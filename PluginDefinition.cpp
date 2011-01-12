@@ -101,7 +101,7 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //----------------------------------------------//
 //-- STEP 4. DEFINE YOUR ASSOCIATED FUNCTIONS --//
 //----------------------------------------------//
-void replaceTag(HWND &curScintilla, std::ifstream &file, int curPos)
+void replaceTag(HWND &curScintilla, std::ifstream &file, int pos)
 {    
   std::streamoff sniplength;
    
@@ -116,7 +116,7 @@ void replaceTag(HWND &curScintilla, std::ifstream &file, int curPos)
 
   ::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
 
-  ::SendMessage(curScintilla, SCI_INSERTTEXT, curPos, (LPARAM)"________`[SnippetInserting]");
+  ::SendMessage(curScintilla, SCI_INSERTTEXT, pos, (LPARAM)"________`[SnippetInserting]");
   ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)snip);
       
   ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
@@ -127,7 +127,7 @@ void replaceTag(HWND &curScintilla, std::ifstream &file, int curPos)
   ::SendMessage(curScintilla, SCI_SEARCHPREV, 0,(LPARAM)"[>END<]");
   int posEndOfSnippet= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
 
-    ::SendMessage(curScintilla, SCI_SETSELECTIONSTART, posEndOfSnippet,(LPARAM)true);
+  ::SendMessage(curScintilla, SCI_SETSELECTIONSTART, posEndOfSnippet,(LPARAM)true);
   ::SendMessage(curScintilla, SCI_SETSELECTIONEND, posEndOfInsertedText,(LPARAM)true);
                 
   ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
@@ -140,7 +140,7 @@ void replaceTag(HWND &curScintilla, std::ifstream &file, int curPos)
 
 void fingerText()
 {
-    int tagFound = 0;
+    
 	// Get the current scintilla
     int which = -1;
     ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
@@ -148,11 +148,13 @@ void fingerText()
         return;
     HWND curScintilla = (which == 0)?nppData._scintillaMainHandle:nppData._scintillaSecondHandle;
 
-	  int curPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
+    int tagFound = 0;
+    
+	  int posCurrent= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
 	  
     ::SendMessage(curScintilla,SCI_WORDLEFTEXTEND,0,0);
 
-    int curPos2= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
+    int posBeforeTag= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
 
     char tag[256];
 	  ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&tag);
@@ -170,10 +172,10 @@ void fingerText()
     
     TCHAR lang[20]=L"snippet";
     ::wcscat(lang,ext);
-    int found;
-    found=static_cast<int>(::SetCurrentDirectory(lang));
     
-    if (found<=0) ::SetCurrentDirectory(L"snippet.global");
+    int folderFound=static_cast<int>(::SetCurrentDirectory(lang));
+    
+    if (folderFound<=0) ::SetCurrentDirectory(L"snippet.global");
 
     std::ifstream file;
     file.open(tag);
@@ -181,9 +183,9 @@ void fingerText()
     if (file.is_open())
     {
       tagFound = 1;
-      replaceTag(curScintilla, file, curPos);
+      replaceTag(curScintilla, file, posCurrent);
       
-    } else if(found>0)
+    } else if(folderFound>0)
     {
       //::SetCurrentDirectory(L"..");
       ::SetCurrentDirectory(L"..\\snippet.global");
@@ -191,37 +193,33 @@ void fingerText()
       if (file.is_open())
       {
         tagFound = 1;
-        replaceTag(curScintilla, file, curPos);
+        replaceTag(curScintilla, file, posCurrent);
       } 
     }
 
     // return to the original path 
     ::SetCurrentDirectory(curPath);
     // return to the original position 
-    ::SendMessage(curScintilla,SCI_GOTOPOS,curPos2,0);
+    ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
     
 
  // This is the part doing Hotspots tab navigation
    
-	  int firstPos;
-	  int secondPos;
-	  int result;
 	
 	  ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-	  result=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"$[![");
-	  if (result>=0)
+	  int spotFound=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"$[![");
+	  if (spotFound>=0)
 	  {
-		  firstPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
+		  int firstPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
 		  ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
 		  ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"]!]");
-		  secondPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
-		  secondPos=secondPos+3;
+		  int secondPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0))+3;
 
 		  ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
 		  ::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
 	  } else if (tagFound == 0)
 	  {
-      ::SendMessage(curScintilla,SCI_GOTOPOS,curPos,0);
+      ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
       
       ::SendMessage(curScintilla,SCI_TAB,0,0);		  
 	  }/*
