@@ -1,4 +1,10 @@
+current development version:
 
+0.2.0
+Support utf-8 encoding. (All snippets are assumed to be in ANSI, and will be converted if current page is utf-8)
+Fixed long tab problem.
+Fixed Spaces or tabspaces before tab problem.
+Fixed empty snippet problem.
 
 0.1.2
 Emulate tab behaviour when no tag match or selection is rectangle.
