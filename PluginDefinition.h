@@ -22,6 +22,7 @@
 // All difinitions of plugin interface
 //
 #include "PluginInterface.h"
+#include <fstream>
 
 //-------------------------------------//
 //-- STEP 1. DEFINE YOUR PLUGIN NAME --//
@@ -71,6 +72,6 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 // Your plugin command functions
 //
 void fingerText();
-
+void replaceTag(HWND &curScintilla, std::ifstream &file, int pos);
 
 #endif //PLUGINDEFINITION_H

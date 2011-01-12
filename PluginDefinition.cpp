@@ -18,8 +18,8 @@
 #include "PluginDefinition.h"
 #include "menuCmdID.h"
 
-#include <iostream>
-#include <fstream>
+
+
 //
 // The plugin data that Notepad++ needs
 //
@@ -101,40 +101,7 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //----------------------------------------------//
 //-- STEP 4. DEFINE YOUR ASSOCIATED FUNCTIONS --//
 //----------------------------------------------//
-void replaceTag(HWND &curScintilla, std::ifstream &file, int pos)
-{    
-  std::streamoff sniplength;
-   
-  file.seekg(0, std::ios::end);
-  sniplength = file.tellg();
-  file.seekg(0, std::ios::beg);
 
-  char* snip = new char[sniplength];
-    
-  file.read(snip,sniplength);
-  file.close();
-
-  ::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
-
-  ::SendMessage(curScintilla, SCI_INSERTTEXT, pos, (LPARAM)"________`[SnippetInserting]");
-  ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)snip);
-      
-  ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
-  ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"`[SnippetInserting]");
-  int posEndOfInsertedText= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0))+19;
-        
-  ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
-  ::SendMessage(curScintilla, SCI_SEARCHPREV, 0,(LPARAM)"[>END<]");
-  int posEndOfSnippet= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
-
-  ::SendMessage(curScintilla, SCI_SETSELECTIONSTART, posEndOfSnippet,(LPARAM)true);
-  ::SendMessage(curScintilla, SCI_SETSELECTIONEND, posEndOfInsertedText,(LPARAM)true);
-                
-  ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
-
-  ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
-
-}
 
 
 
@@ -181,12 +148,12 @@ void fingerText()
         ::wcscat(path,L"\\plugins\\FingerText\\");
         ::SetCurrentDirectory(path);
     
-        TCHAR lang[20]=L"snippet";
+        TCHAR lang[20]=L"(snippet)";
         ::wcscat(lang,ext);
     
         int folderFound=static_cast<int>(::SetCurrentDirectory(lang));
     
-        if (folderFound<=0) ::SetCurrentDirectory(L"snippet.global");
+        if (folderFound<=0) ::SetCurrentDirectory(L"(snippet).global");
 
         std::ifstream file;
         file.open(tag);
@@ -199,7 +166,7 @@ void fingerText()
         } else if(folderFound>0)
         {
           //::SetCurrentDirectory(L"..");
-          ::SetCurrentDirectory(L"..\\snippet.global");
+          ::SetCurrentDirectory(L"..\\(snippet).global");
           file.open(tag);
           if (file.is_open())
           {
@@ -215,9 +182,6 @@ void fingerText()
 
       }
 	  
-    
-    
-
    // This is the part doing Hotspots tab navigation
    
 	
@@ -242,3 +206,65 @@ void fingerText()
 	  } 
 }
 
+void replaceTag(HWND &curScintilla, std::ifstream &file, int pos)
+{    
+  //std::streamoff sniplength;
+  int sniplength;
+
+  file.seekg(0, std::ios::end);
+  sniplength = file.tellg();
+  file.seekg(0, std::ios::beg);
+
+  char* snip = new char[sniplength*2];
+    
+  file.read(snip,sniplength);
+  file.close();
+
+  ::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
+
+  ::SendMessage(curScintilla, SCI_INSERTTEXT, pos, (LPARAM)"_____________________________`[SnippetInserting]");
+
+  
+  // Failed attempt to cater unicode snippets
+  //if (::IsTextUnicode(snip,sniplength,0))
+  //{
+  //  ::MessageBox(nppData._nppHandle, TEXT("ANSI"), TEXT("Trace"), MB_OK);
+  //} else
+  //{
+  //  ::MessageBox(nppData._nppHandle, TEXT("not ANSI"), TEXT("Trace"), MB_OK);
+  //}
+  if (::SendMessage(curScintilla,SCI_GETCODEPAGE,0,0)==65001)
+  {
+    //::MessageBox(nppData._nppHandle, TEXT("65001"), TEXT("Trace"), MB_OK);
+  //
+  //  //char* w=NULL;
+  //  //w = new char[4096];
+  //  //WCHAR w[4096]={0};
+  //
+    WCHAR *w=new WCHAR[sniplength*2];
+    MultiByteToWideChar(CP_ACP, 0, snip, -1, w, sniplength*2); // ANSI to UNICODE
+    WideCharToMultiByte(CP_UTF8, 0, w, -1, snip, sniplength*2, 0, 0); // UNICODE to UTF-8
+    delete [] w;
+  }
+  
+  ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)snip);
+  //::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)snip);
+      
+  ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
+  ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"`[SnippetInserting]");
+  int posEndOfInsertedText= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0))+19;
+        
+  ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
+  ::SendMessage(curScintilla, SCI_SEARCHPREV, 0,(LPARAM)"[>END<]");
+  int posEndOfSnippet= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
+
+  ::SendMessage(curScintilla, SCI_SETSELECTIONSTART, posEndOfSnippet,(LPARAM)true);
+  ::SendMessage(curScintilla, SCI_SETSELECTIONEND, posEndOfInsertedText,(LPARAM)true);
+                
+  ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
+
+  
+  delete [] snip;
+  ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
+
+}
