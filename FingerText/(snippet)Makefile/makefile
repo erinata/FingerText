@@ -1,0 +1,1 @@
+This is a Makefile snippet.[>END<]
