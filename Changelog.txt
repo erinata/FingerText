@@ -1,0 +1,1 @@
+0.1.0 First Alpha verison. Implemented basic tab trigger snippet and hotspot navigation
