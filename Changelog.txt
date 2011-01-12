@@ -1,1 +1,5 @@
-0.1.0 First Alpha verison. Implemented basic tab trigger snippet and hotspot navigation
+0.1.1
+Snippet insertion recorded as one single undo step.
+
+0.1.0 
+First Alpha verison. Implemented basic tab trigger snippet and hotspot navigation
