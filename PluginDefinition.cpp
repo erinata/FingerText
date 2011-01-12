@@ -114,7 +114,7 @@ void replaceTag(HWND &curScintilla, std::ifstream &file, int curPos)
   file.read(snip,sniplength);
   file.close();
 
-  ::SendMessage(curScintilla, SCI_INSERTTEXT, curPos, (LPARAM)"$`[SnippetInserting]");
+  ::SendMessage(curScintilla, SCI_INSERTTEXT, curPos, (LPARAM)"________`[SnippetInserting]");
   ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)snip);
       
   ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
