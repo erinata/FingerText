@@ -148,82 +148,97 @@ void fingerText()
         return;
     HWND curScintilla = (which == 0)?nppData._scintillaMainHandle:nppData._scintillaSecondHandle;
 
-    int tagFound = 0;
-    
-	  int posCurrent= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
-	  
-    ::SendMessage(curScintilla,SCI_WORDLEFTEXTEND,0,0);
+    int rectangleSelction = static_cast<int>(::SendMessage(curScintilla,SCI_SELECTIONISRECTANGLE,0,0));
 
-    int posBeforeTag= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
-
-    char tag[256];
-	  ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&tag);
-    TCHAR curPath[MAX_PATH];
-    ::GetCurrentDirectory(MAX_PATH,(LPTSTR)curPath);
-    
-    TCHAR path[MAX_PATH];
-    ::SendMessage(nppData._nppHandle, NPPM_GETNPPDIRECTORY, (WPARAM)MAX_PATH, (LPARAM)path);
-
-    TCHAR ext[10];
-    ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)ext);
-    
-    ::wcscat(path,L"\\plugins\\FingerText\\");
-    ::SetCurrentDirectory(path);
-    
-    TCHAR lang[20]=L"snippet";
-    ::wcscat(lang,ext);
-    
-    int folderFound=static_cast<int>(::SetCurrentDirectory(lang));
-    
-    if (folderFound<=0) ::SetCurrentDirectory(L"snippet.global");
-
-    std::ifstream file;
-    file.open(tag);
-
-    if (file.is_open())
+    if (rectangleSelction==1)
     {
-      tagFound = 1;
-      replaceTag(curScintilla, file, posCurrent);
-      
-    } else if(folderFound>0)
+      ::SendMessage(curScintilla,SCI_TAB,0,0);	
+    } else
     {
-      //::SetCurrentDirectory(L"..");
-      ::SetCurrentDirectory(L"..\\snippet.global");
-      file.open(tag);
-      if (file.is_open())
+      int tagFound = 0;
+    
+	    int posCurrent= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
+      int posSelectionStart= static_cast<int>(::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0));
+      int posSelectionEnd= static_cast<int>(::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0));
+
+      if (posSelectionStart==posSelectionEnd)
       {
-        tagFound = 1;
-        replaceTag(curScintilla, file, posCurrent);
-      } 
-    }
+        ::SendMessage(curScintilla,SCI_WORDLEFTEXTEND,0,0);
 
-    // return to the original path 
-    ::SetCurrentDirectory(curPath);
-    // return to the original position 
-    ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
+        int posBeforeTag= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
+
+        char tag[256];
+	      ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&tag);
+        TCHAR curPath[MAX_PATH];
+        ::GetCurrentDirectory(MAX_PATH,(LPTSTR)curPath);
+    
+        TCHAR path[MAX_PATH];
+        ::SendMessage(nppData._nppHandle, NPPM_GETNPPDIRECTORY, (WPARAM)MAX_PATH, (LPARAM)path);
+
+        TCHAR ext[10];
+        ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)ext);
+    
+        ::wcscat(path,L"\\plugins\\FingerText\\");
+        ::SetCurrentDirectory(path);
+    
+        TCHAR lang[20]=L"snippet";
+        ::wcscat(lang,ext);
+    
+        int folderFound=static_cast<int>(::SetCurrentDirectory(lang));
+    
+        if (folderFound<=0) ::SetCurrentDirectory(L"snippet.global");
+
+        std::ifstream file;
+        file.open(tag);
+
+        if (file.is_open())
+        {
+          tagFound = 1;
+          replaceTag(curScintilla, file, posCurrent);
+      
+        } else if(folderFound>0)
+        {
+          //::SetCurrentDirectory(L"..");
+          ::SetCurrentDirectory(L"..\\snippet.global");
+          file.open(tag);
+          if (file.is_open())
+          {
+            tagFound = 1;
+            replaceTag(curScintilla, file, posCurrent);
+          } 
+        }
+
+        // return to the original path 
+        ::SetCurrentDirectory(curPath);
+        // return to the original position 
+        ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
+
+      }
+	  
+    
     
 
- // This is the part doing Hotspots tab navigation
+   // This is the part doing Hotspots tab navigation
    
 	
-	  ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-	  int spotFound=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"$[![");
-	  if (spotFound>=0)
-	  {
-		  int firstPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
-		  ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-		  ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"]!]");
-		  int secondPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0))+3;
+	    ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
+	    int spotFound=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"$[![");
+	    if (spotFound>=0)
+	    {
+		    int firstPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
+		    ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
+		    ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"]!]");
+		    int secondPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0))+3;
 
-		  ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
-		  ::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
-	  } else if (tagFound == 0)
-	  {
-      ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
-      
-      ::SendMessage(curScintilla,SCI_TAB,0,0);		  
-	  }/*
-    */
+		    ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
+		    ::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
+	    } else if (tagFound == 0)
+	    {
+        ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
+        ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,posSelectionStart,0);
+        ::SendMessage(curScintilla,SCI_SETSELECTIONEND,posSelectionEnd,0);
+        ::SendMessage(curScintilla,SCI_TAB,0,0);	
+      }
+	  } 
 }
-
 
