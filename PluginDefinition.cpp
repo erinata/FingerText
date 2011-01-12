@@ -233,14 +233,11 @@ void replaceTag(HWND &curScintilla, std::ifstream &file, int pos)
   //{
   //  ::MessageBox(nppData._nppHandle, TEXT("not ANSI"), TEXT("Trace"), MB_OK);
   //}
+
+  // Just assume that all snippets are in ANSI, and convert to UTF-8 when needed.
   if (::SendMessage(curScintilla,SCI_GETCODEPAGE,0,0)==65001)
   {
     //::MessageBox(nppData._nppHandle, TEXT("65001"), TEXT("Trace"), MB_OK);
-  //
-  //  //char* w=NULL;
-  //  //w = new char[4096];
-  //  //WCHAR w[4096]={0};
-  //
     WCHAR *w=new WCHAR[sniplength*2];
     MultiByteToWideChar(CP_ACP, 0, snip, -1, w, sniplength*2); // ANSI to UNICODE
     WideCharToMultiByte(CP_UTF8, 0, w, -1, snip, sniplength*2, 0, 0); // UNICODE to UTF-8
@@ -248,7 +245,6 @@ void replaceTag(HWND &curScintilla, std::ifstream &file, int pos)
   }
   
   ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)snip);
-  //::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)snip);
       
   ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
   ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"`[SnippetInserting]");
@@ -264,7 +260,7 @@ void replaceTag(HWND &curScintilla, std::ifstream &file, int pos)
   ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
 
   
-  delete [] snip;
+  //delete [] snip; // This cause problem when we trigger a long snippet and then a short snippet
   ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
 
 }
