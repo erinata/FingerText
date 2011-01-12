@@ -114,24 +114,25 @@ void replaceTag(HWND &curScintilla, std::ifstream &file, int curPos)
   file.read(snip,sniplength);
   file.close();
 
+  ::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
+
   ::SendMessage(curScintilla, SCI_INSERTTEXT, curPos, (LPARAM)"________`[SnippetInserting]");
   ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)snip);
       
   ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
   ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"`[SnippetInserting]");
-  int aPos;
-  aPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
-  aPos=aPos+19;
+  int posEndOfInsertedText= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0))+19;
         
   ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
   ::SendMessage(curScintilla, SCI_SEARCHPREV, 0,(LPARAM)"[>END<]");
-  int bPos;
-  bPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
+  int posEndOfSnippet= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
 
-  ::SendMessage(curScintilla, SCI_SETSELECTIONSTART, bPos,(LPARAM)true);
-  ::SendMessage(curScintilla, SCI_SETSELECTIONEND, aPos,(LPARAM)true);
+    ::SendMessage(curScintilla, SCI_SETSELECTIONSTART, posEndOfSnippet,(LPARAM)true);
+  ::SendMessage(curScintilla, SCI_SETSELECTIONEND, posEndOfInsertedText,(LPARAM)true);
                 
   ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
+
+  ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
 
 }
 
