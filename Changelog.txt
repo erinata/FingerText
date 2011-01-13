@@ -1,3 +1,7 @@
+current development version:
+Add support for chinese character tag name. Can be triggered from either ANSI or Utf-8 document
+
+
 0.2.2
 Add Readme and License
 fixed tag longer than snippet problem

@@ -149,6 +149,19 @@ void fingerText()
                 char tag[60];
 	            ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&tag);
 
+                // Here the tag is got assuming the document is in ANSI, if the document is in UTF-8,
+                // chinese character tag is not loaded
+                if (::SendMessage(curScintilla,SCI_GETCODEPAGE,0,0)==65001)
+                {
+                    //::MessageBox(nppData._nppHandle, TEXT("65001"), TEXT("Trace"), MB_OK);
+                    WCHAR *w=new WCHAR[120];
+                    MultiByteToWideChar(CP_UTF8, 0, tag, -1, w, 120); 
+                    WideCharToMultiByte(CP_ACP, 0, w, -1, tag, 120, 0, 0); 
+                    delete [] w;
+                }
+  
+
+
                 TCHAR curPath[MAX_PATH];
                 ::GetCurrentDirectory(MAX_PATH,(LPTSTR)curPath);
     
