@@ -76,12 +76,13 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 // http://sourceforge.net/forum/forum.php?forum_id=482781
 //
 extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam, LPARAM lParam)
-{/*
-	if (Message == WM_MOVE)
-	{
-		::MessageBox(NULL, "move", "", MB_OK);
-	}
-*/
+{
+  
+	//if (Message == WM_MOVE)
+	//{
+	//	::MessageBox(NULL, TEXT("move"), TEXT(""), MB_OK);
+	//}
+
 	return TRUE;
 }
 

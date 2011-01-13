@@ -17,9 +17,6 @@
 
 #include "PluginDefinition.h"
 #include "menuCmdID.h"
-
-
-
 //
 // The plugin data that Notepad++ needs
 //
@@ -61,10 +58,10 @@ void commandMenuInit()
     //            bool check0nInit                // optional. Make this menu item be checked visually
     //            );
     ShortcutKey *shKey = new ShortcutKey;
-	  shKey->_isAlt = false;
-	  shKey->_isCtrl = false;
-	  shKey->_isShift = false;
-	  shKey->_key = VK_TAB;
+	shKey->_isAlt = false;
+	shKey->_isCtrl = false;
+	shKey->_isShift = false;
+	shKey->_key = VK_TAB;
     
     setCommand(0, TEXT("Trigger FingerText"), fingerText, shKey, false);
 }
@@ -74,7 +71,7 @@ void commandMenuInit()
 //
 void commandMenuCleanUp()
 {
-  delete funcItem[0]._pShKey;
+    delete funcItem[0]._pShKey;
 	// Don't forget to deallocate your shortcut here
 }
 
@@ -102,9 +99,6 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //-- STEP 4. DEFINE YOUR ASSOCIATED FUNCTIONS --//
 //----------------------------------------------//
 
-
-
-
 void fingerText()
 {
     //::Sleep(10);
@@ -120,80 +114,77 @@ void fingerText()
 
     if (rectangleSelction==1)
     {
-      ::SendMessage(curScintilla,SCI_TAB,0,0);	
+        ::SendMessage(curScintilla,SCI_TAB,0,0);	
     } else
     {
-      
-
-      int posBeforeTag=0;
+        int posBeforeTag=0;
     
 	    int posCurrent= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
-      int posSelectionStart= static_cast<int>(::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0));
-      int posSelectionEnd= static_cast<int>(::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0));
+        int posSelectionStart= static_cast<int>(::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0));
+        int posSelectionEnd= static_cast<int>(::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0));
 
-      if (posSelectionStart!=posSelectionEnd)
-      {
-        //::MessageBox(nppData._nppHandle, TEXT("selection"), TEXT("Trace"), MB_OK);
-      } else
-      {
-        ::SendMessage(curScintilla,SCI_WORDLEFTEXTEND,0,0);
-        posBeforeTag= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
-
-        int posTagStart= static_cast<int>(::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0));
-        int posTagEnd= static_cast<int>(::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0));
-
-        if (posTagEnd-posTagStart>50)
+        if (posSelectionStart!=posSelectionEnd)
         {
-          //::MessageBox(nppData._nppHandle, TEXT("long tag"), TEXT("Trace"), MB_OK); 
-          // Still contain some issues like if we tab on a position where there are a lot of tab spaces before that,
-          // those tabs spaces will be reduced for no reason.
+            //::MessageBox(nppData._nppHandle, TEXT("selection"), TEXT("Trace"), MB_OK);
         } else
         {
-          char tag[60];
-	        ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&tag);
-          TCHAR curPath[MAX_PATH];
-          ::GetCurrentDirectory(MAX_PATH,(LPTSTR)curPath);
-    
-          TCHAR path[MAX_PATH];
-          ::SendMessage(nppData._nppHandle, NPPM_GETNPPDIRECTORY, (WPARAM)MAX_PATH, (LPARAM)path);
+            ::SendMessage(curScintilla,SCI_WORDLEFTEXTEND,0,0);
+            posBeforeTag= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
 
-          TCHAR ext[10];
-          ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)ext);
-    
-          ::wcscat(path,L"\\plugins\\FingerText\\");
-          ::SetCurrentDirectory(path);
-    
-          TCHAR lang[20]=L"(snippet)";
-          ::wcscat(lang,ext);
-    
-          int folderFound=static_cast<int>(::SetCurrentDirectory(lang));
-    
-          if (folderFound<=0) ::SetCurrentDirectory(L"(snippet).global");
+            int posTagStart= static_cast<int>(::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0));
+            int posTagEnd= static_cast<int>(::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0));
 
-          std::ifstream file;
-          file.open(tag);
-
-          if (file.is_open())
-          {
-            tagFound = replaceTag(curScintilla, file, posCurrent,posBeforeTag);
-      
-          } else if(folderFound>0)
-          {
-            //::SetCurrentDirectory(L"..");
-            ::SetCurrentDirectory(L"..\\(snippet).global");
-            file.open(tag);
-            if (file.is_open())
+            if (posTagEnd-posTagStart>40)
             {
-              tagFound = replaceTag(curScintilla, file, posCurrent,posBeforeTag);
-            } 
-          }
-          ::SetCurrentDirectory(curPath);
+                //::MessageBox(nppData._nppHandle, TEXT("long tag"), TEXT("Trace"), MB_OK); 
+                // Still contain some issues like if we tab on a position where there are a lot of tab spaces before that,
+                // those tabs spaces will be reduced for no reason.
+            } else
+            {
+                char tag[60];
+	            ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&tag);
+                TCHAR curPath[MAX_PATH];
+                ::GetCurrentDirectory(MAX_PATH,(LPTSTR)curPath);
+    
+                TCHAR path[MAX_PATH];
+                ::SendMessage(nppData._nppHandle, NPPM_GETNPPDIRECTORY, (WPARAM)MAX_PATH, (LPARAM)path);
+
+                TCHAR ext[10];
+                ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)ext);
+    
+                ::wcscat(path,L"\\plugins\\FingerText\\");
+                ::SetCurrentDirectory(path);
+    
+                TCHAR lang[20]=L"(snippet)";
+                ::wcscat(lang,ext);
+    
+                int folderFound=static_cast<int>(::SetCurrentDirectory(lang));
+    
+                if (folderFound<=0) ::SetCurrentDirectory(L"(snippet).global");
+
+                std::ifstream file;
+                file.open(tag);
+
+                if (file.is_open())
+                {
+                    tagFound = replaceTag(curScintilla, file, posCurrent,posBeforeTag);
+      
+                } else if(folderFound>0)
+                {
+                //::SetCurrentDirectory(L"..");
+                ::SetCurrentDirectory(L"..\\(snippet).global");
+                file.open(tag);
+                if (file.is_open())
+                {
+                    tagFound = replaceTag(curScintilla, file, posCurrent,posBeforeTag);
+                } 
+                }
+                // return to the original path 
+                ::SetCurrentDirectory(curPath);
+            }
+            // return to the original position 
+            ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
         }
-        // return to the original path 
-        
-        // return to the original position 
-        ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
-      }
 	  
    // This is the part doing Hotspots tab navigation
    
@@ -211,86 +202,85 @@ void fingerText()
 		    ::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
 	    } else if (tagFound == 0)
 	    {
-        ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
-        ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,posSelectionStart,0);
-        ::SendMessage(curScintilla,SCI_SETSELECTIONEND,posSelectionEnd,0);
-        ::SendMessage(curScintilla,SCI_TAB,0,0);	
-      }
-	  } 
+            ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
+            ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,posSelectionStart,0);
+            ::SendMessage(curScintilla,SCI_SETSELECTIONEND,posSelectionEnd,0);
+            ::SendMessage(curScintilla,SCI_TAB,0,0);	
+        }
+    } 
 }
 
 int replaceTag(HWND &curScintilla, std::ifstream &file, int posCurrent, int posBeforeTag)
 {
 
-  int preserveSteps=1;
-  //::MessageBox(nppData._nppHandle, TEXT("replace tag"), TEXT("Trace"), MB_OK); 
-  //std::streamoff sniplength;
-  int sniplength;
+    int preserveSteps=1;
+    //::MessageBox(nppData._nppHandle, TEXT("replace tag"), TEXT("Trace"), MB_OK); 
+    //std::streamoff sniplength;
+    int sniplength;
 
-  file.seekg(0, std::ios::end);
-  sniplength = file.tellg();
-  file.seekg(0, std::ios::beg);
+    file.seekg(0, std::ios::end);
+    sniplength = file.tellg();
+    file.seekg(0, std::ios::beg);
 
-  if (sniplength<=1)
-  {
-    //::MessageBox(nppData._nppHandle, TEXT("no text"), TEXT("Trace"), MB_OK); 
-    return 0;
-  } else
-  {
-    //::MessageBox(nppData._nppHandle, TEXT("contain text"), TEXT("Trace"), MB_OK); 
-    char* snip = new char[sniplength*2];
-    
-    file.read(snip,sniplength);
-    file.close();
-
-    if (preserveSteps==0) ::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
-
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, posCurrent, (LPARAM)"_____________________________`[SnippetInserting]");
-
-  
-    // Failed attempt to cater unicode snippets
-    //if (::IsTextUnicode(snip,sniplength,0))
-    //{
-    //  ::MessageBox(nppData._nppHandle, TEXT("ANSI"), TEXT("Trace"), MB_OK);
-    //} else
-    //{
-    //  ::MessageBox(nppData._nppHandle, TEXT("not ANSI"), TEXT("Trace"), MB_OK);
-    //}
-
-    // Just assume that all snippets are in ANSI, and convert to UTF-8 when needed.
-    if (::SendMessage(curScintilla,SCI_GETCODEPAGE,0,0)==65001)
+    if (sniplength<=1)
     {
-      //::MessageBox(nppData._nppHandle, TEXT("65001"), TEXT("Trace"), MB_OK);
-      WCHAR *w=new WCHAR[sniplength*2];
-      MultiByteToWideChar(CP_ACP, 0, snip, -1, w, sniplength*2); // ANSI to UNICODE
-      WideCharToMultiByte(CP_UTF8, 0, w, -1, snip, sniplength*2, 0, 0); // UNICODE to UTF-8
-      delete [] w;
-    }
+        //::MessageBox(nppData._nppHandle, TEXT("no text"), TEXT("Trace"), MB_OK); 
+        return 0;
+    } else
+    {
+        //::MessageBox(nppData._nppHandle, TEXT("contain text"), TEXT("Trace"), MB_OK); 
+        char* snip = new char[sniplength*2];
+    
+        file.read(snip,sniplength);
+        file.close();
+
+        if (preserveSteps==0) ::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
+
+        ::SendMessage(curScintilla, SCI_INSERTTEXT, posCurrent, (LPARAM)"_____________________________`[SnippetInserting]");
+
   
-    ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)snip);
+        // Failed attempt to cater unicode snippets
+        //if (::IsTextUnicode(snip,sniplength,0))
+        //{
+        //  ::MessageBox(nppData._nppHandle, TEXT("ANSI"), TEXT("Trace"), MB_OK);
+        //} else
+        //{
+        //  ::MessageBox(nppData._nppHandle, TEXT("not ANSI"), TEXT("Trace"), MB_OK);
+        //}
+
+        // Just assume that all snippets are in ANSI, and convert to UTF-8 when needed.
+        if (::SendMessage(curScintilla,SCI_GETCODEPAGE,0,0)==65001)
+        {
+            //::MessageBox(nppData._nppHandle, TEXT("65001"), TEXT("Trace"), MB_OK);
+            WCHAR *w=new WCHAR[sniplength*2];
+            MultiByteToWideChar(CP_ACP, 0, snip, -1, w, sniplength*2); // ANSI to UNICODE
+            WideCharToMultiByte(CP_UTF8, 0, w, -1, snip, sniplength*2, 0, 0); // UNICODE to UTF-8
+            delete [] w;
+        }
+  
+        ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)snip);
       
-    ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
-    ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"`[SnippetInserting]");
-    int posEndOfInsertedText= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0))+19;
+        ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
+        ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"`[SnippetInserting]");
+        int posEndOfInsertedText= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0))+19;
         
     
-    ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
-    ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
-    ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"[>END<]");
-    int posEndOfSnippet= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
-    // may consider searching [>END<> from the beginning of the snippet
+        ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
+        ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
+        ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"[>END<]");
+        int posEndOfSnippet= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
+        // may consider searching [>END<> from the beginning of the snippet
 
-    ::SendMessage(curScintilla, SCI_SETSELECTIONSTART, posEndOfSnippet,(LPARAM)true);
-    ::SendMessage(curScintilla, SCI_SETSELECTIONEND, posEndOfInsertedText,(LPARAM)true);
+        ::SendMessage(curScintilla, SCI_SETSELECTIONSTART, posEndOfSnippet,(LPARAM)true);
+        ::SendMessage(curScintilla, SCI_SETSELECTIONEND, posEndOfInsertedText,(LPARAM)true);
                 
-    ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
+        ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
 
   
-    delete [] snip; 
-    // This cause problem when we trigger a long snippet and then a short snippet
-    // The problem is solved after using a better way to search for [>END<]
-    if (preserveSteps==0) ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
-    return 1;
-  }
-
+        delete [] snip; 
+        // This cause problem when we trigger a long snippet and then a short snippet
+        // The problem is solved after using a better way to search for [>END<]
+        if (preserveSteps==0) ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
+        return 1;
+    }
 }
