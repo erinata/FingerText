@@ -77,6 +77,7 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 // Your plugin command functions
 //
 void fingerText();
+HWND getCurrentScintilla();
 void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
 int hotSpotNavigation(HWND &curScintilla);
 int replaceTag(HWND &curScintilla, std::ifstream &file, int &posCurrent, int &posBeforeTag);

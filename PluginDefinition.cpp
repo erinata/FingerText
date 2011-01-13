@@ -107,16 +107,14 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //-- STEP 4. DEFINE YOUR ASSOCIATED FUNCTIONS --//
 //----------------------------------------------//
 
+
+
 void fingerText()
 {
     //::Sleep(10);
 	// Get the current scintilla
-   
-    int which = -1;
-    ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
-    if (which == -1)
-        return;
-    HWND curScintilla = (which == 0)?nppData._scintillaMainHandle:nppData._scintillaSecondHandle;
+    HWND curScintilla = getCurrentScintilla();
+    
 
     if (::SendMessage(curScintilla,SCI_SELECTIONISRECTANGLE,0,0)==1)
     {
@@ -217,6 +215,23 @@ void fingerText()
         if ((spotFound==0) && (tagFound == 0)) restoreTab(curScintilla, posCurrent, posSelectionStart, posSelectionEnd);
     } 
 
+}
+
+
+HWND getCurrentScintilla()
+{
+    int which = -1;
+    ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
+    if (which == -1)
+        return NULL;
+    if (which == 0)
+    {
+        return nppData._scintillaMainHandle;
+    } else
+    {
+        return nppData._scintillaSecondHandle;
+    }
+    return nppData._scintillaMainHandle;
 }
 
 void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int &posSelectionEnd)
