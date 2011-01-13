@@ -1,3 +1,9 @@
+//This file is part of the notepad++ plugin FingerText. This file 
+//is modified from the NppPluginTemplate provided by Don Ho. The 
+//License of the template is shown below. 
+//
+/////////////////////////////////////////////////////
+//
 //this file is part of notepad++
 //Copyright (C)2003 Don HO <donho@altern.org>
 //
@@ -27,11 +33,13 @@ FuncItem funcItem[nbFunc];
 //
 NppData nppData;
 
+
 //
 // Initialize your plugin data here
 // It will be called while plugin loading   
 void pluginInit(HANDLE hModule)
 {
+
 }
 
 //
@@ -103,16 +111,14 @@ void fingerText()
 {
     //::Sleep(10);
 	// Get the current scintilla
-    
+   
     int which = -1;
     ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
     if (which == -1)
         return;
     HWND curScintilla = (which == 0)?nppData._scintillaMainHandle:nppData._scintillaSecondHandle;
 
-    int rectangleSelction = static_cast<int>(::SendMessage(curScintilla,SCI_SELECTIONISRECTANGLE,0,0));
-
-    if (rectangleSelction==1)
+    if (::SendMessage(curScintilla,SCI_SELECTIONISRECTANGLE,0,0)==1)
     {
         ::SendMessage(curScintilla,SCI_TAB,0,0);	
     } else
@@ -190,6 +196,7 @@ void fingerText()
 
         if ((spotFound==0) && (tagFound == 0)) restoreTab(curScintilla, posCurrent, posSelectionStart, posSelectionEnd);
     } 
+
 }
 
 void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int &posSelectionEnd)
@@ -223,7 +230,6 @@ int hotSpotNavigation(HWND &curScintilla)
 
 int replaceTag(HWND &curScintilla, std::ifstream &file, int &posCurrent, int &posBeforeTag)
 {
-
     int preserveSteps=0;
     //::MessageBox(nppData._nppHandle, TEXT("replace tag"), TEXT("Trace"), MB_OK); 
     //std::streamoff sniplength;

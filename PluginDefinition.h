@@ -1,3 +1,9 @@
+//This file is part of the notepad++ plugin FingerText. This file 
+//is modified from the NppPluginTemplate provided by Don Ho. The 
+//License of the template is shown below. 
+//
+/////////////////////////////////////////////////////
+//
 //this file is part of notepad++
 //Copyright (C)2003 Don HO <donho@altern.org>
 //
