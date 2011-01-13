@@ -186,22 +186,27 @@ void fingerText()
             ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
         }
 	  
-   // This is the part doing Hotspots tab navigation
-        if ((hotSpotNavigation(curScintilla)<0) && (tagFound == 0))
-	    {
-            ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
-            ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,posSelectionStart,0);
-            ::SendMessage(curScintilla,SCI_SETSELECTIONEND,posSelectionEnd,0);
-            ::SendMessage(curScintilla,SCI_TAB,0,0);	
-        }
+        int spotFound = hotSpotNavigation(curScintilla);
+
+        if ((spotFound==0) && (tagFound == 0)) restoreTab(curScintilla, posCurrent, posSelectionStart, posSelectionEnd);
     } 
+}
+
+void restoreTab(HWND &curScintilla, int posCurrent, int posSelectionStart, int posSelectionEnd)
+{
+    // restoring the original tab action
+    ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
+    ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,posSelectionStart,0);
+    ::SendMessage(curScintilla,SCI_SETSELECTIONEND,posSelectionEnd,0);
+    ::SendMessage(curScintilla,SCI_TAB,0,0);	
 }
 
 int hotSpotNavigation(HWND &curScintilla)
 {
+    // This is the part doing Hotspots tab navigation
     ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-	int spotFound=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"$[![");
-	if (spotFound>=0)
+	int spot=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"$[![");
+	if (spot>=0)
 	{
 		int firstPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
 		::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
@@ -210,8 +215,9 @@ int hotSpotNavigation(HWND &curScintilla)
 
 		::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
 		::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
+        return 1;
 	}
-    return spotFound;
+    return 0;
 }
 
 
