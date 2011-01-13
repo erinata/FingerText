@@ -175,7 +175,7 @@ void fingerText()
 
           if (file.is_open())
           {
-            tagFound = replaceTag(curScintilla, file, posCurrent);
+            tagFound = replaceTag(curScintilla, file, posCurrent,posBeforeTag);
       
           } else if(folderFound>0)
           {
@@ -184,7 +184,7 @@ void fingerText()
             file.open(tag);
             if (file.is_open())
             {
-              tagFound = replaceTag(curScintilla, file, posCurrent);
+              tagFound = replaceTag(curScintilla, file, posCurrent,posBeforeTag);
             } 
           }
           ::SetCurrentDirectory(curPath);
@@ -219,8 +219,10 @@ void fingerText()
 	  } 
 }
 
-int replaceTag(HWND &curScintilla, std::ifstream &file, int pos)
+int replaceTag(HWND &curScintilla, std::ifstream &file, int posCurrent, int posBeforeTag)
 {
+
+  int preserveSteps=1;
   //::MessageBox(nppData._nppHandle, TEXT("replace tag"), TEXT("Trace"), MB_OK); 
   //std::streamoff sniplength;
   int sniplength;
@@ -241,9 +243,9 @@ int replaceTag(HWND &curScintilla, std::ifstream &file, int pos)
     file.read(snip,sniplength);
     file.close();
 
-    ::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
+    if (preserveSteps==0) ::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
 
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, pos, (LPARAM)"_____________________________`[SnippetInserting]");
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, posCurrent, (LPARAM)"_____________________________`[SnippetInserting]");
 
   
     // Failed attempt to cater unicode snippets
@@ -271,10 +273,12 @@ int replaceTag(HWND &curScintilla, std::ifstream &file, int pos)
     ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"`[SnippetInserting]");
     int posEndOfInsertedText= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0))+19;
         
+    
+    ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
     ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
-    ::SendMessage(curScintilla, SCI_SEARCHPREV, 0,(LPARAM)"[>END<]");
+    ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"[>END<]");
     int posEndOfSnippet= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
-
+    // may consider searching [>END<> from the beginning of the snippet
 
     ::SendMessage(curScintilla, SCI_SETSELECTIONSTART, posEndOfSnippet,(LPARAM)true);
     ::SendMessage(curScintilla, SCI_SETSELECTIONEND, posEndOfInsertedText,(LPARAM)true);
@@ -282,8 +286,10 @@ int replaceTag(HWND &curScintilla, std::ifstream &file, int pos)
     ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
 
   
-    //delete [] snip; // This cause problem when we trigger a long snippet and then a short snippet
-    ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
+    delete [] snip; 
+    // This cause problem when we trigger a long snippet and then a short snippet
+    // The problem is solved after using a better way to search for [>END<]
+    if (preserveSteps==0) ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
     return 1;
   }
 

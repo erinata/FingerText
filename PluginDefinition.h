@@ -72,6 +72,6 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 // Your plugin command functions
 //
 void fingerText();
-int replaceTag(HWND &curScintilla, std::ifstream &file, int pos);
+int replaceTag(HWND &curScintilla, std::ifstream &file, int posCurrent, int posBeforeTag);
 
 #endif //PLUGINDEFINITION_H
