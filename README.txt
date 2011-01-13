@@ -6,7 +6,7 @@ Tab triggered snippet plugin for Notepad++.
 
 Tab triggered snippet plugin for Notepad++. Support global snippets and snippets for each file extension, hotspot navigation, hotspot text hint(instead of just a $ or # sign). 
 
-This plugin is still in Alpha (or may be pre-alpha.....) stage so do expect that it is buggy. 
+This plugin is still in Alpha (or may be pre-alpha.....) stage so do expect that it is buggy. The development direction is to be at least a working snippet plugin, and probably a tab triggered simple command plugin, and add some ruby scripting options after that.
 
 == Install
 
