@@ -103,7 +103,7 @@ void fingerText()
 {
     //::Sleep(10);
 	// Get the current scintilla
-    int tagFound = 0;
+    
     int which = -1;
     ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
     if (which == -1)
@@ -117,6 +117,8 @@ void fingerText()
         ::SendMessage(curScintilla,SCI_TAB,0,0);	
     } else
     {
+        int tagFound = 0;
+
         int posBeforeTag=0;
     
 	    int posCurrent= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
@@ -131,10 +133,7 @@ void fingerText()
             ::SendMessage(curScintilla,SCI_WORDLEFTEXTEND,0,0);
             posBeforeTag= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
 
-            int posTagStart= static_cast<int>(::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0));
-            int posTagEnd= static_cast<int>(::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0));
-
-            if (posTagEnd-posTagStart>40)
+            if (::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0)-::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0)>40)
             {
                 //::MessageBox(nppData._nppHandle, TEXT("long tag"), TEXT("Trace"), MB_OK); 
                 // Still contain some issues like if we tab on a position where there are a lot of tab spaces before that,
@@ -143,6 +142,7 @@ void fingerText()
             {
                 char tag[60];
 	            ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&tag);
+
                 TCHAR curPath[MAX_PATH];
                 ::GetCurrentDirectory(MAX_PATH,(LPTSTR)curPath);
     
@@ -171,13 +171,13 @@ void fingerText()
       
                 } else if(folderFound>0)
                 {
-                //::SetCurrentDirectory(L"..");
-                ::SetCurrentDirectory(L"..\\(snippet).global");
-                file.open(tag);
-                if (file.is_open())
-                {
-                    tagFound = replaceTag(curScintilla, file, posCurrent,posBeforeTag);
-                } 
+                    //::SetCurrentDirectory(L"..");
+                    ::SetCurrentDirectory(L"..\\(snippet).global");
+                    file.open(tag);
+                    if (file.is_open())
+                    {
+                        tagFound = replaceTag(curScintilla, file, posCurrent,posBeforeTag);
+                    } 
                 }
                 // return to the original path 
                 ::SetCurrentDirectory(curPath);
@@ -192,7 +192,7 @@ void fingerText()
     } 
 }
 
-void restoreTab(HWND &curScintilla, int posCurrent, int posSelectionStart, int posSelectionEnd)
+void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int &posSelectionEnd)
 {
     // restoring the original tab action
     ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
@@ -221,7 +221,7 @@ int hotSpotNavigation(HWND &curScintilla)
 }
 
 
-int replaceTag(HWND &curScintilla, std::ifstream &file, int posCurrent, int posBeforeTag)
+int replaceTag(HWND &curScintilla, std::ifstream &file, int &posCurrent, int &posBeforeTag)
 {
 
     int preserveSteps=0;
