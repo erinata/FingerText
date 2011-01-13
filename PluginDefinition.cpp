@@ -187,20 +187,7 @@ void fingerText()
         }
 	  
    // This is the part doing Hotspots tab navigation
-   
-	
-	    ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-	    int spotFound=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"$[![");
-	    if (spotFound>=0)
-	    {
-		    int firstPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
-		    ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-		    ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"]!]");
-		    int secondPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0))+3;
-
-		    ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
-		    ::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
-	    } else if (tagFound == 0)
+        if ((hotSpotNavigation(curScintilla)<0) && (tagFound == 0))
 	    {
             ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
             ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,posSelectionStart,0);
@@ -210,10 +197,28 @@ void fingerText()
     } 
 }
 
+int hotSpotNavigation(HWND &curScintilla)
+{
+    ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
+	int spotFound=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"$[![");
+	if (spotFound>=0)
+	{
+		int firstPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
+		::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
+		::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"]!]");
+		int secondPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0))+3;
+
+		::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
+		::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
+	}
+    return spotFound;
+}
+
+
 int replaceTag(HWND &curScintilla, std::ifstream &file, int posCurrent, int posBeforeTag)
 {
 
-    int preserveSteps=1;
+    int preserveSteps=0;
     //::MessageBox(nppData._nppHandle, TEXT("replace tag"), TEXT("Trace"), MB_OK); 
     //std::streamoff sniplength;
     int sniplength;

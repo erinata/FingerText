@@ -37,7 +37,7 @@ First Alpha verison. Implemented basic tab trigger snippet and hotspot navigatio
  
 == Tested with
 
-- Notepad++ 3.8.6, Windows 7
+- Notepad++ 3.8.6(Unicode), Windows 7 Ultimate 64bit 
 
 
 == License
