@@ -1,4 +1,6 @@
-current development version:
+
+
+0.2.3
 Add support for chinese character tag name. Can be triggered from either ANSI or Utf-8 document
 
 
