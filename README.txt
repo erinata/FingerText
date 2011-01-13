@@ -19,6 +19,15 @@ Unzip the package and copy the files into the plugins folder of Notepad++.
 == Change log 
 (for full change log please refer to the CHANGELOG file in the repository)
 
+0.2.2
+Add Readme and License
+Add basic c++ sample snippets
+fixed tag longer than snippet problem
+fixed the limited row size problem
+Turn on the undo step squash function which is accidentally turned off in previous version
+Lots of performance improvement changes
+
+
 0.2.0
 Support utf-8 encoding. (All snippets are assumed to be in ANSI, and will be converted if current page is utf-8)
 Fixed long tab problem.

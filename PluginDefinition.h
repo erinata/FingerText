@@ -36,7 +36,6 @@
 // Here define your plugin name
 //
 const TCHAR NPP_PLUGIN_NAME[] = TEXT("FingerText");
-
 //-----------------------------------------------//
 //-- STEP 2. DEFINE YOUR PLUGIN COMMAND NUMBER --//
 //-----------------------------------------------//

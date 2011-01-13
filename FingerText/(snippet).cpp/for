@@ -1,0 +1,3 @@
+for ( $[![var]!]= 0; $[![Condition]!]; ++$[![var]!]) {
+	  $[![Body]!]
+}[>END<]
