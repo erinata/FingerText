@@ -154,17 +154,24 @@ void fingerText()
     
                 TCHAR path[MAX_PATH];
                 ::SendMessage(nppData._nppHandle, NPPM_GETNPPDIRECTORY, (WPARAM)MAX_PATH, (LPARAM)path);
-
-                TCHAR ext[10];
-                ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)ext);
-    
+                                
                 ::wcscat(path,L"\\plugins\\FingerText\\");
                 ::SetCurrentDirectory(path);
+
+                //
+                //TCHAR namePart[30];
+                //::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)namePart);
+                //
+                //TCHAR fileName[40]=L"(snippet)";
+                //::wcscat(fileName,namePart);
+
+                TCHAR extPart[10];
+                ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)extPart);
     
-                TCHAR lang[20]=L"(snippet)";
-                ::wcscat(lang,ext);
-    
-                int folderFound=static_cast<int>(::SetCurrentDirectory(lang));
+                TCHAR langName[20]=L"(snippet)";
+                ::wcscat(langName,extPart);
+
+                int folderFound=static_cast<int>(::SetCurrentDirectory(langName));
     
                 if (folderFound<=0) ::SetCurrentDirectory(L"(snippet).global");
 
