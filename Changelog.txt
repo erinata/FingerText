@@ -1,4 +1,8 @@
 current development version:
+replace multiple identical hotspots in one undo steps
+
+
+0.2.6
 Multiple hotspot selection and hotspot hint text replacement works simultaneously
 
 0.2.5

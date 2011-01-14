@@ -269,22 +269,6 @@ int hotSpotNavigation(HWND &curScintilla)
 		::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"]!]");
 		int secondPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
 
-        // This part works as a single selection and will replace hotspot by the hint content
-		//::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos+4,0);
-		//::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
-        //
-        //char selection[60];
-        //::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&selection);
-        //
-        //::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
-		//::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos+3,0);
-        //
-        //::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)&selection);
-        //
-        //::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
-		//::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos-4,0);
-        /////////////////////////////////////////////////////////////////////////////////////////
-
         ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos+4,0);
 		::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
         
