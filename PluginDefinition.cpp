@@ -133,9 +133,9 @@ void fingerText()
 
         int posBeforeTag=0;
     
-	    int posCurrent= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
-        int posSelectionStart= static_cast<int>(::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0));
-        int posSelectionEnd= static_cast<int>(::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0));
+	    int posCurrent= ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+        int posSelectionStart= ::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0);
+        int posSelectionEnd= ::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0);
 
         if (posSelectionStart!=posSelectionEnd)
         {
@@ -254,45 +254,74 @@ void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int
 
 int hotSpotNavigation(HWND &curScintilla)
 {
-
-
     // This is the part doing Hotspots tab navigation
     ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
 	int spot=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"$[![");
 	if (spot>=0)
 	{
-		int firstPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
+		int firstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
 		::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
 		::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"]!]");
-		int secondPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
+		int secondPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
 
-		::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos+4,0);
-		::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
+        /* This part works as a single selection and will replace hotspot by the hint content
+		//::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos+4,0);
+		//::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
+        //
+        //char selection[60];
+        //::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&selection);
 
-        char selection[60];
-        ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&selection);
+        //::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
+		//::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos+3,0);
 
+        //::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)&selection);
+        //
+        //::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
+		//::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos-4,0);
+        *////////////////////////////////////////////////////////////////////////////////////////
+        
         ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
 		::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos+3,0);
+        
+        char hotSpot[60];
+        ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&hotSpot);
+        ::SendMessage(curScintilla,SCI_GOTOPOS,secondPos+3,0);
 
-        ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)&selection);
+        int tempPos[60];
+        int i=1;
+        tempPos[0]=firstPos;
+        int hotSpotFound=1;
+        do
+        {
+            ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
+            ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)hotSpot);
+            if (::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0)!=tempPos[i-1]+1)
+            {
+                tempPos[i] = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+                ::SendMessage(curScintilla,SCI_GOTOPOS,tempPos[i]+1,0);
+                i++;
+            } else
+            {
+                tempPos[i]=-1;
+                hotSpotFound=0;
+            }
+        } while (hotSpotFound==1);
+         
+        //::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
+		//::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"]!]");
+		//int secondPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+        ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos+3);
+        i=1;
+        do
+        {
+            ::SendMessage(curScintilla,SCI_ADDSELECTION,tempPos[i],tempPos[i]+(secondPos+3-firstPos));
+            i++;
+        } while (tempPos[i]!=-1);
 
-        ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
-		::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos-4,0);
-
-        //Sci_CharacterRange selectionCharacterRange;
-        //selectionCharacterRange.cpMax=secondPos-3;
-        //selectionCharacterRange.cpMin=firstPos+4;
-        //
-        //Sci_TextRange selectionTextRange;
-        //selectionTextRange.chrg=selectionCharacterRange;
-        ////selectionTextRange.lpstrText="";
-        //
-        //::SendMessage(curScintilla,SCI_GETTEXTRANGE,0,(LPARAM)(&selectionTextRange));
-        ////char* temp =selectionTextRange.lpstrText;
-        //::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)selectionTextRange.lpstrText);
-        //
-        //::MessageBox(nppData._nppHandle, (LPCWSTR)selectionTextRange.lpstrText, TEXT("Trace"), MB_OK);
+        ::SendMessage(curScintilla,SCI_SETMAINSELECTION,0,0);
+        
+        //::SendMessage(curScintilla,SCI_SETSELECTIONSTART,tempPos,0);
+		//::SendMessage(curScintilla,SCI_SETSELECTIONEND,tempPos+(secondPos+3-firstPos),0);
 
         return 1;
 	}
@@ -351,16 +380,16 @@ int replaceTag(HWND &curScintilla, std::ifstream &file, int &posCurrent, int &po
       
         ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
         ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"`[SnippetInserting]");
-        int posEndOfInsertedText= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0))+19;
+        int posEndOfInsertedText= ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0)+19;
             
         ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
         ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
         ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"[>END<]");
-        int posEndOfSnippet= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
+        int posEndOfSnippet= ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
         
         ::SendMessage(curScintilla, SCI_SETSELECTIONSTART, posEndOfSnippet,(LPARAM)true);
         ::SendMessage(curScintilla, SCI_SETSELECTIONEND, posEndOfInsertedText,(LPARAM)true);
-                
+
         ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
           
         delete [] snip; 

@@ -5,7 +5,7 @@ Change in tab navigation behaviour. The hotspot will be replaced by the hint tex
 
 
 0.2.3
-Add support for chinese character tag name. Can be triggered from either ANSI or Utf-8 document
+Add support for chinese character tag name. Can be triggered from either ANSI or Utf-8 document (But chinese name mess up the word selection in the editor so it may not trigger correctly under ANSI document. So English tag names are encouraged.)
 
 
 0.2.2
