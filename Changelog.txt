@@ -1,5 +1,5 @@
-current development version:
-
+0.2.4
+Change in tab navigation behaviour. The hotspot will be replaced by the hint text when using tab navigation
 
 
 0.2.3
