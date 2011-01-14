@@ -312,9 +312,7 @@ int hotSpotNavigation(HWND &curScintilla)
                 //::MessageBox(nppData._nppHandle, TEXT("<0"), TEXT("Trace"), MB_OK);
                 //tempPos[i]=-1;
             }
-
         }
-
 
         ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos+3);
         for (int j=1;j<i;j++)
@@ -324,7 +322,6 @@ int hotSpotNavigation(HWND &curScintilla)
                 ::SendMessage(curScintilla,SCI_ADDSELECTION,tempPos[j],tempPos[j]+(secondPos+3-firstPos));
             }
         }
-
         ::SendMessage(curScintilla,SCI_SETMAINSELECTION,0,0);
 
         return 1;
