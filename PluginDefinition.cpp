@@ -257,18 +257,30 @@ int hotSpotNavigation(HWND &curScintilla)
     // This is the part doing Hotspots tab navigation
     ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
 	int spot=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"$[![");
+
 	if (spot>=0)
 	{
+        //::MessageBox(nppData._nppHandle, TEXT(">=0"), TEXT("Trace"), MB_OK);
 		int firstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
 		::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
 		::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"]!]");
 		int secondPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
 
-        ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos+4,0);
-		::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
-        
-        char hotSpotText[60];
-        ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&hotSpotText);
+        // This part works as a single selection and will replace hotspot by the hint content
+		//::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos+4,0);
+		//::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
+        //
+        //char selection[60];
+        //::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&selection);
+        //
+        //::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
+		//::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos+3,0);
+        //
+        //::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)&selection);
+        //
+        //::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
+		//::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos-4,0);
+        /////////////////////////////////////////////////////////////////////////////////////////
         
         ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
 		::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos+3,0);
@@ -276,44 +288,48 @@ int hotSpotNavigation(HWND &curScintilla)
         char hotSpot[60];
         ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&hotSpot);
         
-        ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)&hotSpotText);
+        ::SendMessage(curScintilla,SCI_GOTOPOS,secondPos+3,0);
         
-        ::SendMessage(curScintilla,SCI_GOTOPOS,secondPos-4,0);
-
+        int hotSpotFound=-1;
         int tempPos[60];
-        int i=1;
-        tempPos[0]=secondPos-4-1;
-        int hotSpotFound=1;
 
-        do
+        int i=1;
+
+        for (i=1;i<=60;i++)
         {
+            tempPos[i]=0;
+        
             ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-            ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)hotSpot);
-            if (::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0)!=tempPos[i-1]+1)
+            hotSpotFound=::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)hotSpot);
+            if (hotSpotFound>=0)
             {
+                //::MessageBox(nppData._nppHandle, TEXT(">=0"), TEXT("Trace"), MB_OK);
                 tempPos[i] = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-                ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)&hotSpotText);
                 ::SendMessage(curScintilla,SCI_GOTOPOS,tempPos[i]+1,0);
-                i++;
             } else
             {
-                tempPos[i]=-1;
-                hotSpotFound=0;
+                break;
+                //::MessageBox(nppData._nppHandle, TEXT("<0"), TEXT("Trace"), MB_OK);
+                //tempPos[i]=-1;
             }
-        } while (hotSpotFound==1);
-         
-        ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos-4);
-        i=1;
-        do
+
+        }
+
+
+        ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos+3);
+        for (int j=1;j<i;j++)
         {
-            ::SendMessage(curScintilla,SCI_ADDSELECTION,tempPos[i],tempPos[i]+(secondPos-firstPos-4));
-            i++;
-        } while (tempPos[i]!=-1);
+            if (tempPos[j]!=-1)
+            {
+                ::SendMessage(curScintilla,SCI_ADDSELECTION,tempPos[j],tempPos[j]+(secondPos+3-firstPos));
+            }
+        }
 
         ::SendMessage(curScintilla,SCI_SETMAINSELECTION,0,0);
 
         return 1;
 	}
+    //::MessageBox(nppData._nppHandle, TEXT("<0"), TEXT("Trace"), MB_OK);
     return 0;
 }
 
