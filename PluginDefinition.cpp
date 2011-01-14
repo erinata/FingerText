@@ -265,6 +265,8 @@ int hotSpotNavigation(HWND &curScintilla)
         if (preserveSteps==0) ::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
         //::MessageBox(nppData._nppHandle, TEXT(">=0"), TEXT("Trace"), MB_OK);
 		int firstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+        int posLine = ::SendMessage(curScintilla,SCI_LINEFROMPOSITION,0,0);
+        
 		::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
 		::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"]!]");
 		int secondPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
@@ -274,7 +276,6 @@ int hotSpotNavigation(HWND &curScintilla)
         
         char hotSpotText[120];
         ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&hotSpotText);
-
         ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
 		::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos+3,0);
         
@@ -308,6 +309,13 @@ int hotSpotNavigation(HWND &curScintilla)
             }
         }
 
+        
+        //::SendMessage(curScintilla,SCI_GOTOPOS,::SendMessage(curScintilla,SCI_POSITIONFROMLINE,posLine,0),0);
+        //::SendMessage(curScintilla,SCI_GOTOLINE,posLine,0);
+
+        ::SendMessage(curScintilla,SCI_GOTOPOS,firstPos,0);
+        ::SendMessage(curScintilla,SCI_SCROLLCARET,0,0);
+        
         ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos-4);
         for (int j=1;j<i;j++)
         {
@@ -317,6 +325,9 @@ int hotSpotNavigation(HWND &curScintilla)
             }
         }
         ::SendMessage(curScintilla,SCI_SETMAINSELECTION,0,0);
+        ::SendMessage(curScintilla,SCI_LINESCROLL,0,0);
+        
+
         if (preserveSteps==0) ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
         return 1;
 	}
