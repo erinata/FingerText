@@ -281,13 +281,19 @@ int hotSpotNavigation(HWND &curScintilla)
         //::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
 		//::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos-4,0);
         /////////////////////////////////////////////////////////////////////////////////////////
+
+        ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos+4,0);
+		::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
         
+        char hotSpotText[60];
+        ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&hotSpotText);
+
         ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
 		::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos+3,0);
         
         char hotSpot[60];
         ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&hotSpot);
-        
+        ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)&hotSpotText);
         ::SendMessage(curScintilla,SCI_GOTOPOS,secondPos+3,0);
         
         int hotSpotFound=-1;
@@ -305,6 +311,7 @@ int hotSpotNavigation(HWND &curScintilla)
             {
                 //::MessageBox(nppData._nppHandle, TEXT(">=0"), TEXT("Trace"), MB_OK);
                 tempPos[i] = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+                ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)&hotSpotText);
                 ::SendMessage(curScintilla,SCI_GOTOPOS,tempPos[i]+1,0);
             } else
             {
@@ -314,12 +321,12 @@ int hotSpotNavigation(HWND &curScintilla)
             }
         }
 
-        ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos+3);
+        ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos-4);
         for (int j=1;j<i;j++)
         {
             if (tempPos[j]!=-1)
             {
-                ::SendMessage(curScintilla,SCI_ADDSELECTION,tempPos[j],tempPos[j]+(secondPos+3-firstPos));
+                ::SendMessage(curScintilla,SCI_ADDSELECTION,tempPos[j],tempPos[j]+(secondPos-4-firstPos));
             }
         }
         ::SendMessage(curScintilla,SCI_SETMAINSELECTION,0,0);
