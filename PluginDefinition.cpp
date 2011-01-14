@@ -106,6 +106,14 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //----------------------------------------------//
 //-- STEP 4. DEFINE YOUR ASSOCIATED FUNCTIONS --//
 //----------------------------------------------//
+//void convertEncoding(char tag[60],UINT codePageFrom,UINT codePageTo)
+//{
+//    ::MessageBox(nppData._nppHandle, TEXT("converted"), TEXT("Trace"), MB_OK);
+//    WCHAR *w=new WCHAR[120];
+//    MultiByteToWideChar(codePageFrom, 0, tag, -1, w, 120); 
+//    WideCharToMultiByte(codePageTo, 0, w, -1, tag, 120, 0, 0); 
+//    delete [] w;
+//}
 
 
 
@@ -134,10 +142,11 @@ void fingerText()
             //::MessageBox(nppData._nppHandle, TEXT("selection"), TEXT("Trace"), MB_OK);
         } else
         {
+                       
             ::SendMessage(curScintilla,SCI_WORDLEFTEXTEND,0,0);
             posBeforeTag= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
 
-            if (::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0)-::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0)>40)
+            if (posCurrent-posBeforeTag>40)
             {
                 //::MessageBox(nppData._nppHandle, TEXT("long tag"), TEXT("Trace"), MB_OK); 
                 // Still contain some issues like if we tab on a position where there are a lot of tab spaces before that,
@@ -147,19 +156,19 @@ void fingerText()
                 char tag[60];
 	            ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&tag);
 
+                //::MessageBox(nppData._nppHandle, (LPCWSTR)tag, TEXT("Trace"), MB_OK);
                 // Here the tag is got assuming the document is in ANSI, if the document is in UTF-8,
                 // chinese character tag is not loaded
                 if (::SendMessage(curScintilla,SCI_GETCODEPAGE,0,0)==65001)
                 {
                     //::MessageBox(nppData._nppHandle, TEXT("65001"), TEXT("Trace"), MB_OK);
+                    //convertEncoding(tag,CP_UTF8,CP_ACP);
                     WCHAR *w=new WCHAR[120];
                     MultiByteToWideChar(CP_UTF8, 0, tag, -1, w, 120); 
                     WideCharToMultiByte(CP_ACP, 0, w, -1, tag, 120, 0, 0); 
                     delete [] w;
                 }
   
-
-
                 TCHAR curPath[MAX_PATH];
                 ::GetCurrentDirectory(MAX_PATH,(LPTSTR)curPath);
     
@@ -245,6 +254,8 @@ void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int
 
 int hotSpotNavigation(HWND &curScintilla)
 {
+
+
     // This is the part doing Hotspots tab navigation
     ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
 	int spot=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"$[![");
@@ -253,10 +264,36 @@ int hotSpotNavigation(HWND &curScintilla)
 		int firstPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
 		::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
 		::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"]!]");
-		int secondPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0))+3;
+		int secondPos= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
 
-		::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
+		::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos+4,0);
 		::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
+
+        char selection[60];
+        ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&selection);
+
+        ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
+		::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos+3,0);
+
+        ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)&selection);
+
+        ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
+		::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos-4,0);
+
+        //Sci_CharacterRange selectionCharacterRange;
+        //selectionCharacterRange.cpMax=secondPos-3;
+        //selectionCharacterRange.cpMin=firstPos+4;
+        //
+        //Sci_TextRange selectionTextRange;
+        //selectionTextRange.chrg=selectionCharacterRange;
+        ////selectionTextRange.lpstrText="";
+        //
+        //::SendMessage(curScintilla,SCI_GETTEXTRANGE,0,(LPARAM)(&selectionTextRange));
+        ////char* temp =selectionTextRange.lpstrText;
+        //::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)selectionTextRange.lpstrText);
+        //
+        //::MessageBox(nppData._nppHandle, (LPCWSTR)selectionTextRange.lpstrText, TEXT("Trace"), MB_OK);
+
         return 1;
 	}
     return 0;
@@ -315,20 +352,17 @@ int replaceTag(HWND &curScintilla, std::ifstream &file, int &posCurrent, int &po
         ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
         ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"`[SnippetInserting]");
         int posEndOfInsertedText= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0))+19;
-        
-    
+            
         ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
         ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
         ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"[>END<]");
         int posEndOfSnippet= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
-        // may consider searching [>END<> from the beginning of the snippet
-
+        
         ::SendMessage(curScintilla, SCI_SETSELECTIONSTART, posEndOfSnippet,(LPARAM)true);
         ::SendMessage(curScintilla, SCI_SETSELECTIONEND, posEndOfInsertedText,(LPARAM)true);
                 
         ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
-
-  
+          
         delete [] snip; 
         // This cause problem when we trigger a long snippet and then a short snippet
         // The problem is solved after using a better way to search for [>END<]
@@ -336,3 +370,5 @@ int replaceTag(HWND &curScintilla, std::ifstream &file, int &posCurrent, int &po
         return 1;
     }
 }
+
+
