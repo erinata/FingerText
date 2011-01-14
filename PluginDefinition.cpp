@@ -326,45 +326,6 @@ int hotSpotNavigation(HWND &curScintilla)
         }
 
         ::SendMessage(curScintilla,SCI_SETMAINSELECTION,0,0);
-
-
-        //int tempPos[60];
-        //int i=1;
-        //tempPos[0]=secondPos+3;
-        //int hotSpotFound=-1;
-        //do
-        //{
-        //    ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-        //    hotSpotFound=::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)hotSpot);
-        //    if (hotSpotFound>=0)
-        //    {
-        //        //::MessageBox(nppData._nppHandle, TEXT(">=0"), TEXT("Trace"), MB_OK);
-        //        tempPos[i] = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-        //        ::SendMessage(curScintilla,SCI_GOTOPOS,tempPos[i]+1,0);
-        //        i++;
-        //    } else
-        //    {
-        //        //::MessageBox(nppData._nppHandle, TEXT("<0"), TEXT("Trace"), MB_OK);
-        //        tempPos[i]=-1;
-        //    }
-        //} while (hotSpotFound>=0);
-        // 
-        //::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos+3);
-        //i=1;
-        //do
-        //{
-        //    if (tempPos[i]!=-1)
-        //    {
-        //        ::SendMessage(curScintilla,SCI_ADDSELECTION,tempPos[i],tempPos[i]+(secondPos+3-firstPos));
-        //    }
-        //    
-        //    i++;
-        //} while (tempPos[i]!=-1);
-        //
-        //::SendMessage(curScintilla,SCI_SETMAINSELECTION,0,0);
-        
-
-
         return 1;
 	}
     //::MessageBox(nppData._nppHandle, TEXT("<0"), TEXT("Trace"), MB_OK);
