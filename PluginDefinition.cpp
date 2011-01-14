@@ -292,53 +292,35 @@ int hotSpotNavigation(HWND &curScintilla)
         
         int hotSpotFound=-1;
         int tempPos[60];
-        tempPos[1]=0;
+
+        for (int i=1;i<=2;i++)
+        {
+            tempPos[i]=0;
         
-        ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-        hotSpotFound=::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)hotSpot);
-        if (hotSpotFound>=0)
-        {
-            //::MessageBox(nppData._nppHandle, TEXT(">=0"), TEXT("Trace"), MB_OK);
-            tempPos[1] = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-            ::SendMessage(curScintilla,SCI_GOTOPOS,tempPos[1]+1,0);
-        } else
-        {
-            //::MessageBox(nppData._nppHandle, TEXT("<0"), TEXT("Trace"), MB_OK);
-            tempPos[1]=-1;
+            ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
+            hotSpotFound=::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)hotSpot);
+            if (hotSpotFound>=0)
+            {
+                //::MessageBox(nppData._nppHandle, TEXT(">=0"), TEXT("Trace"), MB_OK);
+                tempPos[i] = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+                ::SendMessage(curScintilla,SCI_GOTOPOS,tempPos[i]+1,0);
+            } else
+            {
+                //::MessageBox(nppData._nppHandle, TEXT("<0"), TEXT("Trace"), MB_OK);
+                tempPos[i]=-1;
+            }
+
         }
-
-        
-        tempPos[2]=0;
-        
-        ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-        hotSpotFound=::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)hotSpot);
-        if (hotSpotFound>=0)
-        {
-            //::MessageBox(nppData._nppHandle, TEXT(">=0"), TEXT("Trace"), MB_OK);
-            tempPos[2] = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-            ::SendMessage(curScintilla,SCI_GOTOPOS,tempPos[2]+1,0);
-        } else
-        {
-            //::MessageBox(nppData._nppHandle, TEXT("<0"), TEXT("Trace"), MB_OK);
-            tempPos[2]=-1;
-        }
-
-
-
-
 
 
         ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos+3);
-        if (tempPos[1]!=-1)
+        for (int j=1;j<=2;j++)
         {
-            ::SendMessage(curScintilla,SCI_ADDSELECTION,tempPos[1],tempPos[1]+(secondPos+3-firstPos));
+            if (tempPos[j]!=-1)
+            {
+                ::SendMessage(curScintilla,SCI_ADDSELECTION,tempPos[j],tempPos[j]+(secondPos+3-firstPos));
+            }
         }
-
-        if (tempPos[2]!=-1)
-        {
-            ::SendMessage(curScintilla,SCI_ADDSELECTION,tempPos[2],tempPos[2]+(secondPos+3-firstPos));
-        }
-
 
         ::SendMessage(curScintilla,SCI_SETMAINSELECTION,0,0);
 
