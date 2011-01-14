@@ -1,4 +1,4 @@
-current development version:
+0.2.7
 replace multiple identical hotspots in one undo steps
 
 
