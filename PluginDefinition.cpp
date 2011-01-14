@@ -254,12 +254,15 @@ void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int
 
 int hotSpotNavigation(HWND &curScintilla)
 {
+    int preserveSteps=0;
     // This is the part doing Hotspots tab navigation
+    
     ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
 	int spot=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"$[![");
 
 	if (spot>=0)
 	{
+        if (preserveSteps==0) ::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
         //::MessageBox(nppData._nppHandle, TEXT(">=0"), TEXT("Trace"), MB_OK);
 		int firstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
 		::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
@@ -330,7 +333,7 @@ int hotSpotNavigation(HWND &curScintilla)
             }
         }
         ::SendMessage(curScintilla,SCI_SETMAINSELECTION,0,0);
-
+        if (preserveSteps==0) ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
         return 1;
 	}
     //::MessageBox(nppData._nppHandle, TEXT("<0"), TEXT("Trace"), MB_OK);
