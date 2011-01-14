@@ -280,12 +280,21 @@ int hotSpotNavigation(HWND &curScintilla)
 		//::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos-4,0);
         *////////////////////////////////////////////////////////////////////////////////////////
         
+        ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos+4,0);
+		::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
+        
+        char hotSpotText[60];
+        ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&hotSpotText);
+        
         ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
 		::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos+3,0);
         
         char hotSpot[60];
         ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&hotSpot);
-        ::SendMessage(curScintilla,SCI_GOTOPOS,secondPos+3,0);
+        
+        ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)&hotSpotText);
+        
+        ::SendMessage(curScintilla,SCI_GOTOPOS,secondPos-4,0);
 
         int tempPos[60];
         int i=1;
@@ -298,6 +307,7 @@ int hotSpotNavigation(HWND &curScintilla)
             if (::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0)!=tempPos[i-1]+1)
             {
                 tempPos[i] = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+                ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)&hotSpotText);
                 ::SendMessage(curScintilla,SCI_GOTOPOS,tempPos[i]+1,0);
                 i++;
             } else
@@ -310,11 +320,11 @@ int hotSpotNavigation(HWND &curScintilla)
         //::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
 		//::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"]!]");
 		//int secondPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-        ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos+3);
+        ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos-4);
         i=1;
         do
         {
-            ::SendMessage(curScintilla,SCI_ADDSELECTION,tempPos[i],tempPos[i]+(secondPos+3-firstPos));
+            ::SendMessage(curScintilla,SCI_ADDSELECTION,tempPos[i],tempPos[i]+(secondPos-firstPos-4));
             i++;
         } while (tempPos[i]!=-1);
 
