@@ -279,21 +279,21 @@ int hotSpotNavigation(HWND &curScintilla)
         ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos+4,secondPos);
         //::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos+4,0);
 		//::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
-        int selectionLength;
+        //int selectionLength;
 
-        selectionLength = ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, NULL);
-        char *hotSpotText = new char[selectionLength + 1];
-        //::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(hotSpotText));
-        ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)hotSpotText);
+        //selectionLength = ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, NULL);
+        char *hotSpotText = new char[secondPos - (firstPos + 4) + 1];
+        ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(hotSpotText));
+        //::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)hotSpotText);
         //char hotSpotText[100];
         //::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&hotSpotText);
 
         ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos+3);
         
-        selectionLength = ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, NULL);
-        char *hotSpot = new char[selectionLength + 1];
-        //::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(hotSpot));
-        ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)hotSpot);
+        //selectionLength = ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, NULL);
+        char *hotSpot = new char[secondPos+3 - firstPos + 1];
+        ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(hotSpot));
+        //::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)hotSpot);
         //char hotSpot[100];
         //::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&hotSpot);
 
