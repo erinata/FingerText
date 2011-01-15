@@ -115,7 +115,7 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //    delete [] w;
 //}
 
-int findFolderTag(TCHAR tagPath[20], char tag[60], std::ifstream &file,TCHAR path[MAX_PATH])
+int findFolderTag(TCHAR tagPath[40], char tag[60], std::ifstream &file,TCHAR path[MAX_PATH])
 {
     int folderFound=static_cast<int>(::SetCurrentDirectory(tagPath));
     if (folderFound<=0)
@@ -199,37 +199,44 @@ void fingerText()
                 ::wcscat(path,L"\\plugins\\FingerText\\");
                 ::SetCurrentDirectory(path);
 
-                //
-                //TCHAR namePart[30];
-                //::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)namePart);
-                //
-                //TCHAR fileName[40]=L"(snippet)";
-                //::wcscat(fileName,namePart);
+                
+                TCHAR namePart[30];
+                ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)namePart);
+                
+                TCHAR fileName[40]=L"(snippet)";
+                ::wcscat(fileName,namePart);
 
-                TCHAR extPart[10];
+                TCHAR extPart[30];
                 ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)extPart);
     
-                TCHAR langName[20]=L"(snippet)";
+                TCHAR langName[40]=L"(snippet)";
                 ::wcscat(langName,extPart);
 
                 std::ifstream file;
 
-
-                tagFound=findFolderTag(langName,tag,file,path);
+                tagFound=findFolderTag(fileName,tag,file,path);
                 if (tagFound==1)
                 {
                     replaceTag(curScintilla, file, posCurrent,posBeforeTag);
                 } else
                 {
-                    tagFound=findFolderTag(L"(snippet).global",tag,file,path);
+                    tagFound=findFolderTag(langName,tag,file,path);
                     if (tagFound==1)
                     {
                         replaceTag(curScintilla, file, posCurrent,posBeforeTag);
                     } else
                     {
-                        tagFound=0;
+                        tagFound=findFolderTag(L"(snippet)Global",tag,file,path);
+                        if (tagFound==1)
+                        {
+                            replaceTag(curScintilla, file, posCurrent,posBeforeTag);
+                        } else
+                        {
+                            tagFound=0;
+                        }
                     }
                 }
+
 
 
                 // return to the original path 
