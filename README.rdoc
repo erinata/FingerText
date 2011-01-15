@@ -12,7 +12,7 @@ Again this is alpha version and I am still experimenting different methods. So d
 
 == Install
 
-Download the file "FingerText - 0.3.1.zip"
+Download the file "FingerText - 0.3.2.zip" at https://github.com/downloads/erinata/FingerText/FingerText%20-%200.3.2.zip
 
 Unzip the package and copy the files in the plugins folder of the zip file into the plugins folder of Notepad++.
 
