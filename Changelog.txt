@@ -1,5 +1,5 @@
-current development version:
-
+0.3.1
+Add more details in usage description.
 edit some typo in sample template
 refactor the tag path part
 fixed possible bug of char array manipulation
