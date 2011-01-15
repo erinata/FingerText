@@ -180,26 +180,25 @@ void fingerText()
                 ::SetCurrentDirectory(path);
 
                 std::ifstream file;
-                
-                TCHAR namePart[30];
-                TCHAR fileName[40]=L"(snippet)";
-                
-                ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)namePart);
-                ::wcscat(fileName,namePart);
+   
+                TCHAR tagType[30];
+                TCHAR tagPath[40];
 
-                TCHAR extPart[30];
-                TCHAR langName[40]=L"(snippet)";
+                ::swprintf(tagPath,L"(snippet)");
+                ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)tagType);
+                ::wcscat(tagPath,tagType);
 
-                ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)extPart);
-                ::wcscat(langName,extPart);
 
-                tagFound=findFolderTag(fileName,tag,file,path);
+                tagFound=findFolderTag(tagPath,tag,file,path);
                 if (tagFound==1)
                 {
                     replaceTag(curScintilla, file, posCurrent,posBeforeTag);
                 } else
                 {
-                    tagFound=findFolderTag(langName,tag,file,path);
+                    ::swprintf(tagPath,L"(snippet)");
+                    ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)tagType);
+                    ::wcscat(tagPath,tagType);
+                    tagFound=findFolderTag(tagPath,tag,file,path);
                     if (tagFound==1)
                     {
                         replaceTag(curScintilla, file, posCurrent,posBeforeTag);
