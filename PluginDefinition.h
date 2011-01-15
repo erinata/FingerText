@@ -80,7 +80,7 @@ void fingerText();
 HWND getCurrentScintilla();
 void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
 int hotSpotNavigation(HWND &curScintilla);
-int replaceTag(HWND &curScintilla, std::ifstream &file, int &posCurrent, int &posBeforeTag);
+bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBeforeTag);
 int findFolderTag(TCHAR tagPath[40], char tag[60], std::ifstream &file,TCHAR path[MAX_PATH]);
 
 

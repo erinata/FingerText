@@ -21,6 +21,8 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+#include <tchar.h>
+
 #include "PluginDefinition.h"
 #include "menuCmdID.h"
 //
@@ -115,6 +117,76 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //    delete [] w;
 //}
 
+/** buffer gets allocated in this function (if return != 0). 
+ *  Resposibility of the caller to free it
+ *  returns 0 if tag not found (buffer in this case not allocated)
+ */
+int getCurrentTag(HWND curScintilla, int posCurrent, char** buffer)
+{
+	int retVal = 0;
+	int posBeforeTag = static_cast<int>(::SendMessage(curScintilla,	SCI_WORDSTARTPOSITION, posCurrent, 1));
+    
+            
+    if (posCurrent - posBeforeTag < 100) // Max tag length 100
+    {
+        *buffer = new char[posCurrent - posBeforeTag + 1];
+		Sci_TextRange range;
+		range.chrg.cpMin = posBeforeTag;
+		range.chrg.cpMax = posCurrent;
+		range.lpstrText = *buffer;
+
+	    ::SendMessage(curScintilla, SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
+		retVal = posCurrent - posBeforeTag;
+	}
+
+	return retVal;
+}
+
+
+char* findTag(char *tag, TCHAR *fileType = NULL)
+{
+	char* snip = NULL;
+	TCHAR curPath[MAX_PATH];
+    ::GetCurrentDirectory(MAX_PATH,(LPTSTR)curPath);
+    
+    TCHAR path[MAX_PATH];
+    ::SendMessage(nppData._nppHandle, NPPM_GETNPPDIRECTORY, (WPARAM)MAX_PATH, (LPARAM)path);
+                                
+    ::wcscat(path,L"\\plugins\\FingerText\\");
+    ::SetCurrentDirectory(path);
+
+   
+    TCHAR tagType[MAX_PATH];
+    TCHAR tagPath[MAX_PATH];
+
+    ::swprintf(tagPath,L"(snippet)");
+
+	if (fileType == NULL)
+	{
+		::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)tagType);
+		::wcscat(tagPath, tagType);
+	}
+	else
+	{
+		_tcscat(tagPath, fileType);
+	}
+
+	std::ifstream file;
+	if (findFolderTag(tagPath,tag,file,path))
+	{
+		int sniplength;
+
+		file.seekg(0, std::ios::end);
+		sniplength = file.tellg();
+		file.seekg(0, std::ios::beg);
+		snip = new char[sniplength + 1];
+        file.read(snip, sniplength);
+		snip[sniplength] = '\0';
+        file.close();
+	}
+
+	return snip;
+}
 
 
 void fingerText()
@@ -129,7 +201,7 @@ void fingerText()
         ::SendMessage(curScintilla,SCI_TAB,0,0);	
     } else
     {
-        int tagFound = 0;
+        bool tagFound = false;
 
         int posBeforeTag=0;
     
@@ -142,19 +214,11 @@ void fingerText()
             //::MessageBox(nppData._nppHandle, TEXT("selection"), TEXT("Trace"), MB_OK);
         } else
         {
-            ::SendMessage(curScintilla,SCI_WORDLEFTEXTEND,0,0);
-            posBeforeTag= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
             
-            if (posCurrent-posBeforeTag>40)
-            {
-                //::MessageBox(nppData._nppHandle, TEXT("long tag"), TEXT("Trace"), MB_OK); 
-                // Still contain some issues like if we tab on a position where there are a lot of tab spaces before that,
-                // those tabs spaces will be reduced for no reason.
-            } else
-            {
-                char tag[60];
-	            ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&tag);
-
+			char *tag;
+			int tagLength = getCurrentTag(curScintilla, posCurrent, &tag);
+            if (tagLength != 0)
+			{
                 //::MessageBox(nppData._nppHandle, (LPCWSTR)tag, TEXT("Trace"), MB_OK);
                 // Here the tag is got assuming the document is in ANSI, if the document is in UTF-8,
                 // chinese character tag is not loaded
@@ -162,70 +226,50 @@ void fingerText()
                 {
                     //::MessageBox(nppData._nppHandle, TEXT("65001"), TEXT("Trace"), MB_OK);
                     //convertEncoding(tag,CP_UTF8,CP_ACP);
-                    WCHAR *w=new WCHAR[120];
-                    MultiByteToWideChar(CP_UTF8, 0, tag, -1, w, 120); 
-                    WideCharToMultiByte(CP_ACP, 0, w, -1, tag, 120, 0, 0); 
+                    WCHAR *w=new WCHAR[tagLength + 1];
+                    MultiByteToWideChar(CP_UTF8, 0, tag, -1, w, tagLength); 
+                    WideCharToMultiByte(CP_ACP, 0, w, -1, tag, tagLength, 0, 0); 
                     delete [] w;
                 }
 
-  
-                TCHAR curPath[MAX_PATH];
-                ::GetCurrentDirectory(MAX_PATH,(LPTSTR)curPath);
-    
-                TCHAR path[MAX_PATH];
-                ::SendMessage(nppData._nppHandle, NPPM_GETNPPDIRECTORY, (WPARAM)MAX_PATH, (LPARAM)path);
-                                
-                ::wcscat(path,L"\\plugins\\FingerText\\");
-                ::SetCurrentDirectory(path);
 
-                std::ifstream file;
-   
-                TCHAR tagType[30];
-                TCHAR tagPath[40];
-
-                ::swprintf(tagPath,L"(snippet)");
-                ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)tagType);
-                ::wcscat(tagPath,tagType);
-
-
-                tagFound=findFolderTag(tagPath,tag,file,path);
-                if (tagFound==1)
+				char *expanded = findTag(tag);
+				if (expanded)
                 {
-                    replaceTag(curScintilla, file, posCurrent,posBeforeTag);
-                } else
+                    replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
+					tagFound = true;
+					delete [] expanded;
+                } 
+				else
                 {
-                    ::swprintf(tagPath,L"(snippet)");
-                    ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)tagType);
-                    ::wcscat(tagPath,tagType);
-                    tagFound=findFolderTag(tagPath,tag,file,path);
-                    if (tagFound==1)
+                    expanded = findTag(tag, TEXT("Global"));
+                    if (expanded)
                     {
-                        replaceTag(curScintilla, file, posCurrent,posBeforeTag);
-                    } else
-                    {
-                        tagFound=findFolderTag(L"(snippet)Global",tag,file,path);
-                        if (tagFound==1)
-                        {
-                            replaceTag(curScintilla, file, posCurrent,posBeforeTag);
-                        } else
-                        {
-                            tagFound=0;
-                        }
-                    }
+                        replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
+						tagFound = true;
+						delete [] expanded;
+                    } 
+                    
                 }
 
+				delete [] tag;
                 // return to the original path 
-                ::SetCurrentDirectory(curPath);
+               // ::SetCurrentDirectory(curPath);
             }
 
 
             // return to the original position 
-            ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
+			// Don't need to do that anymore - we don't change the position
+            //::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
         }
         	  
-        int spotFound = hotSpotNavigation(curScintilla);
+        bool spotFound = hotSpotNavigation(curScintilla);
 
-        if ((spotFound==0) && (tagFound == 0)) restoreTab(curScintilla, posCurrent, posSelectionStart, posSelectionEnd);
+        if ((spotFound == false) && (tagFound == false)) 
+		{
+			restoreTab(curScintilla, posCurrent, posSelectionStart, posSelectionEnd);
+		}
+
     } 
 
 }
@@ -354,32 +398,16 @@ int hotSpotNavigation(HWND &curScintilla)
 }
 
 
-int replaceTag(HWND &curScintilla, std::ifstream &file, int &posCurrent, int &posBeforeTag)
+bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBeforeTag)
 {
-    int preserveSteps=0;
+    int preserveSteps=1;
     //::MessageBox(nppData._nppHandle, TEXT("replace tag"), TEXT("Trace"), MB_OK); 
     //std::streamoff sniplength;
-    int sniplength;
-
-    file.seekg(0, std::ios::end);
-    sniplength = file.tellg();
-    file.seekg(0, std::ios::beg);
-
-    if (sniplength<=1)
-    {
-        //::MessageBox(nppData._nppHandle, TEXT("no text"), TEXT("Trace"), MB_OK); 
-        return 0;
-    } else
-    {
-        //::MessageBox(nppData._nppHandle, TEXT("contain text"), TEXT("Trace"), MB_OK); 
-        char* snip = new char[sniplength*2];
     
-        file.read(snip,sniplength);
-        file.close();
+    if (preserveSteps==0) 
+		::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
 
-        if (preserveSteps==0) ::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
-
-        ::SendMessage(curScintilla, SCI_INSERTTEXT, posCurrent, (LPARAM)"_____________________________`[SnippetInserting]");
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, posCurrent, (LPARAM)"_____________________________`[SnippetInserting]");
 
   
         // Failed attempt to cater unicode snippets
@@ -395,13 +423,16 @@ int replaceTag(HWND &curScintilla, std::ifstream &file, int &posCurrent, int &po
         if (::SendMessage(curScintilla,SCI_GETCODEPAGE,0,0)==65001)
         {
             //::MessageBox(nppData._nppHandle, TEXT("65001"), TEXT("Trace"), MB_OK);
-            WCHAR *w=new WCHAR[sniplength*2];
-            MultiByteToWideChar(CP_ACP, 0, snip, -1, w, sniplength*2); // ANSI to UNICODE
-            WideCharToMultiByte(CP_UTF8, 0, w, -1, snip, sniplength*2, 0, 0); // UNICODE to UTF-8
+			int snipLength = strlen(expanded);
+            WCHAR *w=new WCHAR[snipLength + 1];
+            MultiByteToWideChar(CP_ACP, 0, expanded, -1, w, snipLength); // ANSI to UNICODE
+            WideCharToMultiByte(CP_UTF8, 0, w, -1, expanded, snipLength, 0, 0); // UNICODE to UTF-8
             delete [] w;
         }
   
-        ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)snip);
+		::SendMessage(curScintilla, SCI_SETTARGETSTART, posBeforeTag, 0);
+		::SendMessage(curScintilla, SCI_SETTARGETEND, posCurrent, 0);
+        ::SendMessage(curScintilla, SCI_REPLACETARGET, strlen(expanded), reinterpret_cast<LPARAM>(expanded));
       
         ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
         ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"`[SnippetInserting]");
@@ -418,26 +449,33 @@ int replaceTag(HWND &curScintilla, std::ifstream &file, int &posCurrent, int &po
         //::SendMessage(curScintilla, SCI_SETSELECTIONEND, posEndOfInsertedText,(LPARAM)true);
 
         ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
-          
-        delete [] snip; 
+		::SendMessage(curScintilla, SCI_GOTOPOS, posCurrent, 0);
         // This cause problem when we trigger a long snippet and then a short snippet
         // The problem is solved after using a better way to search for [>END<]
-        if (preserveSteps==0) ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
-        return 1;
-    }
+        if (preserveSteps==0) 
+		{
+			::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
+		}
+        return true;
 }
 
 
-int findFolderTag(TCHAR tagPath[40], char tag[60], std::ifstream &file,TCHAR path[MAX_PATH])
+
+int findFolderTag(TCHAR *tagPath, char *tag, std::ifstream &file,TCHAR *path)
 {
-    int folderFound=static_cast<int>(::SetCurrentDirectory(tagPath));
-    if (folderFound<=0)
+
+    int folderFound=static_cast<int>(::SetCurrentDirectory(path));
+	
+	if (folderFound > 0)
+		folderFound = static_cast<int>(::SetCurrentDirectory(tagPath));
+    
+	if (folderFound <= 0)
     {
         return 0;
     }
     else
     {
-        file.open(tag);
+        file.open(tag, std::ios::binary);
         if (file.is_open())
         {
             return 1;
