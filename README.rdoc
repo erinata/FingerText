@@ -114,7 +114,6 @@ First Alpha verison. Implemented basic tab trigger snippet and hotspot navigatio
 
 - Notepad++ 3.8.6(Unicode), Windows 7 Ultimate 64bit 
 
-
 == License
 
 This plugin is built using the NppPluginTemplate provided by Don Ho. The license of the template is included in the source.
