@@ -19,6 +19,24 @@ Unzip the package and copy the files into the plugins folder of Notepad++.
 == Change log 
 (for full change log please refer to the CHANGELOG file in the repository)
 
+0.3.0
+Implemented Snippet set for specific file name.
+The priority is FileName>Ext>Global
+performance improvement to path search
+
+0.2.6
+Multiple hotspot selection and hotspot hint text replacement works simultaneously
+
+0.2.5
+Add Multiple hotspot selection.
+hotspot hint text replacement disabled temporarily.
+
+0.2.4
+Change in tab navigation behaviour. The hotspot will be replaced by the hint text when using tab navigation
+
+0.2.3
+Add support for chinese character tag name. Can be triggered from either ANSI or Utf-8 document (But chinese name mess up the word selection in the editor so it may not trigger correctly under ANSI document. So English tag names are encouraged.)
+
 0.2.2
 Add Readme and License
 Add basic c++ sample snippets
@@ -26,7 +44,6 @@ fixed tag longer than snippet problem
 fixed the limited row size problem
 Turn on the undo step squash function which is accidentally turned off in previous version
 Lots of performance improvement changes
-
 
 0.2.0
 Support utf-8 encoding. (All snippets are assumed to be in ANSI, and will be converted if current page is utf-8)
