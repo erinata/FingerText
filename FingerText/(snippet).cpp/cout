@@ -1,1 +1,1 @@
-cout << "$[![Text]!]" << endl;[>END<]
+cout << "$[![[Text]]!]" << endl;[>END<]

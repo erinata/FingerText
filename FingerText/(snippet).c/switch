@@ -1,0 +1,8 @@
+switch ($[![Key]!]) 
+{
+  	case $[![Value]!]:
+		    $[![Body]!]
+		    break;
+	  default:
+		    break;
+}[>END<]
