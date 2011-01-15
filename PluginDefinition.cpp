@@ -25,6 +25,7 @@
 
 #include "PluginDefinition.h"
 #include "menuCmdID.h"
+#include "sqlite3.h"
 //
 // The plugin data that Notepad++ needs
 //
@@ -35,13 +36,14 @@ FuncItem funcItem[nbFunc];
 //
 NppData nppData;
 
-
+sqlite3 *g_db;
+bool     g_dbOpen;
 //
 // Initialize your plugin data here
 // It will be called while plugin loading   
 void pluginInit(HANDLE hModule)
 {
-
+	
 }
 
 //
@@ -74,6 +76,8 @@ void commandMenuInit()
 	shKey->_key = VK_TAB;
     
     setCommand(0, TEXT("Trigger FingerText"), fingerText, shKey, false);
+
+	openDatabase();
 }
 
 //
@@ -117,10 +121,41 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //    delete [] w;
 //}
 
+void pluginShutdown()
+{
+	if (g_dbOpen)
+	{
+		sqlite3_close(g_db);
+		g_dbOpen = false;
+	}
+}
+
 /** buffer gets allocated in this function (if return != 0). 
  *  Resposibility of the caller to free it
  *  returns 0 if tag not found (buffer in this case not allocated)
  */
+
+void openDatabase()
+{
+	TCHAR path[MAX_PATH];
+	char *cpath;
+	::SendMessage(nppData._nppHandle, NPPM_GETNPPDIRECTORY, MAX_PATH, reinterpret_cast<LPARAM>(path));
+	int multibyteLength = WideCharToMultiByte(CP_UTF8, 0, path, -1, NULL, 0, 0, 0);
+	cpath = new char[multibyteLength + 50];
+	WideCharToMultiByte(CP_UTF8, 0, path, -1, cpath, multibyteLength, 0, 0);
+	strcat(cpath, "\\plugins\\FingerText\\snippets.db3");
+	int rc = sqlite3_open(cpath, &g_db);
+	if (rc)
+	{
+		g_dbOpen = false;
+		MessageBox(nppData._nppHandle, _T("Cannot find or open snippets.db3 in FingerText directory under plugins"), _T("FingerText plugin"), MB_ICONERROR);
+	}
+	else
+	{
+		g_dbOpen = true;
+	}
+}
+
 int getCurrentTag(HWND curScintilla, int posCurrent, char** buffer)
 {
 	int retVal = 0;
@@ -188,6 +223,59 @@ char* findTag(char *tag, TCHAR *fileType = NULL)
 	return snip;
 }
 
+void convertToUTF8(TCHAR *orig, char **utf8)
+{
+	int multibyteLength = WideCharToMultiByte(CP_UTF8, 0, orig, -1, NULL, 0, 0, 0);
+	*utf8 = new char[multibyteLength + 1];
+	WideCharToMultiByte(CP_UTF8, 0, orig, -1, *utf8, multibyteLength, 0, 0);
+}
+
+
+
+char *findTagSQLite(char *tag, TCHAR *fileType = NULL)
+{
+	char *expanded = NULL;
+	sqlite3_stmt *stmt;
+
+
+	// First create the SQLite SQL statement ("prepare" it for running)
+	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+	{
+		char *tagType = NULL;
+
+		if (fileType == NULL)
+		{
+			fileType = new TCHAR[MAX_PATH];
+			::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
+			convertToUTF8(fileType, &tagType);
+			delete [] fileType;
+		}
+		else
+		{
+			convertToUTF8(fileType, &tagType);
+		}
+		
+		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
+		sqlite3_bind_text(stmt, 1, tagType, -1, SQLITE_STATIC);
+		sqlite3_bind_text(stmt, 2, tag, -1, SQLITE_STATIC);
+
+		// Run the query with sqlite3_step
+		if(SQLITE_ROW == sqlite3_step(stmt))
+		{
+			const char* expandedSQL = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
+			expanded = new char[strlen(expandedSQL) + 1];
+			strcpy(expanded, expandedSQL);
+		}
+		// Close the SQLite statement, as we don't need it anymore
+		// This also has the affect of free'ing the result from sqlite3_column_text 
+		// (i.e. in our case, expandedSQL)
+		sqlite3_finalize(stmt);
+
+		
+	}
+
+	return expanded;
+}
 
 void fingerText()
 {
@@ -233,7 +321,7 @@ void fingerText()
                 }
 
 
-				char *expanded = findTag(tag);
+				char *expanded = findTagSQLite(tag);
 				if (expanded)
                 {
                     replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
@@ -242,7 +330,7 @@ void fingerText()
                 } 
 				else
                 {
-                    expanded = findTag(tag, TEXT("Global"));
+                    expanded = findTagSQLite(tag, TEXT("Global"));
                     if (expanded)
                     {
                         replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
