@@ -252,8 +252,9 @@ void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int
 {
     // restoring the original tab action
     ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
-    ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,posSelectionStart,0);
-    ::SendMessage(curScintilla,SCI_SETSELECTIONEND,posSelectionEnd,0);
+    ::SendMessage(curScintilla,SCI_SETSELECTION,posSelectionStart,posSelectionEnd);
+    //::SendMessage(curScintilla,SCI_SETSELECTIONSTART,posSelectionStart,0);
+    //::SendMessage(curScintilla,SCI_SETSELECTIONEND,posSelectionEnd,0);
     ::SendMessage(curScintilla,SCI_TAB,0,0);	
 }
 
@@ -276,13 +277,16 @@ int hotSpotNavigation(HWND &curScintilla)
 		::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"]!]");
 		int secondPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
 
-        ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos+4,0);
-		::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
+        ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos+4,secondPos);
+        //::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos+4,0);
+		//::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
         
         char hotSpotText[100];
         ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&hotSpotText);
-        ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
-		::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos+3,0);
+
+        ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos+3);
+        //::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
+		//::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos+3,0);
         
         char hotSpot[100];
         ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&hotSpot);
@@ -399,8 +403,10 @@ int replaceTag(HWND &curScintilla, std::ifstream &file, int &posCurrent, int &po
         ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"[>END<]");
         int posEndOfSnippet= ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
         
-        ::SendMessage(curScintilla, SCI_SETSELECTIONSTART, posEndOfSnippet,(LPARAM)true);
-        ::SendMessage(curScintilla, SCI_SETSELECTIONEND, posEndOfInsertedText,(LPARAM)true);
+        
+        ::SendMessage(curScintilla,SCI_SETSELECTION,posEndOfSnippet,posEndOfInsertedText);
+        //::SendMessage(curScintilla, SCI_SETSELECTIONSTART, posEndOfSnippet,(LPARAM)true);
+        //::SendMessage(curScintilla, SCI_SETSELECTIONEND, posEndOfInsertedText,(LPARAM)true);
 
         ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
           

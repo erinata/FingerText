@@ -1,7 +1,9 @@
 current development version:
+
 edit some typo in sample template
 refactor the tag path part
 fixed possible bug of char array manipulation
+allow for more hotspots
 
 0.3.0
 Implemented Snippet set for specific file name.
