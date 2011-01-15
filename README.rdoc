@@ -4,15 +4,15 @@ Tab triggered snippet plugin for Notepad++.
 
 == Description
 
-Tab triggered snippet plugin for Notepad++. Support global snippets and snippets for each file extension or file name, hotspot navigation, hotspot text hint(instead of just a $ or # sign) and hotspot default value. You can add comment to you snippets. 
+Tab triggered snippet plugin for Notepad++. Support global snippets and snippets for each file extension or file name, hotspot navigation, hotspot text hint(instead of just a $ or # sign) and hotspot default value. Comments can be added to snippets. 
 
-This plugin is still in Alpha (or may be pre-alpha.....) stage so do expect that it is buggy. The development direction is to be at least a working snippet plugin,  and probably a tab triggered simple command plugin, turn the editor into a convenient console and finally add some ruby scripting support.
+This plugin is still in Alpha (or may be pre-alpha.....) stage so do expect that it is buggy. The development direction is to make it at least a working snippet plugin, and probably a tab triggered simple command plugin, a convenient console in the editor and finally snippet with ruby scripting support.
 
-Again this is alpha and I am still experimenting different methods. So do expect api changes which is not compatible with current version.
+Again this is alpha version and I am still experimenting different methods. So do expect non-backward compatible changes in future releases.
 
 == Install
 
-Download the file FingerText - 0.3.1.zip
+Download the file "FingerText - 0.3.1.zip"
 
 Unzip the package and copy the files in the plugins folder of the zip file into the plugins folder of Notepad++.
 
@@ -40,7 +40,7 @@ Some snippets contain hotspots. For example, open a new file and trigger the sni
 
   mit[tab]
 
-A sample of mit license. Your cursor is currently at the "year" spot. And you can type in the year (say 2011) and hit [tab] again. The cursor is now on the name spot and you can enter the name.
+A sample of mit license will appear in the editor. Your cursor is currently at the "year" spot. And you can type in the year (say 2011) and hit [tab] again. The cursor is now on the name spot and you can enter the name.
 
 Some of them contain multiple hotspot with the same name. For example you can trigger the snippet "awesome". Your cursor is on all three spots and anything you type will change all of them simultaneously. 
 
@@ -48,15 +48,15 @@ To see all the available snippets. Go to the the plugin folder of Notepad++, go 
 
 All the snippets are arranged in different folders. The folder "(Snippet)Global" contain snippets that is available everywhere.
 
-To make your own snippet, just use the existing snippets as reference. Remember each file contain one snippet. The folder name indicates the scope and the file name indicates the tag. Just type whatever you like in the snippet file. And REMEMBER to place a [>END<] at the end of each snippet. Also, make sure that you encode your snippet file in ANSI. (The snippet can be triggered in ANSI or UTF-8 file though)
+To make your own snippet, just use the existing snippets as reference. Remember each file contains one snippet. The folder name indicates the scope and the file name indicates the tag. Just type whatever you like in the snippet file. REMEMBER to place a [>END<] at the end of each snippet. Also, make sure that you encode your snippet file in ANSI. (The snippet can be triggered in ANSI or UTF-8 file though)
 
-Any thing after the [>END<] string will not be inserted so you can write some comment about your snippet here.
+Any thing after the [>END<] will not be inserted as snippet so you can write some comment about your snippet there.
 
-Hotspots are indicated by $[![Whatever name]!]. Hotspots will the same name will be highlighted at the same time.
+Hotspots are indicated by $[![Whatever name]!]. Hotspots with the same name will be highlighted at the same time.
 
 Again this is alpha so I don't know if I will change these things in the future or not. And there are some sample snippet for C and C++.
 
-Chinese characters are supported in snippets. You can try it by triggering the snippet "chinese" (Still all snippets should be encoded in ANSI, and can be triggered in ANSI or UTF-8)  However, Chinese character tags are not supported. Actually sometimes it works sometimes it doesn't so it is not officially supported. 
+Chinese characters are supported in snippets. You can try it by triggering the snippet "chinese". All snippets should be encoded in ANSI, and can be triggered in ANSI or UTF-8.  However, Chinese character tag name are not supported. Actually sometimes it works sometimes it doesn't so it is not officially supported. 
 
 == Change log 
 (for full change log please refer to the CHANGELOG file in the repository)
@@ -107,7 +107,7 @@ Emulate tab behaviour when no tag match or selection is rectangle.
 Snippet insertion recorded as one single undo step.
 
 0.1.0 
-First Alpha verison. Implemented basic tab trigger snippet and hotspot navigation
+First Alpha verison. Implemented basic tab trigger snippets and hotspots navigation
 
  
 == Tested with
