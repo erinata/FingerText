@@ -65,6 +65,7 @@ void commandMenuInit()
     //            ShortcutKey *shortcut,          // optional. Define a shortcut to trigger this command
     //            bool check0nInit                // optional. Make this menu item be checked visually
     //            );
+
     ShortcutKey *shKey = new ShortcutKey;
 	shKey->_isAlt = false;
 	shKey->_isCtrl = false;
@@ -72,6 +73,16 @@ void commandMenuInit()
 	shKey->_key = VK_TAB;
     
     setCommand(0, TEXT("Trigger FingerText"), fingerText, shKey, false);
+
+    //ShortcutKey *shKey2 = new ShortcutKey;
+	//shKey2->_isAlt = false;
+	//shKey2->_isCtrl = false;
+	//shKey2->_isShift = false;
+	//shKey2->_key = VK_RETURN;
+    //
+    //setCommand(1, TEXT("Testing"), testing, shKey2, false);
+    setCommand(1, TEXT("Testing"), testing, NULL, false);
+    
 }
 
 //
@@ -447,4 +458,13 @@ int findFolderTag(TCHAR tagPath[40], char tag[60], std::ifstream &file,TCHAR pat
             return 0;
         }
     }
+}
+
+
+void testing()
+{
+    HWND curScintilla = getCurrentScintilla();
+    ::MessageBox(nppData._nppHandle, TEXT("ENTER!!"), TEXT("Trace"), MB_OK);
+    ::SendMessage(curScintilla,SCI_NEWLINE,0,0);
+
 }

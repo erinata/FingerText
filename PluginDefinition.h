@@ -42,7 +42,7 @@ const TCHAR NPP_PLUGIN_NAME[] = TEXT("FingerText");
 //
 // Here define the number of your plugin commands
 //
-const int nbFunc = 1;
+const int nbFunc = 2;
 
 
 //
@@ -82,6 +82,6 @@ void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int
 int hotSpotNavigation(HWND &curScintilla);
 int replaceTag(HWND &curScintilla, std::ifstream &file, int &posCurrent, int &posBeforeTag);
 int findFolderTag(TCHAR tagPath[40], char tag[60], std::ifstream &file,TCHAR path[MAX_PATH]);
-
+void testing();
 
 #endif //PLUGINDEFINITION_H
