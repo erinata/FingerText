@@ -1,3 +1,6 @@
+0.3.2
+Fixed the problem of long Hotspot name
+
 0.3.1
 Add more details in usage description.
 edit some typo in sample template

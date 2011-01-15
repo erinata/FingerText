@@ -52,7 +52,7 @@ To make your own snippet, just use the existing snippets as reference. Remember 
 
 Any thing after the [>END<] will not be inserted as snippet so you can write some comment about your snippet there.
 
-Hotspots are indicated by $[![Whatever name]!]. Hotspots with the same name will be highlighted at the same time.
+Hotspots are indicated by $[![Whatever name]!]. Hotspots with the same name will be highlighted at the same time. The "Whatever name" can be a hint of the hotspot, or you can fill is with a default value. (If you type nothing and just hit tab, the hotspot $[![Whatever name]!] will be substituted by the string "Whatever name"(without quotes))
 
 Again this is alpha so I don't know if I will change these things in the future or not. And there are some sample snippet for C and C++.
 
@@ -60,6 +60,9 @@ Chinese characters are supported in snippets. You can try it by triggering the s
 
 == Change log 
 (for full change log please refer to the CHANGELOG file in the repository)
+
+0.3.2
+Fixed the problem of long Hotspot name
 
 0.3.1
 Add more details in usage description.
@@ -70,7 +73,7 @@ allow for more hotspots
 
 0.3.0
 Implemented Snippet set for specific file name.
-The priority is FileName>Ext>Global
+The priority is FileName > Ext > Global
 performance improvement to path search
 
 0.2.6
