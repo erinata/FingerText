@@ -1,5 +1,10 @@
 current development version:
 
+0.3.0
+Implemented Snippet set for specific file name.
+The priority is FileName>Ext>Global
+performance improvement to path search
+
 0.2.7
 replace multiple identical hotspots in one undo steps
 

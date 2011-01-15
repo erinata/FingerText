@@ -115,26 +115,6 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //    delete [] w;
 //}
 
-int findFolderTag(TCHAR tagPath[40], char tag[60], std::ifstream &file,TCHAR path[MAX_PATH])
-{
-    int folderFound=static_cast<int>(::SetCurrentDirectory(tagPath));
-    if (folderFound<=0)
-    {
-        return 0;
-    }
-    else
-    {
-        file.open(tag);
-        if (file.is_open())
-        {
-            return 1;
-        } else
-        {
-            ::SetCurrentDirectory(path);
-            return 0;
-        }
-    }
-}
 
 
 void fingerText()
@@ -199,20 +179,19 @@ void fingerText()
                 ::wcscat(path,L"\\plugins\\FingerText\\");
                 ::SetCurrentDirectory(path);
 
+                std::ifstream file;
                 
                 TCHAR namePart[30];
-                ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)namePart);
-                
                 TCHAR fileName[40]=L"(snippet)";
+                
+                ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)namePart);
                 ::wcscat(fileName,namePart);
 
                 TCHAR extPart[30];
-                ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)extPart);
-    
                 TCHAR langName[40]=L"(snippet)";
-                ::wcscat(langName,extPart);
 
-                std::ifstream file;
+                ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)extPart);
+                ::wcscat(langName,extPart);
 
                 tagFound=findFolderTag(fileName,tag,file,path);
                 if (tagFound==1)
@@ -237,18 +216,9 @@ void fingerText()
                     }
                 }
 
-
-
                 // return to the original path 
                 ::SetCurrentDirectory(curPath);
             }
-
-
-
-
-
-
-
 
 
             // return to the original position 
@@ -444,3 +414,23 @@ int replaceTag(HWND &curScintilla, std::ifstream &file, int &posCurrent, int &po
 }
 
 
+int findFolderTag(TCHAR tagPath[40], char tag[60], std::ifstream &file,TCHAR path[MAX_PATH])
+{
+    int folderFound=static_cast<int>(::SetCurrentDirectory(tagPath));
+    if (folderFound<=0)
+    {
+        return 0;
+    }
+    else
+    {
+        file.open(tag);
+        if (file.is_open())
+        {
+            return 1;
+        } else
+        {
+            ::SetCurrentDirectory(path);
+            return 0;
+        }
+    }
+}
