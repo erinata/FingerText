@@ -279,22 +279,22 @@ int hotSpotNavigation(HWND &curScintilla)
         ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos+4,0);
 		::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
         
-        char hotSpotText[120];
+        char hotSpotText[100];
         ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&hotSpotText);
         ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos,0);
 		::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos+3,0);
         
-        char hotSpot[120];
+        char hotSpot[100];
         ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&hotSpot);
         ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)&hotSpotText);
         ::SendMessage(curScintilla,SCI_GOTOPOS,secondPos+3,0);
         
         int hotSpotFound=-1;
-        int tempPos[60];
+        int tempPos[100];
 
         int i=1;
 
-        for (i=1;i<=50;i++)
+        for (i=1;i<=90;i++)
         {
             tempPos[i]=0;
         
