@@ -12,6 +12,8 @@ Again this is alpha and I am still experimenting different methods. So do expect
 
 == Install
 
+Download the file FingerText - 0.3.1.zip
+
 Unzip the package and copy the files in the plugins folder of the zip file into the plugins folder of Notepad++.
 
 == Usage
