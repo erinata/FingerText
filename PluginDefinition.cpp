@@ -115,6 +115,26 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //    delete [] w;
 //}
 
+int findFolderTag(TCHAR tagPath[20], char tag[60], std::ifstream &file,TCHAR path[MAX_PATH])
+{
+    int folderFound=static_cast<int>(::SetCurrentDirectory(tagPath));
+    if (folderFound<=0)
+    {
+        return 0;
+    }
+    else
+    {
+        file.open(tag);
+        if (file.is_open())
+        {
+            return 1;
+        } else
+        {
+            ::SetCurrentDirectory(path);
+            return 0;
+        }
+    }
+}
 
 
 void fingerText()
@@ -168,6 +188,7 @@ void fingerText()
                     WideCharToMultiByte(CP_ACP, 0, w, -1, tag, 120, 0, 0); 
                     delete [] w;
                 }
+
   
                 TCHAR curPath[MAX_PATH];
                 ::GetCurrentDirectory(MAX_PATH,(LPTSTR)curPath);
@@ -191,34 +212,42 @@ void fingerText()
                 TCHAR langName[20]=L"(snippet)";
                 ::wcscat(langName,extPart);
 
-                int folderFound=static_cast<int>(::SetCurrentDirectory(langName));
-    
-                if (folderFound<=0) ::SetCurrentDirectory(L"(snippet).global");
-
                 std::ifstream file;
-                file.open(tag);
 
-                if (file.is_open())
+
+                tagFound=findFolderTag(langName,tag,file,path);
+                if (tagFound==1)
                 {
-                    tagFound = replaceTag(curScintilla, file, posCurrent,posBeforeTag);
-      
-                } else if(folderFound>0)
+                    replaceTag(curScintilla, file, posCurrent,posBeforeTag);
+                } else
                 {
-                    //::SetCurrentDirectory(L"..");
-                    ::SetCurrentDirectory(L"..\\(snippet).global");
-                    file.open(tag);
-                    if (file.is_open())
+                    tagFound=findFolderTag(L"(snippet).global",tag,file,path);
+                    if (tagFound==1)
                     {
-                        tagFound = replaceTag(curScintilla, file, posCurrent,posBeforeTag);
-                    } 
+                        replaceTag(curScintilla, file, posCurrent,posBeforeTag);
+                    } else
+                    {
+                        tagFound=0;
+                    }
                 }
+
+
                 // return to the original path 
                 ::SetCurrentDirectory(curPath);
             }
+
+
+
+
+
+
+
+
+
             // return to the original position 
             ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
         }
-	  
+        	  
         int spotFound = hotSpotNavigation(curScintilla);
 
         if ((spotFound==0) && (tagFound == 0)) restoreTab(curScintilla, posCurrent, posSelectionStart, posSelectionEnd);
