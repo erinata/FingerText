@@ -1,3 +1,9 @@
+0.3.4
+Fixing problem caused after merging (not preserving working folder, chinese snippet not working under UTF-8 document)
+
+0.3.3
+Merging the improvement by Dave Brotherstone.
+
 0.3.2
 Fixed the problem of long Hotspot name
 

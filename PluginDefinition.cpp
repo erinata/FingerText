@@ -179,7 +179,7 @@ char* findTag(char *tag, TCHAR *fileType = NULL)
 		file.seekg(0, std::ios::end);
 		sniplength = file.tellg();
 		file.seekg(0, std::ios::beg);
-		snip = new char[sniplength + 1];
+		snip = new char[sniplength*2 + 1];
         file.read(snip, sniplength);
 		snip[sniplength] = '\0';
         file.close();
@@ -402,7 +402,7 @@ int hotSpotNavigation(HWND &curScintilla)
 
 bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBeforeTag)
 {
-    int preserveSteps=1;
+    int preserveSteps=0;
     //::MessageBox(nppData._nppHandle, TEXT("replace tag"), TEXT("Trace"), MB_OK); 
     //std::streamoff sniplength;
     
@@ -426,9 +426,9 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
         {
             //::MessageBox(nppData._nppHandle, TEXT("65001"), TEXT("Trace"), MB_OK);
 			int snipLength = strlen(expanded);
-            WCHAR *w=new WCHAR[snipLength + 1];
-            MultiByteToWideChar(CP_ACP, 0, expanded, -1, w, snipLength); // ANSI to UNICODE
-            WideCharToMultiByte(CP_UTF8, 0, w, -1, expanded, snipLength, 0, 0); // UNICODE to UTF-8
+            WCHAR *w=new WCHAR[snipLength*2+1];
+            MultiByteToWideChar(CP_ACP, 0, expanded, -1, w, snipLength*2+1); // ANSI to UNICODE
+            WideCharToMultiByte(CP_UTF8, 0, w, -1, expanded, snipLength*2+1, 0, 0); // UNICODE to UTF-8
             delete [] w;
         }
   
