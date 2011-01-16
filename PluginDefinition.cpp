@@ -185,6 +185,8 @@ char* findTag(char *tag, TCHAR *fileType = NULL)
         file.close();
 	}
 
+    ::SetCurrentDirectory(curPath);
+
 	return snip;
 }
 
@@ -400,7 +402,7 @@ int hotSpotNavigation(HWND &curScintilla)
 
 bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBeforeTag)
 {
-    int preserveSteps=1;
+    int preserveSteps=0;
     //::MessageBox(nppData._nppHandle, TEXT("replace tag"), TEXT("Trace"), MB_OK); 
     //std::streamoff sniplength;
     
