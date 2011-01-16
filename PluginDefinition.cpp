@@ -278,10 +278,10 @@ void fingerTextTrigger(int triggerType)
 
 }
 
-int executeCommand(HWND &curScintilla,char tag[100])
+void executeCommand(HWND &curScintilla,char tag[100])
 {
     //char  result[300];
-    char  psBuffer[128];
+    char  psBuffer[999];
     FILE   *pPipe;
     int resultLength;
 
@@ -330,38 +330,48 @@ int executeCommand(HWND &curScintilla,char tag[100])
     //    ::sprintf(result,"%s%s",result,c);
     //} while (c != EOF);
     //
+    //char c;
+    //
+    //do 
+    //{
+    //  c = fgetc (pPipe);
+    //  ::SendMessage(curScintilla, SCI_ADDTEXT, 1, (LPARAM)c);
+    //} while (!feof(pPipe));
+
     int a;
     int b;
-
-    ::memset (psBuffer,'-',sizeof(psBuffer));
-    while(fgets(psBuffer, 128, pPipe))
+    
+    ::memset (psBuffer,0,sizeof(psBuffer));
+    while(fgets(psBuffer, 999, pPipe))
     {
-        //::sprintf(result,"%s%s",result,psBuffer);
-        a=::SendMessage(curScintilla, SCI_GETCURRENTPOS, 0,0);
-        ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
-        ::SendMessage(curScintilla, SCI_SEARCHPREV, 0, (LPARAM)"\n");
-        b=::SendMessage(curScintilla, SCI_GETCURRENTPOS, 0,0);
-        ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
-        ::SendMessage(curScintilla, SCI_SETSEL, b,a);
-        ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
-        ::SendMessage(curScintilla, SCI_NEWLINE, 0,0);
-        ::SendMessage(curScintilla, SCI_HOME, 0,0);
-        //::SendMessage(curScintilla, SCI_CHARRIGHT, 0,0);
-        //::SendMessage(curScintilla, SCI_ADDTEXT, 1, (LPARAM)"a");
+        
+        
+        //a=::SendMessage(curScintilla, SCI_GETCURRENTPOS, 0,0);
+        //::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
+        ////::SendMessage(curScintilla, SCI_SEARCHPREV, SCFIND_REGEXP, (LPARAM)"\x00");
+        //::SendMessage(curScintilla, SCI_SEARCHPREV, 0, (LPARAM)0);
+        //b=::SendMessage(curScintilla, SCI_GETCURRENTPOS, 0,0);
+        //::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
+        //::SendMessage(curScintilla, SCI_SETSEL, b,a);
+        //::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
+        //::SendMessage(curScintilla, SCI_NEWLINE, 0,0);
+        //::SendMessage(curScintilla, SCI_HOME, 0,0);
+        ////::SendMessage(curScintilla, SCI_CHARRIGHT, 0,0);
+        ////::SendMessage(curScintilla, SCI_ADDTEXT, 1, (LPARAM)"a");
         //
-        ::SendMessage(curScintilla, SCI_ADDTEXT, 128, (LPARAM)psBuffer);
-        ::memset (psBuffer,'-',sizeof(psBuffer));
-
+        ::SendMessage(curScintilla, SCI_REPLACESEL, 128, (LPARAM)psBuffer);
+        ::memset (psBuffer,0,sizeof(psBuffer));
+    
         //::SendMessage(curScintilla, SCI_ADDTEXT, 1, (LPARAM)"\n");
     }
-
-    a=::SendMessage(curScintilla, SCI_GETCURRENTPOS, 0,0);
-    ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
-    ::SendMessage(curScintilla, SCI_SEARCHPREV, 0, (LPARAM)"\n");
-    b=::SendMessage(curScintilla, SCI_GETCURRENTPOS, 0,0);
-    ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
-    ::SendMessage(curScintilla, SCI_SETSEL, b,a);
-    ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
+    
+    //a=::SendMessage(curScintilla, SCI_GETCURRENTPOS, 0,0);
+    //::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
+    //::SendMessage(curScintilla, SCI_SEARCHPREV, 0, (LPARAM)"\n");
+    //b=::SendMessage(curScintilla, SCI_GETCURRENTPOS, 0,0);
+    //::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
+    //::SendMessage(curScintilla, SCI_SETSEL, b,a);
+    //::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
     
     ////
     
@@ -373,24 +383,10 @@ int executeCommand(HWND &curScintilla,char tag[100])
     
     _pclose( pPipe );
     /* Close pipe and print return value of pPipe. */
-    //if (feof( pPipe))
-    //{
-    //  //printf( "\nProcess returned %d\n", _pclose( pPipe ) );
-    //  _pclose( pPipe );
-    //  ::MessageBox(nppData._nppHandle, TEXT("Process returned"), TEXT("Trace"), MB_OK);
-    //
-    //}
-    //else
-    //{
-    //  //printf( "Error: Failed to read the pipe to the end.\n");
-    //  ::MessageBox(nppData._nppHandle, TEXT("Process failed"), TEXT("Trace"), MB_OK);
-    //}
-    //
-    
     //::SendMessage(curScintilla, SCI_ADDTEXT, resultLength, (LPARAM)"");
 
    // delete [] result;
-    return 0;
+    
 }
 
 

@@ -80,7 +80,7 @@ void tabTrigger();
 void returnTrigger();
 void fingerTextTrigger(int arg);
 HWND getCurrentScintilla();
-int executeCommand(HWND &curScintilla,char tag[100]);
+void executeCommand(HWND &curScintilla,char tag[100]);
 void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
 void restoreReturn(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
 int hotSpotNavigation(HWND &curScintilla);
