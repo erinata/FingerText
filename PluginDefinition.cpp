@@ -584,8 +584,6 @@ int replaceTag(HWND &curScintilla, std::ifstream &file, int &posCurrent, int &po
         
         
         ::SendMessage(curScintilla,SCI_SETSELECTION,posEndOfSnippet,posEndOfInsertedText);
-        //::SendMessage(curScintilla, SCI_SETSELECTIONSTART, posEndOfSnippet,(LPARAM)true);
-        //::SendMessage(curScintilla, SCI_SETSELECTIONEND, posEndOfInsertedText,(LPARAM)true);
 
         ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
           
@@ -623,7 +621,23 @@ int findFolderTag(TCHAR tagPath[40], char tag[100], std::ifstream &file,TCHAR pa
 void testing()
 {
     HWND curScintilla = getCurrentScintilla();
-//    ::MessageBox(nppData._nppHandle, TEXT("ENTER!!"), TEXT("Trace"), MB_OK);
-    ::SendMessage(curScintilla, SCI_LINEENDEXTEND, 0, 0);
+    //char buffer[256];
+    ::MessageBox(nppData._nppHandle, TEXT("65001"), TEXT("Trace"), MB_OK);
+    wchar_t buf[256];
+
+    //::GetWindowText(nppData._nppHandle,buf,256);
+    ::GetWindowText(nppData._nppHandle,buf,256);
+    //::SetWindowText(nppData._nppHandle,L"12345");
+    ::MessageBox(nppData._nppHandle, buf, TEXT("Trace"), MB_OK);
+
+    // Convert to a char*
+    size_t origsize = wcslen(buf) + 1;
+    const size_t newsize = 100;
+    size_t convertedChars = 0;
+    char nstring[newsize];
+    wcstombs_s(&convertedChars, nstring, origsize, buf, _TRUNCATE);
+        
+    ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)nstring);
+
 
 }
