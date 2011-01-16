@@ -129,14 +129,14 @@ int getCurrentTag(HWND curScintilla, int posCurrent, char** buffer)
             
     if (posCurrent - posBeforeTag < 100) // Max tag length 100
     {
-        *buffer = new char[posCurrent - posBeforeTag + 1];
+        *buffer = new char[(posCurrent - posBeforeTag) + 1];
 		Sci_TextRange range;
 		range.chrg.cpMin = posBeforeTag;
 		range.chrg.cpMax = posCurrent;
 		range.lpstrText = *buffer;
 
 	    ::SendMessage(curScintilla, SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
-		retVal = posCurrent - posBeforeTag;
+		retVal = (posCurrent - posBeforeTag);
 	}
 
 	return retVal;
@@ -402,7 +402,7 @@ int hotSpotNavigation(HWND &curScintilla)
 
 bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBeforeTag)
 {
-    int preserveSteps=0;
+    int preserveSteps=1;
     //::MessageBox(nppData._nppHandle, TEXT("replace tag"), TEXT("Trace"), MB_OK); 
     //std::streamoff sniplength;
     
