@@ -1,5 +1,6 @@
 0.3.4
 Fixing problem caused after merging (not preserving working folder, chinese snippet not working under UTF-8 document)
+Add version resource file
 
 0.3.3
 Merging the improvement by Dave Brotherstone.
