@@ -42,7 +42,7 @@ const TCHAR NPP_PLUGIN_NAME[] = TEXT("FingerText");
 //
 // Here define the number of your plugin commands
 //
-const int nbFunc = 2;
+const int nbFunc = 3;
 
 
 //
@@ -76,11 +76,16 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //
 // Your plugin command functions
 //
-void fingerText();
+void tabTrigger();
+void returnTrigger();
+void fingerTextTrigger(int arg);
 HWND getCurrentScintilla();
+int executeCommand(HWND &curScintilla,char tag[100]);
 void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
+void restoreReturn(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
 int hotSpotNavigation(HWND &curScintilla);
 int replaceTag(HWND &curScintilla, std::ifstream &file, int &posCurrent, int &posBeforeTag);
+
 int findFolderTag(TCHAR tagPath[40], char tag[60], std::ifstream &file,TCHAR path[MAX_PATH]);
 void testing();
 

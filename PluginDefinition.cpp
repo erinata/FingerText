@@ -72,16 +72,18 @@ void commandMenuInit()
 	shKey->_isShift = false;
 	shKey->_key = VK_TAB;
     
-    setCommand(0, TEXT("Trigger FingerText"), fingerText, shKey, false);
+    setCommand(0, TEXT("Trigger Snippet"), tabTrigger, shKey, false);
 
-    //ShortcutKey *shKey2 = new ShortcutKey;
-	//shKey2->_isAlt = false;
-	//shKey2->_isCtrl = false;
-	//shKey2->_isShift = false;
-	//shKey2->_key = VK_RETURN;
-    //
-    //setCommand(1, TEXT("Testing"), testing, shKey2, false);
-    setCommand(1, TEXT("Testing"), testing, NULL, false);
+    ShortcutKey *shKey2 = new ShortcutKey;
+	shKey2->_isAlt = false;
+	shKey2->_isCtrl = false;
+	shKey2->_isShift = false;
+	shKey2->_key = VK_RETURN;
+    
+    setCommand(1, TEXT("Trigger Command"), returnTrigger, shKey2, false);
+
+
+    setCommand(2, TEXT("Testing"), testing, NULL, false);
     
 }
 
@@ -128,7 +130,17 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 
 
 
-void fingerText()
+void tabTrigger()
+{
+    fingerTextTrigger(0);
+}
+
+void returnTrigger()
+{
+    fingerTextTrigger(1);
+}
+
+void fingerTextTrigger(int triggerType)
 {
     //::Sleep(10);
 	// Get the current scintilla
@@ -153,17 +165,24 @@ void fingerText()
             //::MessageBox(nppData._nppHandle, TEXT("selection"), TEXT("Trace"), MB_OK);
         } else
         {
-            ::SendMessage(curScintilla,SCI_WORDLEFTEXTEND,0,0);
+            if (triggerType==0)
+            {
+                ::SendMessage(curScintilla,SCI_WORDLEFTEXTEND,0,0);
+            } else
+            {
+                ::SendMessage(curScintilla,SCI_HOMEEXTEND,0,0);
+            }
+            
             posBeforeTag= static_cast<int>(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
             
-            if (posCurrent-posBeforeTag>40)
+            if (posCurrent-posBeforeTag>90)
             {
                 //::MessageBox(nppData._nppHandle, TEXT("long tag"), TEXT("Trace"), MB_OK); 
                 // Still contain some issues like if we tab on a position where there are a lot of tab spaces before that,
                 // those tabs spaces will be reduced for no reason.
             } else
             {
-                char tag[60];
+                char tag[100];
 	            ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&tag);
 
                 //::MessageBox(nppData._nppHandle, (LPCWSTR)tag, TEXT("Trace"), MB_OK);
@@ -179,54 +198,66 @@ void fingerText()
                     delete [] w;
                 }
 
-  
-                TCHAR curPath[MAX_PATH];
-                ::GetCurrentDirectory(MAX_PATH,(LPTSTR)curPath);
+                if (triggerType==0)
+                {
+                    
+                    TCHAR curPath[MAX_PATH];
+                    ::GetCurrentDirectory(MAX_PATH,(LPTSTR)curPath);
     
-                TCHAR path[MAX_PATH];
-                ::SendMessage(nppData._nppHandle, NPPM_GETNPPDIRECTORY, (WPARAM)MAX_PATH, (LPARAM)path);
+                    TCHAR path[MAX_PATH];
+                    ::SendMessage(nppData._nppHandle, NPPM_GETNPPDIRECTORY, (WPARAM)MAX_PATH, (LPARAM)path);
                                 
-                ::wcscat(path,L"\\plugins\\FingerText\\");
-                ::SetCurrentDirectory(path);
+                    ::wcscat(path,L"\\plugins\\FingerText\\");
+                    ::SetCurrentDirectory(path);
 
-                std::ifstream file;
+                    std::ifstream file;
    
-                TCHAR tagType[30];
-                TCHAR tagPath[40];
+                    TCHAR tagType[30];
+                    TCHAR tagPath[40];
 
-                ::swprintf(tagPath,L"(snippet)");
-                ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)tagType);
-                ::wcscat(tagPath,tagType);
-
-
-                tagFound=findFolderTag(tagPath,tag,file,path);
-                if (tagFound==1)
-                {
-                    replaceTag(curScintilla, file, posCurrent,posBeforeTag);
-                } else
-                {
                     ::swprintf(tagPath,L"(snippet)");
-                    ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)tagType);
+                    ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)tagType);
                     ::wcscat(tagPath,tagType);
+
+
                     tagFound=findFolderTag(tagPath,tag,file,path);
                     if (tagFound==1)
                     {
                         replaceTag(curScintilla, file, posCurrent,posBeforeTag);
                     } else
                     {
-                        tagFound=findFolderTag(L"(snippet)Global",tag,file,path);
+                        ::swprintf(tagPath,L"(snippet)");
+                        ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)tagType);
+                        ::wcscat(tagPath,tagType);
+                        tagFound=findFolderTag(tagPath,tag,file,path);
                         if (tagFound==1)
                         {
                             replaceTag(curScintilla, file, posCurrent,posBeforeTag);
                         } else
                         {
-                            tagFound=0;
+                            tagFound=findFolderTag(L"(snippet)Global",tag,file,path);
+                            if (tagFound==1)
+                            {
+                                replaceTag(curScintilla, file, posCurrent,posBeforeTag);
+                            } else
+                            {
+                                tagFound=0;
+                            }
                         }
                     }
+
+                    // return to the original path 
+                    ::SetCurrentDirectory(curPath);
+
+
+                } else   // when enter is used to trigger the snippet
+                {
+                    ::SendMessage(curScintilla, SCI_CHARRIGHT,0,0);
+                    executeCommand(curScintilla,tag);
+
+                    
                 }
 
-                // return to the original path 
-                ::SetCurrentDirectory(curPath);
             }
 
 
@@ -236,9 +267,130 @@ void fingerText()
         	  
         int spotFound = hotSpotNavigation(curScintilla);
 
-        if ((spotFound==0) && (tagFound == 0)) restoreTab(curScintilla, posCurrent, posSelectionStart, posSelectionEnd);
+        if ((spotFound==0) && (tagFound == 0) && (triggerType==0)) 
+        {
+            restoreTab(curScintilla, posCurrent, posSelectionStart, posSelectionEnd);
+        } else if (triggerType==1)
+        {
+            restoreReturn(curScintilla, posCurrent, posSelectionStart, posSelectionEnd);
+        }
     } 
 
+}
+
+int executeCommand(HWND &curScintilla,char tag[100])
+{
+    //char  result[300];
+    char  psBuffer[128];
+    FILE   *pPipe;
+    int resultLength;
+
+
+    
+    //pPipe = _popen( "ruby -e 'puts 1+1'", "rt" );
+    //pPipe = _popen( tag, "rt" );
+    
+    if( (pPipe = _popen( tag, "rt" )) == NULL )
+    {    
+        exit( 1 );
+    }
+    
+    //fseek(pPipe, 0, SEEK_END);
+    //resultLength = ftell(pPipe);
+    //fseek(pPipe, 0, SEEK_SET);
+    
+    //pPipe.seekg(0, std::ios::end);
+    //resultLength = pPipe.tellg();
+    //pPipe.seekg(0, std::ios::beg);
+    //char* result = new char [sizeof(pPipe)+128];
+    
+    /* Read pipe until end of file, or an error occurs. */
+    
+    //resultLength=0;
+    //char c;
+    //do
+    //{
+    //    c=fgetc(pPipe);
+    //    resultLength++;
+    //} while (c != EOF);
+    //
+    ////while(fgetc(pPipe))
+    ////{
+    ////  resultLength++;
+    ////}
+    //::rewind(pPipe);
+    
+        
+
+
+    //char* result = new char [resultLength+1];
+    //do
+    //{
+    //    c=fgetc(pPipe);
+    //    ::sprintf(result,"%s%s",result,c);
+    //} while (c != EOF);
+    //
+    int a;
+    int b;
+
+    ::memset (psBuffer,'-',sizeof(psBuffer));
+    while(fgets(psBuffer, 128, pPipe))
+    {
+        //::sprintf(result,"%s%s",result,psBuffer);
+        a=::SendMessage(curScintilla, SCI_GETCURRENTPOS, 0,0);
+        ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
+        ::SendMessage(curScintilla, SCI_SEARCHPREV, 0, (LPARAM)"\n");
+        b=::SendMessage(curScintilla, SCI_GETCURRENTPOS, 0,0);
+        ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
+        ::SendMessage(curScintilla, SCI_SETSEL, b,a);
+        ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
+        ::SendMessage(curScintilla, SCI_NEWLINE, 0,0);
+        ::SendMessage(curScintilla, SCI_HOME, 0,0);
+        //::SendMessage(curScintilla, SCI_CHARRIGHT, 0,0);
+        //::SendMessage(curScintilla, SCI_ADDTEXT, 1, (LPARAM)"a");
+        //
+        ::SendMessage(curScintilla, SCI_ADDTEXT, 128, (LPARAM)psBuffer);
+        ::memset (psBuffer,'-',sizeof(psBuffer));
+
+        //::SendMessage(curScintilla, SCI_ADDTEXT, 1, (LPARAM)"\n");
+    }
+
+    a=::SendMessage(curScintilla, SCI_GETCURRENTPOS, 0,0);
+    ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
+    ::SendMessage(curScintilla, SCI_SEARCHPREV, 0, (LPARAM)"\n");
+    b=::SendMessage(curScintilla, SCI_GETCURRENTPOS, 0,0);
+    ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
+    ::SendMessage(curScintilla, SCI_SETSEL, b,a);
+    ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
+    
+    ////
+    
+    ////
+    //while(fgets(psBuffer, 128, pPipe))
+    //{
+    //    ::sprintf(result,"%s%s",result,psBuffer);
+    //}
+    
+    _pclose( pPipe );
+    /* Close pipe and print return value of pPipe. */
+    //if (feof( pPipe))
+    //{
+    //  //printf( "\nProcess returned %d\n", _pclose( pPipe ) );
+    //  _pclose( pPipe );
+    //  ::MessageBox(nppData._nppHandle, TEXT("Process returned"), TEXT("Trace"), MB_OK);
+    //
+    //}
+    //else
+    //{
+    //  //printf( "Error: Failed to read the pipe to the end.\n");
+    //  ::MessageBox(nppData._nppHandle, TEXT("Process failed"), TEXT("Trace"), MB_OK);
+    //}
+    //
+    
+    //::SendMessage(curScintilla, SCI_ADDTEXT, resultLength, (LPARAM)"");
+
+   // delete [] result;
+    return 0;
 }
 
 
@@ -267,6 +419,17 @@ void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int
     //::SendMessage(curScintilla,SCI_SETSELECTIONEND,posSelectionEnd,0);
     ::SendMessage(curScintilla,SCI_TAB,0,0);	
 }
+
+void restoreReturn(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int &posSelectionEnd)
+{
+    // restoring the original tab action
+    ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
+    ::SendMessage(curScintilla,SCI_SETSELECTION,posSelectionStart,posSelectionEnd);
+    //::SendMessage(curScintilla,SCI_SETSELECTIONSTART,posSelectionStart,0);
+    //::SendMessage(curScintilla,SCI_SETSELECTIONEND,posSelectionEnd,0);
+    ::SendMessage(curScintilla,SCI_NEWLINE,0,0);	
+}
+
 
 int hotSpotNavigation(HWND &curScintilla)
 {
@@ -439,7 +602,7 @@ int replaceTag(HWND &curScintilla, std::ifstream &file, int &posCurrent, int &po
 }
 
 
-int findFolderTag(TCHAR tagPath[40], char tag[60], std::ifstream &file,TCHAR path[MAX_PATH])
+int findFolderTag(TCHAR tagPath[40], char tag[100], std::ifstream &file,TCHAR path[MAX_PATH])
 {
     int folderFound=static_cast<int>(::SetCurrentDirectory(tagPath));
     if (folderFound<=0)
@@ -464,7 +627,7 @@ int findFolderTag(TCHAR tagPath[40], char tag[60], std::ifstream &file,TCHAR pat
 void testing()
 {
     HWND curScintilla = getCurrentScintilla();
-    ::MessageBox(nppData._nppHandle, TEXT("ENTER!!"), TEXT("Trace"), MB_OK);
-    ::SendMessage(curScintilla,SCI_NEWLINE,0,0);
+//    ::MessageBox(nppData._nppHandle, TEXT("ENTER!!"), TEXT("Trace"), MB_OK);
+    ::SendMessage(curScintilla, SCI_LINEENDEXTEND, 0, 0);
 
 }
