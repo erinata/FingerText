@@ -142,7 +142,7 @@ int getCurrentTag(HWND curScintilla, int posCurrent, char** buffer)
 	return retVal;
 }
 
-
+/////////////////////////////// Need fix for the File Name specific snippets /////////////////////////////////
 char* findTag(char *tag, TCHAR *fileType = NULL)
 {
 	char* snip = NULL;
@@ -189,7 +189,7 @@ char* findTag(char *tag, TCHAR *fileType = NULL)
 
 	return snip;
 }
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void fingerText()
 {
@@ -234,7 +234,7 @@ void fingerText()
                     delete [] w;
                 }
 
-
+/////////////////////////////// Need fix for the File Name specific snippets /////////////////////////////////
 				char *expanded = findTag(tag);
 				if (expanded)
                 {
@@ -257,12 +257,13 @@ void fingerText()
 				delete [] tag;
                 // return to the original path 
                // ::SetCurrentDirectory(curPath);
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
             }
 
 
             // return to the original position 
-			// Don't need to do that anymore - we don't change the position
-            //::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
+            ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
         }
         	  
         bool spotFound = hotSpotNavigation(curScintilla);
