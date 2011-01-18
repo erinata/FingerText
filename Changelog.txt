@@ -1,3 +1,9 @@
+Current version:
+Fixed problem after merging caused by incompatibility of two branches (tab key will scroll the page when tag is not found, triggering snippet not at the beginning of the document will clear characters before the tag)
+Closing autocomplete window when snippet is triggered
+Fixing problem of multiple identical hotspots sometimes not simultaneously selected
+Fixed unicode convertion buffer size
+
 0.3.4
 Fixing problem caused after merging (not preserving working folder, chinese snippet not working under UTF-8 document)
 Add version resource file

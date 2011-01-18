@@ -179,7 +179,7 @@ char* findTag(char *tag, TCHAR *fileType = NULL)
 		file.seekg(0, std::ios::end);
 		sniplength = file.tellg();
 		file.seekg(0, std::ios::beg);
-		snip = new char[sniplength*2 + 1];
+		snip = new char[sniplength*4 + 1];
         file.read(snip, sniplength);
 		snip[sniplength] = '\0';
         file.close();
@@ -203,6 +203,7 @@ void fingerText()
         ::SendMessage(curScintilla,SCI_TAB,0,0);	
     } else
     {
+        ::SendMessage(curScintilla,SCI_AUTOCCANCEL,0,0);	 
         bool tagFound = false;
 
         int posBeforeTag=0;
@@ -219,6 +220,7 @@ void fingerText()
             
 			char *tag;
 			int tagLength = getCurrentTag(curScintilla, posCurrent, &tag);
+            posBeforeTag=posCurrent-tagLength;
             if (tagLength != 0)
 			{
                 //::MessageBox(nppData._nppHandle, (LPCWSTR)tag, TEXT("Trace"), MB_OK);
@@ -257,13 +259,13 @@ void fingerText()
 				delete [] tag;
                 // return to the original path 
                // ::SetCurrentDirectory(curPath);
-
+              
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
             }
-
+            if (tagFound) ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
 
             // return to the original position 
-            ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
+            
         }
         	  
         bool spotFound = hotSpotNavigation(curScintilla);
@@ -306,7 +308,7 @@ void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int
 
 int hotSpotNavigation(HWND &curScintilla)
 {
-    int preserveSteps=0;
+    int preserveSteps=1;
     // This is the part doing Hotspots tab navigation
     
     ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
@@ -362,9 +364,10 @@ int hotSpotNavigation(HWND &curScintilla)
             if (hotSpotFound>=0)
             {
                 //::MessageBox(nppData._nppHandle, TEXT(">=0"), TEXT("Trace"), MB_OK);
+                
                 tempPos[i] = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
                 ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)hotSpotText);
-                ::SendMessage(curScintilla,SCI_GOTOPOS,tempPos[i]+1,0);
+                ::SendMessage(curScintilla,SCI_GOTOPOS,tempPos[i],0);
             } else
             {
                 break;
@@ -410,7 +413,7 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
     if (preserveSteps==0) 
 		::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
 
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, posCurrent, (LPARAM)"_____________________________`[SnippetInserting]");
+        ::SendMessage(curScintilla, SCI_INSERTTEXT, posCurrent, (LPARAM)"_____________________________`[SnippetInserting]");
 
   
         // Failed attempt to cater unicode snippets
@@ -427,9 +430,9 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
         {
             //::MessageBox(nppData._nppHandle, TEXT("65001"), TEXT("Trace"), MB_OK);
 			int snipLength = strlen(expanded);
-            WCHAR *w=new WCHAR[snipLength*2+1];
-            MultiByteToWideChar(CP_ACP, 0, expanded, -1, w, snipLength*2+1); // ANSI to UNICODE
-            WideCharToMultiByte(CP_UTF8, 0, w, -1, expanded, snipLength*2+1, 0, 0); // UNICODE to UTF-8
+            WCHAR *w=new WCHAR[snipLength*4+1];
+            MultiByteToWideChar(CP_ACP, 0, expanded, -1, w, snipLength*4+1); // ANSI to UNICODE
+            WideCharToMultiByte(CP_UTF8, 0, w, -1, expanded, snipLength*4+1, 0, 0); // UNICODE to UTF-8
             delete [] w;
         }
   
