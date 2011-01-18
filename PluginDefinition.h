@@ -84,5 +84,5 @@ int hotSpotNavigation(HWND &curScintilla);
 bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBeforeTag);
 int findFolderTag(TCHAR tagPath[40], char tag[60], std::ifstream &file,TCHAR path[MAX_PATH]);
 
-
+void openDatabase();
 #endif //PLUGINDEFINITION_H

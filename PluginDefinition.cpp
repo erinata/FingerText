@@ -125,6 +125,14 @@ void pluginShutdown()
  *  Resposibility of the caller to free it
  *  returns 0 if tag not found (buffer in this case not allocated)
  */
+
+void openDatabase()
+{
+
+
+}
+
+
 int getCurrentTag(HWND curScintilla, int posCurrent, char** buffer)
 {
 	int retVal = 0;
