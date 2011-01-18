@@ -4,7 +4,7 @@ Tab triggered snippet plugin for Notepad++.
 
 == Description
 
-Tab triggered snippet plugin for Notepad++. Support global snippets and snippets for each file extension or file name, hotspot navigation, hotspot text hint(instead of just a $ or # sign) and hotspot default value. Comments can be added to snippets. 
+Tab triggered snippet plugin for Notepad++. Support global snippets and snippets for each file extension or file name, hotspot navigation, multiple hotspot simultaneous editing, hotspot text hint(instead of just a $ or # sign) and hotspot default value. Comments can be added to snippets. 
 
 This plugin is still in Alpha (or may be pre-alpha.....) stage so do expect that it is buggy. The development direction is to make it at least a working snippet plugin, and probably a tab triggered simple command plugin, a convenient console in the editor and finally snippet with ruby scripting support.
 
@@ -12,7 +12,8 @@ Again this is alpha version and I am still experimenting different methods. So d
 
 == Install
 
-Download the file "FingerText - 0.3.2.zip" at https://github.com/downloads/erinata/FingerText/FingerText%20-%200.3.2.zip
+Download the file "FingerText - 0.3.5.zip" at 
+https://github.com/downloads/erinata/FingerText/FingerText%20-%200.3.5.zip
 
 Unzip the package and copy the files in the plugins folder of the zip file into the plugins folder of Notepad++.
 
@@ -52,14 +53,20 @@ To make your own snippet, just use the existing snippets as reference. Remember 
 
 Any thing after the [>END<] will not be inserted as snippet so you can write some comment about your snippet there.
 
-Hotspots are indicated by $[![Whatever name]!]. Hotspots with the same name will be highlighted at the same time. The "Whatever name" can be a hint of the hotspot, or you can fill is with a default value. (If you type nothing and just hit tab, the hotspot $[![Whatever name]!] will be substituted by the string "Whatever name"(without quotes))
+Hotspots are indicated by $[![Whatever name]!]. Hotspots with the same name will be highlighted at the same time. The "Whatever name" can be a hint of the hotspot, or you can fill is with a default value. (If you type nothing and just hit tab, the hotspot $[![Whatever name]!] will be substituted by the string "Whatever name"(without quotes)). You may want to add a empty Hotspot (i.e. $[![]!]) at the location where you want the cursor to move to after tabbing through the last hotspot.
 
-Again this is alpha so I don't know if I will change these things in the future or not. And there are some sample snippet for C and C++.
+Chinese characters are supported in snippets. You can try it by triggering the snippet "chinese". All snippets should be encoded in ANSI, and can be triggered in ANSI or UTF-8 document.  Notice that Chinese character tag name are not supported. Actually sometimes it works sometimes it doesn't so it is not officially supported. 
 
-Chinese characters are supported in snippets. You can try it by triggering the snippet "chinese". All snippets should be encoded in ANSI, and can be triggered in ANSI or UTF-8.  However, Chinese character tag name are not supported. Actually sometimes it works sometimes it doesn't so it is not officially supported. 
+Again this is alpha so I don't know if I will change these things in the future or not. And there are some sample snippet for C ,C++ and Stata do file.
 
 == Change log 
 (for full change log please refer to the CHANGELOG file in the repository)
+
+0.3.5:
+Fixed problem after merging caused by incompatibility of two branches (tab key will scroll the page when tag is not found, triggering snippet not at the beginning of the document will clear characters before the tag)
+Closing autocomplete window when snippet is triggered
+Fixing problem of multiple identical hotspots sometimes not simultaneously selected
+Fixed unicode convertion buffer size
 
 0.3.4
 Fixing problem caused after merging (not preserving working folder, chinese snippet not working under UTF-8 document)
@@ -67,9 +74,6 @@ Add version resource file
 
 0.3.3
 Merging the improvement by Dave Brotherstone.
-
-0.3.2
-Fixed the problem of long Hotspot name
 
 0.3.1
 Add more details in usage description.
@@ -84,14 +88,7 @@ The priority is FileName > Ext > Global
 performance improvement to path search
 
 0.2.6
-Multiple hotspot selection and hotspot hint text replacement works simultaneously
-
-0.2.5
-Add Multiple hotspot selection.
-hotspot hint text replacement disabled temporarily.
-
-0.2.4
-Change in tab navigation behaviour. The hotspot will be replaced by the hint text when using tab navigation
+Multiple hotspots selection and hotspot hint text replacement works simultaneously
 
 0.2.3
 Add support for chinese character tag name. Can be triggered from either ANSI or Utf-8 document (But chinese name mess up the word selection in the editor so it may not trigger correctly under ANSI document. So English tag names are encouraged.)
@@ -123,6 +120,10 @@ First Alpha verison. Implemented basic tab trigger snippets and hotspots navigat
 == Tested with
 
 - Notepad++ 3.8.6(Unicode), Windows 7 Ultimate 64bit 
+
+== Credits
+
+Thanks Don Ho for making Notepad++ and providing a flexible and well documented api for plugin programming. Thanks Dave Brotherstone for his helpful comments and programmming help. Also thanks for all the comments from sourceforge forum.  
 
 == License
 

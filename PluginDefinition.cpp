@@ -451,8 +451,6 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
         
         
         ::SendMessage(curScintilla,SCI_SETSELECTION,posEndOfSnippet,posEndOfInsertedText);
-        //::SendMessage(curScintilla, SCI_SETSELECTIONSTART, posEndOfSnippet,(LPARAM)true);
-        //::SendMessage(curScintilla, SCI_SETSELECTIONEND, posEndOfInsertedText,(LPARAM)true);
 
         ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
 		::SendMessage(curScintilla, SCI_GOTOPOS, posCurrent, 0);
