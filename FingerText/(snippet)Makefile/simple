@@ -1,3 +1,0 @@
-all:
-	g++ -c -Wall $[![[FileName]]!].cpp
-	g++ $[![[FileName]]!].o -o $[![[FileName]]!][>END<]

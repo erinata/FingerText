@@ -1,4 +1,0 @@
-foreach i in $[![[variable list]]!]{
-    $[![[Body]]!]
-}
-[>END<]
