@@ -499,7 +499,7 @@ int hotSpotNavigation(HWND &curScintilla)
 
 bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBeforeTag)
 {
-    int preserveSteps=0;
+    int preserveSteps=1;
     //::MessageBox(nppData._nppHandle, TEXT("replace tag"), TEXT("Trace"), MB_OK); 
     //std::streamoff sniplength;
     

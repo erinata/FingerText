@@ -1,3 +1,8 @@
+current development version
+
+0.3.6
+Using Sqlite to store snippets instead of using ecusive file system. Snippet CRUD inside notepad++ is not available yet. 
+
 0.3.5:
 Fixed problem after merging caused by incompatibility of two branches (tab key will scroll the page when tag is not found, triggering snippet not at the beginning of the document will clear characters before the tag)
 Closing autocomplete window when snippet is triggered
