@@ -178,51 +178,51 @@ int getCurrentTag(HWND curScintilla, int posCurrent, char** buffer)
 }
 
 /////////////////////////////// Need fix for the File Name specific snippets /////////////////////////////////
-char* findTag(char *tag, TCHAR *fileType = NULL)
-{
-	char* snip = NULL;
-	TCHAR curPath[MAX_PATH];
-    ::GetCurrentDirectory(MAX_PATH,(LPTSTR)curPath);
-    
-    TCHAR path[MAX_PATH];
-    ::SendMessage(nppData._nppHandle, NPPM_GETNPPDIRECTORY, (WPARAM)MAX_PATH, (LPARAM)path);
-                                
-    ::wcscat(path,L"\\plugins\\FingerText\\");
-    ::SetCurrentDirectory(path);
-
-    TCHAR tagType[MAX_PATH];
-    TCHAR tagPath[MAX_PATH];
-
-    ::swprintf(tagPath,L"(snippet)");
-
-	if (fileType == NULL)
-	{
-		::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)tagType);
-		::wcscat(tagPath, tagType);
-	}
-	else
-	{
-		_tcscat(tagPath, fileType);
-	}
-
-	std::ifstream file;
-	if (findFolderTag(tagPath,tag,file,path))
-	{
-		int sniplength;
-
-		file.seekg(0, std::ios::end);
-		sniplength = file.tellg();
-		file.seekg(0, std::ios::beg);
-		snip = new char[sniplength*4 + 1];
-        file.read(snip, sniplength);
-		snip[sniplength] = '\0';
-        file.close();
-	}
-
-    ::SetCurrentDirectory(curPath);
-
-	return snip;
-}
+//char* findTag(char *tag, TCHAR *fileType = NULL)
+//{
+//	char* snip = NULL;
+//	TCHAR curPath[MAX_PATH];
+//    ::GetCurrentDirectory(MAX_PATH,(LPTSTR)curPath);
+//    
+//    TCHAR path[MAX_PATH];
+//    ::SendMessage(nppData._nppHandle, NPPM_GETNPPDIRECTORY, (WPARAM)MAX_PATH, (LPARAM)path);
+//                                
+//    ::wcscat(path,L"\\plugins\\FingerText\\");
+//    ::SetCurrentDirectory(path);
+//
+//    TCHAR tagType[MAX_PATH];
+//    TCHAR tagPath[MAX_PATH];
+//
+//    ::swprintf(tagPath,L"(snippet)");
+//
+//	if (fileType == NULL)
+//	{
+//		::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)tagType);
+//		::wcscat(tagPath, tagType);
+//	}
+//	else
+//	{
+//		_tcscat(tagPath, fileType);
+//	}
+//
+//	std::ifstream file;
+//	if (findFolderTag(tagPath,tag,file,path))
+//	{
+//		int sniplength;
+//
+//		file.seekg(0, std::ios::end);
+//		sniplength = file.tellg();
+//		file.seekg(0, std::ios::beg);
+//		snip = new char[sniplength*4 + 1];
+//        file.read(snip, sniplength);
+//		snip[sniplength] = '\0';
+//        file.close();
+//	}
+//
+//    ::SetCurrentDirectory(curPath);
+//
+//	return snip;
+//}
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void convertToUTF8(TCHAR *orig, char **utf8)
