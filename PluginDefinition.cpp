@@ -262,18 +262,16 @@ char *findTagSQLite(char *tag, TCHAR *fileType = NULL)
 		sqlite3_bind_text(stmt, 2, tag, -1, SQLITE_STATIC);
 
 		// Run the query with sqlite3_step
-		if(SQLITE_ROW == sqlite3_step(stmt))
+		if(SQLITE_ROW == sqlite3_step(stmt))  // SQLITE_ROW 100 sqlite3_step() has another row ready
 		{
 			const char* expandedSQL = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
-			expanded = new char[strlen(expandedSQL) + 1];
+			expanded = new char[strlen(expandedSQL)*4 + 1];
 			strcpy(expanded, expandedSQL);
 		}
 		// Close the SQLite statement, as we don't need it anymore
-		// This also has the affect of free'ing the result from sqlite3_column_text 
+		// This also has the effect of free'ing the result from sqlite3_column_text 
 		// (i.e. in our case, expandedSQL)
 		sqlite3_finalize(stmt);
-
-
 	}
 
 	return expanded;
