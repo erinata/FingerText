@@ -315,15 +315,15 @@ void fingerText()
                 //::MessageBox(nppData._nppHandle, (LPCWSTR)tag, TEXT("Trace"), MB_OK);
                 // Here the tag is got assuming the document is in ANSI, if the document is in UTF-8,
                 // chinese character tag is not loaded
-                if (::SendMessage(curScintilla,SCI_GETCODEPAGE,0,0)==65001)
-                {
-                    //::MessageBox(nppData._nppHandle, TEXT("65001"), TEXT("Trace"), MB_OK);
-                    //convertEncoding(tag,CP_UTF8,CP_ACP);
-                    WCHAR *w=new WCHAR[tagLength + 1];
-                    MultiByteToWideChar(CP_UTF8, 0, tag, -1, w, tagLength); 
-                    WideCharToMultiByte(CP_ACP, 0, w, -1, tag, tagLength, 0, 0); 
-                    delete [] w;
-                }
+                //if (::SendMessage(curScintilla,SCI_GETCODEPAGE,0,0)==65001)
+                //{
+                //    //::MessageBox(nppData._nppHandle, TEXT("65001"), TEXT("Trace"), MB_OK);
+                //    //convertEncoding(tag,CP_UTF8,CP_ACP);
+                //    WCHAR *w=new WCHAR[tagLength + 1];
+                //    MultiByteToWideChar(CP_UTF8, 0, tag, -1, w, tagLength); 
+                //    WideCharToMultiByte(CP_ACP, 0, w, -1, tag, tagLength, 0, 0); 
+                //    delete [] w;
+                //}
 
 /////////////////////////////// Need fix for the File Name specific snippets /////////////////////////////////
 				//char *expanded = findTag(tag);
@@ -517,15 +517,16 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
         //}
 
         // Just assume that all snippets are in ANSI, and convert to UTF-8 when needed.
-        if (::SendMessage(curScintilla,SCI_GETCODEPAGE,0,0)==65001)
-        {
-            //::MessageBox(nppData._nppHandle, TEXT("65001"), TEXT("Trace"), MB_OK);
-			int snipLength = strlen(expanded);
-            WCHAR *w=new WCHAR[snipLength*4+1];
-            MultiByteToWideChar(CP_ACP, 0, expanded, -1, w, snipLength*4+1); // ANSI to UNICODE
-            WideCharToMultiByte(CP_UTF8, 0, w, -1, expanded, snipLength*4+1, 0, 0); // UNICODE to UTF-8
-            delete [] w;
-        }
+        // This is not needed for sqlite system as sqlite database is in utf-8
+        //if (::SendMessage(curScintilla,SCI_GETCODEPAGE,0,0)==65001)
+        //{
+        //    //::MessageBox(nppData._nppHandle, TEXT("65001"), TEXT("Trace"), MB_OK);
+		//	int snipLength = strlen(expanded);
+        //    WCHAR *w=new WCHAR[snipLength*4+1];
+        //    MultiByteToWideChar(CP_ACP, 0, expanded, -1, w, snipLength*4+1); // ANSI to UNICODE
+        //    WideCharToMultiByte(CP_UTF8, 0, w, -1, expanded, snipLength*4+1, 0, 0); // UNICODE to UTF-8
+        //    delete [] w;
+        //}
   
 		::SendMessage(curScintilla, SCI_SETTARGETSTART, posBeforeTag, 0);
 		::SendMessage(curScintilla, SCI_SETTARGETEND, posCurrent, 0);
