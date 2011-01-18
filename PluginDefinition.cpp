@@ -116,6 +116,10 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //    WideCharToMultiByte(codePageTo, 0, w, -1, tag, 120, 0, 0); 
 //    delete [] w;
 //}
+void pluginShutdown()
+{
+    
+}
 
 /** buffer gets allocated in this function (if return != 0). 
  *  Resposibility of the caller to free it
