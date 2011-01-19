@@ -1,6 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
+#include <Windows.h>
 /////////////////////////////////////////////////////////////////////////////
 // English (United States) resources
 
@@ -16,7 +17,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 IDD_SNIPPET_DOCK DIALOGEX 26, 41, 163, 242
 STYLE DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW | WS_EX_WINDOWEDGE
-CAPTION "Snippet Dock"
+CAPTION "FingerText"
 FONT 10, "Consolas", 0, 0, 0x0
 BEGIN
     LTEXT           "Available Snippets",ID_UGO_STATIC,7,5,95,8

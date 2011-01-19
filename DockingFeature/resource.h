@@ -1,4 +1,4 @@
-#include <Windows.h>
+
 
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
@@ -1375,9 +1375,9 @@
 #define LVS_ALIGNLEFT                   0x0800
 #define TVS_INFOTIP                     0x0800
 #define TCS_RAGGEDRIGHT                 0x0800
-#define IDD_SNIPPET_DOCK                2500
-#define ID_GOLINE_EDIT                  2501
-#define ID_UGO_STATIC                   2505
+#define IDD_SNIPPET_DOCK                2100
+#define ID_GOLINE_EDIT                  2101
+#define ID_UGO_STATIC                   2105
 #define LVS_ALIGNMASK                   0x0c00
 #define CS_BYTEALIGNCLIENT              0x1000
 #define HDS_OVERFLOW                    0x1000

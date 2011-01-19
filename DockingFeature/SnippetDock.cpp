@@ -30,7 +30,8 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 			{
 				case IDOK :
 				{
-                    
+                    clearDock();
+                    updateDockItems();
 
                     //::MessageBox(nppData._nppHandle, TEXT("OK"), TEXT("Trace"), MB_OK);
 

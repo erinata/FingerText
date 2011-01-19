@@ -93,6 +93,7 @@ void pluginShutdown();
 void openDatabase();
 void convertToUTF8(TCHAR *orig, char **utf8);
 void showSnippetDock();
+void updateDockItems();
 
 void testing();
 //char *findTagSQLite(char *tag, TCHAR *fileType = NULL);

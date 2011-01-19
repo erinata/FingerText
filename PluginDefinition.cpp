@@ -134,32 +134,23 @@ char *findTagSQLite(char *tag, int level)
 	char *expanded = NULL;
 	sqlite3_stmt *stmt;
 
-    
-
-	// First create the SQLite SQL statement ("prepare" it for running)
+    // First create the SQLite SQL statement ("prepare" it for running)
 	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
 	{
 		char *tagType = NULL;
-
+        TCHAR *fileType = NULL;
+		fileType = new TCHAR[MAX_PATH];
+        ::swprintf(fileType,TEXT("Global"));
 		if (level == 1)
 		{
-            TCHAR *fileType = NULL;
-			fileType = new TCHAR[MAX_PATH];
 			::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-			convertToUTF8(fileType, &tagType);
-			delete [] fileType;
 		} else if (level == 2)
 		{
-            TCHAR *fileType = NULL;
-			fileType = new TCHAR[MAX_PATH];
 			::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-			convertToUTF8(fileType, &tagType);
-			delete [] fileType;
-		} else
-		{
-			convertToUTF8(TEXT("Global"), &tagType);
 		}
-
+        convertToUTF8(fileType, &tagType);
+		delete [] fileType;
+		
 		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
 		sqlite3_bind_text(stmt, 1, tagType, -1, SQLITE_STATIC);
 		sqlite3_bind_text(stmt, 2, tag, -1, SQLITE_STATIC);
@@ -167,7 +158,7 @@ char *findTagSQLite(char *tag, int level)
 		// Run the query with sqlite3_step
 		if(SQLITE_ROW == sqlite3_step(stmt))  // SQLITE_ROW 100 sqlite3_step() has another row ready
 		{
-			const char* expandedSQL = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
+			const char* expandedSQL = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
 			expanded = new char[strlen(expandedSQL)*4 + 1];
 			strcpy(expanded, expandedSQL);
 		}
@@ -177,7 +168,7 @@ char *findTagSQLite(char *tag, int level)
 		sqlite3_finalize(stmt);
 	}
 
-	return expanded;
+	return expanded; //remember to delete the returned expanded after use.
 }
 
 HWND getCurrentScintilla()
@@ -519,6 +510,59 @@ void showSnippetDock()
 		::SendMessage(nppData._nppHandle, NPPM_DMMREGASDCKDLG, 0, (LPARAM)&data);
 	}
 	_snippetDock.display();
+    updateDockItems();
+}
+
+
+void updateDockItems()
+{
+    sqlite3_stmt *stmt;
+    
+	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT tag FROM snippets WHERE tagType = ? OR tagType = ? OR tagType = ?", -1, &stmt, NULL))
+	{
+        char *tagType = NULL;
+        TCHAR *fileType = NULL;
+		fileType = new TCHAR[MAX_PATH];
+
+		::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
+        convertToUTF8(fileType, &tagType);
+        sqlite3_bind_text(stmt, 1, tagType, -1, SQLITE_STATIC);
+		
+        ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
+        convertToUTF8(fileType, &tagType);
+        sqlite3_bind_text(stmt, 2, tagType, -1, SQLITE_STATIC);
+                        
+        sqlite3_bind_text(stmt, 3, "Global", -1, SQLITE_STATIC);
+        //int cols = sqlite3_column_count(stmt);
+        
+        delete [] fileType;
+
+
+        while(true)
+        {
+            if(SQLITE_ROW == sqlite3_step(stmt))
+            {
+
+                char* tagText = (char *)(sqlite3_column_text(stmt, 0));
+
+                size_t origsize = strlen(tagText) + 1;
+                const size_t newsize = 100;
+                size_t convertedChars = 0;
+                wchar_t convertedTagText[newsize];
+                mbstowcs_s(&convertedChars, convertedTagText, origsize, tagText, _TRUNCATE);
+
+                _snippetDock.addDockItem(convertedTagText);
+
+                //HWND curScintilla = getCurrentScintilla();
+                //::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)tagText);
+            }
+            else
+            {
+                break;  
+            }
+        }
+    }
+    sqlite3_finalize(stmt);
 }
 
 
@@ -644,9 +688,18 @@ void fingerText()
 }
 
 
+
+
 void testing()
 {
 
     ::MessageBox(nppData._nppHandle, TEXT("Testing!"), TEXT("Trace"), MB_OK);
-    _snippetDock.testDialog(nppData._nppHandle);
+
+    //_snippetDock.messageDialog(nppData._nppHandle,TEXT("Message from Main!"));  // Use the Dialog to send a messagebox
+    //_snippetDock.testDialog(nppData._nppHandle);
+    
+
+
 }
+
+    

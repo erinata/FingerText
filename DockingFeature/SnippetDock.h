@@ -39,10 +39,28 @@ public :
 	};
 
     
-    void testDialog(HWND npp)
+    void messageDialog(HWND nppHandle, LPCWSTR message)
     {
-        ::MessageBox(npp, TEXT("OK"), TEXT("Trace"), MB_OK);
-                                        // Add items to list. 
+        ::MessageBox(nppHandle, message, TEXT("Trace"), MB_OK);
+    }
+
+    void addDockItem(wchar_t *dockItem)
+    {
+        HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
+
+        SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM)dockItem); 
+        SetFocus(hwndList);     
+    }
+
+    void clearDock()
+    {
+        HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
+        SendMessage(hwndList, LB_RESETCONTENT, 0, 0);
+    }
+    
+    void testDialog(HWND nppHandle)
+    {
+        ::MessageBox(nppHandle, TEXT("Items added"), TEXT("Trace"), MB_OK);
         HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);  
         SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM)TEXT("HELLO!")); 
         SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM)TEXT("HELLO2!")); 
