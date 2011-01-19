@@ -44,7 +44,7 @@ const TCHAR NPP_PLUGIN_NAME[] = TEXT("FingerText");
 //
 // Here define the number of your plugin commands
 //
-const int nbFunc = 1;
+const int nbFunc = 3;
 
 
 //
@@ -92,5 +92,8 @@ int getCurrentTag(HWND curScintilla, int posCurrent, char** buffer);
 void pluginShutdown();
 void openDatabase();
 void convertToUTF8(TCHAR *orig, char **utf8);
+void showSnippetDock();
+
+void testing();
 //char *findTagSQLite(char *tag, TCHAR *fileType = NULL);
 #endif //PLUGINDEFINITION_H

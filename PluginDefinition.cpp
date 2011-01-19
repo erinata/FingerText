@@ -26,7 +26,7 @@
 #include "PluginDefinition.h"
 #include "menuCmdID.h"
 #include "sqlite3.h"
-
+#include "SnippetDock.h"
 //
 // The plugin data that Notepad++ needs
 //
@@ -39,12 +39,15 @@ NppData nppData;
 
 sqlite3 *g_db;
 bool     g_dbOpen;
+
+DockingDlg _snippetDock;
+#define SNIPPET_DOCK_INDEX 1
 //
 // Initialize your plugin data here
 // It will be called while plugin loading   
 void pluginInit(HANDLE hModule)
 {
-
+    _snippetDock.init((HINSTANCE)hModule, NULL);
 }
 
 //
@@ -77,6 +80,10 @@ void commandMenuInit()
 	shKey->_key = VK_TAB;
     
     setCommand(0, TEXT("Trigger FingerText"), fingerText, shKey, false);
+
+    setCommand(SNIPPET_DOCK_INDEX, TEXT("Show Snippet Dock"), showSnippetDock, NULL, false);
+
+    setCommand(SNIPPET_DOCK_INDEX+1, TEXT("Testing"), testing, NULL, false);
 
     openDatabase();
 }
@@ -492,6 +499,27 @@ void convertToUTF8(TCHAR *orig, char **utf8)
 	WideCharToMultiByte(CP_UTF8, 0, orig, -1, *utf8, multibyteLength, 0, 0);
 }
 
+void showSnippetDock()
+{
+	_snippetDock.setParent(nppData._nppHandle);
+	tTbData	data = {0};
+
+	if (!_snippetDock.isCreated())
+	{
+		_snippetDock.create(&data);
+
+		// define the default docking behaviour
+		data.uMask = DWS_DF_CONT_RIGHT;
+
+		data.pszModuleName = _snippetDock.getPluginFileName();
+
+		// the dlgDlg should be the index of funcItem where the current function pointer is
+		// in this case is DOCKABLE_DEMO_INDEX
+		data.dlgID = SNIPPET_DOCK_INDEX;
+		::SendMessage(nppData._nppHandle, NPPM_DMMREGASDCKDLG, 0, (LPARAM)&data);
+	}
+	_snippetDock.display();
+}
 
 
 
@@ -616,3 +644,9 @@ void fingerText()
 }
 
 
+void testing()
+{
+
+    ::MessageBox(nppData._nppHandle, TEXT("Testing!"), TEXT("Trace"), MB_OK);
+    _snippetDock.testDialog(nppData._nppHandle);
+}

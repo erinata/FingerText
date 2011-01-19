@@ -23,9 +23,11 @@
 
 #include "PluginDefinition.h"
 
+#include "SnippetDock.h"
+
 extern FuncItem funcItem[nbFunc];
 extern NppData nppData;
-
+extern DockingDlg _snippetDock;
 
 BOOL APIENTRY DllMain( HANDLE hModule, 
                        DWORD  reasonForCall, 
