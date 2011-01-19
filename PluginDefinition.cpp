@@ -197,7 +197,7 @@ void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int
     ::SendMessage(curScintilla,SCI_TAB,0,0);	
 }
 
-int hotSpotNavigation(HWND &curScintilla)
+bool hotSpotNavigation(HWND &curScintilla)
 {
     int preserveSteps=0;
     // This is the part doing Hotspots tab navigation
@@ -286,10 +286,10 @@ int hotSpotNavigation(HWND &curScintilla)
         
 
         if (preserveSteps==0) ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
-        return 1;
+        return true;
 	}
     //::MessageBox(nppData._nppHandle, TEXT("<0"), TEXT("Trace"), MB_OK);
-    return 0;
+    return false;
 }
 
 
@@ -540,46 +540,63 @@ void fingerText()
                 //    delete [] w;
                 //}
 
-/////////////////////////////// Need fix for the File Name specific snippets /////////////////////////////////
-				//char *expanded = findTag(tag);
+                //char *expanded = findTag(tag);
                 char *expanded;
 
-                expanded = findTagSQLite(tag,1); //file name specific snippets
-				if (expanded)
+                int level=1;
+                do
                 {
-                    replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
-					tagFound = true;
-					delete [] expanded;
-                } 
-				else
-                {
-                    expanded = findTagSQLite(tag,2);  // ext name specific snippets
+                    expanded = findTagSQLite(tag,level); 
 				    if (expanded)
                     {
                         replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
 					    tagFound = true;
-					    delete [] expanded;
-                    } else
-                    {    
-                        //expanded = findTag(tag, TEXT("Global"));
-                        expanded = findTagSQLite(tag, 3); // Global snippets
-                        if (expanded)
-                        {
-                            replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
-						    tagFound = true;
-						    delete [] expanded;
-                        } else
-                        {
-                            tagFound = false;
-                        }
-                    }
-                }
+                        break;
+                    } 
+                    level++;
+                } while (level<=3);
+
+                delete [] expanded;
+
+
+                //char *expanded;
+                //
+                //expanded = findTagSQLite(tag,1); //file name specific snippets
+				//if (expanded)
+                //{
+                //    replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
+				//	tagFound = true;
+				//	delete [] expanded;
+                //} 
+				//else
+                //{
+                //    expanded = findTagSQLite(tag,2);  // ext name specific snippets
+				//    if (expanded)
+                //    {
+                //        replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
+				//	    tagFound = true;
+				//	    delete [] expanded;
+                //    } else
+                //    {    
+                //        //expanded = findTag(tag, TEXT("Global"));
+                //        expanded = findTagSQLite(tag, 3); // Global snippets
+                //        if (expanded)
+                //        {
+                //            replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
+				//		    tagFound = true;
+				//		    delete [] expanded;
+                //        } else
+                //        {
+                //            tagFound = false;
+                //        }
+                //    }
+                //}
 
 				delete [] tag;
                 // return to the original path 
                // ::SetCurrentDirectory(curPath);
               
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
             }
             if (tagFound) ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
 
