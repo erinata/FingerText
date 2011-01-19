@@ -26,6 +26,7 @@
 #include "PluginDefinition.h"
 #include "menuCmdID.h"
 #include "sqlite3.h"
+
 //
 // The plugin data that Notepad++ needs
 //
@@ -120,120 +121,6 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //    WideCharToMultiByte(codePageTo, 0, w, -1, tag, 120, 0, 0); 
 //    delete [] w;
 //}
-
-void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
-{
-    if (g_dbOpen)
-    {
-        sqlite3_close(g_db);  // This close the database when the plugin shutdown.
-        g_dbOpen = false;
-    }
-}
-
-/** buffer gets allocated in this function (if return != 0). 
- *  Resposibility of the caller to free it
- *  returns 0 if tag not found (buffer in this case not allocated)
- */
-
-void openDatabase()
-{
-    TCHAR path[MAX_PATH];
-    char *cpath;
-    ::SendMessage(nppData._nppHandle, NPPM_GETNPPDIRECTORY, MAX_PATH, reinterpret_cast<LPARAM>(path));
-    int multibyteLength = WideCharToMultiByte(CP_UTF8, 0, path, -1, NULL, 0, 0, 0);
-    cpath = new char[multibyteLength + 50];
-    WideCharToMultiByte(CP_UTF8, 0, path, -1, cpath, multibyteLength, 0, 0);
-    strcat(cpath, "\\plugins\\FingerText\\snippets.db3");
-    int rc = sqlite3_open(cpath, &g_db);
-    if (rc)
-    {
-        g_dbOpen = false;
-        MessageBox(nppData._nppHandle, _T("Cannot find or open snippets.db3 in FingerText directory under plugins"), _T("FingerText plugin"), MB_ICONERROR);
-    }
-    else
-    {
-        g_dbOpen = true;
-    }
-}
-
-int getCurrentTag(HWND curScintilla, int posCurrent, char** buffer)
-{
-	int retVal = 0;
-	int posBeforeTag = static_cast<int>(::SendMessage(curScintilla,	SCI_WORDSTARTPOSITION, posCurrent, 1));
-    
-            
-    if (posCurrent - posBeforeTag < 100) // Max tag length 100
-    {
-        *buffer = new char[(posCurrent - posBeforeTag) + 1];
-		Sci_TextRange range;
-		range.chrg.cpMin = posBeforeTag;
-		range.chrg.cpMax = posCurrent;
-		range.lpstrText = *buffer;
-
-	    ::SendMessage(curScintilla, SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
-		retVal = (posCurrent - posBeforeTag);
-	}
-
-	return retVal;
-}
-
-/////////////////////////////// Need fix for the File Name specific snippets /////////////////////////////////
-//char* findTag(char *tag, TCHAR *fileType = NULL)
-//{
-//	char* snip = NULL;
-//	TCHAR curPath[MAX_PATH];
-//    ::GetCurrentDirectory(MAX_PATH,(LPTSTR)curPath);
-//    
-//    TCHAR path[MAX_PATH];
-//    ::SendMessage(nppData._nppHandle, NPPM_GETNPPDIRECTORY, (WPARAM)MAX_PATH, (LPARAM)path);
-//                                
-//    ::wcscat(path,L"\\plugins\\FingerText\\");
-//    ::SetCurrentDirectory(path);
-//
-//    TCHAR tagType[MAX_PATH];
-//    TCHAR tagPath[MAX_PATH];
-//
-//    ::swprintf(tagPath,L"(snippet)");
-//
-//	if (fileType == NULL)
-//	{
-//		::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)tagType);
-//		::wcscat(tagPath, tagType);
-//	}
-//	else
-//	{
-//		_tcscat(tagPath, fileType);
-//	}
-//
-//	std::ifstream file;
-//	if (findFolderTag(tagPath,tag,file,path))
-//	{
-//		int sniplength;
-//
-//		file.seekg(0, std::ios::end);
-//		sniplength = file.tellg();
-//		file.seekg(0, std::ios::beg);
-//		snip = new char[sniplength*4 + 1];
-//        file.read(snip, sniplength);
-//		snip[sniplength] = '\0';
-//        file.close();
-//	}
-//
-//    ::SetCurrentDirectory(curPath);
-//
-//	return snip;
-//}
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void convertToUTF8(TCHAR *orig, char **utf8)
-{
-	int multibyteLength = WideCharToMultiByte(CP_UTF8, 0, orig, -1, NULL, 0, 0, 0);
-	*utf8 = new char[multibyteLength + 1];
-	WideCharToMultiByte(CP_UTF8, 0, orig, -1, *utf8, multibyteLength, 0, 0);
-}
-
-
-
 char *findTagSQLite(char *tag, TCHAR *fileType = NULL)
 {
 	char *expanded = NULL;
@@ -277,100 +164,6 @@ char *findTagSQLite(char *tag, TCHAR *fileType = NULL)
 	return expanded;
 }
 
-
-
-
-void fingerText()
-{
-    //::Sleep(10);
-	// Get the current scintilla
-    HWND curScintilla = getCurrentScintilla();
-    
-
-    if (::SendMessage(curScintilla,SCI_SELECTIONISRECTANGLE,0,0)==1)
-    {
-        ::SendMessage(curScintilla,SCI_TAB,0,0);	
-    } else
-    {
-        ::SendMessage(curScintilla,SCI_AUTOCCANCEL,0,0);	 
-        bool tagFound = false;
-
-        int posBeforeTag=0;
-    
-	    int posCurrent= ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-        int posSelectionStart= ::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0);
-        int posSelectionEnd= ::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0);
-
-        if (posSelectionStart!=posSelectionEnd)
-        {
-            //::MessageBox(nppData._nppHandle, TEXT("selection"), TEXT("Trace"), MB_OK);
-        } else
-        {
-            
-			char *tag;
-			int tagLength = getCurrentTag(curScintilla, posCurrent, &tag);
-            posBeforeTag=posCurrent-tagLength;
-            if (tagLength != 0)
-			{
-                //::MessageBox(nppData._nppHandle, (LPCWSTR)tag, TEXT("Trace"), MB_OK);
-                // Here the tag is got assuming the document is in ANSI, if the document is in UTF-8,
-                // chinese character tag is not loaded
-                //if (::SendMessage(curScintilla,SCI_GETCODEPAGE,0,0)==65001)
-                //{
-                //    //::MessageBox(nppData._nppHandle, TEXT("65001"), TEXT("Trace"), MB_OK);
-                //    //convertEncoding(tag,CP_UTF8,CP_ACP);
-                //    WCHAR *w=new WCHAR[tagLength + 1];
-                //    MultiByteToWideChar(CP_UTF8, 0, tag, -1, w, tagLength); 
-                //    WideCharToMultiByte(CP_ACP, 0, w, -1, tag, tagLength, 0, 0); 
-                //    delete [] w;
-                //}
-
-/////////////////////////////// Need fix for the File Name specific snippets /////////////////////////////////
-				//char *expanded = findTag(tag);
-                char *expanded = findTagSQLite(tag);
-				if (expanded)
-                {
-                    replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
-					tagFound = true;
-					delete [] expanded;
-                } 
-				else
-                {
-                    //expanded = findTag(tag, TEXT("Global"));
-                    expanded = findTagSQLite(tag, TEXT("Global"));
-                    if (expanded)
-                    {
-                        replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
-						tagFound = true;
-						delete [] expanded;
-                    } 
-                    
-                }
-
-				delete [] tag;
-                // return to the original path 
-               // ::SetCurrentDirectory(curPath);
-              
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            }
-            if (tagFound) ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
-
-            // return to the original position 
-            
-        }
-        	  
-        bool spotFound = hotSpotNavigation(curScintilla);
-
-        if ((spotFound == false) && (tagFound == false)) 
-		{
-			restoreTab(curScintilla, posCurrent, posSelectionStart, posSelectionEnd);
-		}
-
-    } 
-
-}
-
-
 HWND getCurrentScintilla()
 {
     int which = -1;
@@ -399,7 +192,7 @@ void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int
 
 int hotSpotNavigation(HWND &curScintilla)
 {
-    int preserveSteps=1;
+    int preserveSteps=0;
     // This is the part doing Hotspots tab navigation
     
     ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
@@ -497,7 +290,7 @@ int hotSpotNavigation(HWND &curScintilla)
 
 bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBeforeTag)
 {
-    int preserveSteps=1;
+    int preserveSteps=0;
     //::MessageBox(nppData._nppHandle, TEXT("replace tag"), TEXT("Trace"), MB_OK); 
     //std::streamoff sniplength;
     
@@ -582,3 +375,210 @@ int findFolderTag(TCHAR *tagPath, char *tag, std::ifstream &file,TCHAR *path)
         }
     }
 }
+
+
+void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
+{
+    if (g_dbOpen)
+    {
+        sqlite3_close(g_db);  // This close the database when the plugin shutdown.
+        g_dbOpen = false;
+    }
+}
+void openDatabase()
+{
+    TCHAR path[MAX_PATH];
+    char *cpath;
+    ::SendMessage(nppData._nppHandle, NPPM_GETNPPDIRECTORY, MAX_PATH, reinterpret_cast<LPARAM>(path));
+    int multibyteLength = WideCharToMultiByte(CP_UTF8, 0, path, -1, NULL, 0, 0, 0);
+    cpath = new char[multibyteLength + 50];
+    WideCharToMultiByte(CP_UTF8, 0, path, -1, cpath, multibyteLength, 0, 0);
+    strcat(cpath, "\\plugins\\FingerText\\snippets.db3");
+    int rc = sqlite3_open(cpath, &g_db);
+    if (rc)
+    {
+        g_dbOpen = false;
+        MessageBox(nppData._nppHandle, _T("Cannot find or open snippets.db3 in FingerText directory under plugins"), _T("FingerText plugin"), MB_ICONERROR);
+    }
+    else
+    {
+        g_dbOpen = true;
+    }
+}
+
+int getCurrentTag(HWND curScintilla, int posCurrent, char** buffer)
+{
+	int retVal = 0;
+	int posBeforeTag = static_cast<int>(::SendMessage(curScintilla,	SCI_WORDSTARTPOSITION, posCurrent, 1));
+    
+            
+    if (posCurrent - posBeforeTag < 100) // Max tag length 100
+    {
+        *buffer = new char[(posCurrent - posBeforeTag) + 1];
+		Sci_TextRange range;
+		range.chrg.cpMin = posBeforeTag;
+		range.chrg.cpMax = posCurrent;
+		range.lpstrText = *buffer;
+
+	    ::SendMessage(curScintilla, SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
+		retVal = (posCurrent - posBeforeTag);
+	}
+
+	return retVal;
+}
+
+/////////////////////////////// Need fix for the File Name specific snippets /////////////////////////////////
+/** buffer gets allocated in this function (if return != 0). 
+ *  Resposibility of the caller to free it
+ *  returns 0 if tag not found (buffer in this case not allocated)
+ */
+
+
+//char* findTag(char *tag, TCHAR *fileType = NULL)
+//{
+//	char* snip = NULL;
+//	TCHAR curPath[MAX_PATH];
+//    ::GetCurrentDirectory(MAX_PATH,(LPTSTR)curPath);
+//    
+//    TCHAR path[MAX_PATH];
+//    ::SendMessage(nppData._nppHandle, NPPM_GETNPPDIRECTORY, (WPARAM)MAX_PATH, (LPARAM)path);
+//                                
+//    ::wcscat(path,L"\\plugins\\FingerText\\");
+//    ::SetCurrentDirectory(path);
+//
+//    TCHAR tagType[MAX_PATH];
+//    TCHAR tagPath[MAX_PATH];
+//
+//    ::swprintf(tagPath,L"(snippet)");
+//
+//	if (fileType == NULL)
+//	{
+//		::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)tagType);
+//		::wcscat(tagPath, tagType);
+//	}
+//	else
+//	{
+//		_tcscat(tagPath, fileType);
+//	}
+//
+//	std::ifstream file;
+//	if (findFolderTag(tagPath,tag,file,path))
+//	{
+//		int sniplength;
+//
+//		file.seekg(0, std::ios::end);
+//		sniplength = file.tellg();
+//		file.seekg(0, std::ios::beg);
+//		snip = new char[sniplength*4 + 1];
+//        file.read(snip, sniplength);
+//		snip[sniplength] = '\0';
+//        file.close();
+//	}
+//
+//    ::SetCurrentDirectory(curPath);
+//
+//	return snip;
+//}
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void convertToUTF8(TCHAR *orig, char **utf8)
+{
+	int multibyteLength = WideCharToMultiByte(CP_UTF8, 0, orig, -1, NULL, 0, 0, 0);
+	*utf8 = new char[multibyteLength + 1];
+	WideCharToMultiByte(CP_UTF8, 0, orig, -1, *utf8, multibyteLength, 0, 0);
+}
+
+
+
+
+void fingerText()
+{
+    //::Sleep(10);
+	// Get the current scintilla
+    HWND curScintilla = getCurrentScintilla();
+    
+
+    if (::SendMessage(curScintilla,SCI_SELECTIONISRECTANGLE,0,0)==1)
+    {
+        ::SendMessage(curScintilla,SCI_TAB,0,0);	
+    } else
+    {
+        ::SendMessage(curScintilla,SCI_AUTOCCANCEL,0,0);	 
+        bool tagFound = false;
+
+        int posBeforeTag=0;
+    
+	    int posCurrent= ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+        int posSelectionStart= ::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0);
+        int posSelectionEnd= ::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0);
+
+        if (posSelectionStart!=posSelectionEnd)
+        {
+            //::MessageBox(nppData._nppHandle, TEXT("selection"), TEXT("Trace"), MB_OK);
+        } else
+        {
+            
+			char *tag;
+			int tagLength = getCurrentTag(curScintilla, posCurrent, &tag);
+            posBeforeTag=posCurrent-tagLength;
+            if (tagLength != 0)
+			{
+                //::MessageBox(nppData._nppHandle, (LPCWSTR)tag, TEXT("Trace"), MB_OK);
+                // Here the tag is got assuming the document is in ANSI, if the document is in UTF-8,
+                // chinese character tag is not loaded
+                //if (::SendMessage(curScintilla,SCI_GETCODEPAGE,0,0)==65001)
+                //{
+                //    //::MessageBox(nppData._nppHandle, TEXT("65001"), TEXT("Trace"), MB_OK);
+                //    //convertEncoding(tag,CP_UTF8,CP_ACP);
+                //    WCHAR *w=new WCHAR[tagLength + 1];
+                //    MultiByteToWideChar(CP_UTF8, 0, tag, -1, w, tagLength); 
+                //    WideCharToMultiByte(CP_ACP, 0, w, -1, tag, tagLength, 0, 0); 
+                //    delete [] w;
+                //}
+
+/////////////////////////////// Need fix for the File Name specific snippets /////////////////////////////////
+				//char *expanded = findTag(tag);
+                char *expanded = findTagSQLite(tag);
+				if (expanded)
+                {
+                    replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
+					tagFound = true;
+					delete [] expanded;
+                } 
+				else
+                {
+                    //expanded = findTag(tag, TEXT("Global"));
+                    expanded = findTagSQLite(tag, TEXT("Global"));
+                    if (expanded)
+                    {
+                        replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
+						tagFound = true;
+						delete [] expanded;
+                    } 
+                    
+                }
+
+				delete [] tag;
+                // return to the original path 
+               // ::SetCurrentDirectory(curPath);
+              
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            }
+            if (tagFound) ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
+
+            // return to the original position 
+            
+        }
+        	  
+        bool spotFound = hotSpotNavigation(curScintilla);
+
+        if ((spotFound == false) && (tagFound == false)) 
+		{
+			restoreTab(curScintilla, posCurrent, posSelectionStart, posSelectionEnd);
+		}
+
+    } 
+
+}
+
+

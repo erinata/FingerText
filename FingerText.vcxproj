@@ -182,7 +182,6 @@
     <ClInclude Include="PluginDefinition.h" />
     <ClInclude Include="PluginInterface.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="resource2.h" />
     <ClInclude Include="Scintilla.h" />
     <ClInclude Include="sqlite3.h" />
   </ItemGroup>
