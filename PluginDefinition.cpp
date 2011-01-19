@@ -121,27 +121,36 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //    WideCharToMultiByte(codePageTo, 0, w, -1, tag, 120, 0, 0); 
 //    delete [] w;
 //}
-char *findTagSQLite(char *tag, TCHAR *fileType = NULL)
+
+char *findTagSQLite(char *tag, int level)
 {
 	char *expanded = NULL;
 	sqlite3_stmt *stmt;
 
+    
 
 	// First create the SQLite SQL statement ("prepare" it for running)
 	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
 	{
 		char *tagType = NULL;
 
-		if (fileType == NULL)
+		if (level == 1)
 		{
+            TCHAR *fileType = NULL;
 			fileType = new TCHAR[MAX_PATH];
 			::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
 			convertToUTF8(fileType, &tagType);
 			delete [] fileType;
-		}
-		else
+		} else if (level == 2)
 		{
+            TCHAR *fileType = NULL;
+			fileType = new TCHAR[MAX_PATH];
+			::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
 			convertToUTF8(fileType, &tagType);
+			delete [] fileType;
+		} else
+		{
+			convertToUTF8(TEXT("Global"), &tagType);
 		}
 
 		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
@@ -185,8 +194,6 @@ void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int
     // restoring the original tab action
     ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
     ::SendMessage(curScintilla,SCI_SETSELECTION,posSelectionStart,posSelectionEnd);
-    //::SendMessage(curScintilla,SCI_SETSELECTIONSTART,posSelectionStart,0);
-    //::SendMessage(curScintilla,SCI_SETSELECTIONEND,posSelectionEnd,0);
     ::SendMessage(curScintilla,SCI_TAB,0,0);	
 }
 
@@ -210,8 +217,6 @@ int hotSpotNavigation(HWND &curScintilla)
 		int secondPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
 
         ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos+4,secondPos);
-        //::SendMessage(curScintilla,SCI_SETSELECTIONSTART,firstPos+4,0);
-		//::SendMessage(curScintilla,SCI_SETSELECTIONEND,secondPos,0);
         //int selectionLength;
 
         //selectionLength = ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, NULL);
@@ -334,7 +339,6 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
         ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"[>END<]");
         int posEndOfSnippet= ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
         
-        
         ::SendMessage(curScintilla,SCI_SETSELECTION,posEndOfSnippet,posEndOfInsertedText);
 
         ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
@@ -350,31 +354,31 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
 
 
 
-int findFolderTag(TCHAR *tagPath, char *tag, std::ifstream &file,TCHAR *path)
-{
-
-    int folderFound=static_cast<int>(::SetCurrentDirectory(path));
-	
-	if (folderFound > 0)
-		folderFound = static_cast<int>(::SetCurrentDirectory(tagPath));
-    
-	if (folderFound <= 0)
-    {
-        return 0;
-    }
-    else
-    {
-        file.open(tag, std::ios::binary);
-        if (file.is_open())
-        {
-            return 1;
-        } else
-        {
-            ::SetCurrentDirectory(path);
-            return 0;
-        }
-    }
-}
+//int findFolderTag(TCHAR *tagPath, char *tag, std::ifstream &file,TCHAR *path)
+//{
+//
+//    int folderFound=static_cast<int>(::SetCurrentDirectory(path));
+//	
+//	if (folderFound > 0)
+//		folderFound = static_cast<int>(::SetCurrentDirectory(tagPath));
+//    
+//	if (folderFound <= 0)
+//    {
+//        return 0;
+//    }
+//    else
+//    {
+//        file.open(tag, std::ios::binary);
+//        if (file.is_open())
+//        {
+//            return 1;
+//        } else
+//        {
+//            ::SetCurrentDirectory(path);
+//            return 0;
+//        }
+//    }
+//}
 
 
 void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
@@ -538,7 +542,9 @@ void fingerText()
 
 /////////////////////////////// Need fix for the File Name specific snippets /////////////////////////////////
 				//char *expanded = findTag(tag);
-                char *expanded = findTagSQLite(tag);
+                char *expanded;
+
+                expanded = findTagSQLite(tag,1); //file name specific snippets
 				if (expanded)
                 {
                     replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
@@ -547,15 +553,26 @@ void fingerText()
                 } 
 				else
                 {
-                    //expanded = findTag(tag, TEXT("Global"));
-                    expanded = findTagSQLite(tag, TEXT("Global"));
-                    if (expanded)
+                    expanded = findTagSQLite(tag,2);  // ext name specific snippets
+				    if (expanded)
                     {
                         replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
-						tagFound = true;
-						delete [] expanded;
-                    } 
-                    
+					    tagFound = true;
+					    delete [] expanded;
+                    } else
+                    {    
+                        //expanded = findTag(tag, TEXT("Global"));
+                        expanded = findTagSQLite(tag, 3); // Global snippets
+                        if (expanded)
+                        {
+                            replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
+						    tagFound = true;
+						    delete [] expanded;
+                        } else
+                        {
+                            tagFound = false;
+                        }
+                    }
                 }
 
 				delete [] tag;
