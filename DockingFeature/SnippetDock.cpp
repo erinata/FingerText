@@ -79,7 +79,8 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 
                 case IDC_DELETE:
                 {
-                    void deleteSnippet();
+                    
+                    deleteSnippet();
                     return TRUE;
 
                 }
