@@ -30,27 +30,33 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 			{
 				case IDOK :
 				{
-                    updateDockItems();
+
+                    editSnipShow();
+                    //updateDockItems();
 
                     //::MessageBox(nppData._nppHandle, TEXT("OK"), TEXT("Trace"), MB_OK);
-
-
                     //::SetDlgItemInt(_hSelf, ID_GOLINE_EDIT, 1, FALSE);
                     
-					int line = getLine();
-					if (line != -1)
-					{
-						// Get the current scintilla
-						 HWND curScintilla = getCurrentScintilla();
-
-						::SendMessage(curScintilla, SCI_ENSUREVISIBLE, line-1, 0);
-						::SendMessage(curScintilla, SCI_GOTOLINE, line-1, 0);
+					//int line = getLine();
+					//if (line != -1)
+					//{
+					//	// Get the current scintilla
+					//	 HWND curScintilla = getCurrentScintilla();
+                    //
+					//	::SendMessage(curScintilla, SCI_ENSUREVISIBLE, line-1, 0);
+					//	::SendMessage(curScintilla, SCI_GOTOLINE, line-1, 0);
                         
-					}
+					//}
 					return TRUE;
 				}
+
+                case IDC_SAVE:
+                {
+                    saveSnippet();
+                }
+
 			}
-				return FALSE;
+			return FALSE;
 		}
 
         case WM_INITDIALOG:

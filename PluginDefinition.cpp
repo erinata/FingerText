@@ -120,14 +120,6 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //----------------------------------------------//
 //-- STEP 4. DEFINE YOUR ASSOCIATED FUNCTIONS --//
 //----------------------------------------------//
-//void convertEncoding(char tag[60],UINT codePageFrom,UINT codePageTo)
-//{
-//    ::MessageBox(nppData._nppHandle, TEXT("converted"), TEXT("Trace"), MB_OK);
-//    WCHAR *w=new WCHAR[120];
-//    MultiByteToWideChar(codePageFrom, 0, tag, -1, w, 120); 
-//    WideCharToMultiByte(codePageTo, 0, w, -1, tag, 120, 0, 0); 
-//    delete [] w;
-//}
 
 char *findTagSQLite(char *tag, int level)
 {
@@ -140,7 +132,7 @@ char *findTagSQLite(char *tag, int level)
 		char *tagType = NULL;
         TCHAR *fileType = NULL;
 		fileType = new TCHAR[MAX_PATH];
-        ::swprintf(fileType,TEXT("Global"));
+        ::swprintf(fileType,TEXT("GLOBAL"));
 		if (level == 1)
 		{
 			::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
@@ -162,14 +154,126 @@ char *findTagSQLite(char *tag, int level)
 			expanded = new char[strlen(expandedSQL)*4 + 1];
 			strcpy(expanded, expandedSQL);
 		}
-		// Close the SQLite statement, as we don't need it anymore
-		// This also has the effect of free'ing the result from sqlite3_column_text 
-		// (i.e. in our case, expandedSQL)
-		sqlite3_finalize(stmt);
+		
 	}
+    // Close the SQLite statement, as we don't need it anymore
+	// This also has the effect of free'ing the result from sqlite3_column_text 
+	// (i.e. in our case, expandedSQL)
+	sqlite3_finalize(stmt);
 
 	return expanded; //remember to delete the returned expanded after use.
 }
+
+void saveSnippet()
+{
+    HWND curScintilla = getCurrentScintilla();
+   
+    // TODO: Use the position of [ Trigger Text ] and [ Scope ] etc to make the editing more fault torlerant
+    // TODO: Check for empty trigger text or scope.
+
+    // Getting text from the 3rd line of the FingerText Snippet Editing Document
+    int tagPosLineEnd = ::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,9,0);
+    ::SendMessage(curScintilla,SCI_GOTOLINE,9,0);
+    int tagPosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+    ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
+    ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)" ");
+    int tagPosEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+    if (tagPosEnd>tagPosLineEnd)
+    {
+        tagPosEnd=tagPosLineEnd;
+    }
+    ::SendMessage(curScintilla,SCI_SETSELECTION,tagPosStart,tagPosEnd);
+    
+    char* tagText = new char[tagPosEnd-tagPosStart + 1];
+    ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(tagText));
+    
+    // Getting text from the 5th line of the FingerText Snippet Editing Document
+    int tagTypePosLineEnd = ::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,11,0);
+    ::SendMessage(curScintilla,SCI_GOTOLINE,11,0);
+    int tagTypePosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+    ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
+    ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)" ");
+    int tagTypePosEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+    if (tagTypePosEnd>tagTypePosLineEnd)
+    {
+        tagTypePosEnd=tagTypePosLineEnd;
+    }
+    ::SendMessage(curScintilla,SCI_SETSELECTION,tagTypePosStart,tagTypePosEnd);
+    
+    char* tagTypeText = new char[tagTypePosEnd-tagTypePosStart + 1];
+    ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(tagTypeText));
+    
+    // Getting text after the 7th line of the FingerText Snippet Editing Document
+    ::SendMessage(curScintilla,SCI_GOTOLINE,13,0);
+    int snippetPosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+    int snippetPosEnd = ::SendMessage(curScintilla,SCI_GETLENGTH,0,0);
+    
+    ::SendMessage(curScintilla,SCI_SETSELECTION,snippetPosStart,snippetPosEnd);
+    
+    char* snippetText = new char[snippetPosEnd-snippetPosStart + 1];
+    ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(snippetText));
+    
+
+    // TODO: checking for [>END<] and add it if there is none 
+
+    // checking for existing snippet 
+    sqlite3_stmt *stmt;
+
+    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+    {
+        sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
+		sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
+        if(SQLITE_ROW == sqlite3_step(stmt))
+        {
+            sqlite3_finalize(stmt);
+            int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Snippet exists, overwrite?"), TEXT("FingerText"), MB_YESNO);
+            if (messageReturn==IDNO)
+            {
+                delete [] tagText;
+                delete [] tagTypeText;
+                delete [] snippetText;
+                // not overwrite
+                return;
+
+            } else
+            {
+                // delete existing entry
+                if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+                {
+                    sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
+		            sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
+                    sqlite3_step(stmt);
+                }
+                
+            }
+
+        } else
+        {
+            sqlite3_finalize(stmt);
+            
+            //::MessageBox(nppData._nppHandle, TEXT("Not Exist!"), TEXT("Trace"), MB_OK);
+        }
+    }
+    
+    
+    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "INSERT INTO snippets VALUES(?,?,?)", -1, &stmt, NULL))
+	{
+		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
+		sqlite3_bind_text(stmt, 1, tagText, -1, SQLITE_STATIC);
+		sqlite3_bind_text(stmt, 2, tagTypeText, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 3, snippetText, -1, SQLITE_STATIC);
+    
+		// Run the query with sqlite3_step
+		sqlite3_step(stmt); // SQLITE_ROW 100 sqlite3_step() has another row ready
+	}
+    sqlite3_finalize(stmt);
+    delete [] tagText;
+    delete [] tagTypeText;
+    delete [] snippetText;
+
+    updateDockItems();
+}
+
 
 HWND getCurrentScintilla()
 {
@@ -351,34 +455,6 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
 }
 
 
-
-//int findFolderTag(TCHAR *tagPath, char *tag, std::ifstream &file,TCHAR *path)
-//{
-//
-//    int folderFound=static_cast<int>(::SetCurrentDirectory(path));
-//	
-//	if (folderFound > 0)
-//		folderFound = static_cast<int>(::SetCurrentDirectory(tagPath));
-//    
-//	if (folderFound <= 0)
-//    {
-//        return 0;
-//    }
-//    else
-//    {
-//        file.open(tag, std::ios::binary);
-//        if (file.is_open())
-//        {
-//            return 1;
-//        } else
-//        {
-//            ::SetCurrentDirectory(path);
-//            return 0;
-//        }
-//    }
-//}
-
-
 void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
 {
     if (g_dbOpen)
@@ -428,60 +504,6 @@ int getCurrentTag(HWND curScintilla, int posCurrent, char** buffer)
 
 	return retVal;
 }
-
-/////////////////////////////// Need fix for the File Name specific snippets /////////////////////////////////
-/** buffer gets allocated in this function (if return != 0). 
- *  Resposibility of the caller to free it
- *  returns 0 if tag not found (buffer in this case not allocated)
- */
-
-
-//char* findTag(char *tag, TCHAR *fileType = NULL)
-//{
-//	char* snip = NULL;
-//	TCHAR curPath[MAX_PATH];
-//    ::GetCurrentDirectory(MAX_PATH,(LPTSTR)curPath);
-//    
-//    TCHAR path[MAX_PATH];
-//    ::SendMessage(nppData._nppHandle, NPPM_GETNPPDIRECTORY, (WPARAM)MAX_PATH, (LPARAM)path);
-//                                
-//    ::wcscat(path,L"\\plugins\\FingerText\\");
-//    ::SetCurrentDirectory(path);
-//
-//    TCHAR tagType[MAX_PATH];
-//    TCHAR tagPath[MAX_PATH];
-//
-//    ::swprintf(tagPath,L"(snippet)");
-//
-//	if (fileType == NULL)
-//	{
-//		::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)tagType);
-//		::wcscat(tagPath, tagType);
-//	}
-//	else
-//	{
-//		_tcscat(tagPath, fileType);
-//	}
-//
-//	std::ifstream file;
-//	if (findFolderTag(tagPath,tag,file,path))
-//	{
-//		int sniplength;
-//
-//		file.seekg(0, std::ios::end);
-//		sniplength = file.tellg();
-//		file.seekg(0, std::ios::beg);
-//		snip = new char[sniplength*4 + 1];
-//        file.read(snip, sniplength);
-//		snip[sniplength] = '\0';
-//        file.close();
-//	}
-//
-//    ::SetCurrentDirectory(curPath);
-//
-//	return snip;
-//}
-/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void convertToUTF8(TCHAR *orig, char **utf8)
 {
@@ -534,7 +556,7 @@ void updateDockItems()
         convertToUTF8(fileType, &tagType);
         sqlite3_bind_text(stmt, 2, tagType, -1, SQLITE_STATIC);
                         
-        sqlite3_bind_text(stmt, 3, "Global", -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 3, "GLOBAL", -1, SQLITE_STATIC);
         //int cols = sqlite3_column_count(stmt);
         
         delete [] fileType;
@@ -559,9 +581,6 @@ void updateDockItems()
                 size_t convertedChars = 0;
                 wchar_t convertedTagText[newsize];
                 mbstowcs_s(&convertedChars, convertedTagText, origsize, newText, _TRUNCATE);
-
-
-
 
                 _snippetDock.addDockItem(convertedTagText);
 
@@ -642,40 +661,6 @@ void fingerText()
 
                 delete [] expanded;
 
-
-                //char *expanded;
-                //
-                //expanded = findTagSQLite(tag,1); //file name specific snippets
-				//if (expanded)
-                //{
-                //    replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
-				//	tagFound = true;
-				//	delete [] expanded;
-                //} 
-				//else
-                //{
-                //    expanded = findTagSQLite(tag,2);  // ext name specific snippets
-				//    if (expanded)
-                //    {
-                //        replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
-				//	    tagFound = true;
-				//	    delete [] expanded;
-                //    } else
-                //    {    
-                //        //expanded = findTag(tag, TEXT("Global"));
-                //        expanded = findTagSQLite(tag, 3); // Global snippets
-                //        if (expanded)
-                //        {
-                //            replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
-				//		    tagFound = true;
-				//		    delete [] expanded;
-                //        } else
-                //        {
-                //            tagFound = false;
-                //        }
-                //    }
-                //}
-
 				delete [] tag;
                 // return to the original path 
                // ::SetCurrentDirectory(curPath);
@@ -706,12 +691,8 @@ void testing()
 {
 
     ::MessageBox(nppData._nppHandle, TEXT("Testing!"), TEXT("Trace"), MB_OK);
-
-    //_snippetDock.messageDialog(nppData._nppHandle,TEXT("Message from Main!"));  // Use the Dialog to send a messagebox
-    //_snippetDock.testDialog(nppData._nppHandle);
+    _snippetDock.disableSaveSnippet();
     
-
-
 }
 
     

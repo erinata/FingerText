@@ -1,5 +1,3 @@
-
-
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
 // Used by SnippetDock.rc
@@ -65,7 +63,7 @@
 #define CS_VREDRAW                      0x0001
 #define CF_TEXT                         1
 #define SCF_ISSECURE                    0x00000001
-#define IDOK                            1
+#define IDC_EDIT                        1
 #define BN_PAINT                        1
 #define BST_CHECKED                     0x0001
 #define TBSTYLE_SEP                     0x0001
@@ -1157,6 +1155,11 @@
 #define WM_PENWINLAST                   0x038F
 #define WM_DDE_FIRST                    0x03E0
 #define IDC_SNIPPET_LIST                1000
+#define IDC_SAVE                        1002
+#define IDC_TRIGGER_TEXT                1003
+#define IDC_SCOPE                       1004
+#define IDC_CREATE                      1005
+#define IDC_DELETE                      1006
 #define CF_GDIOBJLAST                   0x03FF
 #define _WIN32_WINNT_NT4                0x0400
 #define _WIN32_IE_IE40                  0x0400
@@ -1376,7 +1379,7 @@
 #define TVS_INFOTIP                     0x0800
 #define TCS_RAGGEDRIGHT                 0x0800
 #define IDD_SNIPPET_DOCK                2100
-#define ID_GOLINE_EDIT                  2101
+#define ID_SNIPSHOW_EDIT                2101
 #define ID_UGO_STATIC                   2105
 #define LVS_ALIGNMASK                   0x0c00
 #define CS_BYTEALIGNCLIENT              0x1000
@@ -1504,7 +1507,6 @@
 #define SPVERSION_MASK                  0x0000FF00
 #define HTERROR                         -2
 #define UNICODE_NOCHAR                  0xFFFF
-#define IDC_STATIC                      -1
 #define PWR_FAIL                        -1
 #define HTTRANSPARENT                   -1
 
@@ -1514,7 +1516,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1002
+#define _APS_NEXT_CONTROL_VALUE         1007
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

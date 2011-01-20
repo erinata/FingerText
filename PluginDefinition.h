@@ -79,22 +79,22 @@ void pluginShutdown();
 //
 // Your plugin command functions
 //
-void fingerText();
+
 HWND getCurrentScintilla();
 void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
 bool hotSpotNavigation(HWND &curScintilla);
 bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBeforeTag);
-//int findFolderTag(TCHAR tagPath[40], char tag[60], std::ifstream &file,TCHAR path[MAX_PATH]);
-
 void openDatabase();
-
 int getCurrentTag(HWND curScintilla, int posCurrent, char** buffer);
 void pluginShutdown();
 void openDatabase();
 void convertToUTF8(TCHAR *orig, char **utf8);
 void showSnippetDock();
 void updateDockItems();
+void saveSnippet();
+
+void fingerText();
 
 void testing();
-//char *findTagSQLite(char *tag, TCHAR *fileType = NULL);
+
 #endif //PLUGINDEFINITION_H

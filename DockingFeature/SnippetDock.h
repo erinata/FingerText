@@ -21,6 +21,7 @@
 
 #include "DockingDlgInterface.h"
 #include "resource.h"
+#include <WindowsX.h>
 
 class DockingDlg : public DockingDlgInterface
 {
@@ -31,7 +32,7 @@ public :
     virtual void display(bool toShow = true) const {
         DockingDlgInterface::display(toShow);
         if (toShow)
-            ::SetFocus(::GetDlgItem(_hSelf, ID_GOLINE_EDIT));
+            ::SetFocus(::GetDlgItem(_hSelf, IDC_SNIPPET_LIST));
     };
 
 	void setParent(HWND parent2set){
@@ -46,10 +47,7 @@ public :
 
     void addDockItem(wchar_t *dockItem)
     {
-        HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
-
-        SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM)dockItem); 
-        SetFocus(hwndList);     
+        SendMessage(GetDlgItem(_hSelf, IDC_SNIPPET_LIST), LB_ADDSTRING, 0, (LPARAM)dockItem); 
     }
 
     void clearDock()
@@ -57,15 +55,18 @@ public :
         HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
         SendMessage(hwndList, LB_RESETCONTENT, 0, 0);
     }
-    
-    void testDialog(HWND nppHandle)
+
+    void editSnipShow()
     {
-        ::MessageBox(nppHandle, TEXT("Items added"), TEXT("Trace"), MB_OK);
-        HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);  
-        SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM)TEXT("HELLO!")); 
-        SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM)TEXT("HELLO2!")); 
-        SetFocus(hwndList);     
-        ::SetDlgItemInt(_hSelf, ID_GOLINE_EDIT, 1, FALSE);
+        //HWND hwndList = GetDlgItem(_hSelf, ID_SNIPSHOW_EDIT);
+        
+        ::SetDlgItemText(_hSelf, ID_SNIPSHOW_EDIT,TEXT("Snippet Preview here...\r\nSnippet Preview here...\r\nSnippet Preview here...\r\n"));
+    }
+    
+    void disableSaveSnippet()
+    {
+        HWND hwndButton = GetDlgItem(_hSelf, IDC_SAVE);
+        ::Button_Enable(hwndButton, false);
 
     }
 
@@ -77,7 +78,7 @@ private :
 
     int getLine() const {
         BOOL isSuccessful;
-        int line = ::GetDlgItemInt(_hSelf, ID_GOLINE_EDIT, &isSuccessful, FALSE);
+        int line = ::GetDlgItemInt(_hSelf, ID_SNIPSHOW_EDIT, &isSuccessful, FALSE);
         return (isSuccessful?line:-1);
     };
 

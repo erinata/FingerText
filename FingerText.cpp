@@ -83,6 +83,11 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
         case NPPN_BUFFERACTIVATED:
             updateDockItems();
             break;
+        case SCN_CHARADDED:
+            // trigger when anything is typed
+            // possible implementation of live search of snippets
+            // alternatives can be SCEN_CHANGE or SCN_MODIFIED
+            break;
     }
 }
 
