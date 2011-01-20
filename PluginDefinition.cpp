@@ -150,6 +150,7 @@ char *findTagSQLite(char *tag, int level)
 		{
 			::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
 		}
+        
         convertToUTF8(fileType, &tagType);
 		delete [] fileType;
 		
@@ -197,22 +198,34 @@ void deleteSnippet()
 {
     HWND curScintilla = getCurrentScintilla();
     int index = _snippetDock.getSelection();
-    //char somechar[10];
-    //::_itoa(test, somechar, 10); 
-    //::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)somechar);
-    sqlite3_stmt *stmt;
-
-    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
-    {
-        sqlite3_bind_text(stmt, 1, snippetCache[index].scope, -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 2, snippetCache[index].triggerText, -1, SQLITE_STATIC);
-        sqlite3_step(stmt);
-
-    }
-    sqlite3_finalize(stmt);
+    char somechar[10];
+    ::_itoa(index, somechar, 10); 
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)somechar);
     
-    updateDockItems();
-   
+
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)snippetCache[index].scope);
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)snippetCache[index].triggerText);
+    //
+    //size_t origsize = strlen(snippetCache[index].scope) + 1;
+    //const size_t newsize = 100;
+    //size_t convertedChars = 0;
+    //wchar_t convertedTagText[newsize];
+    //mbstowcs_s(&convertedChars, convertedTagText, origsize, snippetCache[index].scope, _TRUNCATE);
+    //
+    //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)convertedTagText);
+    //sqlite3_stmt *stmt;
+    //
+    //if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+    //{
+    //    sqlite3_bind_text(stmt, 1, snippetCache[index].scope, -1, SQLITE_STATIC);
+    //    sqlite3_bind_text(stmt, 2, snippetCache[index].triggerText, -1, SQLITE_STATIC);
+    //    sqlite3_step(stmt);
+    //
+    //}
+    //sqlite3_finalize(stmt);
+    //
+    //updateDockItems();
+    //
 }
 
 
@@ -638,22 +651,16 @@ void updateDockItems()
         {
             if(SQLITE_ROW == sqlite3_step(stmt))
             {
-                snippetCache[row].scope = (char *)(sqlite3_column_text(stmt, 1));
-                snippetCache[row].triggerText = (char *)(sqlite3_column_text(stmt, 0));
 
-                char newText[200]="";
-                strcat(newText,"<");
-                strcat(newText,snippetCache[row].scope);
-                strcat(newText,">   ");
-                strcat(newText,snippetCache[row].triggerText);
+                const char* tempScope = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
+                snippetCache[row].scope = new char[strlen(tempScope)*4 + 1];
+                strcpy(snippetCache[row].scope, tempScope);
+                const char* tempTrigger = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
+                snippetCache[row].triggerText = new char[strlen(tempTrigger)*4 + 1];
+                strcpy(snippetCache[row].triggerText, tempTrigger);
 
-                size_t origsize = strlen(newText) + 1;
-                const size_t newsize = 100;
-                size_t convertedChars = 0;
-                wchar_t convertedTagText[newsize];
-                mbstowcs_s(&convertedChars, convertedTagText, origsize, newText, _TRUNCATE);
 
-                _snippetDock.addDockItem(convertedTagText);
+
                 row++;
 
             }
@@ -663,7 +670,24 @@ void updateDockItems()
             }
         }
     }
-  
+
+    for (int j=0;j<snippetCacheSize;j++)
+    {  
+        char newText[400]="";
+        strcat(newText,"<");
+        strcat(newText,snippetCache[j].scope);
+        strcat(newText,">   ");
+        strcat(newText,snippetCache[j].triggerText);
+
+        size_t origsize = strlen(newText) + 1;
+        const size_t newsize = 100;
+        size_t convertedChars = 0;
+        wchar_t convertedTagText[newsize];
+        mbstowcs_s(&convertedChars, convertedTagText, origsize, newText, _TRUNCATE);
+
+        _snippetDock.addDockItem(convertedTagText);
+    }
+                
 
     sqlite3_finalize(stmt);
 
