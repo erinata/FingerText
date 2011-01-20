@@ -45,13 +45,18 @@ struct SnipIndex {
     char* scope;
 } ;
 
-//char* snippetIndex[10][2];
 SnipIndex* snippetCache;
-
 int snippetCacheSize;
- 
+
+char* snippetEditTemplate1 = "------ FingerText Snippet Editor View ------\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n------------- [ Trigger Text ] --------------\r\n";
+char* snippetEditTemplate2 = "\r\n---------------- [ Scope ] ------------------\r\n";
+char* snippetEditTemplate3 = "\r\n------------ [ Snippet Content ] ------------\r\n";
+
 DockingDlg _snippetDock;
 #define SNIPPET_DOCK_INDEX 1
+
+
+
 //
 // Initialize your plugin data here
 // It will be called while plugin loading   
@@ -181,17 +186,57 @@ void createSnippet()
     ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
     HWND curScintilla = getCurrentScintilla();
 
-    ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)"------ FingerText Snippet Editor View ------\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n------------- [ Trigger Text ] --------------\r\nsampletriggertext\r\n---------------- [ Scope ] ------------------\r\nGLOBAL\r\n------------ [ Snippet Content ] ------------\r\nThis is a sample snippet.\r\nThis is a sample snippet.\r\nThis is a sample snippet.\r\nThis is a sample snippet.\r\n[>END<]");
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate1);
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"sampletriggertext");
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate2);
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"GLOBAL");
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate3);
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"This is a sample snippet.\r\nThis is a sample snippet.\r\nThis is a sample snippet.\r\nThis is a sample snippet.\r\n[>END<]");
+
 }
 
 void editSnippet()
 {
     HWND curScintilla = getCurrentScintilla();
-    int test = _snippetDock.getSelection();
-    char somechar[10];
-    ::_itoa(test, somechar, 10); 
-    ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)somechar);
-    // To be completed............
+    int index = _snippetDock.getCount() - _snippetDock.getSelection()-1;
+    if (!index>=0)
+    {
+        createSnippet();
+        return;
+        //TODO : should select the corresponding list box item
+        //TODO : or consider create a new snippet after a messagebox confirmation
+
+    }
+
+    ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
+
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate1);
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetCache[index].triggerText);
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate2);
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetCache[index].scope);
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate3);
+    
+    sqlite3_stmt *stmt;
+
+
+    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+	{
+		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
+		sqlite3_bind_text(stmt, 1, snippetCache[index].scope , -1, SQLITE_STATIC);
+		sqlite3_bind_text(stmt, 2, snippetCache[index].triggerText, -1, SQLITE_STATIC);
+
+		// Run the query with sqlite3_step
+		if(SQLITE_ROW == sqlite3_step(stmt))  // SQLITE_ROW 100 sqlite3_step() has another row ready
+		{
+			const char* snippetText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
+            ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetText);
+		}
+		
+	}
+
+	sqlite3_finalize(stmt);
+
+
 }
 
 void deleteSnippet()
@@ -606,6 +651,10 @@ void showSnippetDock()
 
 void updateDockItems()
 {
+    int scopeLength=0;
+    int triggerLength=0;
+    int tempScopeLength=0;
+    int tempTriggerLength=0;
 
     snippetCacheSize=_snippetDock.getLength();
     snippetCache = new SnipIndex [snippetCacheSize];
@@ -650,13 +699,21 @@ void updateDockItems()
             {
 
                 const char* tempScope = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
+                tempScopeLength = strlen(tempScope)*4 + 1;
+                if (tempScopeLength> scopeLength)
+                {
+                    scopeLength = tempScopeLength;
+                }
                 snippetCache[row].scope = new char[strlen(tempScope)*4 + 1];
                 strcpy(snippetCache[row].scope, tempScope);
                 const char* tempTrigger = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
+                tempTriggerLength = strlen(tempTrigger)*4 + 1;
+                if (tempTriggerLength> triggerLength)
+                {
+                    triggerLength = tempTriggerLength;
+                }
                 snippetCache[row].triggerText = new char[strlen(tempTrigger)*4 + 1];
                 strcpy(snippetCache[row].triggerText, tempTrigger);
-
-
 
                 row++;
 
@@ -672,7 +729,7 @@ void updateDockItems()
     {
         if (snippetCache[j].scope !=NULL)
         {
-            char newText[100]="";
+            char newText[200]="";
         
             strcat(newText,"<");
             strcat(newText,snippetCache[j].scope);
