@@ -75,11 +75,14 @@ extern "C" __declspec(dllexport) FuncItem * getFuncsArray(int *nbF)
 
 extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 {
-    switch(notifyCode->message)
+    switch(notifyCode->nmhdr.code)
     {
         case NPPN_SHUTDOWN:
-        pluginShutdown();
-        break;
+            pluginShutdown();
+            break;
+        case NPPN_BUFFERACTIVATED:
+            updateDockItems();
+            break;
     }
 }
 

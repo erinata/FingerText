@@ -1,5 +1,9 @@
 current development version
+Add Snippet Dock, implemented Read function
+
+0.3.7
 Resume Filename specific snippets under sqlite system.
+
 
 0.3.6
 Using Sqlite to store snippets instead of using ecusive file system. Snippet CRUD inside notepad++ is not available yet. 

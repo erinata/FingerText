@@ -510,12 +510,14 @@ void showSnippetDock()
 		::SendMessage(nppData._nppHandle, NPPM_DMMREGASDCKDLG, 0, (LPARAM)&data);
 	}
 	_snippetDock.display();
+    
     updateDockItems();
 }
 
 
 void updateDockItems()
 {
+    _snippetDock.clearDock();
     sqlite3_stmt *stmt;
     
 	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT tag,tagType FROM snippets WHERE tagType = ? OR tagType = ? OR tagType = ?", -1, &stmt, NULL))
