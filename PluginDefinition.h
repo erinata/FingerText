@@ -96,6 +96,7 @@ void createSnippet();
 void clearCache();
 void editSnippet();
 void deleteSnippet();
+void insertSnippet();
 void fingerText();
 
 void testing();

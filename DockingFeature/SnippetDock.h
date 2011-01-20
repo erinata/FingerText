@@ -54,6 +54,11 @@ public :
     {
         HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
         SendMessage(hwndList, LB_RESETCONTENT, 0, 0);
+
+        //::Button_Enable(GetDlgItem(_hSelf, IDC_SAVE), false);
+        ::Button_Enable(GetDlgItem(_hSelf, IDC_EDIT), false);
+        ::Button_Enable(GetDlgItem(_hSelf, IDC_DELETE), false);
+        //::Button_Enable(GetDlgItem(_hSelf, IDC_CREATE), false);
     }
 
     void editSnipShow()
@@ -95,6 +100,15 @@ public :
         return retVal;
     }
 
+    //void disableSnippetButtons()
+    //{
+    //
+    //}
+    //void enableSnippetButtons()
+    //{
+    //
+    //}
+    //
 protected :
     
 	virtual BOOL CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);

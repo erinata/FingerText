@@ -136,7 +136,7 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //-- STEP 4. DEFINE YOUR ASSOCIATED FUNCTIONS --//
 //----------------------------------------------//
 
-char *findTagSQLite(char *tag, int level)
+char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""))
 {
 
 	char *expanded = NULL;
@@ -145,20 +145,28 @@ char *findTagSQLite(char *tag, int level)
     // First create the SQLite SQL statement ("prepare" it for running)
 	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
 	{
-		char *tagType = NULL;
-        TCHAR *fileType = NULL;
-		fileType = new TCHAR[MAX_PATH];
-        ::swprintf(fileType,TEXT("GLOBAL"));
-		if (level == 1)
-		{
-			::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-		} else if (level == 2)
-		{
-			::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-		}
+        char *tagType = NULL;
+        if (level == 0)
+        {
+            convertToUTF8(scope, &tagType);
+        } else
+        {
+            
+            TCHAR *fileType = NULL;
+            fileType = new TCHAR[MAX_PATH];
+            ::swprintf(fileType,TEXT("GLOBAL"));
+            if (level == 1)
+            {
+	            ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
+            } else if (level == 2)
+            {
+	            ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
+            }
         
-        convertToUTF8(fileType, &tagType);
-		delete [] fileType;
+            convertToUTF8(fileType, &tagType);
+            delete [] fileType;
+		
+        }
 		
 		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
 		sqlite3_bind_text(stmt, 1, tagType, -1, SQLITE_STATIC);
@@ -181,9 +189,43 @@ char *findTagSQLite(char *tag, int level)
 	return expanded; //remember to delete the returned expanded after use.
 }
 
+void insertSnippet()
+{
+    sqlite3_stmt *stmt;
+
+    HWND curScintilla = getCurrentScintilla();
+    int posCurrent = ::SendMessage(curScintilla, SCI_GETCURRENTPOS,0,0);
+
+    int index = _snippetDock.getCount() - _snippetDock.getSelection()-1;
+    
+    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+	{
+		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
+		sqlite3_bind_text(stmt, 1, snippetCache[index].scope , -1, SQLITE_STATIC);
+		sqlite3_bind_text(stmt, 2, snippetCache[index].triggerText, -1, SQLITE_STATIC);
+
+		// Run the query with sqlite3_step
+		if(SQLITE_ROW == sqlite3_step(stmt))  // SQLITE_ROW 100 sqlite3_step() has another row ready
+		{
+			const char* snippetText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
+            char * tempSnippetText;
+            tempSnippetText = new char [strlen(snippetText)+1];
+            strcpy(tempSnippetText, snippetText);
+            replaceTag(curScintilla, tempSnippetText, posCurrent, posCurrent);
+            
+            //::SendMessage(curScintilla, SCI_INSERTTEXT, posCurrent, (LPARAM)snippetText);
+		}
+		
+	}
+
+	sqlite3_finalize(stmt);
+    ::SendMessage(curScintilla,SCI_GRABFOCUS,0,0); 
+
+}
+
 void createSnippet()
 {
-    //TODO: empty undo pool and go to save point
+
     //::MessageBox(nppData._nppHandle, TEXT("CREATE~!"), TEXT("Trace"), MB_OK);
     ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
     HWND curScintilla = getCurrentScintilla();
@@ -195,11 +237,15 @@ void createSnippet()
     ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate3);
     ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"This is a sample snippet.\r\nThis is a sample snippet.\r\nThis is a sample snippet.\r\nThis is a sample snippet.\r\n[>END<]");
 
+    ::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
+    ::SendMessage(curScintilla,SCI_EMPTYUNDOBUFFER,0,0);
+    
+
 }
 
 void editSnippet()
 {
-    //TODO: empty undo pool and go to save point
+   
     HWND curScintilla = getCurrentScintilla();
     int index = _snippetDock.getCount() - _snippetDock.getSelection()-1;
     if (sizeof(snippetCache[index].scope) <4)
@@ -242,7 +288,8 @@ void editSnippet()
 
 	sqlite3_finalize(stmt);
 
-
+    ::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
+    ::SendMessage(curScintilla,SCI_EMPTYUNDOBUFFER,0,0);
 }
 
 void deleteSnippet()
@@ -384,6 +431,7 @@ void saveSnippet()
     delete [] tagTypeText;
     delete [] snippetText;
 
+    ::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
     updateDockItems();
 }
 
@@ -657,6 +705,8 @@ void showSnippetDock()
 
 void updateDockItems()
 {
+
+
     int scopeLength=0;
     int triggerLength=0;
     int tempScopeLength=0;
@@ -735,7 +785,7 @@ void updateDockItems()
     {
         if (snippetCache[j].scope !=NULL)
         {
-            char newText[200]="";
+            char newText[200]=""; // TODO: this const length array problem has to be solve when we have scripting hotspot as the hotspot can get super long.
         
             strcat(newText,"<");
             strcat(newText,snippetCache[j].scope);
@@ -743,7 +793,7 @@ void updateDockItems()
             strcat(newText,snippetCache[j].triggerText);
 
             size_t origsize = strlen(newText) + 1;
-            const size_t newsize = 100;
+            const size_t newsize = 300;
             size_t convertedChars = 0;
             wchar_t convertedTagText[newsize];
             mbstowcs_s(&convertedChars, convertedTagText, origsize, newText, _TRUNCATE);
@@ -753,72 +803,14 @@ void updateDockItems()
         
         
     }
-     
 
+    HWND curScintilla = getCurrentScintilla();
+    ::SendMessage(curScintilla,SCI_GRABFOCUS,0,0); 
+    
     sqlite3_finalize(stmt);
 
 
 }
-
-//void updateDockItems()
-//{
-//    _snippetDock.clearDock();
-//
-//    sqlite3_stmt *stmt;
-//    
-//	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT tag,tagType FROM snippets WHERE tagType = ? OR tagType = ? OR tagType = ?", -1, &stmt, NULL))
-//	{
-//        char *tagType = NULL;
-//        TCHAR *fileType = NULL;
-//		fileType = new TCHAR[MAX_PATH];
-//
-//		::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-//        convertToUTF8(fileType, &tagType);
-//        sqlite3_bind_text(stmt, 1, tagType, -1, SQLITE_STATIC);
-//		
-//        ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-//        convertToUTF8(fileType, &tagType);
-//        sqlite3_bind_text(stmt, 2, tagType, -1, SQLITE_STATIC);
-//                        
-//        sqlite3_bind_text(stmt, 3, "GLOBAL", -1, SQLITE_STATIC);
-//        //int cols = sqlite3_column_count(stmt);
-//        
-//        delete [] fileType;
-//
-//
-//        while(true)
-//        {
-//            if(SQLITE_ROW == sqlite3_step(stmt))
-//            {
-//                char* tagText = (char *)(sqlite3_column_text(stmt, 0));
-//                char* tagTypeText = (char *)(sqlite3_column_text(stmt, 1));
-//                
-//                char newText[200]="";
-//                strcat(newText,"<");
-//                strcat(newText,tagTypeText);
-//                strcat(newText,">   ");
-//                strcat(newText,tagText);
-//
-//
-//                size_t origsize = strlen(newText) + 1;
-//                const size_t newsize = 100;
-//                size_t convertedChars = 0;
-//                wchar_t convertedTagText[newsize];
-//                mbstowcs_s(&convertedChars, convertedTagText, origsize, newText, _TRUNCATE);
-//
-//                _snippetDock.addDockItem(convertedTagText);
-//
-//                //HWND curScintilla = getCurrentScintilla();
-//                //::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)tagText);
-//            }
-//            else
-//            {
-//                break;  
-//            }
-//        }
-//    }
-//    sqlite3_finalize(stmt);
-//}
 
 void clearCache()
 {
@@ -877,7 +869,8 @@ void fingerText()
                 //    delete [] w;
                 //}
 
-                //char *expanded = findTag(tag);
+                
+
                 char *expanded;
 
                 int level=1;
