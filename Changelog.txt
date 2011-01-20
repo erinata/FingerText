@@ -1,6 +1,6 @@
 current development version
 
-
+Double Click insert snippet
 
 0.3.9
 Implemented Edit and Delete

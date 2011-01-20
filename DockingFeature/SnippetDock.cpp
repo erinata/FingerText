@@ -24,29 +24,26 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 {
 	switch (message) 
 	{
+        
 		case WM_COMMAND : 
 		{
             if (HIWORD(wParam) == EN_KILLFOCUS && LOWORD(wParam) == IDC_LENGTH)
             {
                 updateDockItems();
 
-            } else if (HIWORD(wParam) == LBN_KILLFOCUS && LOWORD(wParam) == IDC_SNIPPET_LIST)
+            } else if (HIWORD(wParam) == LBN_SELCHANGE && LOWORD(wParam) == IDD_SNIPPET_DOCK)
             {
-                 ::Button_Enable(GetDlgItem(_hSelf, IDC_SAVE), false);
-                 ::Button_Enable(GetDlgItem(_hSelf, IDC_EDIT), false);
-                 ::Button_Enable(GetDlgItem(_hSelf, IDC_DELETE), false);
-                 //::Button_Enable(GetDlgItem(_hSelf, IDC_CREATE), false);
 
             } else if (HIWORD(wParam) == LBN_SETFOCUS && LOWORD(wParam) == IDC_SNIPPET_LIST)
             {
-                 ::Button_Enable(GetDlgItem(_hSelf, IDC_SAVE), true);
-                 ::Button_Enable(GetDlgItem(_hSelf, IDC_EDIT), true);
-                 ::Button_Enable(GetDlgItem(_hSelf, IDC_DELETE), true);
+                //::Button_Enable(GetDlgItem(_hSelf, IDC_SAVE), true);
+                ::Button_Enable(GetDlgItem(_hSelf, IDC_EDIT), true);
+                ::Button_Enable(GetDlgItem(_hSelf, IDC_DELETE), true);
                 //::Button_Enable(GetDlgItem(_hSelf, IDC_CREATE), true);
 
             } else if (HIWORD(wParam) == LBN_DBLCLK && LOWORD(wParam) == IDC_SNIPPET_LIST)
             {
-                
+                insertSnippet();
                 //if (getSelection()==3)
                 //{
                 //    testing();
@@ -57,6 +54,9 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 
 			switch (wParam)
 			{
+
+
+
         		case IDC_EDIT :
 				{
                     editSnippet();
@@ -102,6 +102,11 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 			}
 			return FALSE;
 		}
+
+        case WM_KILLFOCUS:
+        {
+
+        }
         
         case WM_INITDIALOG:
         {
