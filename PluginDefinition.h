@@ -92,6 +92,7 @@ void convertToUTF8(TCHAR *orig, char **utf8);
 void showSnippetDock();
 void updateDockItems();
 void saveSnippet();
+void createSnippet();
 
 void fingerText();
 

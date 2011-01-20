@@ -164,6 +164,16 @@ char *findTagSQLite(char *tag, int level)
 	return expanded; //remember to delete the returned expanded after use.
 }
 
+void createSnippet()
+{
+    //::MessageBox(nppData._nppHandle, TEXT("CREATE~!"), TEXT("Trace"), MB_OK);
+    ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
+    HWND curScintilla = getCurrentScintilla();
+
+    ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)"------ FingerText Snippet Editor View ------\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n------------- [ Trigger Text ] --------------\r\nsampletriggertext\r\n---------------- [ Scope ] ------------------\r\nGLOBAL\r\n------------ [ Snippet Content ] ------------\r\nThis is a sample snippet.\r\nThis is a sample snippet.\r\nThis is a sample snippet.\r\nThis is a sample snippet.\r\n[>END<]");
+}
+
+
 void saveSnippet()
 {
     HWND curScintilla = getCurrentScintilla();
