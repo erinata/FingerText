@@ -138,6 +138,7 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 
 char *findTagSQLite(char *tag, int level)
 {
+
 	char *expanded = NULL;
 	sqlite3_stmt *stmt;
 
@@ -182,6 +183,7 @@ char *findTagSQLite(char *tag, int level)
 
 void createSnippet()
 {
+    //TODO: empty undo pool and go to save point
     //::MessageBox(nppData._nppHandle, TEXT("CREATE~!"), TEXT("Trace"), MB_OK);
     ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
     HWND curScintilla = getCurrentScintilla();
@@ -197,12 +199,16 @@ void createSnippet()
 
 void editSnippet()
 {
+    //TODO: empty undo pool and go to save point
     HWND curScintilla = getCurrentScintilla();
     int index = _snippetDock.getCount() - _snippetDock.getSelection()-1;
-    if (!index>=0)
+    if (sizeof(snippetCache[index].scope) <4)
     {
         createSnippet();
+        
         return;
+
+        //FIX : Don't know why the create page is not shoing up if I click edit before choing any thing in list box
         //TODO : should select the corresponding list box item
         //TODO : or consider create a new snippet after a messagebox confirmation
 
@@ -664,7 +670,7 @@ void updateDockItems()
 
     sqlite3_stmt *stmt;
     
-	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT tag,tagType FROM snippets WHERE tagType = ? OR tagType = ? OR tagType = ? LIMIT ?", -1, &stmt, NULL))
+	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT tag,tagType FROM snippets WHERE tagType = ? OR tagType = ? OR tagType = ? ORDER BY tag DESC LIMIT ? ", -1, &stmt, NULL))
 	{
         char *tagType = NULL;
         TCHAR *fileType = NULL;

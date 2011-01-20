@@ -62,6 +62,18 @@ Again this is alpha so I don't know if I will change these things in the future 
 == Change log 
 (for full change log please refer to the CHANGELOG file in the repository)
 
+0.3.9
+Implemented Edit and Delete
+Refine snippet CRUD implementation
+Disable buttons when snippet list not in focus
+
+0.3.8
+Add Snippet Dock, implemented snippet list.
+Impletmented Create and save snippet.
+
+0.3.7
+Resume Filename specific snippets under sqlite system.
+
 0.3.6
 Using Sqlite to store snippets instead of using ecusive file system. Snippet CRUD inside notepad++ is not available yet. 
 

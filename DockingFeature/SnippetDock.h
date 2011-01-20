@@ -63,12 +63,6 @@ public :
         ::SetDlgItemText(_hSelf, ID_SNIPSHOW_EDIT,TEXT("Snippet Preview here...\r\nSnippet Preview here...\r\nSnippet Preview here...\r\n"));
     }
     
-    void disableSaveSnippet()
-    {
-        HWND hwndButton = GetDlgItem(_hSelf, IDC_SAVE);
-        ::Button_Enable(hwndButton, false);
-
-    }
 
     int getLength() 
     {
@@ -86,7 +80,9 @@ public :
     {
         int retVal;
         HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
-        retVal = SendMessage(hwndList, LB_GETCURSEL, 0, 0);
+//        retVal = SendMessage(hwndList, LB_GETCURSEL, 0, 0);
+        retVal = SendMessage(hwndList, LB_GETANCHORINDEX, 0, 0);
+        
         return retVal;
 
     }
