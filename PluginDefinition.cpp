@@ -563,7 +563,7 @@ void showSnippetDock()
 void updateDockItems()
 {
 
-    snippetCacheSize=10;
+    snippetCacheSize=_snippetDock.getLength();
     snippetCache = new SnipIndex [snippetCacheSize];
     clearCache();
 

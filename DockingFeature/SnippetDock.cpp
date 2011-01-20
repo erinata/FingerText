@@ -28,6 +28,19 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 		{
 			switch (wParam)
 			{
+                case IDC_REFRESH:
+                {
+                    updateDockItems();
+                    
+        
+        
+           
+                   return TRUE;
+        
+                }
+
+                
+
 				case IDC_EDIT :
 				{
 
@@ -70,7 +83,7 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 			}
 			return FALSE;
 		}
-
+        
         case WM_INITDIALOG:
         {
 
