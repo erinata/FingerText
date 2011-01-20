@@ -197,35 +197,32 @@ void editSnippet()
 void deleteSnippet()
 {
     HWND curScintilla = getCurrentScintilla();
-    int index = _snippetDock.getSelection();
-    char somechar[10];
-    ::_itoa(index, somechar, 10); 
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)somechar);
-    
+    int index = _snippetDock.getCount() - _snippetDock.getSelection()-1;
 
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)snippetCache[index].scope);
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)snippetCache[index].triggerText);
-    //
-    //size_t origsize = strlen(snippetCache[index].scope) + 1;
-    //const size_t newsize = 100;
-    //size_t convertedChars = 0;
-    //wchar_t convertedTagText[newsize];
-    //mbstowcs_s(&convertedChars, convertedTagText, origsize, snippetCache[index].scope, _TRUNCATE);
-    //
-    //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)convertedTagText);
-    //sqlite3_stmt *stmt;
-    //
-    //if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
-    //{
-    //    sqlite3_bind_text(stmt, 1, snippetCache[index].scope, -1, SQLITE_STATIC);
-    //    sqlite3_bind_text(stmt, 2, snippetCache[index].triggerText, -1, SQLITE_STATIC);
-    //    sqlite3_step(stmt);
-    //
-    //}
-    //sqlite3_finalize(stmt);
-    //
-    //updateDockItems();
-    //
+    //char somechar[10];
+    //::_itoa(index, somechar, 10); 
+    //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)somechar);
+    ////
+    ////
+    //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)TEXT("\r\n"));
+    //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)snippetCache[index].scope);
+    //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)TEXT("\r\n"));
+    //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)snippetCache[index].triggerText);
+    //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)TEXT("\r\n"));
+
+    sqlite3_stmt *stmt;
+    
+    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+    {
+        sqlite3_bind_text(stmt, 1, snippetCache[index].scope, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 2, snippetCache[index].triggerText, -1, SQLITE_STATIC);
+        sqlite3_step(stmt);
+    
+    }
+    sqlite3_finalize(stmt);
+    
+    updateDockItems();
+    
 }
 
 
@@ -672,22 +669,28 @@ void updateDockItems()
     }
 
     for (int j=0;j<snippetCacheSize;j++)
-    {  
-        char newText[400]="";
-        strcat(newText,"<");
-        strcat(newText,snippetCache[j].scope);
-        strcat(newText,">   ");
-        strcat(newText,snippetCache[j].triggerText);
+    {
+        if (snippetCache[j].scope !=NULL)
+        {
+            char newText[100]="";
+        
+            strcat(newText,"<");
+            strcat(newText,snippetCache[j].scope);
+            strcat(newText,">   ");
+            strcat(newText,snippetCache[j].triggerText);
 
-        size_t origsize = strlen(newText) + 1;
-        const size_t newsize = 100;
-        size_t convertedChars = 0;
-        wchar_t convertedTagText[newsize];
-        mbstowcs_s(&convertedChars, convertedTagText, origsize, newText, _TRUNCATE);
+            size_t origsize = strlen(newText) + 1;
+            const size_t newsize = 100;
+            size_t convertedChars = 0;
+            wchar_t convertedTagText[newsize];
+            mbstowcs_s(&convertedChars, convertedTagText, origsize, newText, _TRUNCATE);
 
-        _snippetDock.addDockItem(convertedTagText);
+            _snippetDock.addDockItem(convertedTagText);
+        }
+        
+        
     }
-                
+     
 
     sqlite3_finalize(stmt);
 
