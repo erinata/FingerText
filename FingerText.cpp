@@ -82,6 +82,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             break;
         case NPPN_BUFFERACTIVATED:
             updateDockItems();
+            // TODO: check if the buffer is a snippet edit mode and (dis)enable save button
+
             break;
         case SCN_CHARADDED:
             // trigger when anything is typed

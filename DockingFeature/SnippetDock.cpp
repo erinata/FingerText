@@ -30,13 +30,27 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
             {
                 updateDockItems();
 
+            } else if (HIWORD(wParam) == LBN_KILLFOCUS && LOWORD(wParam) == IDC_SNIPPET_LIST)
+            {
+                 ::Button_Enable(GetDlgItem(_hSelf, IDC_SAVE), false);
+                 ::Button_Enable(GetDlgItem(_hSelf, IDC_EDIT), false);
+                 ::Button_Enable(GetDlgItem(_hSelf, IDC_DELETE), false);
+                 //::Button_Enable(GetDlgItem(_hSelf, IDC_CREATE), false);
+
+            } else if (HIWORD(wParam) == LBN_SETFOCUS && LOWORD(wParam) == IDC_SNIPPET_LIST)
+            {
+                 ::Button_Enable(GetDlgItem(_hSelf, IDC_SAVE), true);
+                 ::Button_Enable(GetDlgItem(_hSelf, IDC_EDIT), true);
+                 ::Button_Enable(GetDlgItem(_hSelf, IDC_DELETE), true);
+                //::Button_Enable(GetDlgItem(_hSelf, IDC_CREATE), true);
+
             } else if (HIWORD(wParam) == LBN_DBLCLK && LOWORD(wParam) == IDC_SNIPPET_LIST)
             {
                 
-                if (getSelection()==3)
-                {
-                    testing();
-                }                    
+                //if (getSelection()==3)
+                //{
+                //    testing();
+                //}                    
 
             } 
 
@@ -73,6 +87,7 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 
                 case IDC_CREATE:
                 {
+                    
                     createSnippet();
                     return TRUE;
                 }
@@ -90,9 +105,9 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
         
         case WM_INITDIALOG:
         {
-
-
-
+            
+            ::SetDlgItemInt(_hSelf,IDC_LENGTH,100, false);
+            //SendMessage(GetDlgItem(_hSelf, IDC_SNIPPET_LIST), LB_SETSEL , true, 1);
             return TRUE;
          
         } 
