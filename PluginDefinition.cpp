@@ -518,7 +518,7 @@ void updateDockItems()
 {
     sqlite3_stmt *stmt;
     
-	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT tag FROM snippets WHERE tagType = ? OR tagType = ? OR tagType = ?", -1, &stmt, NULL))
+	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT tag,tagType FROM snippets WHERE tagType = ? OR tagType = ? OR tagType = ?", -1, &stmt, NULL))
 	{
         char *tagType = NULL;
         TCHAR *fileType = NULL;
@@ -542,14 +542,24 @@ void updateDockItems()
         {
             if(SQLITE_ROW == sqlite3_step(stmt))
             {
-
                 char* tagText = (char *)(sqlite3_column_text(stmt, 0));
+                char* tagTypeText = (char *)(sqlite3_column_text(stmt, 1));
+                
+                char newText[200]="";
+                strcat(newText,"<");
+                strcat(newText,tagTypeText);
+                strcat(newText,">   ");
+                strcat(newText,tagText);
 
-                size_t origsize = strlen(tagText) + 1;
+
+                size_t origsize = strlen(newText) + 1;
                 const size_t newsize = 100;
                 size_t convertedChars = 0;
                 wchar_t convertedTagText[newsize];
-                mbstowcs_s(&convertedChars, convertedTagText, origsize, tagText, _TRUNCATE);
+                mbstowcs_s(&convertedChars, convertedTagText, origsize, newText, _TRUNCATE);
+
+
+
 
                 _snippetDock.addDockItem(convertedTagText);
 
