@@ -48,7 +48,7 @@ struct SnipIndex {
 SnipIndex* snippetCache;
 int snippetCacheSize;
 
-char* snippetEditTemplate1 = "------ FingerText Snippet Editor View ------\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n------------- [ Trigger Text ] --------------\r\n";
+char* snippetEditTemplate1 = "------ FingerText Snippet Editor View ------\r\nInstructions of how to edit snippet to be completed ....................................\r\nInstructions of how to edit snippet to be completed ....................................\r\nInstructions of how to edit snippet to be completed ....................................\r\n\r\n\r\n\r\n\r\n------------- [ Trigger Text ] --------------\r\n";
 char* snippetEditTemplate2 = "\r\n---------------- [ Scope ] ------------------\r\n";
 char* snippetEditTemplate3 = "\r\n------------ [ Snippet Content ] ------------\r\n";
 
@@ -108,6 +108,10 @@ void commandMenuInit()
 //
 void commandMenuCleanUp()
 {
+    delete [] snippetEditTemplate1;
+    delete [] snippetEditTemplate2;
+    delete [] snippetEditTemplate3;
+
     delete funcItem[0]._pShKey;
 	// Don't forget to deallocate your shortcut here
 }
@@ -246,27 +250,32 @@ void createSnippet()
 void editSnippet()
 {
    
+    // TODO: The snippet menu should show all snippets available, instead of just global snippets, or there may be some better way to deal with this)
     HWND curScintilla = getCurrentScintilla();
     int index = _snippetDock.getCount() - _snippetDock.getSelection()-1;
-    if (sizeof(snippetCache[index].scope) <4)
-    {
-        createSnippet();
-        
-        return;
+    char * tempTriggerText;
+    char * tempScope;
+    char * tempSnippetText;
 
-        //FIX : Don't know why the create page is not shoing up if I click edit before choing any thing in list box
-        //TODO : should select the corresponding list box item
-        //TODO : or consider create a new snippet after a messagebox confirmation
+    tempTriggerText = new char [strlen(snippetCache[index].triggerText)];
+    tempScope = new char [strlen(snippetCache[index].scope)];
 
-    }
+    strcpy(tempTriggerText, snippetCache[index].triggerText);
+    strcpy(tempScope, snippetCache[index].scope);
 
-    ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
+    //if (sizeof(snippetCache[index].scope) <4)
+    //{
+    //    createSnippet();
+    //    
+    //    return;
+    //
+    //    //FIX : Don't know why the create page is not shoing up if I click edit before choing any thing in list box
+    //    //TODO : should select the corresponding list box item
+    //    //TODO : or consider create a new snippet after a messagebox confirmation
+    //
+    //}
 
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate1);
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetCache[index].triggerText);
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate2);
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetCache[index].scope);
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate3);
+    
     
     sqlite3_stmt *stmt;
 
@@ -274,13 +283,22 @@ void editSnippet()
     if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
 	{
 		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
-		sqlite3_bind_text(stmt, 1, snippetCache[index].scope , -1, SQLITE_STATIC);
-		sqlite3_bind_text(stmt, 2, snippetCache[index].triggerText, -1, SQLITE_STATIC);
+		sqlite3_bind_text(stmt, 1, tempScope , -1, SQLITE_STATIC);
+		sqlite3_bind_text(stmt, 2, tempTriggerText, -1, SQLITE_STATIC);
 
 		// Run the query with sqlite3_step
 		if(SQLITE_ROW == sqlite3_step(stmt))  // SQLITE_ROW 100 sqlite3_step() has another row ready
 		{
 			const char* snippetText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
+            
+            ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
+            ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate1);
+            ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)tempTriggerText);
+            ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate2);
+            ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)tempScope);
+            ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate3);
+
+
             ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetText);
 		}
 		
@@ -393,6 +411,7 @@ void saveSnippet()
                 delete [] tagTypeText;
                 delete [] snippetText;
                 // not overwrite
+                ::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), TEXT("FingerText"), MB_OK);
                 return;
 
             } else
@@ -403,6 +422,10 @@ void saveSnippet()
                     sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
 		            sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
                     sqlite3_step(stmt);
+                    
+                } else
+                {
+                    ::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT("FingerText"), MB_OK);
                 }
                 
             }
@@ -410,9 +433,11 @@ void saveSnippet()
         } else
         {
             sqlite3_finalize(stmt);
+
             
-            //::MessageBox(nppData._nppHandle, TEXT("Not Exist!"), TEXT("Trace"), MB_OK);
+            
         }
+        
     }
     
     
@@ -425,6 +450,7 @@ void saveSnippet()
     
 		// Run the query with sqlite3_step
 		sqlite3_step(stmt); // SQLITE_ROW 100 sqlite3_step() has another row ready
+        ::MessageBox(nppData._nppHandle, TEXT("The Snippet is saved."), TEXT("FingerText"), MB_OK);
 	}
     sqlite3_finalize(stmt);
     delete [] tagText;
@@ -717,24 +743,25 @@ void updateDockItems()
     clearCache();
 
     _snippetDock.clearDock();
-
     sqlite3_stmt *stmt;
-    
+
 	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT tag,tagType FROM snippets WHERE tagType = ? OR tagType = ? OR tagType = ? ORDER BY tag DESC LIMIT ? ", -1, &stmt, NULL))
 	{
-        char *tagType = NULL;
-        TCHAR *fileType = NULL;
-		fileType = new TCHAR[MAX_PATH];
+        char *tagType1 = NULL;
+        TCHAR *fileType1 = NULL;
+		fileType1 = new TCHAR[MAX_PATH];
+        char *tagType2 = NULL;
+        TCHAR *fileType2 = NULL;
+		fileType2 = new TCHAR[MAX_PATH];
 
-		::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-        convertToUTF8(fileType, &tagType);
-        sqlite3_bind_text(stmt, 1, tagType, -1, SQLITE_STATIC);
-		
-        ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-        convertToUTF8(fileType, &tagType);
-        sqlite3_bind_text(stmt, 2, tagType, -1, SQLITE_STATIC);
-          
-
+		::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType1);
+        convertToUTF8(fileType1, &tagType1);
+        sqlite3_bind_text(stmt, 1, tagType1, -1, SQLITE_STATIC);
+        		
+        ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType2);
+        convertToUTF8(fileType2, &tagType2);
+        sqlite3_bind_text(stmt, 2, tagType2, -1, SQLITE_STATIC);
+        
         sqlite3_bind_text(stmt, 3, "GLOBAL", -1, SQLITE_STATIC);
         //int cols = sqlite3_column_count(stmt);
 
@@ -744,9 +771,6 @@ void updateDockItems()
 
         sqlite3_bind_text(stmt, 4, snippetCacheSizeText, -1, SQLITE_STATIC);
         
-        delete [] tagType;
-        delete [] fileType;
-
         int row = 0;
 
         while(true)
@@ -779,6 +803,14 @@ void updateDockItems()
                 break;  
             }
         }
+
+        
+        delete [] tagType1;
+        delete [] fileType1;
+
+        delete [] tagType2;
+        delete [] fileType2;
+
     }
 
     for (int j=0;j<snippetCacheSize;j++)
@@ -924,51 +956,7 @@ void testing()
     ::MessageBox(nppData._nppHandle, TEXT("Testing!"), TEXT("Trace"), MB_OK);
     
     HWND curScintilla = getCurrentScintilla();
-
     
-    //snippetIndex[0][0] = NULL;
-    //snippetIndex[0][1] = NULL;
-    //snippetIndex[1][0] = NULL;
-    //snippetIndex[1][1] = NULL;
-    //
-    //::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetIndex[0][0]);
-    //::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetIndex[0][1]);
-    //::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetIndex[1][0]);
-    //::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetIndex[1][1]);
-
-    //_snippetDock.disableSaveSnippet();
-    
-    //snippetCache = new SnipIndex [10];
-
-    
-    //snippetCache = new SnipIndex [20];
-
-    //snippetCache[0].triggerText="testText";
-    //snippetCache[0].scope="testscope";
-    //snippetCache[1].triggerText="testText1";
-    //snippetCache[1].scope="testscope1";
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[0].scope);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[0].triggerText);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[1].scope);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[1].triggerText);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[8].scope);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[8].triggerText);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[9].scope);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[9].triggerText);
-
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)TEXT("\r\n"));
-    
-    clearCache();
-
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[0].scope);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[0].triggerText);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[1].scope);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[1].triggerText);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[8].scope);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[8].triggerText);
-
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[9].scope);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[9].triggerText);
 
 }
 

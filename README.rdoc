@@ -6,18 +6,18 @@ Tab triggered snippet plugin for Notepad++.
 
 Tab triggered snippet plugin for Notepad++. Support global snippets and snippets for each file extension or file name, hotspot navigation, multiple hotspot simultaneous editing, hotspot text hint(instead of just a $ or # sign) and hotspot default value. Comments can be added to snippets. 
 
-This plugin is still in Alpha (or may be pre-alpha.....) stage so do expect that it is buggy. The development direction is to make it at least a working snippet plugin, and probably a tab triggered simple command plugin, a convenient console in the editor and finally snippet with ruby scripting support.
+This plugin is still in Alpha stage so do expect that it can be buggy. The development direction is to make it at least a working snippet plugin, and probably a tab triggered simple command plugin, a convenient console in the editor and finally snippet with ruby scripting support.
 
 Again this is alpha version and I am still experimenting different methods. So do expect non-backward compatible changes in future releases.
 
 == Install
 
-Download the file "FingerText - 0.3.5.zip" at 
-https://github.com/downloads/erinata/FingerText/FingerText%20-%200.3.5.zip
+Download the file "FingerText - 0.3.10.zip" at 
+https://github.com/downloads/erinata/FingerText/FingerText%20-%200.3.10.zip
 
 Unzip the package and copy the files in the plugins folder of the zip file into the plugins folder of Notepad++.
 
-== Usage
+== Basic Usage
 
 To trigger a snippet. Type the snippet tag and hit the [tab] key.
 
@@ -31,11 +31,17 @@ Some snippets are file extension specific. For example, if you open a file calle
   
   cpp[tab]
 
-The tag will be replaced by "This is a cpp snippet". But if you do the same thing in a file call abc.txt, the snippet will not be triggered.
+The tag will be replaced by "This is a cpp snippet". But if you do the same thing in a file called abc.txt, the snippet will not be triggered.
 
 Some snippets are File name specific. It will be triggered only when the file name matches.
 
-(Notice that it does not depends on which language you choose in notepad++, what matters is the file name!)
+(Notice that it does not depends on which language you choose in notepad++, what matters is the file name and the extension name!)
+
+You can show the snippet list by selecting the menu command (Plugins>FingerText>Show Snippet Dock). A list of available snippets are show in the list box. This menu dynamically change according to the current file.
+
+You can create, edit and delete snippets using the buttons on the snippet dock.
+
+== Hotspots navigation
 
 Some snippets contain hotspots. For example, open a new file and trigger the snippet "mit" (type "mit"(without quote and hit [tab]). 
 
@@ -43,59 +49,45 @@ Some snippets contain hotspots. For example, open a new file and trigger the sni
 
 A sample of mit license will appear in the editor. Your cursor is currently at the "year" spot. And you can type in the year (say 2011) and hit [tab] again. The cursor is now on the name spot and you can enter the name.
 
-Some of them contain multiple hotspot with the same name. For example you can trigger the snippet "awesome". Your cursor is on all three spots and anything you type will change all of them simultaneously. 
+Some of them contain multiple hotspot with the same name. For example you can trigger the snippet "awesome". Your cursor is on all three spots and anything you type will change all of them simultaneously. You can also trigger the "for" snippet in an .cpp file and press the letter "i" once to change the iteration variable to "i"
 
-To see all the available snippets. Go to the the plugin folder of Notepad++, go into the folder FingerText. For example if your notepad++ is installed in C:\Program files\Notepad++, then the snippets will be in C:\Program files\Notepad++\plugins\FingerText
+Open a .cpp file and trigger the snippet "template". Use [tab] to navigate to each part and fill in the details and have a working framework for your cpp program. (Also see the snippet "simple" in Makefile)
 
-All the snippets are arranged in different folders. The folder "(Snippet)Global" contain snippets that is available everywhere.
+== Create and Edit Snippets
 
-To make your own snippet, just use the existing snippets as reference. Remember each file contains one snippet. The folder name indicates the scope and the file name indicates the tag. Just type whatever you like in the snippet file. REMEMBER to place a [>END<] at the end of each snippet. Also, make sure that you encode your snippet file in ANSI. (The snippet can be triggered in ANSI or UTF-8 file though)
+To create new snippets, click the create button under the snippet list. A new document is opened and you can edit the Trigger Text (line 10), Scope (line 12) and you can enter your snippet content on line 14 or below. REMEMBER to place a [>END<] at the end of the snippet. Any thing after the [>END<] will not be inserted as snippet so you can write some comment about your snippet there. Click the save button when you finish editing.
 
-Any thing after the [>END<] will not be inserted as snippet so you can write some comment about your snippet there.
+To edit a snippet, select the snippet on the snippet list and click the edit button. The snippet is opened in a new file and you can edit the content. Click the save button when you finish editing.
 
-Hotspots are indicated by $[![Whatever name]!]. Hotspots with the same name will be highlighted at the same time. The "Whatever name" can be a hint of the hotspot, or you can fill is with a default value. (If you type nothing and just hit tab, the hotspot $[![Whatever name]!] will be substituted by the string "Whatever name"(without quotes)). You may want to add a empty Hotspot (i.e. $[![]!]) at the location where you want the cursor to move to after tabbing through the last hotspot.
+The error checking is still very crappy and for sure I will improve it in the future release. At the moment, just be careful not to mess up with the template when you are editing or creating snippets. If you are in doubt, you can always press the "create" button to get a fresh correct template.
 
-Chinese characters are supported in snippets. You can try it by triggering the snippet "chinese". All snippets should be encoded in ANSI, and can be triggered in ANSI or UTF-8 document.  Notice that Chinese character tag name are not supported. Actually sometimes it works sometimes it doesn't so it is not officially supported. 
+Deleting a snippet is easy, just select the snippet and click the delete button.
+
+If you use sqlite, you can directly edit the snippet database too. It is not officially supported but the database is located at the plugins\FingerText\snippets.db3
+
+== Advanced snippet editing
+
+Other than plain text, you can put one or more Hotspots in you snippet.
+
+Hotspots are indicated by $[![Whatever name]!]. The "Whatever name" can be a hint of the hotspot, or you can fill is with a default value. (If you type nothing and just hit tab, the hotspot $[![Whatever name]!] will be substituted by the string "Whatever name"(without quotes)). You may want to add a empty Hotspot (i.e. $[![]!]) at the location where you want the cursor to move to after tabbing through the last hotspot.
+
+Notice that hotspots with the same name will be highlighted at the same time. See the snippet "for" (you can trigger only in a .cpp file) to see it in action.
+
+Chinese characters are supported in snippets. You can try it by triggering the snippet "chinese". All snippets should be encoded in UTF-8. Notice that Chinese character tag name are not supported. Actually sometimes it works sometimes it doesn't so it is not officially supported. 
 
 Again this is alpha so I don't know if I will change these things in the future or not. And there are some sample snippet for C ,C++ and Stata do file.
 
 == Change log 
-(for full change log please refer to the CHANGELOG file in the repository)
+(for full change log (including the development log) please refer to the CHANGELOG file in the repository)
 
-0.3.9
-Implemented Edit and Delete
-Refine snippet CRUD implementation
-Disable buttons when snippet list not in focus
+0.3.11
+Using Sqlite to store snippets instead of using recusive file system.
+Add Snippet Dock, which shows all available snippets according to the curent file.
+Implemented Create Edit and Delete from the snippet dock.
+Impletmented Double Click insert snippet function.
 
-0.3.8
-Add Snippet Dock, implemented snippet list.
-Impletmented Create and save snippet.
-
-0.3.7
-Resume Filename specific snippets under sqlite system.
-
-0.3.6
-Using Sqlite to store snippets instead of using ecusive file system. Snippet CRUD inside notepad++ is not available yet. 
-
-0.3.5:
-Fixed problem after merging caused by incompatibility of two branches (tab key will scroll the page when tag is not found, triggering snippet not at the beginning of the document will clear characters before the tag)
-Closing autocomplete window when snippet is triggered
-Fixing problem of multiple identical hotspots sometimes not simultaneously selected
-Fixed unicode convertion buffer size
-
-0.3.4
-Fixing problem caused after merging (not preserving working folder, chinese snippet not working under UTF-8 document)
-Add version resource file
-
-0.3.3
-Merging the improvement by Dave Brotherstone.
-
-0.3.1
-Add more details in usage description.
-edit some typo in sample template
-refactor the tag path part
-fixed possible bug of char array manipulation
-allow for more hotspots
+0.3.2
+Last stable version using the recusive file system to store snippets. All the snippets create under this version will not work in version later than FingerText - 0.3.5
 
 0.3.0
 Implemented Snippet set for specific file name.
@@ -104,29 +96,6 @@ performance improvement to path search
 
 0.2.6
 Multiple hotspots selection and hotspot hint text replacement works simultaneously
-
-0.2.3
-Add support for chinese character tag name. Can be triggered from either ANSI or Utf-8 document (But chinese name mess up the word selection in the editor so it may not trigger correctly under ANSI document. So English tag names are encouraged.)
-
-0.2.2
-Add Readme and License
-Add basic c++ sample snippets
-fixed tag longer than snippet problem
-fixed the limited row size problem
-Turn on the undo step squash function which is accidentally turned off in previous version
-Lots of performance improvement changes
-
-0.2.0
-Support utf-8 encoding. (All snippets are assumed to be in ANSI, and will be converted if current page is utf-8)
-Fixed long tab problem.
-Fixed Spaces or tabspaces before tab problem.
-Fixed empty snippet problem.
-
-0.1.2
-Emulate tab behaviour when no tag match or selection is rectangle.
-
-0.1.1
-Snippet insertion recorded as one single undo step.
 
 0.1.0 
 First Alpha verison. Implemented basic tab trigger snippets and hotspots navigation
@@ -138,7 +107,7 @@ First Alpha verison. Implemented basic tab trigger snippets and hotspots navigat
 
 == Credits
 
-Thanks Don Ho for making Notepad++ and providing a flexible and well documented api for plugin programming. Thanks Dave Brotherstone for his helpful comments and programmming help. Also thanks for all the comments from sourceforge forum.  
+Thanks Don Ho for making Notepad++ and providing a flexible and well documented api for plugin programming. Thanks Dave Brotherstone for his helpful comments and programmming help (especially for the sqlite support fork). Also thanks for all the comments from sourceforge forum.  
 
 == License
 
