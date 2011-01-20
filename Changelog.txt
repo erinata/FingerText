@@ -1,5 +1,12 @@
 current development version
 
+
+
+0.3.9
+Implemented Edit and Delete
+Refine snippet CRUD implementation
+Disable buttons when snippet list not in focus
+
 0.3.8
 Add Snippet Dock, implemented snippet list.
 Impletmented Create and save snippet.
