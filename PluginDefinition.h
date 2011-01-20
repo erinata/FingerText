@@ -93,6 +93,7 @@ void showSnippetDock();
 void updateDockItems();
 void saveSnippet();
 void createSnippet();
+void clearCache();
 
 void fingerText();
 

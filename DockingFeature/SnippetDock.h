@@ -47,7 +47,7 @@ public :
 
     void addDockItem(wchar_t *dockItem)
     {
-        SendMessage(GetDlgItem(_hSelf, IDC_SNIPPET_LIST), LB_ADDSTRING, 0, (LPARAM)dockItem); 
+        SendMessage(GetDlgItem(_hSelf, IDC_SNIPPET_LIST), LB_INSERTSTRING, 0, (LPARAM)dockItem); 
     }
 
     void clearDock()
