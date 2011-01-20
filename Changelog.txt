@@ -1,6 +1,9 @@
 current development version
 
+
+0.3.10
 Double Click insert snippet
+Fixed Filename specific snippet problem
 
 0.3.9
 Implemented Edit and Delete

@@ -48,7 +48,7 @@ struct SnipIndex {
 SnipIndex* snippetCache;
 int snippetCacheSize;
 
-char* snippetEditTemplate1 = "------ FingerText Snippet Editor View ------\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n------------- [ Trigger Text ] --------------\r\n";
+char* snippetEditTemplate1 = "------ FingerText Snippet Editor View ------\r\nInstructions of how to edit snippet to be completed ....................................\r\nInstructions of how to edit snippet to be completed ....................................\r\nInstructions of how to edit snippet to be completed ....................................\r\n\r\n\r\n\r\n\r\n------------- [ Trigger Text ] --------------\r\n";
 char* snippetEditTemplate2 = "\r\n---------------- [ Scope ] ------------------\r\n";
 char* snippetEditTemplate3 = "\r\n------------ [ Snippet Content ] ------------\r\n";
 
@@ -108,6 +108,10 @@ void commandMenuInit()
 //
 void commandMenuCleanUp()
 {
+    delete [] snippetEditTemplate1;
+    delete [] snippetEditTemplate2;
+    delete [] snippetEditTemplate3;
+
     delete funcItem[0]._pShKey;
 	// Don't forget to deallocate your shortcut here
 }
@@ -717,24 +721,25 @@ void updateDockItems()
     clearCache();
 
     _snippetDock.clearDock();
-
     sqlite3_stmt *stmt;
-    
+
 	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT tag,tagType FROM snippets WHERE tagType = ? OR tagType = ? OR tagType = ? ORDER BY tag DESC LIMIT ? ", -1, &stmt, NULL))
 	{
-        char *tagType = NULL;
-        TCHAR *fileType = NULL;
-		fileType = new TCHAR[MAX_PATH];
+        char *tagType1 = NULL;
+        TCHAR *fileType1 = NULL;
+		fileType1 = new TCHAR[MAX_PATH];
+        char *tagType2 = NULL;
+        TCHAR *fileType2 = NULL;
+		fileType2 = new TCHAR[MAX_PATH];
 
-		::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-        convertToUTF8(fileType, &tagType);
-        sqlite3_bind_text(stmt, 1, tagType, -1, SQLITE_STATIC);
-		
-        ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-        convertToUTF8(fileType, &tagType);
-        sqlite3_bind_text(stmt, 2, tagType, -1, SQLITE_STATIC);
-          
-
+		::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType1);
+        convertToUTF8(fileType1, &tagType1);
+        sqlite3_bind_text(stmt, 1, tagType1, -1, SQLITE_STATIC);
+        		
+        ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType2);
+        convertToUTF8(fileType2, &tagType2);
+        sqlite3_bind_text(stmt, 2, tagType2, -1, SQLITE_STATIC);
+        
         sqlite3_bind_text(stmt, 3, "GLOBAL", -1, SQLITE_STATIC);
         //int cols = sqlite3_column_count(stmt);
 
@@ -744,9 +749,6 @@ void updateDockItems()
 
         sqlite3_bind_text(stmt, 4, snippetCacheSizeText, -1, SQLITE_STATIC);
         
-        delete [] tagType;
-        delete [] fileType;
-
         int row = 0;
 
         while(true)
@@ -779,6 +781,14 @@ void updateDockItems()
                 break;  
             }
         }
+
+        
+        delete [] tagType1;
+        delete [] fileType1;
+
+        delete [] tagType2;
+        delete [] fileType2;
+
     }
 
     for (int j=0;j<snippetCacheSize;j++)
@@ -924,51 +934,7 @@ void testing()
     ::MessageBox(nppData._nppHandle, TEXT("Testing!"), TEXT("Trace"), MB_OK);
     
     HWND curScintilla = getCurrentScintilla();
-
     
-    //snippetIndex[0][0] = NULL;
-    //snippetIndex[0][1] = NULL;
-    //snippetIndex[1][0] = NULL;
-    //snippetIndex[1][1] = NULL;
-    //
-    //::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetIndex[0][0]);
-    //::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetIndex[0][1]);
-    //::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetIndex[1][0]);
-    //::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetIndex[1][1]);
-
-    //_snippetDock.disableSaveSnippet();
-    
-    //snippetCache = new SnipIndex [10];
-
-    
-    //snippetCache = new SnipIndex [20];
-
-    //snippetCache[0].triggerText="testText";
-    //snippetCache[0].scope="testscope";
-    //snippetCache[1].triggerText="testText1";
-    //snippetCache[1].scope="testscope1";
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[0].scope);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[0].triggerText);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[1].scope);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[1].triggerText);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[8].scope);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[8].triggerText);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[9].scope);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[9].triggerText);
-
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)TEXT("\r\n"));
-    
-    clearCache();
-
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[0].scope);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[0].triggerText);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[1].scope);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[1].triggerText);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[8].scope);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[8].triggerText);
-
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[9].scope);
-    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[9].triggerText);
 
 }
 
