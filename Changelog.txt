@@ -1,5 +1,8 @@
 current development version
-Add Snippet Dock, implemented Read function
+
+0.3.8
+Add Snippet Dock, implemented snippet list.
+Impletmented Create and save snippet.
 
 0.3.7
 Resume Filename specific snippets under sqlite system.

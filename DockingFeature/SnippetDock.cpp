@@ -28,7 +28,7 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 		{
 			switch (wParam)
 			{
-				case IDOK :
+				case IDC_EDIT :
 				{
 
                     editSnipShow();
@@ -53,8 +53,20 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
                 case IDC_SAVE:
                 {
                     saveSnippet();
+                    return TRUE;
                 }
 
+                case IDC_CREATE:
+                {
+                    createSnippet();
+                    return TRUE;
+                }
+
+                case IDC_DELETE:
+                {
+                    return TRUE;
+
+                }
 			}
 			return FALSE;
 		}

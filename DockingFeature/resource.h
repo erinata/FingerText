@@ -211,6 +211,7 @@
 #define VFFF_ISSHAREDFILE               0x0001
 #define VFF_CURNEDEST                   0x0001
 #define VIFF_FORCEINSTALL               0x0001
+#define IDOK                            1
 #define ISOLATIONAWARE_MANIFEST_RESOURCE_ID 2
 #define SW_SHOWMINIMIZED                2
 #define SHOW_ICONWINDOW                 2
@@ -1509,6 +1510,7 @@
 #define UNICODE_NOCHAR                  0xFFFF
 #define PWR_FAIL                        -1
 #define HTTRANSPARENT                   -1
+#define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 
@@ -1516,7 +1518,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1007
+#define _APS_NEXT_CONTROL_VALUE         1009
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

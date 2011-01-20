@@ -40,6 +40,16 @@ NppData nppData;
 sqlite3 *g_db;
 bool     g_dbOpen;
 
+struct SnipIndex {
+    char* triggerText;
+    char* scope;
+} ;
+
+//char* snippetIndex[10][2];
+SnipIndex* snippetCache;
+
+int snippetCacheSize;
+ 
 DockingDlg _snippetDock;
 #define SNIPPET_DOCK_INDEX 1
 //
@@ -163,6 +173,16 @@ char *findTagSQLite(char *tag, int level)
 
 	return expanded; //remember to delete the returned expanded after use.
 }
+
+void createSnippet()
+{
+    //::MessageBox(nppData._nppHandle, TEXT("CREATE~!"), TEXT("Trace"), MB_OK);
+    ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
+    HWND curScintilla = getCurrentScintilla();
+
+    ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)"------ FingerText Snippet Editor View ------\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n------------- [ Trigger Text ] --------------\r\nsampletriggertext\r\n---------------- [ Scope ] ------------------\r\nGLOBAL\r\n------------ [ Snippet Content ] ------------\r\nThis is a sample snippet.\r\nThis is a sample snippet.\r\nThis is a sample snippet.\r\nThis is a sample snippet.\r\n[>END<]");
+}
+
 
 void saveSnippet()
 {
@@ -346,7 +366,7 @@ bool hotSpotNavigation(HWND &curScintilla)
 
         int i=1;
 
-        for (i=1;i<=90;i++)
+        for (i=1;i<=98;i++)
         {
             tempPos[i]=0;
         
@@ -397,6 +417,7 @@ bool hotSpotNavigation(HWND &curScintilla)
 
 bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBeforeTag)
 {
+    //TODO: can use ::SendMessage(curScintilla, SCI_ENSUREVISIBLE, line-1, 0); to make sure that caret is visible after long snippet substitution.
     int preserveSteps=0;
     //::MessageBox(nppData._nppHandle, TEXT("replace tag"), TEXT("Trace"), MB_OK); 
     //std::streamoff sniplength;
@@ -463,6 +484,7 @@ void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
         g_dbOpen = false;
     }
 }
+
 void openDatabase()
 {
     TCHAR path[MAX_PATH];
@@ -486,7 +508,7 @@ void openDatabase()
 
 int getCurrentTag(HWND curScintilla, int posCurrent, char** buffer)
 {
-	int retVal = 0;
+	int length = 0;
 	int posBeforeTag = static_cast<int>(::SendMessage(curScintilla,	SCI_WORDSTARTPOSITION, posCurrent, 1));
     
             
@@ -499,10 +521,10 @@ int getCurrentTag(HWND curScintilla, int posCurrent, char** buffer)
 		range.lpstrText = *buffer;
 
 	    ::SendMessage(curScintilla, SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
-		retVal = (posCurrent - posBeforeTag);
+		length = (posCurrent - posBeforeTag);
 	}
 
-	return retVal;
+	return length;
 }
 
 void convertToUTF8(TCHAR *orig, char **utf8)
@@ -535,14 +557,21 @@ void showSnippetDock()
     
     updateDockItems();
 }
-
+    
+    
 
 void updateDockItems()
 {
+
+    snippetCacheSize=10;
+    snippetCache = new SnipIndex [snippetCacheSize];
+    clearCache();
+
     _snippetDock.clearDock();
+
     sqlite3_stmt *stmt;
     
-	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT tag,tagType FROM snippets WHERE tagType = ? OR tagType = ? OR tagType = ?", -1, &stmt, NULL))
+	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT tag,tagType FROM snippets WHERE tagType = ? OR tagType = ? OR tagType = ? LIMIT ?", -1, &stmt, NULL))
 	{
         char *tagType = NULL;
         TCHAR *fileType = NULL;
@@ -555,26 +584,34 @@ void updateDockItems()
         ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
         convertToUTF8(fileType, &tagType);
         sqlite3_bind_text(stmt, 2, tagType, -1, SQLITE_STATIC);
-                        
+          
+
         sqlite3_bind_text(stmt, 3, "GLOBAL", -1, SQLITE_STATIC);
         //int cols = sqlite3_column_count(stmt);
+
+        //tagType = itoa(snippetCacheSize,tagType,10);
+        char snippetCacheSizeText[10];
+        ::_itoa(snippetCacheSize, snippetCacheSizeText, 10); 
+
+        sqlite3_bind_text(stmt, 4, snippetCacheSizeText, -1, SQLITE_STATIC);
         
+        delete [] tagType;
         delete [] fileType;
 
+        int row = 0;
 
         while(true)
         {
             if(SQLITE_ROW == sqlite3_step(stmt))
             {
-                char* tagText = (char *)(sqlite3_column_text(stmt, 0));
-                char* tagTypeText = (char *)(sqlite3_column_text(stmt, 1));
-                
+                snippetCache[row].scope = (char *)(sqlite3_column_text(stmt, 1));
+                snippetCache[row].triggerText = (char *)(sqlite3_column_text(stmt, 0));
+
                 char newText[200]="";
                 strcat(newText,"<");
-                strcat(newText,tagTypeText);
+                strcat(newText,snippetCache[row].scope);
                 strcat(newText,">   ");
-                strcat(newText,tagText);
-
+                strcat(newText,snippetCache[row].triggerText);
 
                 size_t origsize = strlen(newText) + 1;
                 const size_t newsize = 100;
@@ -583,9 +620,8 @@ void updateDockItems()
                 mbstowcs_s(&convertedChars, convertedTagText, origsize, newText, _TRUNCATE);
 
                 _snippetDock.addDockItem(convertedTagText);
+                row++;
 
-                //HWND curScintilla = getCurrentScintilla();
-                //::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)tagText);
             }
             else
             {
@@ -593,9 +629,83 @@ void updateDockItems()
             }
         }
     }
+  
+
     sqlite3_finalize(stmt);
+
+
 }
 
+//void updateDockItems()
+//{
+//    _snippetDock.clearDock();
+//
+//    sqlite3_stmt *stmt;
+//    
+//	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT tag,tagType FROM snippets WHERE tagType = ? OR tagType = ? OR tagType = ?", -1, &stmt, NULL))
+//	{
+//        char *tagType = NULL;
+//        TCHAR *fileType = NULL;
+//		fileType = new TCHAR[MAX_PATH];
+//
+//		::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
+//        convertToUTF8(fileType, &tagType);
+//        sqlite3_bind_text(stmt, 1, tagType, -1, SQLITE_STATIC);
+//		
+//        ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
+//        convertToUTF8(fileType, &tagType);
+//        sqlite3_bind_text(stmt, 2, tagType, -1, SQLITE_STATIC);
+//                        
+//        sqlite3_bind_text(stmt, 3, "GLOBAL", -1, SQLITE_STATIC);
+//        //int cols = sqlite3_column_count(stmt);
+//        
+//        delete [] fileType;
+//
+//
+//        while(true)
+//        {
+//            if(SQLITE_ROW == sqlite3_step(stmt))
+//            {
+//                char* tagText = (char *)(sqlite3_column_text(stmt, 0));
+//                char* tagTypeText = (char *)(sqlite3_column_text(stmt, 1));
+//                
+//                char newText[200]="";
+//                strcat(newText,"<");
+//                strcat(newText,tagTypeText);
+//                strcat(newText,">   ");
+//                strcat(newText,tagText);
+//
+//
+//                size_t origsize = strlen(newText) + 1;
+//                const size_t newsize = 100;
+//                size_t convertedChars = 0;
+//                wchar_t convertedTagText[newsize];
+//                mbstowcs_s(&convertedChars, convertedTagText, origsize, newText, _TRUNCATE);
+//
+//                _snippetDock.addDockItem(convertedTagText);
+//
+//                //HWND curScintilla = getCurrentScintilla();
+//                //::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)tagText);
+//            }
+//            else
+//            {
+//                break;  
+//            }
+//        }
+//    }
+//    sqlite3_finalize(stmt);
+//}
+
+void clearCache()
+{
+    for (int i=0;i<snippetCacheSize;i++)
+    {
+        snippetCache[i].triggerText=NULL;
+        snippetCache[i].scope=NULL;
+    }
+    
+    
+}
 
 
 void fingerText()
@@ -689,10 +799,60 @@ void fingerText()
 
 void testing()
 {
+    //snippetIndex[0][0]="Test00";
+    //snippetIndex[0][1]="Test01";
+    //snippetIndex[1][0]="Test10";
+    //snippetIndex[1][1]="Test11";
 
     ::MessageBox(nppData._nppHandle, TEXT("Testing!"), TEXT("Trace"), MB_OK);
-    _snippetDock.disableSaveSnippet();
     
+    HWND curScintilla = getCurrentScintilla();
+
+    
+    //snippetIndex[0][0] = NULL;
+    //snippetIndex[0][1] = NULL;
+    //snippetIndex[1][0] = NULL;
+    //snippetIndex[1][1] = NULL;
+    //
+    //::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetIndex[0][0]);
+    //::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetIndex[0][1]);
+    //::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetIndex[1][0]);
+    //::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetIndex[1][1]);
+
+    //_snippetDock.disableSaveSnippet();
+    
+    //snippetCache = new SnipIndex [10];
+
+    
+    //snippetCache = new SnipIndex [20];
+
+    //snippetCache[0].triggerText="testText";
+    //snippetCache[0].scope="testscope";
+    //snippetCache[1].triggerText="testText1";
+    //snippetCache[1].scope="testscope1";
+    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[0].scope);
+    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[0].triggerText);
+    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[1].scope);
+    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[1].triggerText);
+    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[8].scope);
+    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[8].triggerText);
+    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[9].scope);
+    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[9].triggerText);
+
+    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)TEXT("\r\n"));
+    
+    clearCache();
+
+    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[0].scope);
+    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[0].triggerText);
+    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[1].scope);
+    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[1].triggerText);
+    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[8].scope);
+    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[8].triggerText);
+
+    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[9].scope);
+    ::SendMessage(curScintilla,SCI_INSERTTEXT,0,(LPARAM)snippetCache[9].triggerText);
+
 }
 
     
