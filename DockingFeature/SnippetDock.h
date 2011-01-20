@@ -82,6 +82,15 @@ public :
         return length;
     }
 
+    int getSelection()
+    {
+        int retVal;
+        HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
+        retVal = SendMessage(hwndList, LB_GETCURSEL, 0, 0);
+        return retVal;
+
+    }
+
 protected :
     
 	virtual BOOL CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);

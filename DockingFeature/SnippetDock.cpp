@@ -26,25 +26,27 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 	{
 		case WM_COMMAND : 
 		{
+            if (HIWORD(wParam) == EN_KILLFOCUS && LOWORD(wParam) == IDC_LENGTH)
+            {
+                updateDockItems();
+
+            } else if (HIWORD(wParam) == LBN_DBLCLK && LOWORD(wParam) == IDC_SNIPPET_LIST)
+            {
+                
+                if (getSelection()==3)
+                {
+                    testing();
+                }                    
+
+            } 
+
+
 			switch (wParam)
 			{
-                case IDC_REFRESH:
-                {
-                    updateDockItems();
-                    
-        
-        
-           
-                   return TRUE;
-        
-                }
-
-                
-
-				case IDC_EDIT :
+        		case IDC_EDIT :
 				{
-
-                    editSnipShow();
+                    editSnippet();
+                    //editSnipShow();
                     //updateDockItems();
 
                     //::MessageBox(nppData._nppHandle, TEXT("OK"), TEXT("Trace"), MB_OK);
@@ -77,6 +79,7 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 
                 case IDC_DELETE:
                 {
+                    void deleteSnippet();
                     return TRUE;
 
                 }
@@ -86,6 +89,8 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
         
         case WM_INITDIALOG:
         {
+
+
 
             return TRUE;
          
