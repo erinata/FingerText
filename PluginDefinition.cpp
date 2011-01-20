@@ -183,6 +183,38 @@ void createSnippet()
     ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)"------ FingerText Snippet Editor View ------\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n------------- [ Trigger Text ] --------------\r\nsampletriggertext\r\n---------------- [ Scope ] ------------------\r\nGLOBAL\r\n------------ [ Snippet Content ] ------------\r\nThis is a sample snippet.\r\nThis is a sample snippet.\r\nThis is a sample snippet.\r\nThis is a sample snippet.\r\n[>END<]");
 }
 
+void editSnippet()
+{
+    HWND curScintilla = getCurrentScintilla();
+    int test = _snippetDock.getSelection();
+    char somechar[10];
+    ::_itoa(test, somechar, 10); 
+    ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)somechar);
+    // To be completed............
+}
+
+void deleteSnippet()
+{
+    HWND curScintilla = getCurrentScintilla();
+    int index = _snippetDock.getSelection();
+    //char somechar[10];
+    //::_itoa(test, somechar, 10); 
+    //::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)somechar);
+    sqlite3_stmt *stmt;
+
+    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+    {
+        sqlite3_bind_text(stmt, 1, snippetCache[index].scope, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 2, snippetCache[index].triggerText, -1, SQLITE_STATIC);
+        sqlite3_step(stmt);
+
+    }
+    sqlite3_finalize(stmt);
+    
+    updateDockItems();
+   
+}
+
 
 void saveSnippet()
 {
@@ -478,6 +510,8 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
 
 void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
 {
+
+    delete [] snippetCache;
     if (g_dbOpen)
     {
         sqlite3_close(g_db);  // This close the database when the plugin shutdown.
@@ -563,7 +597,7 @@ void showSnippetDock()
 void updateDockItems()
 {
 
-    snippetCacheSize=10;
+    snippetCacheSize=_snippetDock.getLength();
     snippetCache = new SnipIndex [snippetCacheSize];
     clearCache();
 

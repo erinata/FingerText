@@ -94,7 +94,8 @@ void updateDockItems();
 void saveSnippet();
 void createSnippet();
 void clearCache();
-
+void editSnippet();
+void deleteSnippet();
 void fingerText();
 
 void testing();

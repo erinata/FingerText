@@ -70,17 +70,34 @@ public :
 
     }
 
+    int getLength() 
+    {
+        BOOL isSuccessful;
+        int length = ::GetDlgItemInt(_hSelf, IDC_LENGTH, &isSuccessful, false);
+        if (!isSuccessful || length<10)
+        {
+            length=10;
+            ::SetDlgItemInt(_hSelf,IDC_LENGTH,10, false);
+        }
+        return length;
+    }
+
+    int getSelection()
+    {
+        int retVal;
+        HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
+        retVal = SendMessage(hwndList, LB_GETCURSEL, 0, 0);
+        return retVal;
+
+    }
+
 protected :
     
 	virtual BOOL CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 
 private :
 
-    int getLine() const {
-        BOOL isSuccessful;
-        int line = ::GetDlgItemInt(_hSelf, ID_SNIPSHOW_EDIT, &isSuccessful, FALSE);
-        return (isSuccessful?line:-1);
-    };
+    
 
 };
 

@@ -1161,6 +1161,8 @@
 #define IDC_SCOPE                       1004
 #define IDC_CREATE                      1005
 #define IDC_DELETE                      1006
+#define IDC_LENGTH                      1009
+#define IDC_REFRESH                     1010
 #define CF_GDIOBJLAST                   0x03FF
 #define _WIN32_WINNT_NT4                0x0400
 #define _WIN32_IE_IE40                  0x0400
@@ -1382,6 +1384,7 @@
 #define IDD_SNIPPET_DOCK                2100
 #define ID_SNIPSHOW_EDIT                2101
 #define ID_UGO_STATIC                   2105
+#define ID_UGO_STATIC2                  2106
 #define LVS_ALIGNMASK                   0x0c00
 #define CS_BYTEALIGNCLIENT              0x1000
 #define HDS_OVERFLOW                    0x1000
@@ -1508,9 +1511,9 @@
 #define SPVERSION_MASK                  0x0000FF00
 #define HTERROR                         -2
 #define UNICODE_NOCHAR                  0xFFFF
+#define IDC_STATIC                      -1
 #define PWR_FAIL                        -1
 #define HTTRANSPARENT                   -1
-#define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 
@@ -1518,7 +1521,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1009
+#define _APS_NEXT_CONTROL_VALUE         1011
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

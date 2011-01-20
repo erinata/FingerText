@@ -1,8 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
-#include "windows.h"
-
+#include <windows.h>
 /////////////////////////////////////////////////////////////////////////////
 // English (United States) resources
 
@@ -21,13 +20,15 @@ EXSTYLE WS_EX_TOOLWINDOW | WS_EX_WINDOWEDGE
 CAPTION "FingerText"
 FONT 12, "Consolas", 0, 0, 0x0
 BEGIN
-    LTEXT           "Available Snippets",ID_UGO_STATIC,7,5,95,8
+    LTEXT           "Available Snippets",ID_UGO_STATIC,4,3,95,8
     EDITTEXT        ID_SNIPSHOW_EDIT,5,267,155,78,ES_MULTILINE | ES_READONLY
-    DEFPUSHBUTTON   "Edit",IDC_EDIT,45,247,35,15,BS_NOTIFY
-    LISTBOX         IDC_SNIPPET_LIST,5,16,155,228,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Save",IDC_SAVE,85,247,35,15,BS_NOTIFY
+    PUSHBUTTON      "Edit",IDC_EDIT,45,247,35,15
+    LISTBOX         IDC_SNIPPET_LIST,3,12,157,217,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP | LBS_NOTIFY 
+    PUSHBUTTON      "Save",IDC_SAVE,85,247,35,15
     PUSHBUTTON      "Create",IDC_CREATE,5,247,35,15
     PUSHBUTTON      "Delete",IDC_DELETE,125,247,35,15
+    LTEXT           "List Length",ID_UGO_STATIC2,83,233,48,8
+    EDITTEXT        IDC_LENGTH,129,232,30,12,ES_AUTOHSCROLL | ES_NUMBER
 END
 
 
