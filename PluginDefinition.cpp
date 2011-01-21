@@ -98,7 +98,7 @@ void commandMenuInit()
 
     setCommand(SNIPPET_DOCK_INDEX, TEXT("Show Snippet Dock"), showSnippetDock, NULL, false);
 
-    setCommand(SNIPPET_DOCK_INDEX+1, TEXT("Testing"), testing, NULL, false);
+    //setCommand(SNIPPET_DOCK_INDEX+1, TEXT("Testing"), testing, NULL, false);
 
     openDatabase();
 }
