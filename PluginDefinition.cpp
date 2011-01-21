@@ -687,16 +687,16 @@ void openDatabase()
 {
     TCHAR path[MAX_PATH];
     char *cpath;
-    ::SendMessage(nppData._nppHandle, NPPM_GETNPPDIRECTORY, MAX_PATH, reinterpret_cast<LPARAM>(path));
+    ::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH, reinterpret_cast<LPARAM>(path));
     int multibyteLength = WideCharToMultiByte(CP_UTF8, 0, path, -1, NULL, 0, 0, 0);
     cpath = new char[multibyteLength + 50];
     WideCharToMultiByte(CP_UTF8, 0, path, -1, cpath, multibyteLength, 0, 0);
-    strcat(cpath, "\\plugins\\FingerText\\snippets.db3");
+    strcat(cpath, "\\FingerText.db3");
     int rc = sqlite3_open(cpath, &g_db);
     if (rc)
     {
         g_dbOpen = false;
-        MessageBox(nppData._nppHandle, _T("Cannot find or open snippets.db3 in FingerText directory under plugins"), _T("FingerText plugin"), MB_ICONERROR);
+        MessageBox(nppData._nppHandle, _T("Cannot find or open FingerText.db3 in config folder"), _T("FingerText plugin"), MB_ICONERROR);
     }
     else
     {
