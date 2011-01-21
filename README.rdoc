@@ -39,7 +39,7 @@ Some snippets are File name specific. It will be triggered only when the file na
 
 You can show the snippet list by selecting the menu command (Plugins>FingerText>Show Snippet Dock). A list of available snippets are show in the list box. This menu dynamically change according to the current file.
 
-You can create, edit and delete snippets using the buttons on the snippet dock.
+You can create, edit and delete snippets using the buttons on the snippet dock. Double clicking on an item in the snippet dock is another way to insert snippet.
 
 
 == Hotspots navigation

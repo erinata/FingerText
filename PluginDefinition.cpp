@@ -98,7 +98,7 @@ void commandMenuInit()
 
     setCommand(SNIPPET_DOCK_INDEX, TEXT("Show Snippet Dock"), showSnippetDock, NULL, false);
 
-    //setCommand(SNIPPET_DOCK_INDEX+1, TEXT("Testing"), testing, NULL, false);
+    setCommand(SNIPPET_DOCK_INDEX+1, TEXT("Testing"), testing, NULL, false);
 
     openDatabase();
 }
@@ -228,7 +228,7 @@ void insertSnippet()
 
 void createSnippet()
 {
-
+    //TODO: Use the annotation as instructions
     //::MessageBox(nppData._nppHandle, TEXT("CREATE~!"), TEXT("Trace"), MB_OK);
     ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
     HWND curScintilla = getCurrentScintilla();
