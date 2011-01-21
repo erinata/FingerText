@@ -4,11 +4,17 @@ Tab triggered snippet plugin for Notepad++.
 
 == Description
 
-Tab triggered snippet plugin for Notepad++. Support global snippets and snippets for each file extension or file name, hotspot navigation, multiple hotspot simultaneous editing, hotspot text hint(instead of just a $ or # sign) and hotspot default value. Comments can be added to snippets. 
+Tab triggered snippet plugin for Notepad++. Support global snippets and snippets for each file extension or file name, hotspot navigation, multiple hotspot simultaneous editing, hotspot text hint(instead of just a $ or # sign) and hotspot default value. Comments can be added to snippets. It also features a SnippetDock which shows a list of currently available snippets. (see screenshots)
 
-This plugin is still in Alpha stage so do expect that it can be buggy. The development direction is to make it at least a working snippet plugin, and probably a tab triggered simple command plugin, a convenient console in the editor and finally snippet with ruby scripting support.
+This plugin is still in Alpha stage so do expect that it can be buggy. The development direction is to make it at least a working snippet plugin, and probably a tab triggered simple command plugin, a convenient console in the editor and finally snippets plugin with ruby scripting support.
 
-Again this is alpha version and I am still experimenting different methods. So do expect non-backward compatible changes in future releases.
+I am still experimenting different methods, so do expect non-backward compatible changes (just like the migration to sqlite3 from 0.3.2 to 0.4.1) in future releases. Things are getting more stable once I implement the "inline scripting" and "dynamic hotspots" support. I keep saying this because I am more than happy if people want to make snippets for this plugin and start using it. But I do not want to waste people's effort and the project is actually under active development so a stable version (at least an API stable version) is coming soon.
+
+== Screenshots
+
+Screenshot is available here:
+
+https://github.com/downloads/erinata/FingerText/ScreenClip.png
 
 == Install
 
@@ -37,36 +43,35 @@ Some snippets are File name specific. It will be triggered only when the file na
 
 (Notice that it does not depends on which language you choose in notepad++, what matters is the file name and the extension name!)
 
-You can show the snippet list by selecting the menu command (Plugins>FingerText>Show Snippet Dock). A list of available snippets are show in the list box. This menu dynamically change according to the current file.
+You can show the snippet list by selecting the notepad command on the menu bar (Plugins>FingerText>Show Snippet Dock). A list of available snippets are show in the list box. This SnippetDock dynamically change according to the current file.
 
-You can create, edit and delete snippets using the buttons on the snippet dock. Double clicking on an item in the snippet dock is another way to insert snippet.
+You can create, edit and delete snippets using the buttons on the SnippetDock. Double clicking on an item in the list is another way to insert snippet.
 
-
-== Hotspots navigation
+== Hotspots Navigation
 
 Some snippets contain hotspots. For example, open a new file and trigger the snippet "mit" (type "mit"(without quote and hit [tab]). 
 
   mit[tab]
 
-A sample of mit license will appear in the editor. Your cursor is currently at the "year" spot. And you can type in the year (say 2011) and hit [tab] again. The cursor is now on the name spot and you can enter the name.
+A sample of MIT license will appear in the editor. Your cursor is automatically moved to the "year" spot. And you can type in the year (say 2011) and hit [tab] again. The cursor is now on the name spot and you can enter the name. This is a very convenient way to fill in information while the snippet act as a template file.
 
-Some of them contain multiple hotspot with the same name. For example you can trigger the snippet "awesome". Your cursor is on all three spots and anything you type will change all of them simultaneously. You can also trigger the "for" snippet in an .cpp file and press the letter "i" once to change the iteration variable to "i"
+Some of the snippets contain multiple hotspot with the same name. For example you can trigger the snippet "awesome". Your cursor is on all three spots and anything you type will change all of them simultaneously. You can also trigger the "for" snippet in a .cpp file and press the letter "i" once to change all the iteration variable to "i".
 
-Open a .cpp file and trigger the snippet "template". Use [tab] to navigate to each part and fill in the details and have a working framework for your cpp program. (Also see the snippet "simple" in Makefile)
+To see this in action, open a .cpp file and trigger the snippet "template". Use [tab] to navigate to each part and fill in the details. Now you have a working framework for your cpp main program. (Also see the snippet "simple" in Makefile)
 
-== Create and Edit Snippets
+== Creating and Editing Snippets
 
-To create new snippets, click the create button under the snippet list. A new document is opened and you can edit the Trigger Text (line 10), Scope (line 12) and you can enter your snippet content on line 14 or below. REMEMBER to place a [>END<] at the end of the snippet. Any thing after the [>END<] will not be inserted as snippet so you can write some comment about your snippet there. Click the save button when you finish editing.
+To create new snippets, click the create button under the snippet list. A new document is opened and you can edit the Trigger Text (line 10), Scope (line 12) and you can enter your snippet content on line 14 or below. REMEMBER to place a [>END<] at the end of the snippet. Click the save button when you finish editing.
 
 To edit a snippet, select the snippet on the snippet list and click the edit button. The snippet is opened in a new file and you can edit the content. Click the save button when you finish editing.
 
-The error checking is still very crappy and for sure I will improve it in the future release. At the moment, just be careful not to mess up with the template when you are editing or creating snippets. If you are in doubt, you can always press the "create" button to get a fresh correct template.
+The error checking is still very crappy and for sure I will improve it in future release. At the moment, just be careful not to mess up the template when you are editing or creating snippets. If you are in doubt, you can always press the "create" button to get a fresh correct template.
 
 Deleting a snippet is easy, just select the snippet and click the delete button.
 
-If you use sqlite, you can directly edit the snippet database too. It is not officially supported but the database is located at the plugins\FingerText\snippets.db3
+And there are some sample snippets for C ,C++ and Stata do file.
 
-== Advanced snippet editing
+== Advanced Snippet Editing
 
 Other than plain text, you can put one or more Hotspots in you snippet.
 
@@ -74,9 +79,14 @@ Hotspots are indicated by $[![Whatever name]!]. The "Whatever name" can be a hin
 
 Notice that hotspots with the same name will be highlighted at the same time. See the snippet "for" (you can trigger only in a .cpp file) to see it in action.
 
+Any thing after the [>END<] will not be inserted into the document so you can comment about your snippet there.
+
 Chinese characters are supported in snippets. You can try it by triggering the snippet "chinese". All snippets should be encoded in UTF-8. Notice that Chinese character tag name are not supported. Actually sometimes it works sometimes it doesn't so it is not officially supported. 
 
-Again this is alpha so I don't know if I will change these things in the future or not. And there are some sample snippet for C ,C++ and Stata do file.
+== Snippets Backup and Sharing
+Currently there is no good way to do that. You can backup your database file located at %Notepad++Folder%\plugins\FingerText\snippets.db3 and you can share this file to others who want to use your snippets. Importing and Exporting functions will be available in the future but not before the snippet format become stable.
+
+If you use sqlite, you can directly edit the snippet database too. It is not officially supported though.
 
 == Change log 
 (for full change log (including the development log) please refer to the CHANGELOG file in the repository)
