@@ -12,8 +12,8 @@ Again this is alpha version and I am still experimenting different methods. So d
 
 == Install
 
-Download the file "FingerText - 0.4.0.zip" at 
-https://github.com/downloads/erinata/FingerText/FingerText%20-%200.4.0.zip
+Download the file "FingerText - 0.4.1.zip" at 
+https://github.com/downloads/erinata/FingerText/FingerText%20-%200.4.1.zip
 
 Unzip the package and copy the files in the plugins folder of the zip file into the plugins folder of Notepad++.
 
@@ -81,8 +81,8 @@ Again this is alpha so I don't know if I will change these things in the future 
 == Change log 
 (for full change log (including the development log) please refer to the CHANGELOG file in the repository)
 
-0.4.0
-First stable version using sqlite3.
+0.4.1
+First stable version using sqlite3. (fixing the version number problem of 0.4.0)
 
 0.3.11
 Using Sqlite to store snippets instead of using recusive file system.
