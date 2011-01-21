@@ -104,7 +104,6 @@ Multiple hotspots selection and hotspot hint text replacement works simultaneous
 0.1.0 
 First Alpha verison. Implemented basic tab trigger snippets and hotspots navigation
 
- 
 == Tested with
 
 - Notepad++ 3.8.6(Unicode), Windows 7 Ultimate 64bit 

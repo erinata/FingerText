@@ -154,8 +154,7 @@ char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""))
         {
             convertToUTF8(scope, &tagType);
         } else
-        {
-            
+        {            
             TCHAR *fileType = NULL;
             fileType = new TCHAR[MAX_PATH];
             ::swprintf(fileType,TEXT("GLOBAL"));
