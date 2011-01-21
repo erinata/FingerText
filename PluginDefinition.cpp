@@ -250,6 +250,7 @@ void createSnippet()
 void editSnippet()
 {
    
+
     // TODO: The snippet menu should show all snippets available, instead of just global snippets, or there may be some better way to deal with this)
     HWND curScintilla = getCurrentScintilla();
     int index = _snippetDock.getCount() - _snippetDock.getSelection()-1;
@@ -286,10 +287,12 @@ void editSnippet()
 		sqlite3_bind_text(stmt, 1, tempScope , -1, SQLITE_STATIC);
 		sqlite3_bind_text(stmt, 2, tempTriggerText, -1, SQLITE_STATIC);
 
+
 		// Run the query with sqlite3_step
 		if(SQLITE_ROW == sqlite3_step(stmt))  // SQLITE_ROW 100 sqlite3_step() has another row ready
 		{
 			const char* snippetText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
+
             
             ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
             ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate1);
@@ -297,7 +300,6 @@ void editSnippet()
             ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate2);
             ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)tempScope);
             ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate3);
-
 
             ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetText);
 		}
