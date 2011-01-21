@@ -23,7 +23,7 @@ https://github.com/downloads/erinata/FingerText/FingerText%20-%200.4.1.zip
 
 Unzip the package and copy the files in the plugins folder of the zip file into the plugins folder of Notepad++.
 
-== Known issues
+== Known issues (Have trouble saving snippets under Windows 7 or Vista?)
 
 If you are using Windows 7 or Vista and you install your notepad++ into the Program files or Program Files (x86) folderm, you may need to run notepad++ with administrator rights in order to edit and save snippets. 
 
