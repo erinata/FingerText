@@ -125,6 +125,7 @@ void clearCache();
 void editSnippet();
 void deleteSnippet();
 void insertSnippet();
+void importSnippets();
 void fingerText();
 
 void testing();

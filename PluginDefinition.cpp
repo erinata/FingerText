@@ -671,7 +671,6 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
         return true;
 }
 
-
 void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
 {
 
@@ -696,7 +695,7 @@ void openDatabase()
     if (rc)
     {
         g_dbOpen = false;
-        MessageBox(nppData._nppHandle, _T("Cannot find or open FingerText.db3 in config folder"), _T("FingerText plugin"), MB_ICONERROR);
+        MessageBox(nppData._nppHandle, TEXT("Cannot find or open FingerText.db3 in config folder"), TEXT("FingerText plugin"), MB_ICONERROR);
     }
     else
     {
@@ -754,6 +753,7 @@ void showSnippetDock()
 	_snippetDock.display();
     
     updateDockItems();
+    
 }
     
     
@@ -885,6 +885,35 @@ void clearCache()
 }
 
 
+void importSnippets()
+{
+    OPENFILENAME ofn;
+    char fileName[MAX_PATH] = "";
+    ZeroMemory(&ofn, sizeof(ofn));
+
+    ofn.lStructSize = sizeof(OPENFILENAME);
+    ofn.hwndOwner = NULL;
+    ofn.lpstrFilter = TEXT("All Files (*.*)\0*.*\0");
+    ofn.lpstrFile = (LPWSTR)fileName;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+    ofn.lpstrDefExt = TEXT("");
+    
+    if (::GetOpenFileName(&ofn))
+    {
+        
+        ::MessageBox(nppData._nppHandle, (LPCWSTR)fileName, TEXT("Trace"), MB_OK);
+
+
+
+
+    }
+
+
+
+
+}
+
 void fingerText()
 {
     //::Sleep(10);
@@ -986,7 +1015,7 @@ void testing()
     
     HWND curScintilla = getCurrentScintilla();
     
-
+    importSnippets();
 }
 
     
