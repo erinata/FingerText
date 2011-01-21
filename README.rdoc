@@ -25,7 +25,7 @@ Unzip the package and copy the files in the plugins folder of the zip file into 
 
 == Known issues (Have trouble saving snippets under Windows 7 or Vista?)
 
-If you are using Windows 7 or Vista and you install your notepad++ into the Program files or Program Files (x86) folderm, you may need to run notepad++ with administrator rights in order to edit and save snippets. 
+If you are using Windows 7 or Vista and you install your notepad++ into the Program files or Program Files (x86) folderm, you may need to run notepad++ with administrator rights in order to edit and save snippets. If you are using the portable version and you install notepad++ somewhere else then you should have no problem saving snippets.
 
 == Basic Usage
 
