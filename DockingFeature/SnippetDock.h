@@ -110,8 +110,13 @@ public :
         if (!isSuccessful || length<10)
         {
             length=10;
-            ::SetDlgItemInt(_hSelf,IDC_LENGTH,10, false);
+            ::SetDlgItemInt(_hSelf,IDC_LENGTH,length, false);
+        } else if (length>999)
+        {
+            length=999;
+            ::SetDlgItemInt(_hSelf,IDC_LENGTH,length, false);
         }
+        
         return length;
     }
 

@@ -25,7 +25,7 @@ Unzip the package and copy the files in the plugins folder of the zip file into 
 
 == Known issues (Have trouble saving snippets under Windows 7 or Vista?)
 
-If you are using Windows 7 or Vista and you install your notepad++ into the Program files or Program Files (x86) folderm, you may need to run notepad++ with administrator rights in order to edit and save snippets. If you are using the portable version and you install notepad++ somewhere else then you should have no problem saving snippets.
+If you are using Windows 7 or Vista and you have installed your notepad++ into the Program files or Program Files (x86) folder, you may need to run notepad++ with administrator rights in order to edit, save and delete snippets. If you are using the portable version and you have installed notepad++ somewhere else then you should have no problem saving snippets.
 
 == Basic Usage
 
@@ -37,17 +37,17 @@ For example, you can open a new file , type in "global"(without quotes) and hit 
 
 The tag will be replaced by "This is a global snippet."
 
-Some snippets are file extension specific. For example, if you open a file called test.cpp, you can type cpp(without quote) and hit [tab]. 
+Some snippets are file extension specific. For example, if you open a file called test.cpp, you can type "cpp"(without quote) and hit [tab]. 
   
   cpp[tab]
 
 The tag will be replaced by "This is a cpp snippet". But if you do the same thing in a file called abc.txt, the snippet will not be triggered.
 
-Some snippets are File name specific. It will be triggered only when the file name matches.
+Some snippets are File name specific. It will be triggered only when the file name matches. For example, there are some snippets which are specific for Makefile, so it will only trigger when the file name is "Makefile".
 
-(Notice that it does not depends on which language you choose in notepad++, what matters is the file name and the extension name!)
+(Notice that the available snippets list does not depends on which language you have chosen in notepad++, what matters is the file name and the extension name!)
 
-You can show the snippet list by selecting the notepad command on the menu bar (Plugins>FingerText>Show Snippet Dock). A list of available snippets are show in the list box. This SnippetDock dynamically change according to the current file.
+You can show the SnippetDock by selecting the notepad command on the menu bar (Plugins>FingerText>Show Snippet Dock). A list of available snippets are shown in the list box. This SnippetDock dynamically changes according to the current file status.
 
 You can create, edit and delete snippets using the buttons on the SnippetDock. Double clicking on an item in the list is another way to insert snippet.
 
