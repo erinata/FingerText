@@ -72,7 +72,7 @@ const TCHAR NPP_PLUGIN_NAME[] = TEXT("FingerText");
 //
 // Here define the number of your plugin commands
 //
-const int nbFunc = 4;
+const int nbFunc = 5;
 
 
 //
@@ -118,7 +118,7 @@ void pluginShutdown();
 void openDatabase();
 void convertToUTF8(TCHAR *orig, char **utf8);
 void showSnippetDock();
-void updateDockItems();
+void updateDockItems(bool withContent=false);
 void saveSnippet();
 void createSnippet();
 void clearCache();

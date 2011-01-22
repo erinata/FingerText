@@ -73,6 +73,7 @@ bool     g_dbOpen;
 struct SnipIndex {
     char* triggerText;
     char* scope;
+    char* content;
 } ;
 
 SnipIndex* snippetCache;
@@ -130,7 +131,9 @@ void commandMenuInit()
 
     setCommand(2, TEXT("Import Snippets"), importSnippets, NULL, false);
 
-    setCommand(3, TEXT("Testing"), testing, NULL, false);
+    setCommand(3, TEXT("Export Snippets"), exportSnippets, NULL, false);
+
+    setCommand(4, TEXT("Testing"), testing, NULL, false);
 
     openDatabase();
 }
@@ -769,14 +772,16 @@ void showSnippetDock()
     
     
 
-void updateDockItems()
+void updateDockItems(bool withContent)
 {
 
 
     int scopeLength=0;
     int triggerLength=0;
+    int contentLength=0;
     int tempScopeLength=0;
     int tempTriggerLength=0;
+    int tempContentLength=0;
 
     snippetCacheSize=_snippetDock.getLength();
     snippetCache = new SnipIndex [snippetCacheSize];
@@ -785,7 +790,7 @@ void updateDockItems()
     _snippetDock.clearDock();
     sqlite3_stmt *stmt;
 
-	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT tag,tagType FROM snippets WHERE tagType = ? OR tagType = ? OR tagType = ? ORDER BY tag DESC LIMIT ? ", -1, &stmt, NULL))
+	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets WHERE tagType = ? OR tagType = ? OR tagType = ? ORDER BY tag DESC LIMIT ? ", -1, &stmt, NULL))
 	{
         char *tagType1 = NULL;
         TCHAR *fileType1 = NULL;
@@ -826,6 +831,7 @@ void updateDockItems()
                 }
                 snippetCache[row].scope = new char[strlen(tempScope)*4 + 1];
                 strcpy(snippetCache[row].scope, tempScope);
+
                 const char* tempTrigger = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
                 tempTriggerLength = strlen(tempTrigger)*4 + 1;
                 if (tempTriggerLength> triggerLength)
@@ -834,6 +840,21 @@ void updateDockItems()
                 }
                 snippetCache[row].triggerText = new char[strlen(tempTrigger)*4 + 1];
                 strcpy(snippetCache[row].triggerText, tempTrigger);
+
+                if (withContent)
+                {
+                    
+                    const char* tempContent = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
+                    tempContentLength = strlen(tempContent)*4 + 1;
+                    if (tempContentLength> contentLength)
+                    {
+                        contentLength = tempContentLength;
+                    }
+                    snippetCache[row].content = new char[strlen(tempContent)*4 + 1];
+                    strcpy(snippetCache[row].content, tempContent);
+                }
+
+
 
                 row++;
 
@@ -890,6 +911,7 @@ void clearCache()
     {
         snippetCache[i].triggerText=NULL;
         snippetCache[i].scope=NULL;
+        snippetCache[i].content=NULL;
     }
     
     
@@ -898,28 +920,56 @@ void clearCache()
 
 void exportSnippets()
 {
-    //OPENFILENAME ofn;
-    //char fileName[MAX_PATH] = "";
-    //ZeroMemory(&ofn, sizeof(ofn));
-    //
-    //ofn.lStructSize = sizeof(OPENFILENAME);
-    //ofn.hwndOwner = NULL;
-    //ofn.lpstrFilter = TEXT("FingerText Datafiles (*.ftd)\0*.ftd\0");
-    //ofn.lpstrFile = (LPWSTR)fileName;
-    //ofn.nMaxFile = MAX_PATH;
-    //ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
-    //ofn.lpstrDefExt = TEXT("");
-    //
-    //if (::GetSaveFileName(&ofn))
-    //{
-    //    //std::ofstream file;
-    //
-    //    //file.open((LPCWSTR)fileName);
-    //    //::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, (WPARAM)0, (LPARAM)TEXT("abc"));
-    //    
-    //
-    //}
-    ::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, 0, (LPARAM)TEXT("abc.log"));
+    HWND curScintilla = getCurrentScintilla();
+
+    OPENFILENAME ofn;
+    char fileName[MAX_PATH] = "";
+    ZeroMemory(&ofn, sizeof(ofn));
+    
+    ofn.lStructSize = sizeof(OPENFILENAME);
+    ofn.hwndOwner = NULL;
+    ofn.lpstrFilter = TEXT("FingerText Datafiles (*.ftd)\0*.ftd\0");
+    ofn.lpstrFile = (LPWSTR)fileName;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
+    ofn.lpstrDefExt = TEXT("");
+    
+    if (::GetSaveFileName(&ofn))
+    {
+        ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
+        int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
+        ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
+
+        updateDockItems(true);
+
+        for (int j=0;j<snippetCacheSize;j++)
+        {
+            if (snippetCache[j].scope !=NULL)
+            {
+        
+                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)snippetCache[j].triggerText);
+                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n");
+                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)snippetCache[j].scope);
+                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n");
+                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)snippetCache[j].content);
+                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n!$[FingerTextData FingerTextData]@#\r\n");
+        
+             
+            }
+        
+        
+        }
+
+        
+
+        ::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, 0, (LPARAM)fileName);
+
+        ::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
+        ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
+        
+    
+    }
+    
 
     
         
