@@ -130,7 +130,7 @@ void commandMenuInit()
 
     setCommand(2, TEXT("Import Snippets"), importSnippets, NULL, false);
 
-    //setCommand(3, TEXT("Testing"), testing, NULL, false);
+    setCommand(3, TEXT("Testing"), testing, NULL, false);
 
     openDatabase();
 }
