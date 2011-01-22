@@ -126,9 +126,11 @@ void commandMenuInit()
     
     setCommand(0, TEXT("Trigger FingerText"), fingerText, shKey, false);
 
-    setCommand(SNIPPET_DOCK_INDEX, TEXT("Show Snippet Dock"), showSnippetDock, NULL, false);
+    setCommand(SNIPPET_DOCK_INDEX, TEXT("Show SnippetDock"), showSnippetDock, NULL, false);
 
-    setCommand(SNIPPET_DOCK_INDEX+1, TEXT("Testing"), testing, NULL, false);
+    setCommand(2, TEXT("Import Snippets"), importSnippets, NULL, false);
+
+    //setCommand(3, TEXT("Testing"), testing, NULL, false);
 
     openDatabase();
 }
@@ -894,6 +896,31 @@ void clearCache()
 }
 
 
+void exportSnippets()
+{
+    OPENFILENAME ofn;
+    char fileName[MAX_PATH] = "";
+    ZeroMemory(&ofn, sizeof(ofn));
+
+    ofn.lStructSize = sizeof(OPENFILENAME);
+    ofn.hwndOwner = NULL;
+    ofn.lpstrFilter = TEXT("FingerText Datafiles (*.ftd)\0*.ftd\0");
+    ofn.lpstrFile = (LPWSTR)fileName;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+    ofn.lpstrDefExt = TEXT("");
+
+    if (::GetSaveFileName(&ofn))
+    {
+
+
+
+
+    }
+        
+
+}
+
 void importSnippets()
 {
     OPENFILENAME ofn;
@@ -911,7 +938,7 @@ void importSnippets()
     if (::GetOpenFileName(&ofn))
     {
         
-        ::MessageBox(nppData._nppHandle, (LPCWSTR)fileName, TEXT("Trace"), MB_OK);
+        //::MessageBox(nppData._nppHandle, (LPCWSTR)fileName, TEXT("Trace"), MB_OK);
         std::ifstream file;
 
         file.open((LPCWSTR)fileName);   // This part may cause problem in chinese file names
@@ -941,7 +968,7 @@ void importSnippets()
         //::SendMessage(curScintilla, SCI_SETCODEPAGE,65001,0);
         ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)fileText);
         ::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
-
+        int importCount=0;
         int next=0;
         do
         {
@@ -1033,7 +1060,7 @@ void importSnippets()
                         //delete [] tagTypeText;
                         //delete [] snippetText;
                         // not overwrite
-                        ::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), TEXT("FingerText"), MB_OK);
+                        //::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), TEXT("FingerText"), MB_OK);
                         notOverWrite = true;
             
                     } else
@@ -1070,6 +1097,7 @@ void importSnippets()
             
             if (notOverWrite == false && g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "INSERT INTO snippets VALUES(?,?,?)", -1, &stmt, NULL))
             {
+                importCount++;
                 // Then bind the two ? parameters in the SQLite SQL to the real parameter values
                 sqlite3_bind_text(stmt, 1, tagText, -1, SQLITE_STATIC);
                 sqlite3_bind_text(stmt, 2, tagTypeText, -1, SQLITE_STATIC);
@@ -1077,7 +1105,7 @@ void importSnippets()
             
                 // Run the query with sqlite3_step
                 sqlite3_step(stmt); // SQLITE_ROW 100 sqlite3_step() has another row ready
-                ::MessageBox(nppData._nppHandle, TEXT("The Snippet is saved."), TEXT("FingerText"), MB_OK);
+                //::MessageBox(nppData._nppHandle, TEXT("The Snippet is saved."), TEXT("FingerText"), MB_OK);
             }
             sqlite3_finalize(stmt);
             delete [] tagText;
@@ -1095,10 +1123,26 @@ void importSnippets()
 
         } while (next>=0);
         
+        wchar_t importCountText[35] = TEXT("");
 
+        if (importCount>1)
+        {
+            ::_itow_s(importCount, importCountText, 10, 10);
+            wcscat(importCountText,TEXT(" snippets are imported."));
+        } else if (importCount==1)
+        {
+            wcscat(importCountText,TEXT("1 snippet is imported."));
+        } else
+        {
+            wcscat(importCountText,TEXT("Snippet import is aborted."));
+          
+        }
+        
+        //::MessageBox(nppData._nppHandle, TEXT("Complete importing snippets"), TEXT("FingerText"), MB_OK);
+        ::MessageBox(nppData._nppHandle, importCountText, TEXT("FingerText"), MB_OK);
 
-        //::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
-        //::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
+        ::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
+        ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
 
 
 
