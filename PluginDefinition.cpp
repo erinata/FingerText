@@ -898,25 +898,30 @@ void clearCache()
 
 void exportSnippets()
 {
-    OPENFILENAME ofn;
-    char fileName[MAX_PATH] = "";
-    ZeroMemory(&ofn, sizeof(ofn));
+    //OPENFILENAME ofn;
+    //char fileName[MAX_PATH] = "";
+    //ZeroMemory(&ofn, sizeof(ofn));
+    //
+    //ofn.lStructSize = sizeof(OPENFILENAME);
+    //ofn.hwndOwner = NULL;
+    //ofn.lpstrFilter = TEXT("FingerText Datafiles (*.ftd)\0*.ftd\0");
+    //ofn.lpstrFile = (LPWSTR)fileName;
+    //ofn.nMaxFile = MAX_PATH;
+    //ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
+    //ofn.lpstrDefExt = TEXT("");
+    //
+    //if (::GetSaveFileName(&ofn))
+    //{
+    //    //std::ofstream file;
+    //
+    //    //file.open((LPCWSTR)fileName);
+    //    //::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, (WPARAM)0, (LPARAM)TEXT("abc"));
+    //    
+    //
+    //}
+    ::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, 0, (LPARAM)TEXT("abc.log"));
 
-    ofn.lStructSize = sizeof(OPENFILENAME);
-    ofn.hwndOwner = NULL;
-    ofn.lpstrFilter = TEXT("FingerText Datafiles (*.ftd)\0*.ftd\0");
-    ofn.lpstrFile = (LPWSTR)fileName;
-    ofn.nMaxFile = MAX_PATH;
-    ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-    ofn.lpstrDefExt = TEXT("");
-
-    if (::GetSaveFileName(&ofn))
-    {
-
-
-
-
-    }
+    
         
 
 }
@@ -1254,7 +1259,7 @@ void testing()
     
     HWND curScintilla = getCurrentScintilla();
     
-    importSnippets();
+    exportSnippets();
 
     // messagebox shows the current buffer encoding id
     //int enc = ::SendMessage(nppData._nppHandle, NPPM_GETBUFFERENCODING, (LPARAM)::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0), 0);
