@@ -118,7 +118,7 @@ void pluginShutdown();
 void openDatabase();
 void convertToUTF8(TCHAR *orig, char **utf8);
 void showSnippetDock();
-void updateDockItems(bool withContent=false);
+void updateDockItems(bool withContent=false, bool withAll=false);
 void saveSnippet();
 void createSnippet();
 void clearCache();

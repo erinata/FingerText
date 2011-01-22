@@ -772,7 +772,7 @@ void showSnippetDock()
     
     
 
-void updateDockItems(bool withContent)
+void updateDockItems(bool withContent, bool withAll)
 {
 
 
@@ -790,7 +790,35 @@ void updateDockItems(bool withContent)
     _snippetDock.clearDock();
     sqlite3_stmt *stmt;
 
-	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets WHERE tagType = ? OR tagType = ? OR tagType = ? ORDER BY tag DESC LIMIT ? ", -1, &stmt, NULL))
+    //char *tagTypeAll = NULL;
+    //TCHAR *fileTypeAll = NULL;
+    //fileTypeAll = new TCHAR[MAX_PATH];
+    //::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileTypeAll);
+    //convertToUTF8(fileTypeAll, &tagTypeAll);
+    //size_t origsize = strlen(tagTypeAll) + 1; 
+    //const size_t newsize = MAX_PATH; 
+    //size_t convertedChars = 0; 
+    //wchar_t wcstring[newsize]; 
+    //mbstowcs_s(&convertedChars, wcstring, origsize, tagTypeAll, _TRUNCATE);
+    //if ((LPCWSTR)fileTypeAll == TEXT("FingerTextSnippetEdit"))
+    //{
+    //    ::MessageBox(nppData._nppHandle, (LPCWSTR)fileTypeAll, TEXT("Trace"), MB_OK);
+    //}
+    
+    int sqlitePrepare;
+    
+    if (withAll)
+    {
+        sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets ORDER BY tag DESC LIMIT ? ", -1, &stmt, NULL);
+    } else 
+    {
+        sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets WHERE tagType = ? OR tagType = ? OR tagType = ? ORDER BY tag DESC LIMIT ? ", -1, &stmt, NULL);
+    }
+    
+
+
+
+	if (g_dbOpen && SQLITE_OK == sqlitePrepare)
 	{
         char *tagType1 = NULL;
         TCHAR *fileType1 = NULL;
@@ -799,22 +827,33 @@ void updateDockItems(bool withContent)
         TCHAR *fileType2 = NULL;
 		fileType2 = new TCHAR[MAX_PATH];
 
-		::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType1);
-        convertToUTF8(fileType1, &tagType1);
-        sqlite3_bind_text(stmt, 1, tagType1, -1, SQLITE_STATIC);
+        if (withAll)
+        {
+            char snippetCacheSizeText[10];
+            ::_itoa(snippetCacheSize, snippetCacheSizeText, 10); 
+
+            sqlite3_bind_text(stmt, 1, snippetCacheSizeText, -1, SQLITE_STATIC);
+
+        } else
+        {
+            ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType1);
+            convertToUTF8(fileType1, &tagType1);
+            sqlite3_bind_text(stmt, 1, tagType1, -1, SQLITE_STATIC);
         		
-        ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType2);
-        convertToUTF8(fileType2, &tagType2);
-        sqlite3_bind_text(stmt, 2, tagType2, -1, SQLITE_STATIC);
+            ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType2);
+            convertToUTF8(fileType2, &tagType2);
+            sqlite3_bind_text(stmt, 2, tagType2, -1, SQLITE_STATIC);
         
-        sqlite3_bind_text(stmt, 3, "GLOBAL", -1, SQLITE_STATIC);
-        //int cols = sqlite3_column_count(stmt);
+            sqlite3_bind_text(stmt, 3, "GLOBAL", -1, SQLITE_STATIC);
+                //int cols = sqlite3_column_count(stmt);
 
-        //tagType = itoa(snippetCacheSize,tagType,10);
-        char snippetCacheSizeText[10];
-        ::_itoa(snippetCacheSize, snippetCacheSizeText, 10); 
+            //tagType = itoa(snippetCacheSize,tagType,10);
+            char snippetCacheSizeText[10];
+            ::_itoa(snippetCacheSize, snippetCacheSizeText, 10); 
 
-        sqlite3_bind_text(stmt, 4, snippetCacheSizeText, -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 4, snippetCacheSizeText, -1, SQLITE_STATIC);
+        }
+		
         
         int row = 0;
 
@@ -853,9 +892,6 @@ void updateDockItems(bool withContent)
                     snippetCache[row].content = new char[strlen(tempContent)*4 + 1];
                     strcpy(snippetCache[row].content, tempContent);
                 }
-
-
-
                 row++;
 
             }
@@ -940,7 +976,7 @@ void exportSnippets()
         int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
         ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
 
-        updateDockItems(true);
+        updateDockItems(true,true);
 
         for (int j=0;j<snippetCacheSize;j++)
         {
@@ -953,11 +989,7 @@ void exportSnippets()
                 ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n");
                 ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)snippetCache[j].content);
                 ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n!$[FingerTextData FingerTextData]@#\r\n");
-        
-             
             }
-        
-        
         }
 
         
@@ -970,10 +1002,6 @@ void exportSnippets()
     
     }
     
-
-    
-        
-
 }
 
 void importSnippets()
