@@ -1,5 +1,10 @@
 current development version
 
+0.4.4
+Better readme.rdoc
+
+0.4.3
+Implement database export function
 
 0.4.2
 Using the config folder to storage database (should solve the windows 7 admin problem)

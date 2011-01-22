@@ -4,11 +4,15 @@ Tab triggered snippet plugin for Notepad++.
 
 == Description
 
-Tab triggered snippet plugin for Notepad++. Support global snippets and snippets for each file extension or file name, hotspot navigation, multiple hotspot simultaneous editing, hotspot text hint(instead of just a $ or # sign) and hotspot default value. Comments can be added to snippets. It also features a SnippetDock which shows a list of currently available snippets. (see screenshots)
+FingerText is a tab triggered snippet plugin for Notepad++. Support global snippets and snippets for each file extension or file name, hotspots navigation, multiple hotspots simultaneous editing, hotspot text hint(instead of just a $ or # sign) and hotspot default value. Comments can be added to snippets. It also features a SnippetDock which shows a list of currently available snippets. (see screenshots) You can import or export your snippets and share it to others.
+
+If you are new to FingerText, foller the "Install", "Importing Sample Snippets" and "Basic Usage" sections in this file. This should give you a step by step tutorial on how to use FingerText.
+
+== Development Status
 
 This plugin is still in Alpha stage so do expect that it can be buggy. The development direction is to make it at least a working snippet plugin, and probably a tab triggered simple command plugin, a convenient console in the editor and finally snippets plugin with ruby scripting support.
 
-I am still experimenting different methods, so do expect non-backward compatible changes (just like the migration to sqlite3 from 0.3.2 to 0.4.1) in future releases. Things are getting more stable once I implement the "inline scripting" and "dynamic hotspots" support. I keep saying this because I am more than happy if people want to make snippets for this plugin and start using it. But I do not want to waste people's effort and the project is actually under active development so a stable version (at least an API stable version) is coming soon.
+I am still experimenting different methods, so do expect non-backward compatible changes (just like the migration to sqlite3 from 0.3.2 to 0.4.1) in future releases. Things are getting more stable once I implement the "inline scripting" and "dynamic hotspots" support. I keep saying this because I am more than happy if people want to make snippets for this plugin and start using it. But as a ethical programmer I do not want to waste people's effort. And more importantly the project is really under active development so a stable version (at least an API stable version) is coming soon.
 
 == Screenshots
 
@@ -18,50 +22,65 @@ https://github.com/downloads/erinata/FingerText/ScreenClip.png
 
 == Install
 
-Download the file "FingerText - 0.4.1.zip" at 
-https://github.com/downloads/erinata/FingerText/FingerText%20-%200.4.1.zip
+Download the file "FingerText - 0.4.4.zip" at 
+https://github.com/downloads/erinata/FingerText/FingerText%20-%200.4.4.zip
 
-Unzip the package and copy the files in the plugins folder of the zip file into the plugins folder of Notepad++.
+Unzip the package and copy the FingerText.dll to the plugins folder of Notepad++. This is the only file you need to run FingerText in notepad++.
 
-== Known issues (Have trouble saving snippets under Windows 7 or Vista?)
+The changelog.txt and readme.rdoc is for your reference. 
 
-If you are using Windows 7 or Vista and you have installed your notepad++ into the Program files or Program Files (x86) folder, you may need to run notepad++ with administrator rights in order to edit, save and delete snippets. If you are using the portable version and you have installed notepad++ somewhere else then you should have no problem saving snippets.
+The SampleSnippets.ftd contains a bunch of sample snippets. You do NOT need to put this file into your plugin folder. Just put that somewhere you can find (say desktop)
+
+== Importing Sample Snippets
+
+You should have your FingerText installed. If you are in doubt, go to the notepad++ menu, there should be "FingerText" undert "Plugins".
+
+To import the sample snippets mentioned in the installation section, go to notepad++ menu > plugin > FingerText > Import Snippets.
+
+Choose the file SampleSnippets.ftd and all the sample snippets will be installed. You should be able to find it in your download package or it can be in the plugin or config folder if you are installing FingerText through Plugin Manager. If you still cannot find it, go to https://github.com/downloads/erinata/FingerText/FingerText%20-%200.4.4.zip to download the file again and you should be able to get the file.
+
+To verify you have imported the snippets correctly, go to notepad++ menu > Plugins > FingerText > Show SnippetDock. A Dialog with a list of available plugins should show up.
 
 == Basic Usage
 
-To trigger a snippet. Type the snippet tag and hit the [tab] key.
+Here I assume the you have already install FingerText and imported the sample snippets. If you are not, please refer to previous sections.
 
-For example, you can open a new file , type in "global"(without quotes) and hit [tab]. 
+Open a new file in notepad++ and go to notepad++ menu > Plugins > FingerText > Show SnippetDock. A Dialog with a list of available plugins should show up. Here you can see a list of available snippets. There is one of them called "<GLOBAL> num". "num" is the trigger text of the snippet. To trigger it, type in "num" (with out quotes) and hit the [Tab] key.
 
-  global[tab]
+  num[Tab]
 
-The tag will be replaced by "This is a global snippet."
+The trigger text disappear and it is replaced by a bunch of numbers.
 
-Some snippets are file extension specific. For example, if you open a file called test.cpp, you can type "cpp"(without quote) and hit [tab]. 
+That's it. You can try triggering others snippets in the list. Snippet can be as long as several paragraphs (try "lorem"). Or as short as just one word (try "npp")
+
+  lorem[Tab]
+  npp[Tab]
+
+Some snippets are file specific. Try to open a new file and save it as "test.cpp".
+
+You can see the SnippetDock is updated. There are a bunch of snippets added to the list. One of them is called "<.cpp> ios". Try triggering it inside the test.cpp.
+
+  ios[Tab]
   
-  cpp[tab]
+You can see the snippet is triggered and a bunch of code is inserted. This snippet is only available when your file has extension ".cpp". But you can still trigger the global snippets. (Try "num" in the test.cpp file)
 
-The tag will be replaced by "This is a cpp snippet". But if you do the same thing in a file called abc.txt, the snippet will not be triggered.
+As you may notice, <GLOBAL> indicates that the snippet is available anywhere, while <.cpp> snippets are only for .cpp files. The SnippetDock automatically updates the available snippets for your reference.
 
-Some snippets are File name specific. It will be triggered only when the file name matches. For example, there are some snippets which are specific for Makefile, so it will only trigger when the file name is "Makefile".
+Apart from global and extension, there are some snippets which are Filename specific. You can try open a new file in notepad++ and save it as "Makefile" (with no extension and capital M). The SnippetDock will shows that there are some more snippets available for Makefile. (Try "simple")
 
-(Notice that the available snippets list does not depends on which language you have chosen in notepad++, what matters is the file name and the extension name!)
-
-You can show the SnippetDock by selecting the notepad command on the menu bar (Plugins>FingerText>Show Snippet Dock). A list of available snippets are shown in the list box. This SnippetDock dynamically changes according to the current file status.
-
-You can create, edit and delete snippets using the buttons on the SnippetDock. Double clicking on an item in the list is another way to insert snippet.
+You can trigger snippets anywhere in your document. the snippet will be inserted to the location where you type in the trigger text.
 
 == Hotspots Navigation
 
-Some snippets contain hotspots. For example, open a new file and trigger the snippet "mit" (type "mit"(without quote and hit [tab]). 
+Some snippets contain hotspots. For example, open a new file and trigger the snippet "mit". 
 
   mit[tab]
 
-A sample of MIT license will appear in the editor. Your cursor is automatically moved to the "year" spot. And you can type in the year (say 2011) and hit [tab] again. The cursor is now on the name spot and you can enter the name. This is a very convenient way to fill in information while the snippet act as a template file.
+A sample of MIT license will appear in the editor. Notice that your caret is automatically moved to the "year" spot. Now type in 2011 and hit [Tab] again. The caret is now on the name spot and you can enter your name. Hit [Tab] after you enter you name will bring the caret to the end of the text. This is a very convenient way to fill in information while the snippet acts as a template file.
 
-Some of the snippets contain multiple hotspot with the same name. For example you can trigger the snippet "awesome". Your cursor is on all three spots and anything you type will change all of them simultaneously. You can also trigger the "for" snippet in a .cpp file and press the letter "i" once to change all the iteration variable to "i".
+Some of the snippets contain multiple hotspots with the same name. For example you can trigger the snippet "awesome". Your cursor is on all three spots and anything you type will change all of them simultaneously. You can also try the snippet "for" in a .cpp file. Trigger the snippet and press the letter "i" once to change all the iteration variable to "i".
 
-To see this in action, open a .cpp file and trigger the snippet "template". Use [tab] to navigate to each part and fill in the details. Now you have a working framework for your cpp main program. (Also see the snippet "simple" in Makefile)
+To see feature this in action, open a .cpp file and trigger the snippet "template". Use [tab] to navigate to each part and fill in the details. Now you have a working framework for your cpp main program. (Also see the snippet "simple" in Makefile)
 
 == Creating and Editing Snippets
 
@@ -69,31 +88,40 @@ To create new snippets, click the create button under the snippet list. A new do
 
 To edit a snippet, select the snippet on the snippet list and click the edit button. The snippet is opened in a new file and you can edit the content. Click the save button when you finish editing.
 
-The error checking is still very crappy and for sure I will improve it in future release. At the moment, just be careful not to mess up the template when you are editing or creating snippets. If you are in doubt, you can always press the "create" button to get a fresh correct template.
+The error checking is still very crappy and I will improve it in future release. At the moment, just be careful not to mess up the template when you are editing or creating snippets. If you are in doubt, you can always press the "create" button to get a fresh correct template.
 
 Deleting a snippet is easy, just select the snippet and click the delete button.
-
-And there are some sample snippets for C ,C++ and Stata do file.
 
 == Advanced Snippet Editing
 
 Other than plain text, you can put one or more Hotspots in you snippet.
 
-Hotspots are indicated by $[![Whatever name]!]. The "Whatever name" can be a hint of the hotspot, or you can fill is with a default value. (If you type nothing and just hit tab, the hotspot $[![Whatever name]!] will be substituted by the string "Whatever name"(without quotes)). You may want to add a empty Hotspot (i.e. $[![]!]) at the location where you want the cursor to move to after tabbing through the last hotspot.
+Hotspots are indicated by $[![Whatever name]!]. The "Whatever name" can be a hint of the hotspot, or you can fill it with a default value. (If you type nothing and just hit tab, the hotspot $[![Whatever name]!] will be substituted by the string "Whatever name"(without quotes)). You may want to add a empty Hotspot (i.e. $[![]!]) at the location where you want the cursor to move to after tabbing through the last hotspot. Try to edit the sample snippets and use them as reference. 
 
-Notice that hotspots with the same name will be highlighted at the same time. See the snippet "for" (you can trigger only in a .cpp file) to see it in action.
+Notice that hotspots with the same name will be highlighted at the same time. Try editing the snippet "for" which you have triggered in previous section. You can see that there are a bunch of $[![[var]]!], which will be highlighted simultaneously when the snippet is triggered.
 
 Any thing after the [>END<] will not be inserted into the document so you can comment about your snippet there.
 
-Chinese characters are supported in snippets. You can try it by triggering the snippet "chinese". All snippets should be encoded in UTF-8. Notice that Chinese character tag name are not supported. Actually sometimes it works sometimes it doesn't so it is not officially supported. 
+Chinese characters are supported in snippets. You can try it by triggering the snippet "chinese". All snippets should be encoded in UTF-8 and being triggered in UTF-8 document. Notice that Chinese character tag name are not supported. Actually sometimes it works sometimes it doesn't so it is not officially supported. 
 
 == Snippets Backup and Sharing
-Currently there is no good way to do that. You can backup your database file located at %Notepad++Folder%\plugins\FingerText\snippets.db3 and you can share this file to others who want to use your snippets. Importing and Exporting functions will be available in the future but not before the snippet format become stable.
+
+To backup the snippets, you can go to notepad++ menu > Plugins > FingerText > Export Snippets. Choose a file name (which extension .ftd) and the snippets are exported. You can import them in the same way as importing the sample snippets.
+
+The .ftd files are in plain text so you can edit them directly too. But don't do that unless you know what you are doing because this can cause serious problem in importing and exporting. Editing .ftd files is not officially supported.
 
 If you use sqlite, you can directly edit the snippet database too. It is not officially supported though.
 
+== Upgrading from 0.4.1
+
+If you want to use your snippets after you upgrade to 0.4.4, you can got to the %Notepad++ folder%\plugins\FingerText to get the old database Snippets.db3. Rename is to FingerText.db3 and move it to the config folder after update.
+
 == Change log 
 (for full change log (including the development log) please refer to the CHANGELOG file in the repository)
+
+0.4.4
+Implemented Snippets import and export function. Change the database storage location to the config folder. (Should solve the problem of snippet not saving correctly under Windows 7 and Vista)
+A better step by step tutorial for people who are new to snippets
 
 0.4.1
 First stable version using sqlite3. (fixing the version number problem of 0.4.0)

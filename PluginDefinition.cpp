@@ -134,7 +134,6 @@ void commandMenuInit()
     setCommand(3, TEXT("Export Snippets"), exportSnippets, NULL, false);
 
     //setCommand(4, TEXT("Testing"), testing, NULL, false);
-
     openDatabase();
 }
 
