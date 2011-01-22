@@ -6,13 +6,13 @@ Tab triggered snippet plugin for Notepad++.
 
 FingerText is a tab triggered snippet plugin for Notepad++. Support global snippets and snippets for each file extension or file name, hotspots navigation, multiple hotspots simultaneous editing, hotspot text hint(instead of just a $ or # sign) and hotspot default value. Comments can be added to snippets. It also features a SnippetDock which shows a list of currently available snippets. (see screenshots) You can import or export your snippets and share it to others.
 
-If you are new to FingerText, foller the "Install", "Importing Sample Snippets" and "Basic Usage" sections in this file. This should give you a step by step tutorial on how to use FingerText.
+If you are new to FingerText, follow the "Install", "Importing Sample Snippets" and "Basic Usage" sections in this file. That should give you a step by step tutorial on how to use FingerText.
 
 == Development Status
 
 This plugin is still in Alpha stage so do expect that it can be buggy. The development direction is to make it at least a working snippet plugin, and probably a tab triggered simple command plugin, a convenient console in the editor and finally snippets plugin with ruby scripting support.
 
-I am still experimenting different methods, so do expect non-backward compatible changes (just like the migration to sqlite3 from 0.3.2 to 0.4.1) in future releases. Things are getting more stable once I implement the "inline scripting" and "dynamic hotspots" support. I keep saying this because I am more than happy if people want to make snippets for this plugin and start using it. But as a ethical programmer I do not want to waste people's effort. And more importantly the project is really under active development so a stable version (at least an API stable version) is coming soon.
+I am still experimenting different methods, so do expect non-backward compatible changes (just like the migration to sqlite3 from 0.3.2 to 0.4.1) in future releases. Things are getting more stable once I implement the "inline scripting" and "dynamic hotspots" features. I keep saying this because I am more than happy if people want to make snippets for this plugin and start using it. But as an ethical programmer I do not want to waste people's effort. And more importantly the project is really under active development so a stable version (at least an API stable version) is coming SOON.
 
 == Screenshots
 
@@ -33,7 +33,7 @@ The SampleSnippets.ftd contains a bunch of sample snippets. You do NOT need to p
 
 == Importing Sample Snippets
 
-You should have your FingerText installed. If you are in doubt, go to the notepad++ menu, there should be "FingerText" undert "Plugins".
+You should have FingerText installed. If you are in doubt, go to the notepad++ menu, there should be "FingerText" undert "Plugins".
 
 To import the sample snippets mentioned in the installation section, go to notepad++ menu > plugin > FingerText > Import Snippets.
 
@@ -84,7 +84,7 @@ To see feature this in action, open a .cpp file and trigger the snippet "templat
 
 == Creating and Editing Snippets
 
-To create new snippets, click the create button under the snippet list. A new document is opened and you can edit the Trigger Text (line 10), Scope (line 12) and you can enter your snippet content on line 14 or below. REMEMBER to place a [>END<] at the end of the snippet. Click the save button when you finish editing.
+To create new snippets, click the create button at the SnippetDock. A new document is opened and you can edit the Trigger Text (line 10), Scope (line 12) and you can enter your snippet content on line 14 or below. REMEMBER to place a [>END<] at the end of the snippet. Click the save button when you finish editing.
 
 To edit a snippet, select the snippet on the snippet list and click the edit button. The snippet is opened in a new file and you can edit the content. Click the save button when you finish editing.
 
@@ -114,7 +114,7 @@ If you use sqlite, you can directly edit the snippet database too. It is not off
 
 == Upgrading from 0.4.1
 
-If you want to use your snippets after you upgrade to 0.4.4, you can got to the %Notepad++ folder%\plugins\FingerText to get the old database Snippets.db3. Rename is to FingerText.db3 and move it to the config folder after update.
+If you want to use your snippets after you upgrade to 0.4.4, you can go to the %Notepad++ folder%\plugins\FingerText and get the old database file Snippets.db3. Rename is to FingerText.db3 and move it to the config folder after update.
 
 == Change log 
 (for full change log (including the development log) please refer to the CHANGELOG file in the repository)
