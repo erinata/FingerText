@@ -927,13 +927,16 @@ void importSnippets()
         char* fileText = new char[fileLength+1];
 
         //TODO: consider using NPPM_CREATESCINTILLAHANDLE and NPPM_DESTROYSCINTILLAHANDLE instead of just a new file
-
+        // TODO : check if the file is open before processing the rest of the program
         file.read(fileText,fileLength);
         file.close();
         
-        ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
-        ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0), 4);
         
+
+        ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
+        int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
+        ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
+
         HWND curScintilla = getCurrentScintilla();
         //::SendMessage(curScintilla, SCI_SETCODEPAGE,65001,0);
         ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)fileText);
@@ -1010,32 +1013,18 @@ void importSnippets()
                     // TODO: may be moving the message to earlier location so that the text editor will be showing the message that is about to be overwriting into the database
                     // TODO: or to try showing the conflict message on the editor
 
-                    // Failed attempt to show overwrite hint message.....
-                    //const char * tempTagText = tagText;
-                    //const char * tempTagTypeText = tagTypeText;
-                    //
-                    //int overWriteMessageLength = strlen(tempTagText) + strlen(tempTagTypeText) +50;
-                    //
-                    //char* overWriteMessage = new char [overWriteMessageLength+1];
-                    //
-                    ////char* overWriteMessage= new char [1000];
-                    //strcat(overWriteMessage,"Snippet (");
-                    //strcat(overWriteMessage, tempTagText);
-                    //strcat(overWriteMessage, ") of Scope (");
-                    //strcat(overWriteMessage, tempTagTypeText);
-                    //strcat(overWriteMessage, ") already exists, overwrite?");
-                    //
-                    //size_t origsize = overWriteMessageLength + 1; 
-                    //size_t convertedChars = 0; 
-                    //wchar_t* wcstring;
-                    //wcstring = new wchar_t[origsize*4+1];
-                    //mbstowcs_s(&convertedChars, wcstring, origsize, overWriteMessage, _TRUNCATE);  
-                    //
-                    //int messageReturn = ::MessageBox(nppData._nppHandle, (LPCWSTR)wcstring, TEXT("FingerText"), MB_YESNO);
-                    //delete [] overWriteMessage;
-                    //delete [] wcstring;
-                    /////////////////////////////
-                    
+                    ::SendMessage(curScintilla,SCI_GOTOLINE,0,0);
+  
+                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\nConflicting Snippet: \r\n\r\n     ");
+                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)tagText);
+                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"  <");
+                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)tagTypeText);
+                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)">\r\n");
+                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n\r\n   (More details of the conflicts will be shown in future releases)");
+                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n----------------------------------------\r\n");
+                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"---------- [ Pending Imports ] ---------\r\n");
+                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"----------------------------------------\r\n");
+
 
                     int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("A snippet already exists, overwrite?"), TEXT("FingerText"), MB_YESNO);
                     if (messageReturn==IDNO)
@@ -1063,7 +1052,9 @@ void importSnippets()
                     
                     }
 
-
+                    ::SendMessage(curScintilla,SCI_GOTOLINE,17,0);
+                    ::SendMessage(curScintilla,SCI_SETSELECTION,0,::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
+                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
 
             
                 } else

@@ -1,5 +1,14 @@
 current development version
 
+
+0.4.2
+Using the config folder to storage database (should solve the windows 7 admin problem)
+Add import database function (export coming soon)
+The whole plugin become a single dll for easy installation. The sample snippet database can be imported afterwards.
+
+0.4.1
+Fixing the version number problem
+
 0.4.0
 Disabling the debuging testing function.
 
