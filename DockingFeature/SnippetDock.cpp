@@ -64,8 +64,19 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
             {
                 updateDockItems();
 
-            } else if (HIWORD(wParam) == LBN_SELCHANGE && LOWORD(wParam) == IDD_SNIPPET_DOCK)
+            } else if (HIWORD(wParam) == LBN_SELCHANGE && LOWORD(wParam) == IDC_SNIPPET_LIST)
             {
+                //implement snippet preview here
+                 
+                //::MessageBox(nppData._nppHandle, TEXT("change!"), TEXT("FingerText"), MB_OK);
+                //if (getSelection()==3)
+                //{
+                //     ::MessageBox(nppData._nppHandle, TEXT("3"), TEXT("FingerText"), MB_OK);
+                //} else if (getSelection()==4)
+                //{
+                //     ::MessageBox(nppData._nppHandle, TEXT("4"), TEXT("FingerText"), MB_OK);
+                //}
+
 
             } else if (HIWORD(wParam) == LBN_SETFOCUS && LOWORD(wParam) == IDC_SNIPPET_LIST)
             {

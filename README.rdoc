@@ -124,7 +124,10 @@ Implemented Snippets import and export function. Change the database storage loc
 A better step by step tutorial for people who are new to snippets
 
 0.4.1
-First stable version using sqlite3. (fixing the version number problem of 0.4.0)
+Fixing the version number problem of 0.4.0
+
+0.4.0
+First stable version using sqlite3. 
 
 0.3.11
 Using Sqlite to store snippets instead of using recusive file system.
@@ -143,12 +146,29 @@ performance improvement to path search
 0.2.6
 Multiple hotspots selection and hotspot hint text replacement works simultaneously
 
+0.2.0
+Fixed long tab problem
+Fixed Spaces or tabspaces before tab problem
+Fixed empty snippet problem
+Emulate tab behaviour when no tag match or selection is rectangle
+Snippet insertion recorded as one single undo step
+
 0.1.0 
 First Alpha verison. Implemented basic tab trigger snippets and hotspots navigation
 
 == Tested with
 
 - Notepad++ 3.8.6(Unicode), Windows 7 Ultimate 64bit 
+
+== To Do List
+
+- Dynamic Snippets
+
+- More efficient import and export
+
+- More fault tolerant snippet editor.
+
+- Snippet Preview
 
 == Credits
 

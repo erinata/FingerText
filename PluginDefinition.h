@@ -72,7 +72,7 @@ const TCHAR NPP_PLUGIN_NAME[] = TEXT("FingerText");
 //
 // Here define the number of your plugin commands
 //
-const int nbFunc = 4;
+const int nbFunc = 8;
 
 
 //
@@ -127,6 +127,7 @@ void deleteSnippet();
 void insertSnippet();
 void exportSnippets();
 void importSnippets();
+void showAbout();
 void fingerText();
 
 void testing();
