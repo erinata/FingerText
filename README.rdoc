@@ -116,6 +116,11 @@ If you use sqlite, you can directly edit the snippet database too. It is not off
 
 If you want to use your snippets after you upgrade to 0.4.4, you can go to the %Notepad++ folder%\plugins\FingerText and get the old database file Snippets.db3. Rename is to FingerText.db3 and move it to the config folder after update.
 
+== Upgrading from 0.3.5 or below
+
+FingerText 0.3.5 or below use a "one snippet per file" system to store snippets, which is not compatibile with current version. If you really have a lot of snippets created using these early version, please send your snippet to erinata@gmail.com. I will try my best to import them into the database in the current version.
+
+
 == Change log 
 (for full change log (including the development log) please refer to the CHANGELOG file in the repository)
 
