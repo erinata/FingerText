@@ -118,8 +118,9 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             // possible implementation of live search of snippets
             // alternatives can be SCEN_CHANGE or SCN_MODIFIED
             break;
-
-
+        case NPPN_FILEBEFORESAVE:
+            promptSaveSnippet();
+            break;
     }
 }
 
@@ -132,6 +133,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam, LPARAM lParam)
 {
   
+    
 	//if (Message == WM_MOVE)
 	//{
 	//	::MessageBox(NULL, TEXT("move"), TEXT(""), MB_OK);

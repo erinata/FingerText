@@ -87,7 +87,8 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 
             } else if (HIWORD(wParam) == LBN_DBLCLK && LOWORD(wParam) == IDC_SNIPPET_LIST)
             {
-                insertSnippet();
+                editSnippet();
+                //insertSnippet();
                 //if (getSelection()==3)
                 //{
                 //    testing();
@@ -154,8 +155,9 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
         
         case WM_INITDIALOG:
         {
+            setEditMode();
             
-            ::SetDlgItemInt(_hSelf,IDC_LENGTH,100, false);
+            //::SetDlgItemInt(_hSelf,IDC_LENGTH,100, false);
             //SendMessage(GetDlgItem(_hSelf, IDC_SNIPPET_LIST), LB_SETSEL , true, 1);
             return TRUE;
          

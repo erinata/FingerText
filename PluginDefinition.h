@@ -115,18 +115,20 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
 void openDatabase();
 int getCurrentTag(HWND curScintilla, int posCurrent, char** buffer);
 void pluginShutdown();
-void openDatabase();
+void setConfigAndDatabase();
 void convertToUTF8(TCHAR *orig, char **utf8);
 void showSnippetDock();
 void updateDockItems(bool withContent=false, bool withAll=false);
 void saveSnippet();
 void createSnippet();
 void clearCache();
+void fillSnippetEditor();
 void editSnippet();
 void deleteSnippet();
 void insertSnippet();
 void exportSnippets();
 void importSnippets();
+void promptSaveSnippet();
 void showAbout();
 void fingerText();
 

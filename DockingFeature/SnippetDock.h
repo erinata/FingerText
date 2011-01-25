@@ -103,22 +103,29 @@ public :
     }
     
 
-    int getLength() 
+    void setEditMode()
     {
-        BOOL isSuccessful;
-        int length = ::GetDlgItemInt(_hSelf, IDC_LENGTH, &isSuccessful, false);
-        if (!isSuccessful || length<10)
-        {
-            length=10;
-            ::SetDlgItemInt(_hSelf,IDC_LENGTH,length, false);
-        } else if (length>999)
-        {
-            length=999;
-            ::SetDlgItemInt(_hSelf,IDC_LENGTH,length, false);
-        }
-        
-        return length;
+        ::SetDlgItemText(_hSelf, IDC_LIST_TITLE,TEXT("Available Snippets"));
+
     }
+
+    //int getLength() 
+    //{
+    //    BOOL isSuccessful;
+    //    int length = ::GetDlgItemInt(_hSelf, IDC_LENGTH, &isSuccessful, false);
+    //    
+    //    if (!isSuccessful || length<10)
+    //    {
+    //        length=10;
+    //        ::SetDlgItemInt(_hSelf,IDC_LENGTH,length, false);
+    //    } else if (length>999)
+    //    {
+    //        length=999;
+    //        ::SetDlgItemInt(_hSelf,IDC_LENGTH,length, false);
+    //    }
+    //    
+    //    return length;
+    //}
 
     int getSelection()
     {

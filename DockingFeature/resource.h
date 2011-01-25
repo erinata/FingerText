@@ -1163,6 +1163,9 @@
 #define IDC_DELETE                      1006
 #define IDC_LENGTH                      1009
 #define IDC_REFRESH                     1010
+#define IDC_BUTTON1                     1012
+#define IDC_EDIT1                       1015
+#define IDC_LIST_TITLE                  1015
 #define CF_GDIOBJLAST                   0x03FF
 #define _WIN32_WINNT_NT4                0x0400
 #define _WIN32_IE_IE40                  0x0400
@@ -1521,7 +1524,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1011
+#define _APS_NEXT_CONTROL_VALUE         1016
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

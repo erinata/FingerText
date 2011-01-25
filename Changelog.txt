@@ -1,5 +1,10 @@
 current development version
 
+0.4.5
+Use ini config file
+remove the list length text box
+
+
 0.4.4
 Better readme.rdoc
 
