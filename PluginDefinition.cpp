@@ -87,8 +87,10 @@ TCHAR g_ftbPath[MAX_PATH];
 SnipIndex* g_snippetCache;
 int g_snippetCacheSize;
 
-bool g_editorView;
+
 bool g_enable;
+bool g_editorView;
+bool g_display;
 
 char* snippetEditTemplate = "------ FingerText Snippet Editor View ------\r\n";
 
@@ -96,7 +98,19 @@ char* snippetEditTemplate = "------ FingerText Snippet Editor View ------\r\n";
 int g_snippetListLength;
 
 DockingDlg snippetDock;
+
+#define TRIGGER_TAB_INDEX 0
 #define SNIPPET_DOCK_INDEX 1
+#define TOGGLE_ENABLE_INDEX 2
+#define IMPORT_SNIPPETS_INDEX 3
+#define EXPORT_SNIPPETS_INDEX 4
+#define SEPARATOR_ONE_INDEX 5
+#define HELP_INDEX 6
+#define ABOUT_INDEX 7
+#define SEPARATOR_TWO_INDEX 8
+#define TESTING_INDEX 9
+
+
 //
 // Initialize your plugin data here
 // It will be called while plugin loading   
@@ -134,25 +148,16 @@ void commandMenuInit()
 	shKey->_isShift = false;
 	shKey->_key = VK_TAB;
     
-    setCommand(0, TEXT("Trigger FingerText"), fingerText, shKey, false);
-
-    setCommand(SNIPPET_DOCK_INDEX, TEXT("Show SnippetDock"), showSnippetDock, NULL, false);
-
-    setCommand(2, TEXT("Import Snippets"), importSnippets, NULL, false);
-
-    setCommand(3, TEXT("Export Snippets"), exportSnippets, NULL, false);
-
-    setCommand(4, TEXT("Toggle On/Off FingerText"), toggleDisable, NULL, false);
-
-    setCommand(5, TEXT("---"), NULL, NULL, false);
-
-    setCommand(6, TEXT("Help"), showHelp, NULL, false);
-
-    setCommand(7, TEXT("About"), showAbout, NULL, false);
-
-    setCommand(8, TEXT("---"), NULL, NULL, false);
-
-    setCommand(9, TEXT("Testing"), testing, NULL, false);
+    setCommand(TRIGGER_TAB_INDEX, TEXT("Trigger FingerText"), fingerText, shKey, false);
+    setCommand(SNIPPET_DOCK_INDEX, TEXT("Toggle On/off SnippetDock"), showSnippetDock, NULL, false);
+    setCommand(TOGGLE_ENABLE_INDEX, TEXT("Toggle On/Off FingerText"), toggleDisable, NULL, false);
+    setCommand(IMPORT_SNIPPETS_INDEX, TEXT("Import Snippets"), importSnippets, NULL, false);
+    setCommand(EXPORT_SNIPPETS_INDEX, TEXT("Export Snippets"), exportSnippets, NULL, false);
+    setCommand(SEPARATOR_ONE_INDEX, TEXT("---"), NULL, NULL, false);
+    setCommand(HELP_INDEX, TEXT("Help"), showHelp, NULL, false);
+    setCommand(ABOUT_INDEX, TEXT("About"), showAbout, NULL, false);
+    setCommand(SEPARATOR_TWO_INDEX, TEXT("---"), NULL, NULL, false);
+    setCommand(TESTING_INDEX, TEXT("Testing"), testing, NULL, false);
         
     setConfigAndDatabase();
 }
@@ -765,6 +770,7 @@ void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
 void setConfigAndDatabase()
 {
     g_enable = true;
+    g_display=false;
     updateMode();
     
     TCHAR path[MAX_PATH];
@@ -869,9 +875,19 @@ void showSnippetDock()
 		data.dlgID = SNIPPET_DOCK_INDEX;
 		::SendMessage(nppData._nppHandle, NPPM_DMMREGASDCKDLG, 0, (LPARAM)&data);
 	}
-	snippetDock.display();
+
+    if (g_display)
+    {
+        snippetDock.display(false);
+        g_display=false;
+    } else
+    {
+        snippetDock.display();
+        g_display=true;
+        updateDockItems();
+    }
+	    
     
-    updateDockItems();
 }
 
 void updateDockItems(bool withContent, bool withAll)
