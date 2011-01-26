@@ -1,8 +1,12 @@
 current development version
 
+0.4.10
+Fixed problem of extra endline during repeated exporting and importing
+
 0.4.9
 Fixed problem of not opening the correct snippet in edit mode
 Cmd to enable or disable fingertext
+Better snippet save behaviour
 
 
 0.4.8

@@ -27,7 +27,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-#define VERSION_TEXT "0.4.9.0"
-#define VERSION_NUM 0,4,9,0
-#define VERSION_TEXT_LONG "FingerText 0.4.9(Alpha)"
-#define VERSION_TEXT_FULL TEXT("FingerText 0.4.9(Alpha)\r\nJanuary 2011\r\n\r\nAuthor: Tom Lam\r\nEmail: erinata@gmail.com\r\n\r\nUpdate to the lastest version:\r\n     http://sourceforge.net/projects/fingertext/ \r\nUsage Guide and Source code:\r\n     http://github.com/erinata/FingerText \r\n\r\n(Notice that Snippets created using FingerText version 0.3.5 or below is not compatible with this version)")
+#define VERSION_TEXT "0.4.10.0"
+#define VERSION_NUM 0,4,10,0
+#define VERSION_TEXT_LONG "FingerText 0.4.10(Alpha)"
+#define VERSION_TEXT_FULL TEXT("FingerText 0.4.10(Alpha)\r\nJanuary 2011\r\n\r\nAuthor: Tom Lam\r\nEmail: erinata@gmail.com\r\n\r\nUpdate to the lastest version:\r\n     http://sourceforge.net/projects/fingertext/ \r\nUsage Guide and Source code:\r\n     http://github.com/erinata/FingerText \r\n\r\n(Notice that Snippets created using FingerText version 0.3.5 or below is not compatible with this version)")
