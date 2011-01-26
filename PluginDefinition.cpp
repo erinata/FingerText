@@ -79,7 +79,7 @@ struct SnipIndex {
     char* triggerText;
     char* scope;
     char* content;
-} ;
+};
 
 TCHAR g_iniPath[MAX_PATH];
 TCHAR g_ftbPath[MAX_PATH];
@@ -87,11 +87,9 @@ TCHAR g_ftbPath[MAX_PATH];
 SnipIndex* g_snippetCache;
 int g_snippetCacheSize;
 
-bool g_editMode;
+bool g_editorView;
 
-char* snippetEditTemplate1 = "------ FingerText Snippet Editor View ------\r\n";
-char* snippetEditTemplate2 = "\r\n";
-char* snippetEditTemplate3 = "\r\n";
+char* snippetEditTemplate = "------ FingerText Snippet Editor View ------\r\n";
 
 DockingDlg snippetDock;
 #define SNIPPET_DOCK_INDEX 1
@@ -106,8 +104,6 @@ int g_snippetListLength;
 void pluginInit(HANDLE hModule)
 {
     snippetDock.init((HINSTANCE)hModule, NULL);
-    
-    
 }
 
 //
@@ -154,11 +150,8 @@ void commandMenuInit()
     setCommand(6, TEXT("---"), NULL, NULL, false);
 
     setCommand(7, TEXT("Testing"), testing, NULL, false);
-
-    
+        
     setConfigAndDatabase();
-
-    
 }
 
 //
@@ -166,10 +159,7 @@ void commandMenuInit()
 //
 void commandMenuCleanUp()
 {
-    delete [] snippetEditTemplate1;
-    delete [] snippetEditTemplate2;
-    delete [] snippetEditTemplate3;
-
+    delete [] snippetEditTemplate;
     delete funcItem[0]._pShKey;
 	// Don't forget to deallocate your shortcut here
 }
@@ -202,7 +192,6 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 
 char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""))
 {
-
 	char *expanded = NULL;
 	sqlite3_stmt *stmt;
 
@@ -290,17 +279,15 @@ void createSnippet()
     ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
     HWND curScintilla = getCurrentScintilla();
 
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate1);
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"sampletriggertext");
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate2);
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"GLOBAL");
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate3);
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate);
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"sampletriggertext\r\n");
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"GLOBAL\r\n");
     ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"This is a sample snippet.\r\nThis is a sample snippet.\r\nThis is a sample snippet.\r\nThis is a sample snippet.\r\n[>END<]");
 
     ::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
     ::SendMessage(curScintilla,SCI_EMPTYUNDOBUFFER,0,0);
 
-    g_editMode = true;
+    g_editorView = true;
     refreshAnnotation();
 }
 
@@ -331,7 +318,7 @@ void editSnippet()
     //::SendMessage(curScintilla, SCI_SETCODEPAGE,65001,0);
     fillSnippetEditor();
 
-    g_editMode = true;
+    g_editorView = true;
     refreshAnnotation();
 
 }
@@ -365,11 +352,11 @@ void fillSnippetEditor()
 			const char* snippetText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
    
             //::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
-            ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate1);
+            ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate);
             ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)tempTriggerText);
-            ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate2);
+            ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"\r\n");
             ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)tempScope);
-            ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate3);
+            ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"\r\n");
 
             ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetText);
 		}		
@@ -830,7 +817,6 @@ void showSnippetDock()
 	snippetDock.display();
     
     updateDockItems();
-    
 }
     
     
@@ -1272,7 +1258,7 @@ void importSnippets()
 
 void promptSaveSnippet()
 {
-    if (g_editMode)
+    if (g_editorView)
     {
         //int messageReturn=::MessageBox(nppData._nppHandle, TEXT("It seems that you are saving a snippet to a file. Do you wish to save the snippet into your snippet list? (You can trigger a snippet only if it is in the snippet list)"), TEXT("FingerText"), MB_YESNO);
         //if (messageReturn==IDYES)
@@ -1288,21 +1274,25 @@ void promptSaveSnippet()
 
 void updateMode()
 {
+
     HWND curScintilla = getCurrentScintilla();
+
+    int curPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
     
     ::SendMessage(curScintilla,SCI_GOTOPOS,0,0);
     ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
     ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"FingerText Snippet Editor View");
     
     
-    if (::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0) == 7)
+    if ((::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0) == 7) && (::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0) == 37))
     {
-        g_editMode = true;
+        g_editorView = true;
     } else
     {
-        g_editMode = false;
+        g_editorView = false;
     }
 
+    ::SendMessage(curScintilla,SCI_GOTOPOS,curPos,0);
 
 }
 
@@ -1326,7 +1316,7 @@ Usage Guide and Source code:\r\n\
 
 void keyUpdate()
 {
-    if (g_editMode)
+    if (g_editorView)
     {
         refreshAnnotation();
 
@@ -1341,21 +1331,21 @@ void refreshAnnotation()
     ::SendMessage(curScintilla, SCI_ANNOTATIONCLEARALL, 0, 0);
 
     ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"\
-          The first line in this document should always be this \r\n\
-          ------ FingerText Snippet Editor View ------ \r\n\
-          line. Don't mess it up! \r\n\r\n");
+          # The first line in this document should always be this \r\n\
+          # ------ FingerText Snippet Editor View ------ \r\n\
+          # line. Don't mess it up! \r\n\r\n");
     ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 1, (LPARAM)"\
-          The second line is the trigger text. For example if you \r\n\
-          put \"npp\" (without quotes) in this line, the snippet will\r\n\
-          be triggered when you type npp and hit tab.\r\n\r\n");
+          # The second part is the trigger text. For example if you \r\n\
+          # put \"npp\" (without quotes) in this line, the snippet will\r\n\
+          # be triggered when you type npp and hit tab.\r\n\r\n");
     ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 2, (LPARAM)"\
-          The third line is the scope of the snippet. \r\n\
-          e.g. \"GLOBAL\" (without quotes) for globally available snippets,\r\n\
-          and \".cpp\" (without quotes) for snippets that is only available\r\n\
-          in .cpp documents. \r\n\r\n\r\n\
-          Anywhere below the third line is the snippet content. It can be as\r\n\
-          long as many paragraphs or just several words. \r\n\
-          Remember to place a [>END<] at the end of the snippet content.\r\n");
+          # The third part is the scope of the snippet. \r\n\
+          # e.g. \"GLOBAL\" (without quotes) for globally available snippets,\r\n\
+          # and \".cpp\" (without quotes) for snippets that is only available\r\n\
+          # in .cpp documents. \r\n\r\n\r\n\
+          # Anywhere below the third line is the snippet content. It can be as\r\n\
+          # long as many paragraphs or just several words. \r\n\
+          # Remember to place an [>END<] at the end of the snippet content.\r\n");
     
     
     ::SendMessage(curScintilla, SCI_ANNOTATIONSETSTYLE, 0, STYLE_INDENTGUIDE);
