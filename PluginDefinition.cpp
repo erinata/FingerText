@@ -305,6 +305,8 @@ void createSnippet()
     ::SendMessage(curScintilla,SCI_EMPTYUNDOBUFFER,0,0);
 
     g_editorView = true;
+    updateDockItems();
+    updateMode();
     refreshAnnotation();
 }
 
@@ -765,7 +767,6 @@ void setConfigAndDatabase()
     g_enable = true;
     updateMode();
     
-
     TCHAR path[MAX_PATH];
     char *cpath;
     ::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH, reinterpret_cast<LPARAM>(path));
