@@ -81,28 +81,29 @@ struct SnipIndex {
     char* content;
 } ;
 
-TCHAR iniPath[MAX_PATH];
-TCHAR ftbPath[MAX_PATH];
+TCHAR g_iniPath[MAX_PATH];
+TCHAR g_ftbPath[MAX_PATH];
 
-SnipIndex* snippetCache;
-int snippetCacheSize;
+SnipIndex* g_snippetCache;
+int g_snippetCacheSize;
 
 char* snippetEditTemplate1 = " ------ FingerText Snippet Editor View ------\r\nInstructions of how to edit snippet to be completed ....................................\r\nInstructions of how to edit snippet to be completed ....................................\r\nInstructions of how to edit snippet to be completed ....................................\r\n\r\n\r\n\r\n\r\n------------- [ Trigger Text ] --------------\r\n";
 char* snippetEditTemplate2 = "\r\n ---------------- [ Scope ] ------------------\r\n";
 char* snippetEditTemplate3 = "\r\n ------------ [ Snippet Content ] ------------\r\n";
 
-DockingDlg _snippetDock;
+DockingDlg snippetDock;
 #define SNIPPET_DOCK_INDEX 1
 
+
 // Config file content
-int snippetListLength;
+int g_snippetListLength;
 
 //
 // Initialize your plugin data here
 // It will be called while plugin loading   
 void pluginInit(HANDLE hModule)
 {
-    _snippetDock.init((HINSTANCE)hModule, NULL);
+    snippetDock.init((HINSTANCE)hModule, NULL);
     
     
 }
@@ -255,13 +256,13 @@ void insertSnippet()
     HWND curScintilla = getCurrentScintilla();
     int posCurrent = ::SendMessage(curScintilla, SCI_GETCURRENTPOS,0,0);
 
-    int index = _snippetDock.getCount() - _snippetDock.getSelection()-1;
+    int index = snippetDock.getCount() - snippetDock.getSelection()-1;
     
     if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
 	{
 		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
-		sqlite3_bind_text(stmt, 1, snippetCache[index].scope , -1, SQLITE_STATIC);
-		sqlite3_bind_text(stmt, 2, snippetCache[index].triggerText, -1, SQLITE_STATIC);
+		sqlite3_bind_text(stmt, 1, g_snippetCache[index].scope , -1, SQLITE_STATIC);
+		sqlite3_bind_text(stmt, 2, g_snippetCache[index].triggerText, -1, SQLITE_STATIC);
 
 		// Run the query with sqlite3_step
 		if(SQLITE_ROW == sqlite3_step(stmt))  // SQLITE_ROW 100 sqlite3_step() has another row ready
@@ -273,10 +274,8 @@ void insertSnippet()
             replaceTag(curScintilla, tempSnippetText, posCurrent, posCurrent);
             
             //::SendMessage(curScintilla, SCI_INSERTTEXT, posCurrent, (LPARAM)snippetText);
-		}
-		
+		}	
 	}
-
 	sqlite3_finalize(stmt);
     ::SendMessage(curScintilla,SCI_GRABFOCUS,0,0); 
 
@@ -304,14 +303,12 @@ void editSnippet()
 {
     HWND curScintilla = getCurrentScintilla();
     
-    if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)ftbPath))
+    if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
     {
         //switch to the editor file
-
-
     } else
     {
-        ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)ftbPath);
+        ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_ftbPath);
     }
 
     if (::SendMessage(curScintilla,SCI_GETMODIFY,0,0)!=0)
@@ -322,14 +319,10 @@ void editSnippet()
         {
             saveSnippet();
         }
-
     }
 
-    
     ::SendMessage(curScintilla,SCI_CLEARALL,0,0);
     
-
-
     //::SendMessage(curScintilla, SCI_SETCODEPAGE,65001,0);
     fillSnippetEditor();
 
@@ -339,28 +332,17 @@ void fillSnippetEditor()
 {
     // TODO: The snippet menu should show all snippets available, instead of just global snippets, or there may be some better way to deal with this)
     HWND curScintilla = getCurrentScintilla();
-    int index = _snippetDock.getCount() - _snippetDock.getSelection()-1;
+    int index = snippetDock.getCount() - snippetDock.getSelection()-1;
     char * tempTriggerText;
     char * tempScope;
     char * tempSnippetText;
 
-    tempTriggerText = new char [strlen(snippetCache[index].triggerText)];
-    tempScope = new char [strlen(snippetCache[index].scope)];
+    tempTriggerText = new char [strlen(g_snippetCache[index].triggerText)];
+    tempScope = new char [strlen(g_snippetCache[index].scope)];
 
-    strcpy(tempTriggerText, snippetCache[index].triggerText);
-    strcpy(tempScope, snippetCache[index].scope);
+    strcpy(tempTriggerText, g_snippetCache[index].triggerText);
+    strcpy(tempScope, g_snippetCache[index].scope);
 
-    //if (sizeof(snippetCache[index].scope) <4)
-    //{
-    //    createSnippet();
-    //    
-    //    return;
-    //
-    //    //FIX : Don't know why the create page is not shoing up if I click edit before choing any thing in list box
-    //    //TODO : should select the corresponding list box item
-    //    //TODO : or consider create a new snippet after a messagebox confirmation
-    //
-    //}
     sqlite3_stmt *stmt;
 
 
@@ -394,14 +376,14 @@ void fillSnippetEditor()
 void deleteSnippet()
 {
     HWND curScintilla = getCurrentScintilla();
-    int index = _snippetDock.getCount() - _snippetDock.getSelection()-1;
+    int index = snippetDock.getCount() - snippetDock.getSelection()-1;
 
     sqlite3_stmt *stmt;
     
     if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
     {
-        sqlite3_bind_text(stmt, 1, snippetCache[index].scope, -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 2, snippetCache[index].triggerText, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 1, g_snippetCache[index].scope, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 2, g_snippetCache[index].triggerText, -1, SQLITE_STATIC);
         sqlite3_step(stmt);
     }
     sqlite3_finalize(stmt);
@@ -716,7 +698,7 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
 void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
 {
 
-    delete [] snippetCache;
+    delete [] g_snippetCache;
     if (g_dbOpen)
     {
         sqlite3_close(g_db);  // This close the database when the plugin shutdown.
@@ -761,24 +743,24 @@ void setConfigAndDatabase()
 
     // Loading config file
 
-    ::_tcscpy(iniPath,path);
-    ::_tcscpy(ftbPath,path);
-    ::_tcscat(iniPath,TEXT("\\FingerText.ini"));
-    ::_tcscat(ftbPath,TEXT("\\SnippetEditor.ftb"));
+    ::_tcscpy(g_iniPath,path);
+    ::_tcscpy(g_ftbPath,path);
+    ::_tcscat(g_iniPath,TEXT("\\FingerText.ini"));
+    ::_tcscat(g_ftbPath,TEXT("\\SnippetEditor.ftb"));
     //::MessageBox(nppData._nppHandle, path, TEXT("Trace"), MB_OK);
 
     // create the file if not exist
-    if (PathFileExists(iniPath) == FALSE)
+    if (PathFileExists(g_iniPath) == FALSE)
 	{
-        ::WritePrivateProfileString(TEXT("FingerText"), TEXT("snippet_list_length"), TEXT("100"), iniPath);
+        ::WritePrivateProfileString(TEXT("FingerText"), TEXT("snippet_list_length"), TEXT("100"), g_iniPath);
         
     }
 
-    snippetListLength = GetPrivateProfileInt(TEXT("FingerText"), TEXT("snippet_list_length"), 0, iniPath);
+    g_snippetListLength = GetPrivateProfileInt(TEXT("FingerText"), TEXT("snippet_list_length"), 0, g_iniPath);
 
-    if (PathFileExists(ftbPath) == FALSE)
+    if (PathFileExists(g_ftbPath) == FALSE)
 	{
-        ::WritePrivateProfileString(TEXT("Dummy"), TEXT("Dummy"), TEXT("Dummy"), ftbPath);
+        ::WritePrivateProfileString(TEXT("Dummy"), TEXT("Dummy"), TEXT("Dummy"), g_ftbPath);
         //::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, 0, (LPARAM)ftbPath);
         
     }
@@ -818,24 +800,24 @@ void convertToUTF8(TCHAR *orig, char **utf8)
 
 void showSnippetDock()
 {
-	_snippetDock.setParent(nppData._nppHandle);
+	snippetDock.setParent(nppData._nppHandle);
 	tTbData	data = {0};
 
-	if (!_snippetDock.isCreated())
+	if (!snippetDock.isCreated())
 	{
-		_snippetDock.create(&data);
+		snippetDock.create(&data);
 
 		// define the default docking behaviour
 		data.uMask = DWS_DF_CONT_RIGHT;
 
-		data.pszModuleName = _snippetDock.getPluginFileName();
+		data.pszModuleName = snippetDock.getPluginFileName();
 
 		// the dlgDlg should be the index of funcItem where the current function pointer is
 		// in this case is DOCKABLE_DEMO_INDEX
 		data.dlgID = SNIPPET_DOCK_INDEX;
 		::SendMessage(nppData._nppHandle, NPPM_DMMREGASDCKDLG, 0, (LPARAM)&data);
 	}
-	_snippetDock.display();
+	snippetDock.display();
     
     updateDockItems();
     
@@ -855,12 +837,12 @@ void updateDockItems(bool withContent, bool withAll)
     int tempTriggerLength=0;
     int tempContentLength=0;
 
-    //snippetCacheSize=_snippetDock.getLength();
-    snippetCacheSize=snippetListLength;
-    snippetCache = new SnipIndex [snippetCacheSize];
+    //g_snippetCacheSize=snippetDock.getLength();
+    g_snippetCacheSize=g_snippetListLength;
+    g_snippetCache = new SnipIndex [g_snippetCacheSize];
     clearCache();
 
-    _snippetDock.clearDock();
+    snippetDock.clearDock();
     sqlite3_stmt *stmt;
 
     //char *tagTypeAll = NULL;
@@ -900,7 +882,7 @@ void updateDockItems(bool withContent, bool withAll)
         if (withAll)
         {
             char snippetCacheSizeText[10];
-            ::_itoa(snippetCacheSize, snippetCacheSizeText, 10); 
+            ::_itoa(g_snippetCacheSize, snippetCacheSizeText, 10); 
 
             sqlite3_bind_text(stmt, 1, snippetCacheSizeText, -1, SQLITE_STATIC);
 
@@ -918,7 +900,7 @@ void updateDockItems(bool withContent, bool withAll)
             //int cols = sqlite3_column_count(stmt);
             //tagType = itoa(snippetCacheSize,tagType,10);
             char snippetCacheSizeText[10];
-            ::_itoa(snippetCacheSize, snippetCacheSizeText, 10); 
+            ::_itoa(g_snippetCacheSize, snippetCacheSizeText, 10); 
 
             sqlite3_bind_text(stmt, 4, snippetCacheSizeText, -1, SQLITE_STATIC);
         }
@@ -935,8 +917,8 @@ void updateDockItems(bool withContent, bool withAll)
                 {
                     scopeLength = tempScopeLength;
                 }
-                snippetCache[row].scope = new char[strlen(tempScope)*4 + 1];
-                strcpy(snippetCache[row].scope, tempScope);
+                g_snippetCache[row].scope = new char[strlen(tempScope)*4 + 1];
+                strcpy(g_snippetCache[row].scope, tempScope);
 
                 const char* tempTrigger = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
                 tempTriggerLength = strlen(tempTrigger)*4 + 1;
@@ -944,8 +926,8 @@ void updateDockItems(bool withContent, bool withAll)
                 {
                     triggerLength = tempTriggerLength;
                 }
-                snippetCache[row].triggerText = new char[strlen(tempTrigger)*4 + 1];
-                strcpy(snippetCache[row].triggerText, tempTrigger);
+                g_snippetCache[row].triggerText = new char[strlen(tempTrigger)*4 + 1];
+                strcpy(g_snippetCache[row].triggerText, tempTrigger);
 
                 if (withContent)
                 {
@@ -955,8 +937,8 @@ void updateDockItems(bool withContent, bool withAll)
                     {
                         contentLength = tempContentLength;
                     }
-                    snippetCache[row].content = new char[strlen(tempContent)*4 + 1];
-                    strcpy(snippetCache[row].content, tempContent);
+                    g_snippetCache[row].content = new char[strlen(tempContent)*4 + 1];
+                    strcpy(g_snippetCache[row].content, tempContent);
                 }
                 row++;
 
@@ -976,16 +958,16 @@ void updateDockItems(bool withContent, bool withAll)
 
     }
 
-    for (int j=0;j<snippetCacheSize;j++)
+    for (int j=0;j<g_snippetCacheSize;j++)
     {
-        if (snippetCache[j].scope !=NULL)
+        if (g_snippetCache[j].scope !=NULL)
         {
             char newText[200]=""; // TODO: this const length array problem has to be solve when we have scripting hotspot as the hotspot can get super long.
         
             strcat(newText,"<");
-            strcat(newText,snippetCache[j].scope);
+            strcat(newText,g_snippetCache[j].scope);
             strcat(newText,">   ");
-            strcat(newText,snippetCache[j].triggerText);
+            strcat(newText,g_snippetCache[j].triggerText);
 
             size_t origsize = strlen(newText) + 1;
             const size_t newsize = 300;
@@ -993,7 +975,7 @@ void updateDockItems(bool withContent, bool withAll)
             wchar_t convertedTagText[newsize];
             mbstowcs_s(&convertedChars, convertedTagText, origsize, newText, _TRUNCATE);
 
-            _snippetDock.addDockItem(convertedTagText);
+            snippetDock.addDockItem(convertedTagText);
         }
         
         
@@ -1009,11 +991,11 @@ void updateDockItems(bool withContent, bool withAll)
 
 void clearCache()
 {
-    for (int i=0;i<snippetCacheSize;i++)
+    for (int i=0;i<g_snippetCacheSize;i++)
     {
-        snippetCache[i].triggerText=NULL;
-        snippetCache[i].scope=NULL;
-        snippetCache[i].content=NULL;
+        g_snippetCache[i].triggerText=NULL;
+        g_snippetCache[i].scope=NULL;
+        g_snippetCache[i].content=NULL;
     }
 }
 
@@ -1042,16 +1024,16 @@ void exportSnippets()
 
         updateDockItems(true,true);
 
-        for (int j=0;j<snippetCacheSize;j++)
+        for (int j=0;j<g_snippetCacheSize;j++)
         {
-            if (snippetCache[j].scope !=NULL)
+            if (g_snippetCache[j].scope !=NULL)
             {
         
-                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)snippetCache[j].triggerText);
+                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)g_snippetCache[j].triggerText);
                 ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n");
-                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)snippetCache[j].scope);
+                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)g_snippetCache[j].scope);
                 ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n");
-                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)snippetCache[j].content);
+                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)g_snippetCache[j].content);
                 ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n!$[FingerTextData FingerTextData]@#\r\n");
             }
         }
@@ -1403,7 +1385,7 @@ void testing()
     // messagebox shows the current buffer encoding id
     //int enc = ::SendMessage(nppData._nppHandle, NPPM_GETBUFFERENCODING, (LPARAM)::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0), 0);
 
-    //int enc = snippetListLength;
+    //int enc = g_snippetListLength;
     //wchar_t countText[10];
     //::_itow_s(enc, countText, 10, 10); 
     //::MessageBox(nppData._nppHandle, countText, TEXT("Trace"), MB_OK);
