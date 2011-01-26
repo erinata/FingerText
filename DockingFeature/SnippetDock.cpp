@@ -79,6 +79,7 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
             } else if (HIWORD(wParam) == LBN_SETFOCUS && LOWORD(wParam) == IDC_SNIPPET_LIST)
             {
                 keyUpdate();
+                //updateDockItems();
                 //::Button_Enable(GetDlgItem(_hSelf, IDC_SAVE), true);
                 ::Button_Enable(GetDlgItem(_hSelf, IDC_EDIT), true);
                 ::Button_Enable(GetDlgItem(_hSelf, IDC_DELETE), true);

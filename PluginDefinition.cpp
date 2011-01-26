@@ -292,39 +292,9 @@ void createSnippet()
     refreshAnnotation();
 }
 
+
+
 void editSnippet()
-{
-    HWND curScintilla = getCurrentScintilla();
-    
-    if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
-    {
-        //switch to the editor file
-    } else
-    {
-        ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_ftbPath);
-    }
-
-    if (::SendMessage(curScintilla,SCI_GETMODIFY,0,0)!=0)
-    {
-        //TODO: can be merged with the function promptsavesnippet();
-        int messageReturn=::MessageBox(nppData._nppHandle, TEXT("Do you wish to save the current snippet before editing anotoher one?"), TEXT("FingerText"), MB_YESNO);
-        if (messageReturn==IDYES)
-        {
-            saveSnippet();
-        }
-    }
-
-    ::SendMessage(curScintilla,SCI_CLEARALL,0,0);
-    
-    //::SendMessage(curScintilla, SCI_SETCODEPAGE,65001,0);
-    fillSnippetEditor();
-
-    g_editorView = true;
-    refreshAnnotation();
-
-}
-
-void fillSnippetEditor()
 {
     // TODO: The snippet menu should show all snippets available, instead of just global snippets, or there may be some better way to deal with this)
     HWND curScintilla = getCurrentScintilla();
@@ -351,6 +321,26 @@ void fillSnippetEditor()
 		if(SQLITE_ROW == sqlite3_step(stmt))  // SQLITE_ROW 100 sqlite3_step() has another row ready
 		{
 			const char* snippetText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
+
+            if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
+            {
+                //switch to the editor file
+            } else
+            {
+                ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_ftbPath);
+            }
+
+            if (::SendMessage(curScintilla,SCI_GETMODIFY,0,0)!=0)
+            {
+                //TODO: can be merged with the function promptsavesnippet();
+                int messageReturn=::MessageBox(nppData._nppHandle, TEXT("Do you wish to save the current snippet before editing anotoher one?"), TEXT("FingerText"), MB_YESNO);
+                if (messageReturn==IDYES)
+                {
+                    saveSnippet();
+                }
+            }
+            ::SendMessage(curScintilla,SCI_CLEARALL,0,0);
+
    
             //::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
             ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate);
@@ -360,6 +350,8 @@ void fillSnippetEditor()
             ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"\r\n");
 
             ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetText);
+            g_editorView = true;
+            refreshAnnotation();
 		}		
 	}
 
@@ -787,7 +779,6 @@ void setConfigAndDatabase()
     sqlite3_step(stmt);
     sqlite3_finalize(stmt);
 
-
     // Loading config file
 
     ::_tcscpy(g_iniPath,path);
@@ -864,14 +855,9 @@ void showSnippetDock()
     
     updateDockItems();
 }
-    
-    
 
 void updateDockItems(bool withContent, bool withAll)
 {
-    //TODO: some way to show all snippets in edit mode....everytime updatedockitem is trigger, check the current doc for some sign of editing.
-    // withAll = true if it is editing snippet. Also, trigger withAll=true when creating a snippet
-
     int scopeLength=0;
     int triggerLength=0;
     int contentLength=0;
@@ -886,21 +872,6 @@ void updateDockItems(bool withContent, bool withAll)
 
     snippetDock.clearDock();
     sqlite3_stmt *stmt;
-
-    //char *tagTypeAll = NULL;
-    //TCHAR *fileTypeAll = NULL;
-    //fileTypeAll = new TCHAR[MAX_PATH];
-    //::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileTypeAll);
-    //convertToUTF8(fileTypeAll, &tagTypeAll);
-    //size_t origsize = strlen(tagTypeAll) + 1; 
-    //const size_t newsize = MAX_PATH; 
-    //size_t convertedChars = 0; 
-    //wchar_t wcstring[newsize]; 
-    //mbstowcs_s(&convertedChars, wcstring, origsize, tagTypeAll, _TRUNCATE);
-    //if ((LPCWSTR)fileTypeAll == TEXT("FingerTextSnippetEdit"))
-    //{
-    //    ::MessageBox(nppData._nppHandle, (LPCWSTR)fileTypeAll, TEXT("Trace"), MB_OK);
-    //}
     
     int sqlitePrepare;
     
@@ -1072,7 +1043,6 @@ void exportSnippets()
         {
             if (g_snippetCache[j].scope !=NULL)
             {
-        
                 ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)g_snippetCache[j].triggerText);
                 ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n");
                 ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)g_snippetCache[j].scope);
@@ -1122,184 +1092,195 @@ void importSnippets()
 
         //TODO: consider using NPPM_CREATESCINTILLAHANDLE and NPPM_DESTROYSCINTILLAHANDLE instead of just a new file
         // TODO : check if the file is open before processing the rest of the program
-        file.read(fileText,fileLength);
-        file.close();
-        
-        ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
-        int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
-        ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
-
-        HWND curScintilla = getCurrentScintilla();
-        //::SendMessage(curScintilla, SCI_SETCODEPAGE,65001,0);
-        ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)fileText);
-        ::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
-        int importCount=0;
-        int next=0;
-        do
+        if (!file.is_open())
         {
-            //TODO: Put this into a "getline" function"
-            // Getting text from the 1st line
-            int tagPosLineEnd = ::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,0,0);
-            ::SendMessage(curScintilla,SCI_GOTOLINE,0,0);
-            int tagPosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-            ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-            ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)" ");
-            int tagPosEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-            if (tagPosEnd>tagPosLineEnd)
-            {
-                tagPosEnd=tagPosLineEnd;
-            }
-            ::SendMessage(curScintilla,SCI_SETSELECTION,tagPosStart,tagPosEnd);
-            
-            char* tagText = new char[tagPosEnd-tagPosStart + 1];
-            ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(tagText));
-            
-            // Getting text from the 2nd line
-            int tagTypePosLineEnd = ::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,1,0);
-            ::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
-            int tagTypePosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-            ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-            ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)" ");
-            int tagTypePosEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-            if (tagTypePosEnd>tagTypePosLineEnd)
-            {
-                tagTypePosEnd=tagTypePosLineEnd;
-            }
-            ::SendMessage(curScintilla,SCI_SETSELECTION,tagTypePosStart,tagTypePosEnd);
-            
-            char* tagTypeText = new char[tagTypePosEnd-tagTypePosStart + 1];
-            ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(tagTypeText));
-            
-            // Getting text after the 3rd line until the tag !$[FingerTextData FingerTextData]@#
-            ::SendMessage(curScintilla,SCI_GOTOLINE,2,0);
-            int snippetPosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-            //int snippetPosEnd = ::SendMessage(curScintilla,SCI_GETLENGTH,0,0);
-            ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-            ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"!$[FingerTextData FingerTextData]@#");
-            int snippetPosEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-            ::SendMessage(curScintilla,SCI_SETSELECTION,snippetPosStart,snippetPosEnd);
-            
-            char* snippetText = new char[snippetPosEnd-snippetPosStart + 1];
-            ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(snippetText));
-            
-            ::SendMessage(curScintilla,SCI_SETSELECTION,0,snippetPosEnd);
-            ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
-            //TODO :need rewrite to more efficient code
-            ::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
-            ::SendMessage(curScintilla,SCI_SETSELECTION,0,::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
-            ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
 
-            sqlite3_stmt *stmt;
-            
-            bool notOverWrite = false;
 
-            if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+
+        } else
+        {
+            file.read(fileText,fileLength);
+            file.close();
+        
+            ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
+            int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
+            ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
+
+            HWND curScintilla = getCurrentScintilla();
+            //::SendMessage(curScintilla, SCI_SETCODEPAGE,65001,0);
+            ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)fileText);
+            ::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
+            int importCount=0;
+            int next=0;
+            do
             {
-                sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
-                sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
-                if(SQLITE_ROW == sqlite3_step(stmt))
+                //TODO: Put this into a "getline" function"
+                // Getting text from the 1st line
+                int tagPosLineEnd = ::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,0,0);
+                ::SendMessage(curScintilla,SCI_GOTOLINE,0,0);
+                int tagPosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+                ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
+                ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)" ");
+                int tagPosEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+                if (tagPosEnd>tagPosLineEnd)
                 {
-                    sqlite3_finalize(stmt);
-                    // TODO: may be moving the message to earlier location so that the text editor will be showing the message that is about to be overwriting into the database
-                    // TODO: or to try showing the conflict message on the editor
+                    tagPosEnd=tagPosLineEnd;
+                }
+                ::SendMessage(curScintilla,SCI_SETSELECTION,tagPosStart,tagPosEnd);
+            
+                char* tagText = new char[tagPosEnd-tagPosStart + 1];
+                ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(tagText));
+            
+                // Getting text from the 2nd line
+                int tagTypePosLineEnd = ::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,1,0);
+                ::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
+                int tagTypePosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+                ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
+                ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)" ");
+                int tagTypePosEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+                if (tagTypePosEnd>tagTypePosLineEnd)
+                {
+                    tagTypePosEnd=tagTypePosLineEnd;
+                }
+                ::SendMessage(curScintilla,SCI_SETSELECTION,tagTypePosStart,tagTypePosEnd);
+            
+                char* tagTypeText = new char[tagTypePosEnd-tagTypePosStart + 1];
+                ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(tagTypeText));
+            
+                // Getting text after the 3rd line until the tag !$[FingerTextData FingerTextData]@#
+                ::SendMessage(curScintilla,SCI_GOTOLINE,2,0);
+                int snippetPosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+                //int snippetPosEnd = ::SendMessage(curScintilla,SCI_GETLENGTH,0,0);
+                ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
+                ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"!$[FingerTextData FingerTextData]@#");
+                int snippetPosEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+                ::SendMessage(curScintilla,SCI_SETSELECTION,snippetPosStart,snippetPosEnd);
+            
+                char* snippetText = new char[snippetPosEnd-snippetPosStart + 1];
+                ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(snippetText));
+            
+                ::SendMessage(curScintilla,SCI_SETSELECTION,0,snippetPosEnd);
+                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+                //TODO :need rewrite to more efficient code
+                ::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
+                ::SendMessage(curScintilla,SCI_SETSELECTION,0,::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
+                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
 
-                    ::SendMessage(curScintilla,SCI_GOTOLINE,0,0);
-  
-                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\nConflicting Snippet: \r\n\r\n     ");
-                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)tagText);
-                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"  <");
-                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)tagTypeText);
-                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)">\r\n");
-                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n\r\n   (More details of the conflicts will be shown in future releases)");
-                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n----------------------------------------\r\n");
-                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"---------- [ Pending Imports ] ---------\r\n");
-                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"----------------------------------------\r\n");
+                sqlite3_stmt *stmt;
+            
+                bool notOverWrite = false;
 
-
-                    int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("A snippet already exists, overwrite?"), TEXT("FingerText"), MB_YESNO);
-                    if (messageReturn==IDNO)
+                if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+                {
+                    sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
+                    sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
+                    if(SQLITE_ROW == sqlite3_step(stmt))
                     {
-                        //delete [] tagText;
-                        //delete [] tagTypeText;
-                        //delete [] snippetText;
-                        // not overwrite
-                        //::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), TEXT("FingerText"), MB_OK);
-                        notOverWrite = true;
+                        sqlite3_finalize(stmt);
+                        // TODO: may be moving the message to earlier location so that the text editor will be showing the message that is about to be overwriting into the database
+                        // TODO: try showing the conflict message on the editor
+
+                        ::SendMessage(curScintilla,SCI_GOTOLINE,0,0);
+  
+                        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\nConflicting Snippet: \r\n\r\n     ");
+                        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)tagText);
+                        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"  <");
+                        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)tagTypeText);
+                        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)">\r\n");
+                        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n\r\n   (More details of the conflicts will be shown in future releases)");
+                        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n----------------------------------------\r\n");
+                        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"---------- [ Pending Imports ] ---------\r\n");
+                        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"----------------------------------------\r\n");
+
+
+                        int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("A snippet already exists, overwrite?"), TEXT("FingerText"), MB_YESNO);
+                        if (messageReturn==IDNO)
+                        {
+                            //delete [] tagText;
+                            //delete [] tagTypeText;
+                            //delete [] snippetText;
+                            // not overwrite
+                            //::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), TEXT("FingerText"), MB_OK);
+                            notOverWrite = true;
+            
+                        } else
+                        {
+                            // delete existing entry
+                            if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+                            {
+                                sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
+                                sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
+                                sqlite3_step(stmt);
+                        
+                            } else
+                            {
+                                ::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT("FingerText"), MB_OK);
+                            }
+                    
+                        }
+
+                        ::SendMessage(curScintilla,SCI_GOTOLINE,17,0);
+                        ::SendMessage(curScintilla,SCI_SETSELECTION,0,::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
+                        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+
             
                     } else
                     {
-                        // delete existing entry
-                        if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
-                        {
-                            sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
-                            sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
-                            sqlite3_step(stmt);
-                        
-                        } else
-                        {
-                            ::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT("FingerText"), MB_OK);
-                        }
-                    
-                    }
-
-                    ::SendMessage(curScintilla,SCI_GOTOLINE,17,0);
-                    ::SendMessage(curScintilla,SCI_SETSELECTION,0,::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
-                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
-
-            
-                } else
-                {
-                    sqlite3_finalize(stmt);
+                        sqlite3_finalize(stmt);
           
+                    }
+            
                 }
             
-            }
+                if (notOverWrite == false && g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "INSERT INTO snippets VALUES(?,?,?)", -1, &stmt, NULL))
+                {
+                    importCount++;
+                    // Then bind the two ? parameters in the SQLite SQL to the real parameter values
+                    sqlite3_bind_text(stmt, 1, tagText, -1, SQLITE_STATIC);
+                    sqlite3_bind_text(stmt, 2, tagTypeText, -1, SQLITE_STATIC);
+                    sqlite3_bind_text(stmt, 3, snippetText, -1, SQLITE_STATIC);
             
-            if (notOverWrite == false && g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "INSERT INTO snippets VALUES(?,?,?)", -1, &stmt, NULL))
-            {
-                importCount++;
-                // Then bind the two ? parameters in the SQLite SQL to the real parameter values
-                sqlite3_bind_text(stmt, 1, tagText, -1, SQLITE_STATIC);
-                sqlite3_bind_text(stmt, 2, tagTypeText, -1, SQLITE_STATIC);
-                sqlite3_bind_text(stmt, 3, snippetText, -1, SQLITE_STATIC);
+                    // Run the query with sqlite3_step
+                    sqlite3_step(stmt); // SQLITE_ROW 100 sqlite3_step() has another row ready
+                    //::MessageBox(nppData._nppHandle, TEXT("The Snippet is saved."), TEXT("FingerText"), MB_OK);
+                }
+                sqlite3_finalize(stmt);
+                delete [] tagText;
+                delete [] tagTypeText;
+                delete [] snippetText;
             
-                // Run the query with sqlite3_step
-                sqlite3_step(stmt); // SQLITE_ROW 100 sqlite3_step() has another row ready
-                //::MessageBox(nppData._nppHandle, TEXT("The Snippet is saved."), TEXT("FingerText"), MB_OK);
-            }
-            sqlite3_finalize(stmt);
-            delete [] tagText;
-            delete [] tagTypeText;
-            delete [] snippetText;
+                ::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
+                updateDockItems();
             
-            ::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
-            updateDockItems();
-            
-            ::SendMessage(curScintilla,SCI_GOTOPOS,0,0);
-            ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-            next = ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"!$[FingerTextData FingerTextData]@#");
+                ::SendMessage(curScintilla,SCI_GOTOPOS,0,0);
+                ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
+                next = ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"!$[FingerTextData FingerTextData]@#");
 
-        } while (next>=0);
+            } while (next>=0);
         
-        wchar_t importCountText[35] = TEXT("");
+            wchar_t importCountText[35] = TEXT("");
 
-        if (importCount>1)
-        {
-            ::_itow_s(importCount, importCountText, 10, 10);
-            wcscat(importCountText,TEXT(" snippets are imported."));
-        } else if (importCount==1)
-        {
-            wcscat(importCountText,TEXT("1 snippet is imported."));
-        } else
-        {
-            wcscat(importCountText,TEXT("Snippet import is aborted."));
+            if (importCount>1)
+            {
+                ::_itow_s(importCount, importCountText, 10, 10);
+                wcscat(importCountText,TEXT(" snippets are imported."));
+            } else if (importCount==1)
+            {
+                wcscat(importCountText,TEXT("1 snippet is imported."));
+            } else
+            {
+                wcscat(importCountText,TEXT("Snippet import is aborted."));
           
-        }
-        //::MessageBox(nppData._nppHandle, TEXT("Complete importing snippets"), TEXT("FingerText"), MB_OK);
-        ::MessageBox(nppData._nppHandle, importCountText, TEXT("FingerText"), MB_OK);
+            }
+            //::MessageBox(nppData._nppHandle, TEXT("Complete importing snippets"), TEXT("FingerText"), MB_OK);
+            ::MessageBox(nppData._nppHandle, importCountText, TEXT("FingerText"), MB_OK);
 
-        ::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
-        ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
+            ::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
+            ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
+
+            //updateMode();
+            //updateDockItems();
+        }
 
     }
 }
@@ -1315,14 +1296,11 @@ void promptSaveSnippet()
         //}
 
         saveSnippet();
-
     }
-    
 }
 
 void updateMode()
 {
-
     HWND curScintilla = getCurrentScintilla();
 
     int curPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
@@ -1330,7 +1308,6 @@ void updateMode()
     ::SendMessage(curScintilla,SCI_GOTOPOS,0,0);
     ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
     ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"FingerText Snippet Editor View");
-    
     
     if ((::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0) == 7) && (::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0) == 37))
     {

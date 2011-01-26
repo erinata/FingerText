@@ -123,7 +123,6 @@ void updateDockItems(bool withContent=false, bool withAll=false);
 void saveSnippet();
 void createSnippet();
 void clearCache();
-void fillSnippetEditor();
 void editSnippet();
 void deleteSnippet();
 void insertSnippet();
