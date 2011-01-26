@@ -95,11 +95,10 @@ public :
         //::Button_Enable(GetDlgItem(_hSelf, IDC_CREATE), false);
     }
 
-    void editSnipShow()
+    void editSnipShow(TCHAR* showText)
     {
         //HWND hwndList = GetDlgItem(_hSelf, ID_SNIPSHOW_EDIT);
-        
-        ::SetDlgItemText(_hSelf, ID_SNIPSHOW_EDIT,TEXT("Snippet Preview here...\r\nSnippet Preview here...\r\nSnippet Preview here...\r\n"));
+        ::SetDlgItemText(_hSelf, ID_SNIPSHOW_EDIT,showText);
     }
     
 

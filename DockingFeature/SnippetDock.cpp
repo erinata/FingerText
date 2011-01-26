@@ -63,6 +63,7 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 
             if  (HIWORD(wParam) == LBN_SELCHANGE && LOWORD(wParam) == IDC_SNIPPET_LIST)
             {
+                showPreview();
                 //implement snippet preview here
                  
                 //::MessageBox(nppData._nppHandle, TEXT("change!"), TEXT("FingerText"), MB_OK);

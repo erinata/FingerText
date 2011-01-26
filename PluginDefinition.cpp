@@ -62,7 +62,6 @@
 
 //#include <string.h>
 
-
 //
 // The plugin data that Notepad++ needs
 //
@@ -92,13 +91,11 @@ bool g_editorView;
 
 char* snippetEditTemplate = "------ FingerText Snippet Editor View ------\r\n";
 
-DockingDlg snippetDock;
-#define SNIPPET_DOCK_INDEX 1
-
-
 // Config file content
 int g_snippetListLength;
 
+DockingDlg snippetDock;
+#define SNIPPET_DOCK_INDEX 1
 //
 // Initialize your plugin data here
 // It will be called while plugin loading   
@@ -267,6 +264,7 @@ void insertSnippet()
             strcpy(tempSnippetText, snippetText);
             replaceTag(curScintilla, tempSnippetText, posCurrent, posCurrent);
             
+            delete [] tempSnippetText;
             //::SendMessage(curScintilla, SCI_INSERTTEXT, posCurrent, (LPARAM)snippetText);
 		}	
 	}
@@ -333,7 +331,7 @@ void fillSnippetEditor()
     int index = snippetDock.getCount() - snippetDock.getSelection()-1;
     char * tempTriggerText;
     char * tempScope;
-    char * tempSnippetText;
+    //char * tempSnippetText;
 
     tempTriggerText = new char [strlen(g_snippetCache[index].triggerText)];
     tempScope = new char [strlen(g_snippetCache[index].scope)];
@@ -369,6 +367,9 @@ void fillSnippetEditor()
 
     ::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
     ::SendMessage(curScintilla,SCI_EMPTYUNDOBUFFER,0,0);
+
+    delete [] tempTriggerText;
+    delete [] tempScope;
 }
 
 void deleteSnippet()
@@ -632,6 +633,52 @@ bool hotSpotNavigation(HWND &curScintilla)
     return false;
 }
 
+void showPreview()
+{
+    sqlite3_stmt *stmt;
+
+    HWND curScintilla = getCurrentScintilla();
+    int posCurrent = ::SendMessage(curScintilla, SCI_GETCURRENTPOS,0,0);
+
+    int index = snippetDock.getCount() - snippetDock.getSelection()-1;
+    
+    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+	{
+		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
+		sqlite3_bind_text(stmt, 1, g_snippetCache[index].scope , -1, SQLITE_STATIC);
+		sqlite3_bind_text(stmt, 2, g_snippetCache[index].triggerText, -1, SQLITE_STATIC);
+
+		// Run the query with sqlite3_step
+		if(SQLITE_ROW == sqlite3_step(stmt))  // SQLITE_ROW 100 sqlite3_step() has another row ready
+		{
+			const char* snippetText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
+            //size_t origsize = strlen(snippetText) + 1; 
+            size_t convertedChars = 0; 
+            wchar_t previewText[270]; 
+            mbstowcs_s(&convertedChars, previewText, 190, snippetText, _TRUNCATE);
+            
+            if (convertedChars>=184)
+            {
+                const TCHAR etcText[] = TEXT(" . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .");
+                ::_tcscat(previewText,etcText);
+            }
+            
+            snippetDock.editSnipShow(previewText);
+
+            //wchar_t countText[10];
+            //::_itow_s(convertedChars, countText, 10, 10); 
+            //::MessageBox(nppData._nppHandle, countText, TEXT("Trace"), MB_OK);
+            
+            //replaceTag(curScintilla, tempSnippetText, posCurrent, posCurrent);
+            
+            //::SendMessage(curScintilla, SCI_INSERTTEXT, posCurrent, (LPARAM)snippetText);
+		}	
+	}
+	sqlite3_finalize(stmt);
+    //::SendMessage(curScintilla,SCI_GRABFOCUS,0,0); 
+
+    
+}
 
 bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBeforeTag)
 {
@@ -764,10 +811,6 @@ void setConfigAndDatabase()
         //::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, 0, (LPARAM)ftbPath);
         
     }
-
-    
-
-
 }
 
 int getCurrentTag(HWND curScintilla, int posCurrent, char** buffer)
@@ -1303,14 +1346,10 @@ void updateMode()
 void showHelp()
 {
      ShellExecute(NULL, TEXT("open"), TEXT("https://github.com/erinata/FingerText"), NULL, NULL, SW_SHOWNORMAL);
-    
 }
 
 void showAbout()
 {
-
-
-    
     ::MessageBox(nppData._nppHandle, VERSION_TEXT_FULL, TEXT("FingerText"), MB_OK);
 }
 

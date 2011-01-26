@@ -1,6 +1,7 @@
 current development version
 
 0.4.8
+Snippet Preview Box working (chinese snippet text not supported)
 
 0.4.7
 centralize version number

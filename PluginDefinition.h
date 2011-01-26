@@ -111,6 +111,7 @@ void pluginShutdown();
 HWND getCurrentScintilla();
 void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
 bool hotSpotNavigation(HWND &curScintilla);
+void showPreview();
 bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBeforeTag);
 void openDatabase();
 int getCurrentTag(HWND curScintilla, int posCurrent, char** buffer);
