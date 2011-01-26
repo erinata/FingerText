@@ -117,6 +117,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             updateMode();
 
             break;
+        //case SCN_CHARADDED:
         case SCN_CHARADDED:
             keyUpdate();
             

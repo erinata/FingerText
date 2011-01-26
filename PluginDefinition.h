@@ -72,7 +72,7 @@ const TCHAR NPP_PLUGIN_NAME[] = TEXT("FingerText");
 //
 // Here define the number of your plugin commands
 //
-const int nbFunc = 8;
+const int nbFunc = 9;
 
 
 //
@@ -132,6 +132,7 @@ void promptSaveSnippet();
 void updateMode();
 void keyUpdate();
 void refreshAnnotation();
+void showHelp();
 void showAbout();
 void fingerText();
 

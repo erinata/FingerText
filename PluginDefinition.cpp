@@ -145,11 +145,13 @@ void commandMenuInit()
 
     setCommand(4, TEXT("---"), NULL, NULL, false);
 
-    setCommand(5, TEXT("About"), showAbout, NULL, false);
+    setCommand(5, TEXT("Help"), showHelp, NULL, false);
 
-    setCommand(6, TEXT("---"), NULL, NULL, false);
+    setCommand(6, TEXT("About"), showAbout, NULL, false);
 
-    setCommand(7, TEXT("Testing"), testing, NULL, false);
+    setCommand(7, TEXT("---"), NULL, NULL, false);
+
+    setCommand(8, TEXT("Testing"), testing, NULL, false);
         
     setConfigAndDatabase();
 }
@@ -1297,6 +1299,12 @@ void updateMode()
 }
 
 
+void showHelp()
+{
+     ShellExecute(NULL, TEXT("open"), TEXT("https://github.com/erinata/FingerText"), NULL, NULL, SW_SHOWNORMAL);
+    
+}
+
 void showAbout()
 {
     TCHAR aboutMessage[]=TEXT("\
@@ -1319,33 +1327,34 @@ void keyUpdate()
     if (g_editorView)
     {
         refreshAnnotation();
-
     }
 }
 
 void refreshAnnotation()
 {
-    
     HWND curScintilla = getCurrentScintilla();
 
     ::SendMessage(curScintilla, SCI_ANNOTATIONCLEARALL, 0, 0);
 
     ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"\
-          # The first line in this document should always be this \r\n\
+          # The first line in this document should always be this    \r\n\
           # ------ FingerText Snippet Editor View ------ \r\n\
           # line. Don't mess it up! \r\n\r\n");
     ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 1, (LPARAM)"\
           # The second part is the trigger text. For example if you \r\n\
           # put \"npp\" (without quotes) in this line, the snippet will\r\n\
-          # be triggered when you type npp and hit tab.\r\n\r\n");
+          # be triggered when you type npp and hit tab.\r\n\
+          # Only alphanumerics are allowed.\r\n\r\n");
     ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 2, (LPARAM)"\
           # The third part is the scope of the snippet. \r\n\
-          # e.g. \"GLOBAL\" (without quotes) for globally available snippets,\r\n\
-          # and \".cpp\" (without quotes) for snippets that is only available\r\n\
-          # in .cpp documents. \r\n\r\n\r\n\
-          # Anywhere below the third line is the snippet content. It can be as\r\n\
-          # long as many paragraphs or just several words. \r\n\
-          # Remember to place an [>END<] at the end of the snippet content.\r\n");
+          # e.g. \"GLOBAL\" (without quotes) for globally available\r\n\
+          # snippets, and \".cpp\" (without quotes) for snippets that  \r\n\
+          # is only available in .cpp documents.\r\n\
+          # Only alphanumerics are allowed.\r\n\r\n\r\n\r\n\
+          # Anywhere below the third line is the snippet content. It\r\n\
+          # can be as long as many paragraphs or just several words.\r\n\
+          # Remember to place an [>END<] at the end of the snippet\r\n\
+          # content.\r\n");
     
     
     ::SendMessage(curScintilla, SCI_ANNOTATIONSETSTYLE, 0, STYLE_INDENTGUIDE);
@@ -1360,7 +1369,7 @@ void fingerText()
 {
     HWND curScintilla = getCurrentScintilla();
 
-    if (::SendMessage(curScintilla,SCI_SELECTIONISRECTANGLE,0,0)==1)
+    if ((g_editorView==true) || (::SendMessage(curScintilla,SCI_SELECTIONISRECTANGLE,0,0)==1))
     {
         ::SendMessage(curScintilla,SCI_TAB,0,0);	
     } else
