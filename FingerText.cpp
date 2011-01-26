@@ -113,9 +113,10 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
         //    updateMode();
         //    break;
         case NPPN_BUFFERACTIVATED:
-            updateDockItems();
+            
             updateMode();
             keyUpdate();
+            updateDockItems();
             break;
         
         case SCN_CHARADDED:

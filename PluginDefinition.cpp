@@ -904,6 +904,8 @@ void updateDockItems(bool withContent, bool withAll)
     
     int sqlitePrepare;
     
+    if (g_editorView) withAll = true;
+
     if (withAll)
     {
         sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets ORDER BY tag DESC LIMIT ? ", -1, &stmt, NULL);
@@ -1333,9 +1335,11 @@ void updateMode()
     if ((::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0) == 7) && (::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0) == 37))
     {
         g_editorView = true;
+        snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("EDIT MODE\r\n\r\nList of All Snippets"));
     } else
     {
         g_editorView = false;
+        snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE\r\n\r\nList of Available Snippets"));
     }
 
     ::SendMessage(curScintilla,SCI_GOTOPOS,curPos,0);
@@ -1469,11 +1473,27 @@ void testing()
     ::MessageBox(nppData._nppHandle, TEXT("Testing!"), TEXT("Trace"), MB_OK);
     
     HWND curScintilla = getCurrentScintilla();
+        
+    //char *tagType1 = NULL;
+    TCHAR fileType1[5];
+    ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType1);
+    //convertToUTF8(fileType1, &tagType1);
+    ::MessageBox(nppData._nppHandle, fileType1, TEXT("Trace"), MB_OK);
 
-    
-    ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"Hello!");
-    ::SendMessage(curScintilla, SCI_ANNOTATIONSETVISIBLE, 2, 0);
-    
+    TCHAR key[MAX_PATH];
+    ::swprintf(key,fileType1);
+    ::MessageBox(nppData._nppHandle, key, TEXT("Trace"), MB_OK);
+
+    const TCHAR* key2 = (TCHAR*)".txt";
+
+    if (key==key2)
+    {
+        ::MessageBox(nppData._nppHandle, TEXT("txt!"), TEXT("Trace"), MB_OK);
+
+    } else
+    {
+       ::MessageBox(nppData._nppHandle, TEXT("not txt!"), TEXT("Trace"), MB_OK);
+    }
 
 
 
@@ -1482,8 +1502,9 @@ void testing()
 
 
 
-
-    
+    //::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"Hello!");
+    //::SendMessage(curScintilla, SCI_ANNOTATIONSETVISIBLE, 2, 0);
+      
     //exportSnippets();
 
     // messagebox shows the current buffer encoding id
