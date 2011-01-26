@@ -108,15 +108,22 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
         case NPPN_SHUTDOWN:
             pluginShutdown();
             break;
+        //case NPPN_FILEOPENED:
+        //    updateDockItems();
+        //    updateMode();
+        //    break;
         case NPPN_BUFFERACTIVATED:
             updateDockItems();
-            // TODO: check if the buffer is a snippet edit mode and (dis)enable save button
+            updateMode();
 
             break;
         case SCN_CHARADDED:
+            keyUpdate();
+            
+            
             // trigger when anything is typed
             // possible implementation of live search of snippets
-            // alternatives can be SCEN_CHANGE or SCN_MODIFIED
+            // alternatives can be SCN_CHARADDED, SCEN_CHANGE or SCN_MODIFIED
             break;
         case NPPN_FILESAVED:
             promptSaveSnippet();

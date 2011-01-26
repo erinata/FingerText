@@ -129,9 +129,13 @@ void insertSnippet();
 void exportSnippets();
 void importSnippets();
 void promptSaveSnippet();
+void updateMode();
+void keyUpdate();
+void refreshAnnotation();
 void showAbout();
 void fingerText();
 
 void testing();
+void alert();
 
 #endif //PLUGINDEFINITION_H

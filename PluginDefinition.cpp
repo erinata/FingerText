@@ -87,9 +87,11 @@ TCHAR g_ftbPath[MAX_PATH];
 SnipIndex* g_snippetCache;
 int g_snippetCacheSize;
 
-char* snippetEditTemplate1 = " ------ FingerText Snippet Editor View ------\r\nInstructions of how to edit snippet to be completed ....................................\r\nInstructions of how to edit snippet to be completed ....................................\r\nInstructions of how to edit snippet to be completed ....................................\r\n\r\n\r\n\r\n\r\n------------- [ Trigger Text ] --------------\r\n";
-char* snippetEditTemplate2 = "\r\n ---------------- [ Scope ] ------------------\r\n";
-char* snippetEditTemplate3 = "\r\n ------------ [ Snippet Content ] ------------\r\n";
+bool g_editMode;
+
+char* snippetEditTemplate1 = "------ FingerText Snippet Editor View ------\r\n";
+char* snippetEditTemplate2 = "\r\n";
+char* snippetEditTemplate3 = "\r\n";
 
 DockingDlg snippetDock;
 #define SNIPPET_DOCK_INDEX 1
@@ -297,6 +299,9 @@ void createSnippet()
 
     ::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
     ::SendMessage(curScintilla,SCI_EMPTYUNDOBUFFER,0,0);
+
+    g_editMode = true;
+    refreshAnnotation();
 }
 
 void editSnippet()
@@ -325,6 +330,9 @@ void editSnippet()
     
     //::SendMessage(curScintilla, SCI_SETCODEPAGE,65001,0);
     fillSnippetEditor();
+
+    g_editMode = true;
+    refreshAnnotation();
 
 }
 
@@ -401,8 +409,8 @@ void saveSnippet()
     // TODO: Check for empty trigger text or scope.
 
     // Getting text from the 3rd line of the FingerText Snippet Editing Document
-    int tagPosLineEnd = ::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,9,0);
-    ::SendMessage(curScintilla,SCI_GOTOLINE,9,0);
+    int tagPosLineEnd = ::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,1,0);
+    ::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
     int tagPosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
     ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
     ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)" ");
@@ -417,8 +425,8 @@ void saveSnippet()
     ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(tagText));
     
     // Getting text from the 5th line of the FingerText Snippet Editing Document
-    int tagTypePosLineEnd = ::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,11,0);
-    ::SendMessage(curScintilla,SCI_GOTOLINE,11,0);
+    int tagTypePosLineEnd = ::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,2,0);
+    ::SendMessage(curScintilla,SCI_GOTOLINE,2,0);
     int tagTypePosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
     ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
     ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)" ");
@@ -433,7 +441,7 @@ void saveSnippet()
     ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(tagTypeText));
     
     // Getting text after the 7th line of the FingerText Snippet Editing Document
-    ::SendMessage(curScintilla,SCI_GOTOLINE,13,0);
+    ::SendMessage(curScintilla,SCI_GOTOLINE,3,0);
     int snippetPosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
     int snippetPosEnd = ::SendMessage(curScintilla,SCI_GETLENGTH,0,0);
     
@@ -465,7 +473,7 @@ void saveSnippet()
                 //::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
                 //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)" ");
                 ::SendMessage(curScintilla, SCI_SETSELECTION, 0, 1);
-                ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)" ");
+                ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"-");
                 ::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
                 
                 return;
@@ -710,6 +718,8 @@ void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
 
 void setConfigAndDatabase()
 {
+    updateMode();
+
     TCHAR path[MAX_PATH];
     char *cpath;
     ::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH, reinterpret_cast<LPARAM>(path));
@@ -1262,14 +1272,7 @@ void importSnippets()
 
 void promptSaveSnippet()
 {
-    HWND curScintilla = getCurrentScintilla();
-    
-    ::SendMessage(curScintilla,SCI_GOTOPOS,0,0);
-    ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-    ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"FingerText Snippet Editor View");
-    
-    
-    if (::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0) == 8)
+    if (g_editMode)
     {
         //int messageReturn=::MessageBox(nppData._nppHandle, TEXT("It seems that you are saving a snippet to a file. Do you wish to save the snippet into your snippet list? (You can trigger a snippet only if it is in the snippet list)"), TEXT("FingerText"), MB_YESNO);
         //if (messageReturn==IDYES)
@@ -1282,6 +1285,27 @@ void promptSaveSnippet()
     }
     
 }
+
+void updateMode()
+{
+    HWND curScintilla = getCurrentScintilla();
+    
+    ::SendMessage(curScintilla,SCI_GOTOPOS,0,0);
+    ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
+    ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"FingerText Snippet Editor View");
+    
+    
+    if (::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0) == 7)
+    {
+        g_editMode = true;
+    } else
+    {
+        g_editMode = false;
+    }
+
+
+}
+
 
 void showAbout()
 {
@@ -1300,7 +1324,47 @@ Usage Guide and Source code:\r\n\
     ::MessageBox(nppData._nppHandle, aboutMessage, TEXT("FingerText"), MB_OK);
 }
 
+void keyUpdate()
+{
+    if (g_editMode)
+    {
+        refreshAnnotation();
 
+    }
+}
+
+void refreshAnnotation()
+{
+    
+    HWND curScintilla = getCurrentScintilla();
+
+    ::SendMessage(curScintilla, SCI_ANNOTATIONCLEARALL, 0, 0);
+
+    ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"\
+          The first line in this document should always be this \r\n\
+          ------ FingerText Snippet Editor View ------ \r\n\
+          line. Don't mess it up! \r\n\r\n");
+    ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 1, (LPARAM)"\
+          The second line is the trigger text. For example if you \r\n\
+          put \"npp\" (without quotes) in this line, the snippet will\r\n\
+          be triggered when you type npp and hit tab.\r\n\r\n");
+    ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 2, (LPARAM)"\
+          The third line is the scope of the snippet. \r\n\
+          e.g. \"GLOBAL\" (without quotes) for globally available snippets,\r\n\
+          and \".cpp\" (without quotes) for snippets that is only available\r\n\
+          in .cpp documents. \r\n\r\n\r\n\
+          Anywhere below the third line is the snippet content. It can be as\r\n\
+          long as many paragraphs or just several words. \r\n\
+          Remember to place a [>END<] at the end of the snippet content.\r\n");
+    
+    
+    ::SendMessage(curScintilla, SCI_ANNOTATIONSETSTYLE, 0, STYLE_INDENTGUIDE);
+    ::SendMessage(curScintilla, SCI_ANNOTATIONSETSTYLE, 1, STYLE_INDENTGUIDE);
+    ::SendMessage(curScintilla, SCI_ANNOTATIONSETSTYLE, 2, STYLE_INDENTGUIDE);
+    
+    ::SendMessage(curScintilla, SCI_ANNOTATIONSETVISIBLE, 2, 0);
+
+}
 
 void fingerText()
 {
@@ -1371,14 +1435,24 @@ void fingerText()
 
 void testing()
 {
-    //snippetIndex[0][0]="Test00";
-    //snippetIndex[0][1]="Test01";
-    //snippetIndex[1][0]="Test10";
-    //snippetIndex[1][1]="Test11";
 
     ::MessageBox(nppData._nppHandle, TEXT("Testing!"), TEXT("Trace"), MB_OK);
     
     HWND curScintilla = getCurrentScintilla();
+
+    
+    ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"Hello!");
+    ::SendMessage(curScintilla, SCI_ANNOTATIONSETVISIBLE, 2, 0);
+    
+
+
+
+
+
+
+
+
+
     
     //exportSnippets();
 
@@ -1418,16 +1492,21 @@ void testing()
 
 
         
-    ::SendMessage(curScintilla,SCI_GOTOPOS,0,0);
-    ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-    ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"FingerText Snippet Editor View");
-        
-    if (::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0) == 7)
-    {
-        ::MessageBox(nppData._nppHandle, TEXT("true"), TEXT("Trace"), MB_OK);
-    } else
-    {
-        ::MessageBox(nppData._nppHandle, TEXT("false"), TEXT("Trace"), MB_OK);
-    }
+    //::SendMessage(curScintilla,SCI_GOTOPOS,0,0);
+    //::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
+    //::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"FingerText Snippet Editor View");
+    //    
+    //if (::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0) == 7)
+    //{
+    //    ::MessageBox(nppData._nppHandle, TEXT("true"), TEXT("Trace"), MB_OK);
+    //} else
+    //{
+    //    ::MessageBox(nppData._nppHandle, TEXT("false"), TEXT("Trace"), MB_OK);
+    //}
 
+}
+
+void alert()
+{
+     ::MessageBox(nppData._nppHandle, TEXT("Alert!"), TEXT("Trace"), MB_OK);
 }
