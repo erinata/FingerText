@@ -1,5 +1,10 @@
 current development version
 
+0.4.9
+Fixed problem of not opening the correct snippet in edit mode
+Cmd to enable or disable fingertext
+
+
 0.4.8
 Snippet Preview Box working (chinese snippet text not supported)
 edit mode and normal mode (all snippets show in the list in edit mode)

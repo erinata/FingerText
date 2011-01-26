@@ -88,6 +88,7 @@ SnipIndex* g_snippetCache;
 int g_snippetCacheSize;
 
 bool g_editorView;
+bool g_enable;
 
 char* snippetEditTemplate = "------ FingerText Snippet Editor View ------\r\n";
 
@@ -141,15 +142,17 @@ void commandMenuInit()
 
     setCommand(3, TEXT("Export Snippets"), exportSnippets, NULL, false);
 
-    setCommand(4, TEXT("---"), NULL, NULL, false);
+    setCommand(4, TEXT("Toggle On/Off FingerText"), toggleDisable, NULL, false);
 
-    setCommand(5, TEXT("Help"), showHelp, NULL, false);
+    setCommand(5, TEXT("---"), NULL, NULL, false);
 
-    setCommand(6, TEXT("About"), showAbout, NULL, false);
+    setCommand(6, TEXT("Help"), showHelp, NULL, false);
 
-    setCommand(7, TEXT("---"), NULL, NULL, false);
+    setCommand(7, TEXT("About"), showAbout, NULL, false);
 
-    setCommand(8, TEXT("Testing"), testing, NULL, false);
+    setCommand(8, TEXT("---"), NULL, NULL, false);
+
+    setCommand(9, TEXT("Testing"), testing, NULL, false);
         
     setConfigAndDatabase();
 }
@@ -188,7 +191,20 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //-- STEP 4. DEFINE YOUR ASSOCIATED FUNCTIONS --//
 //----------------------------------------------//
 
+void toggleDisable()
+{
+    if (g_enable)
+    {
+        ::MessageBox(nppData._nppHandle, TEXT("FingerText is disabled"), TEXT("Trace"), MB_OK);
+        g_enable = false;
+    } else
+    {
+        ::MessageBox(nppData._nppHandle, TEXT("FingerText is enabled"), TEXT("Trace"), MB_OK);
+        g_enable = true;
+    }
 
+    updateMode();
+}
 
 char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""))
 {
@@ -296,7 +312,6 @@ void createSnippet()
 
 void editSnippet()
 {
-    // TODO: The snippet menu should show all snippets available, instead of just global snippets, or there may be some better way to deal with this)
     HWND curScintilla = getCurrentScintilla();
     int index = snippetDock.getCount() - snippetDock.getSelection()-1;
     char * tempTriggerText;
@@ -322,6 +337,7 @@ void editSnippet()
 		{
 			const char* snippetText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
 
+            // After loading the content, switch to the editor buffer and promput for saving if needed
             if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
             {
                 //switch to the editor file
@@ -340,8 +356,7 @@ void editSnippet()
                 }
             }
             ::SendMessage(curScintilla,SCI_CLEARALL,0,0);
-
-   
+               
             //::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
             ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetEditTemplate);
             ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)tempTriggerText);
@@ -747,7 +762,9 @@ void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
 
 void setConfigAndDatabase()
 {
+    g_enable = true;
     updateMode();
+    
 
     TCHAR path[MAX_PATH];
     char *cpath;
@@ -1313,10 +1330,16 @@ void updateMode()
     {
         g_editorView = true;
         snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("EDIT MODE\r\n\r\nList of All Snippets"));
+    } else if (g_enable)
+    {
+        g_editorView = false;
+        snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE (FingerText Enabled)\r\n\r\nList of Available Snippets"));
+        //TODO: add instructions (Go to Menu>Plugin>FingerText>Toggle On/off to re-enable FingerText)
     } else
     {
         g_editorView = false;
-        snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE\r\n\r\nList of Available Snippets"));
+        snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE (FingerText Disabled)\r\n\r\nList of Available Snippets"));
+
     }
 
     ::SendMessage(curScintilla,SCI_GOTOPOS,curPos,0);
@@ -1363,8 +1386,8 @@ void refreshAnnotation()
           # snippets, and \".cpp\" (without quotes) for snippets that  \r\n\
           # is only available in .cpp documents.\r\n\
           # Only alphanumerics are allowed.\r\n\r\n\r\n\r\n\
-          # Anywhere below the third line is the snippet content. It\r\n\
-          # can be as long as many paragraphs or just several words.\r\n\
+          # Anywhere below here is the snippet content. It can be\r\n\
+          # as long as many paragraphs or just several words.\r\n\
           # Remember to place an [>END<] at the end of the snippet\r\n\
           # content.\r\n");
     
@@ -1381,7 +1404,7 @@ void fingerText()
 {
     HWND curScintilla = getCurrentScintilla();
 
-    if ((g_editorView==true) || (::SendMessage(curScintilla,SCI_SELECTIONISRECTANGLE,0,0)==1))
+    if ((g_enable==false) || (g_editorView==true) || (::SendMessage(curScintilla,SCI_SELECTIONISRECTANGLE,0,0)==1))
     {
         ::SendMessage(curScintilla,SCI_TAB,0,0);	
     } else
@@ -1471,13 +1494,6 @@ void testing()
     {
        ::MessageBox(nppData._nppHandle, TEXT("not txt!"), TEXT("Trace"), MB_OK);
     }
-
-
-
-
-
-
-
 
     //::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"Hello!");
     //::SendMessage(curScintilla, SCI_ANNOTATIONSETVISIBLE, 2, 0);

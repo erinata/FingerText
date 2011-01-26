@@ -72,7 +72,7 @@ const TCHAR NPP_PLUGIN_NAME[] = TEXT("FingerText");
 //
 // Here define the number of your plugin commands
 //
-const int nbFunc = 9;
+const int nbFunc = 10;
 
 
 //
@@ -109,6 +109,7 @@ void pluginShutdown();
 //
 
 HWND getCurrentScintilla();
+void toggleDisable();
 void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
 bool hotSpotNavigation(HWND &curScintilla);
 void showPreview();
