@@ -87,9 +87,9 @@ TCHAR ftbPath[MAX_PATH];
 SnipIndex* snippetCache;
 int snippetCacheSize;
 
-char* snippetEditTemplate1 = "------ FingerText Snippet Editor View ------\r\nInstructions of how to edit snippet to be completed ....................................\r\nInstructions of how to edit snippet to be completed ....................................\r\nInstructions of how to edit snippet to be completed ....................................\r\n\r\n\r\n\r\n\r\n------------- [ Trigger Text ] --------------\r\n";
-char* snippetEditTemplate2 = "\r\n---------------- [ Scope ] ------------------\r\n";
-char* snippetEditTemplate3 = "\r\n------------ [ Snippet Content ] ------------\r\n";
+char* snippetEditTemplate1 = " ------ FingerText Snippet Editor View ------\r\nInstructions of how to edit snippet to be completed ....................................\r\nInstructions of how to edit snippet to be completed ....................................\r\nInstructions of how to edit snippet to be completed ....................................\r\n\r\n\r\n\r\n\r\n------------- [ Trigger Text ] --------------\r\n";
+char* snippetEditTemplate2 = "\r\n ---------------- [ Scope ] ------------------\r\n";
+char* snippetEditTemplate3 = "\r\n ------------ [ Snippet Content ] ------------\r\n";
 
 DockingDlg _snippetDock;
 #define SNIPPET_DOCK_INDEX 1
@@ -480,6 +480,12 @@ void saveSnippet()
                 delete [] snippetText;
                 // not overwrite
                 ::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), TEXT("FingerText"), MB_OK);
+                //::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
+                //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)" ");
+                ::SendMessage(curScintilla, SCI_SETSELECTION, 0, 1);
+                ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)" ");
+                ::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
+                
                 return;
 
             } else
@@ -1281,7 +1287,7 @@ void promptSaveSnippet()
     ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"FingerText Snippet Editor View");
     
     
-    if (::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0) == 7)
+    if (::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0) == 8)
     {
         //int messageReturn=::MessageBox(nppData._nppHandle, TEXT("It seems that you are saving a snippet to a file. Do you wish to save the snippet into your snippet list? (You can trigger a snippet only if it is in the snippet list)"), TEXT("FingerText"), MB_YESNO);
         //if (messageReturn==IDYES)

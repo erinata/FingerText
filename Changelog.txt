@@ -3,6 +3,9 @@ current development version
 0.4.5
 Use ini config file
 remove the list length text box
+change the list double click behaviour. it trigger edit instead of insert.
+editor use SnippetEditor.ftb as buffer
+can use ctrl-S to save snippet
 
 
 0.4.4
