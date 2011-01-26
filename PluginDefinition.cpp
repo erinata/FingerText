@@ -240,38 +240,38 @@ char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""))
 	return expanded; //remember to delete the returned expanded after use.
 }
 
-void insertSnippet()
-{
-    sqlite3_stmt *stmt;
-
-    HWND curScintilla = getCurrentScintilla();
-    int posCurrent = ::SendMessage(curScintilla, SCI_GETCURRENTPOS,0,0);
-
-    int index = snippetDock.getCount() - snippetDock.getSelection()-1;
-    
-    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
-	{
-		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
-		sqlite3_bind_text(stmt, 1, g_snippetCache[index].scope , -1, SQLITE_STATIC);
-		sqlite3_bind_text(stmt, 2, g_snippetCache[index].triggerText, -1, SQLITE_STATIC);
-
-		// Run the query with sqlite3_step
-		if(SQLITE_ROW == sqlite3_step(stmt))  // SQLITE_ROW 100 sqlite3_step() has another row ready
-		{
-			const char* snippetText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
-            char * tempSnippetText;
-            tempSnippetText = new char [strlen(snippetText)+1];
-            strcpy(tempSnippetText, snippetText);
-            replaceTag(curScintilla, tempSnippetText, posCurrent, posCurrent);
-            
-            delete [] tempSnippetText;
-            //::SendMessage(curScintilla, SCI_INSERTTEXT, posCurrent, (LPARAM)snippetText);
-		}	
-	}
-	sqlite3_finalize(stmt);
-    ::SendMessage(curScintilla,SCI_GRABFOCUS,0,0); 
-
-}
+//void insertSnippet()
+//{
+//    sqlite3_stmt *stmt;
+//
+//    HWND curScintilla = getCurrentScintilla();
+//    int posCurrent = ::SendMessage(curScintilla, SCI_GETCURRENTPOS,0,0);
+//
+//    int index = snippetDock.getCount() - snippetDock.getSelection()-1;
+//    
+//    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+//	{
+//		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
+//		sqlite3_bind_text(stmt, 1, g_snippetCache[index].scope , -1, SQLITE_STATIC);
+//		sqlite3_bind_text(stmt, 2, g_snippetCache[index].triggerText, -1, SQLITE_STATIC);
+//
+//		// Run the query with sqlite3_step
+//		if(SQLITE_ROW == sqlite3_step(stmt))  // SQLITE_ROW 100 sqlite3_step() has another row ready
+//		{
+//			const char* snippetText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
+//            char * tempSnippetText;
+//            tempSnippetText = new char [strlen(snippetText)+1];
+//            strcpy(tempSnippetText, snippetText);
+//            replaceTag(curScintilla, tempSnippetText, posCurrent, posCurrent);
+//            
+//            delete [] tempSnippetText;
+//            //::SendMessage(curScintilla, SCI_INSERTTEXT, posCurrent, (LPARAM)snippetText);
+//		}	
+//	}
+//	sqlite3_finalize(stmt);
+//    ::SendMessage(curScintilla,SCI_GRABFOCUS,0,0); 
+//
+//}
 
 void createSnippet()
 {
@@ -663,7 +663,7 @@ void showPreview()
                 ::_tcscat(previewText,etcText);
             }
             
-            snippetDock.editSnipShow(previewText);
+            snippetDock.setDlgText(ID_SNIPSHOW_EDIT,previewText);
 
             //wchar_t countText[10];
             //::_itow_s(convertedChars, countText, 10, 10); 

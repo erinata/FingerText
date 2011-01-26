@@ -95,18 +95,24 @@ public :
         //::Button_Enable(GetDlgItem(_hSelf, IDC_CREATE), false);
     }
 
-    void editSnipShow(TCHAR* showText)
+    void setDlgText(int dlg, TCHAR* showText)
     {
-        //HWND hwndList = GetDlgItem(_hSelf, ID_SNIPSHOW_EDIT);
-        ::SetDlgItemText(_hSelf, ID_SNIPSHOW_EDIT,showText);
+        ::SetDlgItemText(_hSelf, dlg ,showText);
+
     }
+
+    //void editSnipShow(TCHAR* showText)
+    //{
+    //    //HWND hwndList = GetDlgItem(_hSelf, ID_SNIPSHOW_EDIT);
+    //    ::SetDlgItemText(_hSelf, ID_SNIPSHOW_EDIT,showText);
+    //}
     
 
-    void setEditMode()
-    {
-        ::SetDlgItemText(_hSelf, IDC_LIST_TITLE,TEXT("Available Snippets"));
-
-    }
+    //void setEditMode()
+    //{
+    //    ::SetDlgItemText(_hSelf, IDC_LIST_TITLE,TEXT("Available Snippets"));
+    //
+    //}
 
     //int getLength() 
     //{
