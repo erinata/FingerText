@@ -1,6 +1,9 @@
 current development version
 
+0.4.8
+
 0.4.7
+centralize version number
 
 0.4.6
 Use annotation in edit view.

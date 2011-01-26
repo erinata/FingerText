@@ -60,11 +60,8 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
         
 		case WM_COMMAND : 
 		{
-            if (HIWORD(wParam) == EN_KILLFOCUS && LOWORD(wParam) == IDC_LENGTH)
-            {
-                updateDockItems();
 
-            } else if (HIWORD(wParam) == LBN_SELCHANGE && LOWORD(wParam) == IDC_SNIPPET_LIST)
+            if  (HIWORD(wParam) == LBN_SELCHANGE && LOWORD(wParam) == IDC_SNIPPET_LIST)
             {
                 //implement snippet preview here
                  
@@ -80,6 +77,7 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 
             } else if (HIWORD(wParam) == LBN_SETFOCUS && LOWORD(wParam) == IDC_SNIPPET_LIST)
             {
+                keyUpdate();
                 //::Button_Enable(GetDlgItem(_hSelf, IDC_SAVE), true);
                 ::Button_Enable(GetDlgItem(_hSelf, IDC_EDIT), true);
                 ::Button_Enable(GetDlgItem(_hSelf, IDC_DELETE), true);
@@ -147,6 +145,11 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 			}
 			return FALSE;
 		}
+
+        case WM_SETFOCUS:
+        {
+
+        }
 
         case WM_KILLFOCUS:
         {

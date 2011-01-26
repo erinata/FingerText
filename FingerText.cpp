@@ -115,18 +115,17 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
         case NPPN_BUFFERACTIVATED:
             updateDockItems();
             updateMode();
-
+            keyUpdate();
             break;
-        //case SCN_CHARADDED:
+        
         case SCN_CHARADDED:
             keyUpdate();
-            
-            
             // trigger when anything is typed
             // possible implementation of live search of snippets
             // alternatives can be SCN_CHARADDED, SCEN_CHANGE or SCN_MODIFIED
             break;
         case NPPN_FILESAVED:
+            keyUpdate();
             promptSaveSnippet();
             break;
     }

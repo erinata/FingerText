@@ -190,6 +190,7 @@
     <ClInclude Include="Notepad_plus_msgs.h" />
     <ClInclude Include="PluginDefinition.h" />
     <ClInclude Include="PluginInterface.h" />
+    <ClInclude Include="VersionNumber.h" />
     <ClInclude Include="versionrc.h" />
     <ClInclude Include="Scintilla.h" />
     <ClInclude Include="sqlite3.h" />

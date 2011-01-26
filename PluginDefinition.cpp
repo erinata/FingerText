@@ -56,6 +56,7 @@
 #include "menuCmdID.h"
 #include "sqlite3.h"
 #include "SnippetDock.h"
+#include "VersionNumber.h"
 
 #include <fstream>
 
@@ -1307,19 +1308,10 @@ void showHelp()
 
 void showAbout()
 {
-    TCHAR aboutMessage[]=TEXT("\
-FingerText 0.4.4(Alpha)\r\n\
-January 2011\r\n\r\n\
-Author: Tom Lam\r\n\
-Email: erinata@gmail.com\r\n\r\n\
-Update to the lastest version:\r\n\
-     http://sourceforge.net/projects/fingertext/ \r\n\
-Usage Guide and Source code:\r\n\
-     http://github.com/erinata/FingerText \r\n\r\n\
-(Notice that Snippets created using FingerText version 0.3.5 or below is not compatible with this version)\
-");
 
-    ::MessageBox(nppData._nppHandle, aboutMessage, TEXT("FingerText"), MB_OK);
+
+    
+    ::MessageBox(nppData._nppHandle, VERSION_TEXT_FULL, TEXT("FingerText"), MB_OK);
 }
 
 void keyUpdate()
