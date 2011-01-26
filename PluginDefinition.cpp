@@ -442,6 +442,7 @@ void saveSnippet()
     }
     if (tagPosEnd-tagPosStart<=0)
     {
+        ::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
         ::MessageBox(nppData._nppHandle, TEXT("TriggerText cannot be blank."), TEXT("FingerText"), MB_OK);
         problemSnippet = true;
     }
@@ -462,6 +463,7 @@ void saveSnippet()
     }
     if (tagTypePosEnd-tagTypePosStart<=0)
     {
+        ::SendMessage(curScintilla,SCI_GOTOLINE,2,0);
         ::MessageBox(nppData._nppHandle, TEXT("Scope cannot be blank."), TEXT("FingerText"), MB_OK);
         problemSnippet = true;
     }
@@ -475,6 +477,7 @@ void saveSnippet()
     int snippetPosEnd = ::SendMessage(curScintilla,SCI_GETLENGTH,0,0);
     if (snippetPosEnd-snippetPosStart<=0)
     {
+        ::SendMessage(curScintilla,SCI_GOTOLINE,3,0);
         ::MessageBox(nppData._nppHandle, TEXT("Snippet Content cannot be blank."), TEXT("FingerText"), MB_OK);
         problemSnippet = true;
     }
@@ -1374,7 +1377,7 @@ void importSnippets()
             //updateMode();
             //updateDockItems();
         }
-
+        delete [] fileText;
     }
 }
 
