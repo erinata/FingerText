@@ -154,7 +154,7 @@ void commandMenuInit()
     setCommand(IMPORT_SNIPPETS_INDEX, TEXT("Import Snippets"), importSnippets, NULL, false);
     setCommand(EXPORT_SNIPPETS_INDEX, TEXT("Export Snippets"), exportSnippets, NULL, false);
     setCommand(SEPARATOR_ONE_INDEX, TEXT("---"), NULL, NULL, false);
-    setCommand(HELP_INDEX, TEXT("Help"), showHelp, NULL, false);
+    setCommand(HELP_INDEX, TEXT("Quick Guide"), showHelp, NULL, false);
     setCommand(ABOUT_INDEX, TEXT("About"), showAbout, NULL, false);
     setCommand(SEPARATOR_TWO_INDEX, TEXT("---"), NULL, NULL, false);
     setCommand(TESTING_INDEX, TEXT("Testing"), testing, NULL, false);
@@ -419,10 +419,8 @@ void deleteSnippet()
     }
     sqlite3_finalize(stmt);
     
-    updateDockItems(false,false);
-    
+    updateDockItems(false,false);    
 }
-
 
 void saveSnippet()
 {
@@ -544,9 +542,7 @@ void saveSnippet()
             {
                 sqlite3_finalize(stmt);
             }
-        
         }
-    
     
         if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "INSERT INTO snippets VALUES(?,?,?)", -1, &stmt, NULL))
 	    {
@@ -565,7 +561,6 @@ void saveSnippet()
     delete [] tagText;
     delete [] tagTypeText;
     delete [] snippetText;
-
     
     updateDockItems(false,false);
 }
@@ -733,8 +728,6 @@ void showPreview()
 	}
 	sqlite3_finalize(stmt);
     //::SendMessage(curScintilla,SCI_GRABFOCUS,0,0); 
-
-    
 }
 
 bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBeforeTag)
@@ -749,7 +742,6 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
 
         ::SendMessage(curScintilla, SCI_INSERTTEXT, posCurrent, (LPARAM)"_____________________________`[SnippetInserting]");
 
-  
         // Failed attempt to cater unicode snippets
         //if (::IsTextUnicode(snip,sniplength,0))
         //{
@@ -799,7 +791,6 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
 
 void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
 {
-
     delete [] g_snippetCache;
     if (g_dbOpen)
     {
@@ -1408,16 +1399,16 @@ void updateMode()
     if ((::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0) == 7) && (::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0) == 37))
     {
         g_editorView = true;
-        snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("EDIT MODE\r\n\r\nList of All Snippets"));
+        snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("EDIT MODE\r\n(Double click item in list to edit another snippet, Ctrl+S to save)\r\nList of All Snippets"));
     } else if (g_enable)
     {
         g_editorView = false;
-        snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE (FingerText Enabled)\r\n\r\nList of Available Snippets"));
+        snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Enabled]\r\n(Type trigger text and hit tab to insert snippet)\r\nList of Available Snippets"));
         //TODO: add instructions (Go to Menu>Plugin>FingerText>Toggle On/off to re-enable FingerText)
     } else
     {
         g_editorView = false;
-        snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE (FingerText Disabled)\r\n\r\nList of Available Snippets"));
+        snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Disabled]\r\n(To enable: Plugins>FingerText>Toggle FingerText On/Off)\r\nList of Available Snippets"));
 
     }
 
@@ -1428,7 +1419,10 @@ void updateMode()
 
 void showHelp()
 {
-     ShellExecute(NULL, TEXT("open"), TEXT("https://github.com/erinata/FingerText"), NULL, NULL, SW_SHOWNORMAL);
+    ::MessageBox(nppData._nppHandle, HELP_TEXT_FULL, TEXT("FingerText"), MB_OK);
+
+
+     //ShellExecute(NULL, TEXT("open"), TEXT("https://github.com/erinata/FingerText"), NULL, NULL, SW_SHOWNORMAL);
 }
 
 void showAbout()

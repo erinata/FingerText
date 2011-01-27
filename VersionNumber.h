@@ -30,4 +30,29 @@
 #define VERSION_TEXT "0.4.10.0"
 #define VERSION_NUM 0,4,10,0
 #define VERSION_TEXT_LONG "FingerText 0.4.10(Alpha)"
-#define VERSION_TEXT_FULL TEXT("FingerText 0.4.10(Alpha)\r\nJanuary 2011\r\n\r\nAuthor: Tom Lam\r\nEmail: erinata@gmail.com\r\n\r\nUpdate to the lastest version:\r\n     http://sourceforge.net/projects/fingertext/ \r\nUsage Guide and Source code:\r\n     http://github.com/erinata/FingerText \r\n\r\n(Notice that Snippets created using FingerText version 0.3.5 or below is not compatible with this version)")
+#define VERSION_TEXT_FULL TEXT("\
+FingerText 0.4.10(Alpha)\r\n\
+January 2011\r\n\r\n\
+Author: Tom Lam\r\n\
+Email: erinata@gmail.com\r\n\r\n\
+Update to the lastest version:\r\n\
+     http://sourceforge.net/projects/fingertext/ \r\n\
+Usage Guide and Source code:\r\n\
+     http://github.com/erinata/FingerText \r\n\r\n\
+(Notice that Snippets created using FingerText version 0.3.5 or below is not compatible with this version)\
+")
+
+#define HELP_TEXT_FULL TEXT("\
+FingerText Quick Guide:\r\n\r\n\
+Insert Snippet --- Type in TriggerText and Hit the tab key\r\n\
+Navigate to next Hotspot --- Hit the tab key\r\n\
+Show SnippetDock --- Menu>Plugins>FingerText>Toggle On/Off SnippetDock\r\n\
+Goto Snippet Editor --- Double click snippets on the SnippetDock\r\n\
+Create New Snippets --- Click Create button on the SnippetDock\r\n\
+Save Snippet --- In the Snippet Editor View, Click Save Button or Ctrl+S\r\n\
+Delete Snippet --- Select a snippet on SnippetDock and Click Delete Button\r\n\
+Export Snippets --- Menu>Plugins>FingerText>Export Snippets\r\n\
+Import Snippets --- Menu>Plugins>FingerText>Import Snippets\r\n\
+About FingerText --- Menu>Plugins>FingerText>About\r\n\r\n\
+For step by step usage guide, please visit http://github.com/erinata/FingerText\
+")
