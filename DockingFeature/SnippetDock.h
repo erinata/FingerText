@@ -101,6 +101,11 @@ public :
 
     }
 
+    void toggleSave(bool buttonOn)
+    {
+        ::Button_Enable(GetDlgItem(_hSelf, IDC_SAVE), buttonOn);
+    }
+
     //void editSnipShow(TCHAR* showText)
     //{
     //    //HWND hwndList = GetDlgItem(_hSelf, ID_SNIPSHOW_EDIT);

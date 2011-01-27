@@ -2,6 +2,8 @@ current development version
 
 0.4.11
 
+
+
 0.4.10
 Case insensitive search. Now extension .c and .C are viewed as the same extension,
 More instructions on the snippetdock

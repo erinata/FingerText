@@ -27,11 +27,11 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-#define VERSION_TEXT "0.4.10.0"
-#define VERSION_NUM 0,4,10,0
-#define VERSION_TEXT_LONG "FingerText 0.4.10(Alpha)"
+#define VERSION_TEXT "0.4.11.0"
+#define VERSION_NUM 0,4,11,0
+#define VERSION_TEXT_LONG "FingerText 0.4.11(Alpha)"
 #define VERSION_TEXT_FULL TEXT("\
-FingerText 0.4.10(Alpha)\r\n\
+FingerText 0.4.11(Alpha)\r\n\
 January 2011\r\n\r\n\
 Author: Tom Lam\r\n\
 Email: erinata@gmail.com\r\n\r\n\

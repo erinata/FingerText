@@ -87,7 +87,6 @@ TCHAR g_ftbPath[MAX_PATH];
 SnipIndex* g_snippetCache;
 int g_snippetCacheSize;
 
-
 bool g_enable;
 bool g_editorView;
 bool g_display;
@@ -207,7 +206,6 @@ void toggleDisable()
         ::MessageBox(nppData._nppHandle, TEXT("FingerText is enabled"), TEXT("Trace"), MB_OK);
         g_enable = true;
     }
-
     updateMode();
 }
 
@@ -238,7 +236,6 @@ char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""))
         
             convertToUTF8(fileType, &tagType);
             delete [] fileType;
-		
         }
 		
 		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
@@ -252,7 +249,6 @@ char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""))
 			expanded = new char[strlen(expandedSQL)*4 + 1];
 			strcpy(expanded, expandedSQL);
 		}
-		
 	}
     // Close the SQLite statement, as we don't need it anymore
 	// This also has the effect of free'ing the result from sqlite3_column_text 
@@ -296,7 +292,6 @@ char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""))
 
 void createSnippet()
 {
-    
     //::MessageBox(nppData._nppHandle, TEXT("CREATE~!"), TEXT("Trace"), MB_OK);
     //::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
     HWND curScintilla = getCurrentScintilla();
@@ -308,16 +303,8 @@ void createSnippet()
     {
         ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_ftbPath);
     }
-
-    if (::SendMessage(curScintilla,SCI_GETMODIFY,0,0)!=0)
-    {
-        //TODO: can be merged with the function promptsavesnippet();
-        int messageReturn=::MessageBox(nppData._nppHandle, TEXT("Do you wish to save the current snippet before editing anotoher one?"), TEXT("FingerText"), MB_YESNO);
-        if (messageReturn==IDYES)
-        {
-            saveSnippet();
-        }
-    }
+    promptSaveSnippet(TEXT("Do you wish to save the current snippet before creating a new one?"));
+    
     ::SendMessage(curScintilla,SCI_CLEARALL,0,0);
 
 
@@ -371,15 +358,7 @@ void editSnippet()
                 ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_ftbPath);
             }
 
-            if (::SendMessage(curScintilla,SCI_GETMODIFY,0,0)!=0)
-            {
-                //TODO: can be merged with the function promptsavesnippet();
-                int messageReturn=::MessageBox(nppData._nppHandle, TEXT("Do you wish to save the current snippet before editing anotoher one?"), TEXT("FingerText"), MB_YESNO);
-                if (messageReturn==IDYES)
-                {
-                    saveSnippet();
-                }
-            }
+            promptSaveSnippet(TEXT("Do you wish to save the current snippet before editing anotoher one?"));
             ::SendMessage(curScintilla,SCI_CLEARALL,0,0);
                
             //::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
@@ -1372,17 +1351,21 @@ void importSnippets()
     }
 }
 
-void promptSaveSnippet()
+void promptSaveSnippet(TCHAR* message)
 {
-    if (g_editorView)
-    {
-        //int messageReturn=::MessageBox(nppData._nppHandle, TEXT("It seems that you are saving a snippet to a file. Do you wish to save the snippet into your snippet list? (You can trigger a snippet only if it is in the snippet list)"), TEXT("FingerText"), MB_YESNO);
-        //if (messageReturn==IDYES)
-        //{
-        //    saveSnippet();
-        //}
+    HWND curScintilla = ::getCurrentScintilla();
 
+    if ((message == NULL) && (g_editorView))
+    {
         saveSnippet();
+    } else if (::SendMessage(curScintilla,SCI_GETMODIFY,0,0)!=0)
+    {
+        //TODO: can be merged with the function promptsavesnippet();
+        int messageReturn=::MessageBox(nppData._nppHandle, message, TEXT("FingerText"), MB_YESNO);
+        if (messageReturn==IDYES)
+        {
+            saveSnippet();
+        }
     }
 }
 
@@ -1398,19 +1381,24 @@ void updateMode()
     
     if ((::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0) == 7) && (::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0) == 37))
     {
+        snippetDock.toggleSave(true);
         g_editorView = true;
         snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("EDIT MODE\r\n(Double click item in list to edit another snippet, Ctrl+S to save)\r\nList of All Snippets"));
     } else if (g_enable)
     {
+        snippetDock.toggleSave(false);
         g_editorView = false;
         snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Enabled]\r\n(Type trigger text and hit tab to insert snippet)\r\nList of Available Snippets"));
-        //TODO: add instructions (Go to Menu>Plugin>FingerText>Toggle On/off to re-enable FingerText)
+        
     } else
     {
+        snippetDock.toggleSave(false);
         g_editorView = false;
         snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Disabled]\r\n(To enable: Plugins>FingerText>Toggle FingerText On/Off)\r\nList of Available Snippets"));
 
     }
+
+    
 
     ::SendMessage(curScintilla,SCI_GOTOPOS,curPos,0);
 

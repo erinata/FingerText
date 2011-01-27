@@ -129,7 +129,7 @@ void deleteSnippet();
 void insertSnippet();
 void exportSnippets();
 void importSnippets();
-void promptSaveSnippet();
+void promptSaveSnippet(TCHAR* message = NULL);
 void updateMode();
 void keyUpdate();
 void refreshAnnotation();
