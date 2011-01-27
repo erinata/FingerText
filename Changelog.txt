@@ -1,7 +1,12 @@
 current development version
 
 0.4.10
+Case insensitive search. Now extension .c and .C are viewed as the same extension,
+and TriggerText "NpP" is the same as "nPp"
 Fixed problem of extra endline during repeated exporting and importing
+more messages for snippet save problem
+
+
 
 0.4.9
 Fixed problem of not opening the correct snippet in edit mode

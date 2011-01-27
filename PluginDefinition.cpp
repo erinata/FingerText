@@ -217,7 +217,7 @@ char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""))
 	sqlite3_stmt *stmt;
 
     // First create the SQLite SQL statement ("prepare" it for running)
-	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
 	{
         char *tagType = NULL;
         if (level == 0)
@@ -352,7 +352,7 @@ void editSnippet()
     sqlite3_stmt *stmt;
 
 
-    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
 	{
 		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
 		sqlite3_bind_text(stmt, 1, tempScope , -1, SQLITE_STATIC);
@@ -411,7 +411,7 @@ void deleteSnippet()
 
     sqlite3_stmt *stmt;
     
-    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
     {
         sqlite3_bind_text(stmt, 1, g_snippetCache[index].scope, -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, g_snippetCache[index].triggerText, -1, SQLITE_STATIC);
@@ -501,7 +501,7 @@ void saveSnippet()
         // checking for existing snippet 
         sqlite3_stmt *stmt;
 
-        if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+        if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
         {
             sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
 		    sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
@@ -527,7 +527,7 @@ void saveSnippet()
                 } else
                 {
                     // delete existing entry
-                    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+                    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
                     {
                         sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
 		                sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
@@ -699,7 +699,7 @@ void showPreview()
 
     int index = snippetDock.getCount() - snippetDock.getSelection()-1;
     
-    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
 	{
 		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
 		sqlite3_bind_text(stmt, 1, g_snippetCache[index].scope , -1, SQLITE_STATIC);
@@ -959,7 +959,7 @@ void updateDockItems(bool withContent, bool withAll)
         sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets ORDER BY tag DESC LIMIT ? ", -1, &stmt, NULL);
     } else 
     {
-        sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets WHERE tagType = ? OR tagType = ? OR tagType = ? ORDER BY tag DESC LIMIT ? ", -1, &stmt, NULL);
+        sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets WHERE tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? ORDER BY tag DESC LIMIT ? ", -1, &stmt, NULL);
     }
     
 	if (g_dbOpen && SQLITE_OK == sqlitePrepare)
@@ -1266,7 +1266,7 @@ void importSnippets()
             
                 bool notOverWrite = false;
 
-                if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+                if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
                 {
                     sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
                     sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
@@ -1302,7 +1302,7 @@ void importSnippets()
                         } else
                         {
                             // delete existing entry
-                            if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
+                            if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
                             {
                                 sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
                                 sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
