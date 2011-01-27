@@ -1,7 +1,8 @@
 current development version
 
 0.4.11
-
+important bug fix on snippet with no space
+save button disabled in normal mode
 
 
 0.4.10

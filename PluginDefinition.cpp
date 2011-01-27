@@ -130,7 +130,6 @@ void pluginCleanUp()
 // You should fill your plugins commands here
 void commandMenuInit()
 {
-
     //--------------------------------------------//
     //-- STEP 3. CUSTOMIZE YOUR PLUGIN COMMANDS --//
     //--------------------------------------------//
@@ -155,8 +154,8 @@ void commandMenuInit()
     setCommand(SEPARATOR_ONE_INDEX, TEXT("---"), NULL, NULL, false);
     setCommand(HELP_INDEX, TEXT("Quick Guide"), showHelp, NULL, false);
     setCommand(ABOUT_INDEX, TEXT("About"), showAbout, NULL, false);
-    setCommand(SEPARATOR_TWO_INDEX, TEXT("---"), NULL, NULL, false);
-    setCommand(TESTING_INDEX, TEXT("Testing"), testing, NULL, false);
+    //setCommand(SEPARATOR_TWO_INDEX, TEXT("---"), NULL, NULL, false);
+    //setCommand(TESTING_INDEX, TEXT("Testing"), testing, NULL, false);
         
     setConfigAndDatabase();
 }
@@ -321,7 +320,6 @@ void createSnippet()
 }
 
 
-
 void editSnippet()
 {
     HWND curScintilla = getCurrentScintilla();
@@ -337,7 +335,6 @@ void editSnippet()
     strcpy(tempScope, g_snippetCache[index].scope);
 
     sqlite3_stmt *stmt;
-
 
     if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
 	{
@@ -373,7 +370,6 @@ void editSnippet()
             refreshAnnotation();
 		}		
 	}
-
 	sqlite3_finalize(stmt);
 
     ::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
@@ -401,10 +397,16 @@ void deleteSnippet()
     updateDockItems(false,false);    
 }
 
+
+//TODO: saveSnippet() and importSnippet() need refactoring so badly..................
 void saveSnippet()
 {
     HWND curScintilla = getCurrentScintilla();
 
+    int docLength = ::SendMessage(curScintilla, SCI_GETLENGTH,0,0);
+    // insert a space at the end of the doc so the ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)" "); will not get into error
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, docLength, (LPARAM)" ");
+    
     bool problemSnippet = false;
        
     int tagPosLineEnd = ::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,1,0);
@@ -458,6 +460,10 @@ void saveSnippet()
         ::MessageBox(nppData._nppHandle, TEXT("Snippet Content cannot be blank."), TEXT("FingerText"), MB_OK);
         problemSnippet = true;
     }
+
+    ::SendMessage(curScintilla,SCI_SETSELECTION,docLength,docLength+1); //Take away the extra space added
+    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+
     ::SendMessage(curScintilla,SCI_GOTOPOS,snippetPosStart,0);
 
     ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
@@ -471,6 +477,8 @@ void saveSnippet()
     char* snippetText = new char[snippetPosEnd-snippetPosStart + 1];
     ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(snippetText));
     
+    
+//    ::SendMessage(curScintilla, SCI_GOTOPOS, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)" ");
 
     if (!problemSnippet)
     {
@@ -1180,6 +1188,8 @@ void importSnippets()
             int next=0;
             do
             {
+                //import snippet do have have the problem of " " in save snippet because of the space in  "!$[FingerTextData FingerTextData]@#"
+                
                 //TODO: Put this into a "getline" function"
                 // Getting text from the 1st line
                 int tagPosLineEnd = ::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,0,0);

@@ -16,28 +16,29 @@ I am still experimenting different methods, so do expect non-backward compatible
 
 == Screenshots
 
-Screenshot is available here:
+Screenshots are available here:
 
-https://github.com/downloads/erinata/FingerText/ScreenClip.png
+https://github.com/downloads/erinata/FingerText/FingerText0.4.11_ScreenClip.png
+https://github.com/downloads/erinata/FingerText/FingerText0.4.11_ScreenClip_2.png
+https://github.com/downloads/erinata/FingerText/FingerText0.4.11_ScreenClip_3.png
 
 == Install
 
-Download the file "FingerText - 0.4.4.zip" at 
-https://github.com/downloads/erinata/FingerText/FingerText%20-%200.4.4.zip
+Download the file "FingerText - 0.4.11.zip" at 
+https://github.com/downloads/erinata/FingerText/FingerText%20-%200.4.11.zip
 
 Unzip the package and copy the FingerText.dll to the plugins folder of Notepad++. This is the only file you need to run FingerText in notepad++.
 
 The changelog.txt and readme.rdoc is for your reference. 
 
-The SampleSnippets.ftd contains a bunch of sample snippets. You do NOT need to put this file into your plugin folder. Just put that somewhere you can find (say desktop)
-
 == Importing Sample Snippets
 
-You should have FingerText installed. If you are in doubt, go to the notepad++ menu, there should be "FingerText" undert "Plugins".
+You should have FingerText installed. If you are in doubt, go to the notepad++ menu, there should be "FingerText" under "Plugins".
 
-To import the sample snippets mentioned in the installation section, go to notepad++ menu > plugin > FingerText > Import Snippets.
+To import the sample snippets, download FingerText0.4.11SampleSnippets.ftd from 
+https://github.com/downloads/erinata/FingerText/FingerText0.4.11SampleSnippets.ftd
 
-Choose the file SampleSnippets.ftd and all the sample snippets will be installed. You should be able to find it in your download package or it can be in the plugin or config folder if you are installing FingerText through Plugin Manager. If you still cannot find it, go to https://github.com/downloads/erinata/FingerText/FingerText%20-%200.4.4.zip to download the file again and you should be able to get the file.
+Go to notepad++ menu > plugin > FingerText > Import Snippets. Choose the file FingerText0.4.11SampleSnippets.ftd and all the sample snippets will be installed.
 
 To verify you have imported the snippets correctly, go to notepad++ menu > Plugins > FingerText > Show SnippetDock. A Dialog with a list of available plugins should show up.
 
@@ -51,6 +52,11 @@ Open a new file in notepad++ and go to notepad++ menu > Plugins > FingerText > S
 
 The trigger text disappear and it is replaced by a bunch of numbers.
 
+  1234567890
+  0987654321
+  1234567890
+  0987654321
+
 That's it. You can try triggering others snippets in the list. Snippet can be as long as several paragraphs (try "lorem"). Or as short as just one word (try "npp")
 
   lorem[Tab]
@@ -58,13 +64,13 @@ That's it. You can try triggering others snippets in the list. Snippet can be as
 
 Some snippets are file specific. Try to open a new file and save it as "test.cpp".
 
-You can see the SnippetDock is updated. There are a bunch of snippets added to the list. One of them is called "<.cpp> ios". Try triggering it inside the test.cpp.
+Notice that the SnippetDock is updated. There are a bunch of snippets added to the list. One of them is called "<.cpp> ios". Try triggering it inside the test.cpp.
 
   ios[Tab]
   
-You can see the snippet is triggered and a bunch of code is inserted. This snippet is only available when your file has extension ".cpp". But you can still trigger the global snippets. (Try "num" in the test.cpp file)
+The snippet is triggered and a bunch of code is inserted. This snippet is only available when your file has extension ".cpp". But you can still trigger the global snippets. (Try "num" in the test.cpp file)
 
-As you may notice, <GLOBAL> indicates that the snippet is available anywhere, while <.cpp> snippets are only for .cpp files. The SnippetDock automatically updates the available snippets for your reference.
+As you may notice, <GLOBAL> indicates that the snippet is available anywhere, while <.cpp> snippets are only for .cpp files. The SnippetDock automatically updates the available snippets for your reference. The text box on the top of the SnippetDock will show a preview of the snippet that is currently selected.
 
 Apart from global and extension, there are some snippets which are Filename specific. You can try open a new file in notepad++ and save it as "Makefile" (with no extension and capital M). The SnippetDock will shows that there are some more snippets available for Makefile. (Try "simple")
 
@@ -84,11 +90,11 @@ To see feature this in action, open a .cpp file and trigger the snippet "templat
 
 == Creating and Editing Snippets
 
-To create new snippets, click the create button at the SnippetDock. A new document is opened and you can edit the Trigger Text (line 10), Scope (line 12) and you can enter your snippet content on line 14 or below. REMEMBER to place a [>END<] at the end of the snippet. Click the save button when you finish editing.
+To create new snippets, click the create button at the SnippetDock. A new document is opened and you can edit the Trigger Text, Scope and you can enter your snippet content. REMEMBER to place a [>END<] at the end of the snippet. Click the save button when you finish editing, or you can use the shortkey Ctrl+S.
 
-To edit a snippet, select the snippet on the snippet list and click the edit button. The snippet is opened in a new file and you can edit the content. Click the save button when you finish editing.
+To edit a snippet, select the snippet on the snippet list and click the edit button. You can also double click on the list to edit a particular snippet. Click the save button when you finish editing.
 
-The error checking is still very crappy and I will improve it in future release. At the moment, just be careful not to mess up the template when you are editing or creating snippets. If you are in doubt, you can always press the "create" button to get a fresh correct template.
+Be careful not to mess up the template when you are editing or creating snippets. If you are in doubt, you can always press the "create" button to get a fresh correct template.
 
 Deleting a snippet is easy, just select the snippet and click the delete button.
 
@@ -98,7 +104,7 @@ Other than plain text, you can put one or more Hotspots in you snippet.
 
 Hotspots are indicated by $[![Whatever name]!]. The "Whatever name" can be a hint of the hotspot, or you can fill it with a default value. (If you type nothing and just hit tab, the hotspot $[![Whatever name]!] will be substituted by the string "Whatever name"(without quotes)). You may want to add a empty Hotspot (i.e. $[![]!]) at the location where you want the cursor to move to after tabbing through the last hotspot. Try to edit the sample snippets and use them as reference. 
 
-Notice that hotspots with the same name will be highlighted at the same time. Try editing the snippet "for" which you have triggered in previous section. You can see that there are a bunch of $[![[var]]!], which will be highlighted simultaneously when the snippet is triggered.
+Notice that hotspots with the same name will be highlighted at the same time. Try editing the snippet "for" which you have triggered in previous section. You can see that there are a bunch of $[![(var)]!], which will be highlighted simultaneously when the snippet is triggered.
 
 Any thing after the [>END<] will not be inserted into the document so you can comment about your snippet there.
 
@@ -112,6 +118,10 @@ The .ftd files are in plain text so you can edit them directly too. But don't do
 
 If you use sqlite, you can directly edit the snippet database too. It is not officially supported though.
 
+== Upgrading from 0.4.4
+
+Everything is compatibile. Just make sure that you restart notepad++ after updating the plugin.
+
 == Upgrading from 0.4.1
 
 If you want to use your snippets after you upgrade to 0.4.4, you can go to the %Notepad++ folder%\plugins\FingerText and get the old database file Snippets.db3. Rename is to FingerText.db3 and move it to the config folder after update.
@@ -124,42 +134,61 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 == Change log 
 (for full change log (including the development log) please refer to the CHANGELOG file in the repository)
 
+0.4.11
+- Snippets TriggerText and Scope are NOT case sensitive now. Extension .c and .C are viewed as the same extension,and TriggerText "NpP" is the same as "nPp"
+- Totally new snippet editing view with more wrong format checking
+- Change double click behaviour in SnippetDock. It trigger editview instead of inserting snippets.
+- Use ctrl-S to save snippet while in editing view
+- Added an "About" and "Quick Guide" command in menu
+- Added a command to temporarily enable or disable fingertext
+- Added a command to toggle show/Hide SnippetDock
+- Added a snippet Preview Box (chinese snippet text not supported)
+- Snippets function are disabled when you are editing snippets
+- All snippets are shown in SnippetDock when editing snippets
+- Remove the list length text box, use ini config file to configure snippet list maximum length (more configuration coming)
+- Fixed problem of extra endline during repeated exporting and importing
+- save button disabled when the editor is not editing snippet
+- More instructions on the snippetdock
+- More messages for snippet saving and importing
+- Fixed problem of not opening the correct snippet in editor
+- Tons of other bugs fixed
+
 0.4.4
-Implemented Snippets import and export function. Change the database storage location to the config folder. (Should solve the problem of snippet not saving correctly under Windows 7 and Vista)
-A better step by step tutorial for people who are new to snippets
+- Implemented Snippets import and export function. Change the database storage location to the config folder. (Should solve the problem of snippet not saving correctly under Windows 7 and Vista)
+- A better step by step tutorial for people who are new to snippets
 
 0.4.1
-Fixing the version number problem of 0.4.0
+- Fixing the version number problem of 0.4.0
 
 0.4.0
-First stable version using sqlite3. 
+- First stable version using sqlite3. 
 
 0.3.11
-Using Sqlite to store snippets instead of using recusive file system.
-Add Snippet Dock, which shows all available snippets according to the curent file.
-Implemented Create Edit and Delete from the snippet dock.
-Impletmented Double Click insert snippet function.
+- Using Sqlite to store snippets instead of using recusive file system.
+- Add Snippet Dock, which shows all available snippets according to the curent file.
+- Implemented Create Edit and Delete from the snippet dock.
+- Impletmented Double Click insert snippet function.
 
 0.3.2
-Last stable version using the recusive file system to store snippets. All the snippets create under this version will not work in version later than FingerText - 0.3.5
+- Last stable version using the recusive file system to store snippets. All the snippets create under this version will not work in version later than FingerText - 0.3.5
 
 0.3.0
-Implemented Snippet set for specific file name.
-The priority is FileName > Ext > Global
-performance improvement to path search
+- Implemented Snippet set for specific file name.
+- The priority is FileName > Ext > Global
+- performance improvement to path search
 
 0.2.6
-Multiple hotspots selection and hotspot hint text replacement works simultaneously
+- Multiple hotspots selection and hotspot hint text replacement works simultaneously
 
 0.2.0
-Fixed long tab problem
-Fixed Spaces or tabspaces before tab problem
-Fixed empty snippet problem
-Emulate tab behaviour when no tag match or selection is rectangle
-Snippet insertion recorded as one single undo step
+- Fixed long tab problem
+- Fixed Spaces or tabspaces before tab problem
+- Fixed empty snippet problem
+- Emulate tab behaviour when no tag match or selection is rectangle
+- Snippet insertion recorded as one single undo step
 
 0.1.0 
-First Alpha verison. Implemented basic tab trigger snippets and hotspots navigation
+- First Alpha verison. Implemented basic tab trigger snippets and hotspots navigation
 
 == Tested with
 
