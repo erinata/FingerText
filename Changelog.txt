@@ -1,5 +1,10 @@
 current development version
 
+
+0.4.12
+preview showing instructions when no item is selected
+Order list by tagType (can be configured in ini file)
+
 0.4.11
 important bug fix on snippet with no space
 save button disabled in normal mode

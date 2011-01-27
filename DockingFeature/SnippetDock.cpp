@@ -64,18 +64,7 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
             if  (HIWORD(wParam) == LBN_SELCHANGE && LOWORD(wParam) == IDC_SNIPPET_LIST)
             {
                 showPreview();
-                //implement snippet preview here
-                 
-                //::MessageBox(nppData._nppHandle, TEXT("change!"), TEXT("FingerText"), MB_OK);
-                //if (getSelection()==3)
-                //{
-                //     ::MessageBox(nppData._nppHandle, TEXT("3"), TEXT("FingerText"), MB_OK);
-                //} else if (getSelection()==4)
-                //{
-                //     ::MessageBox(nppData._nppHandle, TEXT("4"), TEXT("FingerText"), MB_OK);
-                //}
-
-
+              
             } else if (HIWORD(wParam) == LBN_SETFOCUS && LOWORD(wParam) == IDC_SNIPPET_LIST)
             {
                 keyUpdate();
@@ -89,11 +78,6 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
             {
                 editSnippet();
                 //insertSnippet();
-                //if (getSelection()==3)
-                //{
-                //    testing();
-                //}                    
-
             } 
 
 
@@ -105,20 +89,6 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
                     editSnippet();
                     //editSnipShow();
                     //updateDockItems();
-
-                    //::MessageBox(nppData._nppHandle, TEXT("OK"), TEXT("Trace"), MB_OK);
-                    //::SetDlgItemInt(_hSelf, ID_GOLINE_EDIT, 1, FALSE);
-                    
-					//int line = getLine();
-					//if (line != -1)
-					//{
-					//	// Get the current scintilla
-					//	 HWND curScintilla = getCurrentScintilla();
-                    //
-					//	::SendMessage(curScintilla, SCI_ENSUREVISIBLE, line-1, 0);
-					//	::SendMessage(curScintilla, SCI_GOTOLINE, line-1, 0);
-                        
-					//}
 					return TRUE;
 				}
 
@@ -158,8 +128,8 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
         
         case WM_INITDIALOG:
         {
-
             updateMode();
+            setDlgText(ID_SNIPSHOW_EDIT,TEXT("Select an item in SnippetDock to view the snippet preview here."));
             //setDlgText(IDC_LIST_TITLE, TEXT("Available Snippets"));
             
             //::SetDlgItemInt(_hSelf,IDC_LENGTH,100, false);

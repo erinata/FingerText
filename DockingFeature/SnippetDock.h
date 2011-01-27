@@ -119,24 +119,6 @@ public :
     //
     //}
 
-    //int getLength() 
-    //{
-    //    BOOL isSuccessful;
-    //    int length = ::GetDlgItemInt(_hSelf, IDC_LENGTH, &isSuccessful, false);
-    //    
-    //    if (!isSuccessful || length<10)
-    //    {
-    //        length=10;
-    //        ::SetDlgItemInt(_hSelf,IDC_LENGTH,length, false);
-    //    } else if (length>999)
-    //    {
-    //        length=999;
-    //        ::SetDlgItemInt(_hSelf,IDC_LENGTH,length, false);
-    //    }
-    //    
-    //    return length;
-    //}
-
     int getSelection()
     {
         int retVal;
@@ -155,16 +137,6 @@ public :
         retVal = SendMessage(hwndList, LB_GETCOUNT, 0, 0);
         return retVal;
     }
-
-    //void disableSnippetButtons()
-    //{
-    //
-    //}
-    //void enableSnippetButtons()
-    //{
-    //
-    //}
-    //
 protected :
     
 	virtual BOOL CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);

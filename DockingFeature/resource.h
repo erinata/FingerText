@@ -1164,7 +1164,6 @@
 #define IDC_LENGTH                      1009
 #define IDC_REFRESH                     1010
 #define IDC_BUTTON1                     1012
-#define IDC_EDIT1                       1015
 #define IDC_LIST_TITLE                  1015
 #define CF_GDIOBJLAST                   0x03FF
 #define _WIN32_WINNT_NT4                0x0400

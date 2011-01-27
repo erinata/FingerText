@@ -117,6 +117,7 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
 void openDatabase();
 int getCurrentTag(HWND curScintilla, int posCurrent, char** buffer);
 void pluginShutdown();
+//void writeConfig();
 void setConfigAndDatabase();
 void convertToUTF8(TCHAR *orig, char **utf8);
 void showSnippetDock();
@@ -135,6 +136,7 @@ void keyUpdate();
 void refreshAnnotation();
 void showHelp();
 void showAbout();
+bool triggerTag(int &posCurrent);
 void fingerText();
 
 void testing();
