@@ -119,6 +119,10 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             updateDockItems();
             break;
         
+            //TODO: Try to deal with repeated triggering of snippetHintUpdate and keyUpdate
+        case SCN_MODIFIED:
+            snippetHintUpdate();
+            break;
         case SCN_CHARADDED:
             keyUpdate();
             // trigger when anything is typed
@@ -140,7 +144,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 //
 extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam, LPARAM lParam)
 {
-  
+
     
 	//if (Message == WM_MOVE)
 	//{

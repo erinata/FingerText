@@ -72,7 +72,7 @@ const TCHAR NPP_PLUGIN_NAME[] = TEXT("FingerText");
 //
 // Here define the number of your plugin commands
 //
-const int nbFunc = 8;
+const int nbFunc = 10;
 
 
 //
@@ -117,11 +117,11 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
 void openDatabase();
 int getCurrentTag(HWND curScintilla, int posCurrent, char** buffer);
 void pluginShutdown();
-//void writeConfig();
 void setConfigAndDatabase();
+void setupConfigFile();
 void convertToUTF8(TCHAR *orig, char **utf8);
 void showSnippetDock();
-void updateDockItems(bool withContent=false, bool withAll=false);
+void updateDockItems(bool withContent=false, bool withAll=false, char* tag = "%");
 void saveSnippet();
 void createSnippet();
 void clearCache();
@@ -130,6 +130,7 @@ void deleteSnippet();
 void insertSnippet();
 void exportSnippets();
 void importSnippets();
+void snippetHintUpdate();
 void promptSaveSnippet(TCHAR* message = NULL);
 void updateMode();
 void keyUpdate();

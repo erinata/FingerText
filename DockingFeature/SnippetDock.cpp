@@ -67,7 +67,8 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
               
             } else if (HIWORD(wParam) == LBN_SETFOCUS && LOWORD(wParam) == IDC_SNIPPET_LIST)
             {
-                keyUpdate();
+                refreshAnnotation();
+                //keyUpdate();
                 //updateDockItems();
                 //::Button_Enable(GetDlgItem(_hSelf, IDC_SAVE), true);
                 ::Button_Enable(GetDlgItem(_hSelf, IDC_EDIT), true);
@@ -100,17 +101,14 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 
                 case IDC_CREATE:
                 {
-                    
                     createSnippet();
                     return TRUE;
                 }
 
                 case IDC_DELETE:
                 {
-                    
                     deleteSnippet();
                     return TRUE;
-
                 }
 			}
 			return FALSE;

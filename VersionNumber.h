@@ -27,11 +27,11 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-#define VERSION_TEXT "0.4.12.0"
-#define VERSION_NUM 0,4,12,0
-#define VERSION_TEXT_LONG "FingerText 0.4.12(Alpha)"
+#define VERSION_TEXT "0.4.14.0"
+#define VERSION_NUM 0,4,14,0
+#define VERSION_TEXT_LONG "FingerText 0.4.14.0(Alpha)"
 #define VERSION_TEXT_FULL TEXT("\
-FingerText 0.4.12(Alpha)\r\n\
+FingerText 0.4.14.0(Alpha)\r\n\
 January 2011\r\n\r\n\
 Author: Tom Lam\r\n\
 Email: erinata@gmail.com\r\n\r\n\
@@ -39,7 +39,7 @@ Update to the lastest version:\r\n\
      http://sourceforge.net/projects/fingertext/ \r\n\
 Usage Guide and Source code:\r\n\
      http://github.com/erinata/FingerText \r\n\r\n\
-(Notice that Snippets created using FingerText version 0.3.5 or below is not compatible with this version)\
+(Snippets created using FingerText version earlier than 0.3.5 are not compatible with this version)\
 ")
 
 #define HELP_TEXT_FULL TEXT("\
@@ -54,5 +54,7 @@ Delete Snippet --- Select a snippet on SnippetDock and Click Delete Button\r\n\
 Export Snippets --- Menu>Plugins>FingerText>Export Snippets\r\n\
 Import Snippets --- Menu>Plugins>FingerText>Import Snippets\r\n\
 About FingerText --- Menu>Plugins>FingerText>About\r\n\r\n\
-For step by step usage guide, please visit http://github.com/erinata/FingerText\
+For step by step usage guide, please visit http://github.com/erinata/FingerText \
 ")
+
+#define SNIPPET_EDIT_TEMPLATE "------ FingerText Snippet Editor View ------\r\n"
