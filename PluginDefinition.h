@@ -140,6 +140,9 @@ void keyUpdate();
 void refreshAnnotation();
 void showHelp();
 void showAbout();
+void insertDateTime(bool date,int type, HWND &curScintilla);
+void insertCurrentPath(int msg, HWND &curScintilla);
+void runCommand();
 bool triggerTag(int &posCurrent, int triggerLength=0);
 void fingerText();
 

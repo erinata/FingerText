@@ -94,6 +94,7 @@ bool g_editorView;
 //char* snippetEditTemplate = "------ FingerText Snippet Editor View ------\r\n";
 
 // Config file content
+int g_version;
 int g_snippetListLength;
 int g_snippetListOrderTagType;
 int g_permissiveTagTrigger;
@@ -101,6 +102,8 @@ int g_liveHintUpdate;
 int g_indentReference;
 int g_chainLimit;
 int g_preserveSteps;
+
+bool g_newUpdate;
 
 DockingDlg snippetDock;
 
@@ -127,6 +130,7 @@ void pluginInit(HANDLE hModule)
 //
 void pluginCleanUp()
 {
+    g_liveHintUpdate = 2;
     //writeConfig();
 }
 
@@ -409,6 +413,58 @@ void deleteSnippet()
 }
 
 
+bool getLineChecked(char **buffer, HWND &curScintilla, int lineNumber, TCHAR* errorText)
+{
+    bool problemSnippet;
+
+    ::SendMessage(curScintilla,SCI_GOTOLINE,lineNumber,0);
+    int tagPosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+
+    int tagPosEnd;
+    if (lineNumber == 3)
+    {
+        tagPosEnd = ::SendMessage(curScintilla,SCI_GETLENGTH,0,0);
+    } else
+    {
+
+        int tagPosLineEnd = ::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,lineNumber,0);
+        ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
+        ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)" ");
+        tagPosEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+        if (tagPosEnd>tagPosLineEnd)
+        {
+            tagPosEnd=tagPosLineEnd;
+        }
+    }
+
+    if (tagPosEnd-tagPosStart<=0)
+    {
+        ::SendMessage(curScintilla,SCI_GOTOLINE,lineNumber,0);
+        ::MessageBox(nppData._nppHandle, errorText, TEXT("FingerText"), MB_OK);
+        problemSnippet = true;
+    }
+
+    if (lineNumber == 3)
+    {
+        ::SendMessage(curScintilla,SCI_GOTOPOS,tagPosStart,0);
+
+        ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
+	    int spot=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"[>END<]");
+        if (spot<0)
+        {
+            ::MessageBox(nppData._nppHandle, TEXT("You should put an \"[>END<]\" (without quotes) at the end of your snippet content."), TEXT("FingerText"), MB_OK);
+            problemSnippet = true;
+        }
+    }
+
+    ::SendMessage(curScintilla,SCI_SETSELECTION,tagPosStart,tagPosEnd);
+    *buffer = new char[tagPosEnd-tagPosStart + 1];
+    ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(*buffer));
+
+    return problemSnippet;
+}
+
+
 //TODO: saveSnippet() and importSnippet() need refactoring sooooooo badly..................
 void saveSnippet()
 {
@@ -419,77 +475,17 @@ void saveSnippet()
     ::SendMessage(curScintilla, SCI_INSERTTEXT, docLength, (LPARAM)" ");
     
     bool problemSnippet = false;
-       
-    int tagPosLineEnd = ::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,1,0);
-    ::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
-    int tagPosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-    ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-    ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)" ");
-    int tagPosEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-    if (tagPosEnd>tagPosLineEnd)
-    {
-        tagPosEnd=tagPosLineEnd;
-    }
-    if (tagPosEnd-tagPosStart<=0)
-    {
-        ::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
-        ::MessageBox(nppData._nppHandle, TEXT("TriggerText cannot be blank."), TEXT("FingerText"), MB_OK);
-        problemSnippet = true;
-    }
-    ::SendMessage(curScintilla,SCI_SETSELECTION,tagPosStart,tagPosEnd);
-    char* tagText = new char[tagPosEnd-tagPosStart + 1];
-    ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(tagText));
-    
-    
-    int tagTypePosLineEnd = ::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,2,0);
-    ::SendMessage(curScintilla,SCI_GOTOLINE,2,0);
-    int tagTypePosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-    ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-    ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)" ");
-    int tagTypePosEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-    if (tagTypePosEnd>tagTypePosLineEnd)
-    {
-        tagTypePosEnd=tagTypePosLineEnd;
-    }
-    if (tagTypePosEnd-tagTypePosStart<=0)
-    {
-        ::SendMessage(curScintilla,SCI_GOTOLINE,2,0);
-        ::MessageBox(nppData._nppHandle, TEXT("Scope cannot be blank."), TEXT("FingerText"), MB_OK);
-        problemSnippet = true;
-    }
-    ::SendMessage(curScintilla,SCI_SETSELECTION,tagTypePosStart,tagTypePosEnd);
-    char* tagTypeText = new char[tagTypePosEnd-tagTypePosStart + 1];
-    ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(tagTypeText));
-    
-    
-    ::SendMessage(curScintilla,SCI_GOTOLINE,3,0);
-    int snippetPosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-    int snippetPosEnd = ::SendMessage(curScintilla,SCI_GETLENGTH,0,0);
-    if (snippetPosEnd-snippetPosStart<=0)
-    {
-        ::SendMessage(curScintilla,SCI_GOTOLINE,3,0);
-        ::MessageBox(nppData._nppHandle, TEXT("Snippet Content cannot be blank."), TEXT("FingerText"), MB_OK);
-        problemSnippet = true;
-    }
 
+    char* tagText;
+    char* tagTypeText;
+    char* snippetText;
+
+    if (getLineChecked(&tagText,curScintilla,1,TEXT("TriggerText cannot be blank."))==true) problemSnippet = true;
+    if (getLineChecked(&tagTypeText,curScintilla,2,TEXT("Scope cannot be blank."))==true) problemSnippet = true;
+    if (getLineChecked(&snippetText,curScintilla,3,TEXT("Snippet Content cannot be blank."))==true) problemSnippet = true;
+    
     ::SendMessage(curScintilla,SCI_SETSELECTION,docLength,docLength+1); //Take away the extra space added
     ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
-
-    ::SendMessage(curScintilla,SCI_GOTOPOS,snippetPosStart,0);
-
-    ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-	int spot=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"[>END<]");
-    if (spot<0)
-    {
-        ::MessageBox(nppData._nppHandle, TEXT("You should put an \"[>END<]\" (without quotes) at the end of your snippet content."), TEXT("FingerText"), MB_OK);
-        problemSnippet = true;
-    }
-    ::SendMessage(curScintilla,SCI_SETSELECTION,snippetPosStart,snippetPosEnd);
-    char* snippetText = new char[snippetPosEnd-snippetPosStart + 1];
-    ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(snippetText));
-    
-    
-//    ::SendMessage(curScintilla, SCI_GOTOPOS, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)" ");
 
     if (!problemSnippet)
     {
@@ -615,32 +611,102 @@ void chainSnippet(HWND &curScintilla, int startingPos)
 
 }
 
-void dynamicHotspot(HWND &curScintilla, int startingPos)
+void keyWordSpot(HWND &curScintilla, int startingPos)
 {
-    char cmdTagSign[] = "$[![(cmd)";
-    int cmdTagSignLength = strlen(cmdTagSign);
-    char* cmdHotSpotText;
-    char* cmdHotSpot;
-    int cmdSpot = -1;
+    char keyTagSign[] = "$[![(key)";
+    int keyTagSignLength = strlen(keyTagSign);
+    char* keyHotSpotText;
+    char* keyHotSpot;
+    int keySpot = -1;
 
-    //int cmdLimitCounter = 0;
+    //int keyLimitCounter = 0;
     do 
     {
         ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos,0);
         ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-        cmdSpot=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)cmdTagSign);
-        if (cmdSpot>=0)
+        keySpot=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)keyTagSign);
+        if (keySpot>=0)
 	    {
-            int cmdFirstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-            int cmdSecondPos = grabHotSpotContent(curScintilla, &cmdHotSpotText, &cmdHotSpot, cmdFirstPos,cmdTagSignLength);
-            
-            //int triggerPos = strlen(cmdHotSpotText)+cmdFirstPos;
+            int keyFirstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+            int keySecondPos = grabHotSpotContent(curScintilla, &keyHotSpotText, &keyHotSpot, keyFirstPos,keyTagSignLength);
+
+            int triggerPos = strlen(keyHotSpotText)+keyFirstPos;
             //::SendMessage(curScintilla,SCI_GOTOPOS,triggerPos,0);
+            ::SendMessage(curScintilla,SCI_SETSEL,keyFirstPos,triggerPos);
+            //TODO: probably should use enum type...........
+
+            if (strcmp(keyHotSpotText,"PASTE")==0)
+            {
+                ::SendMessage(curScintilla,SCI_PASTE,0,0);
+	            
+            } else if (strcmp(keyHotSpotText,"DATESHORT")==0)
+            {
+                insertDateTime(true,DATE_SHORTDATE,curScintilla);
+	            
+            } else if (strcmp(keyHotSpotText,"DATELONG")==0)
+            {
+                insertDateTime(true,DATE_LONGDATE,curScintilla);
+                
+            } else if (strcmp(keyHotSpotText,"TIMESHORT")==0)
+            {
+                insertDateTime(false,TIME_NOSECONDS,curScintilla);
+                
+            } else if (strcmp(keyHotSpotText,"TIMELONG")==0)
+            {
+                insertDateTime(false,0,curScintilla);
+            } else if (strcmp(keyHotSpotText,"FILENAME")==0)
+            {
+                insertCurrentPath(NPPM_GETNAMEPART,curScintilla);
+                
+            } else if (strcmp(keyHotSpotText,"EXTNAME")==0)
+            {
+                insertCurrentPath(NPPM_GETEXTPART,curScintilla);
+                
+            } else if (strcmp(keyHotSpotText,"DIRECTORY")==0)
+            {
+                insertCurrentPath(NPPM_GETCURRENTDIRECTORY,curScintilla);
+                
+            }
+            
             //triggerTag(triggerPos);
         }
-        //cmdLimitCounter++;
-    } while (cmdSpot>=0);
-    //while ((cmdSpot>=0) && (cmdLimitCounter<g_cmdLimit));
+        //keyLimitCounter++;
+    } while (keySpot>=0);
+    //while ((keySpot>=0) && (keyLimitCounter<g_keyLimit));
+
+}
+
+void runCommand()
+{
+}
+
+void insertCurrentPath(int msg, HWND &curScintilla)
+{
+
+	TCHAR path[MAX_PATH];
+	::SendMessage(nppData._nppHandle, msg, 0, (LPARAM)path);
+
+	char pathText[MAX_PATH];
+	WideCharToMultiByte((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, path, -1, pathText, MAX_PATH, NULL, NULL);
+	::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)pathText);
+}
+
+void insertDateTime(bool date,int type, HWND &curScintilla)
+{
+    TCHAR time[128];
+    SYSTEMTIME formatTime;
+	::GetLocalTime(&formatTime);
+    if (date)
+    {
+        ::GetDateFormat(LOCALE_USER_DEFAULT, type, &formatTime, NULL, time, 128);
+    } else
+    {
+        ::GetTimeFormat(LOCALE_USER_DEFAULT, type, &formatTime, NULL, time, 128);
+    }
+	
+	char timeText[MAX_PATH];
+	WideCharToMultiByte((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, time, -1, timeText, MAX_PATH, NULL, NULL);
+	::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)timeText);
 
 }
 
@@ -749,8 +815,7 @@ int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, in
     ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)*hotSpotText);
     ::SendMessage(curScintilla,SCI_GOTOPOS,secondPos+3,0);
     
-    return secondPos;
-  
+    return secondPos;  
 }
 
 void showPreview()
@@ -966,6 +1031,8 @@ void setConfigAndDatabase()
 
 void setupConfigFile()
 {
+
+    g_version = ::GetPrivateProfileInt(TEXT("FingerText"), TEXT("version"), 0, g_iniPath);
     g_snippetListLength = GetPrivateProfileInt(TEXT("FingerText"), TEXT("snippet_list_length"), 0, g_iniPath);
     g_snippetListOrderTagType = GetPrivateProfileInt(TEXT("FingerText"), TEXT("snippet_list_order_tagtype"), 0, g_iniPath);
     g_permissiveTagTrigger = GetPrivateProfileInt(TEXT("FingerText"), TEXT("permissive_tag_trigger"), 0, g_iniPath);
@@ -973,6 +1040,16 @@ void setupConfigFile()
     g_indentReference = GetPrivateProfileInt(TEXT("FingerText"), TEXT("indent_reference"), 0, g_iniPath);
     g_chainLimit = GetPrivateProfileInt(TEXT("FingerText"), TEXT("chain_limit"), 0, g_iniPath);
     g_preserveSteps = GetPrivateProfileInt(TEXT("FingerText"), TEXT("preserve_steps"), 0, g_iniPath);
+
+    if (g_version!=414)
+    {
+        g_version = 414;
+        ::WritePrivateProfileString(TEXT("FingerText"), TEXT("version"), TEXT("414"), g_iniPath);
+        g_newUpdate = true;
+    } else
+    {
+        g_newUpdate = false;
+    }
 
     if (g_snippetListLength==NULL)
     {
@@ -1071,21 +1148,7 @@ void showSnippetDock()
         snippetDock.display(!snippetDock.isVisible());
     }
 
-    
-
-
-
-    //if ((!g_display) || (!snippetDock.isVisible()))
-    //{
-    //    snippetDock.display();
-    //    g_display=true;
-    //    updateDockItems(false,false);
-    //    
-    //} else
-    //{
-    //    snippetDock.display(false);
-    //    g_display=false;
-    //}
+   
 }
 
 
@@ -1434,39 +1497,12 @@ void importSnippets()
             {
                 //import snippet do have have the problem of " " in save snippet because of the space in  "!$[FingerTextData FingerTextData]@#"
                 
-                //TODO: Put this into a "getline" function"
-                // Getting text from the 1st line
-                int tagPosLineEnd = ::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,0,0);
-                ::SendMessage(curScintilla,SCI_GOTOLINE,0,0);
-                int tagPosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-                ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-                ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)" ");
-                int tagPosEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-                if (tagPosEnd>tagPosLineEnd)
-                {
-                    tagPosEnd=tagPosLineEnd;
-                }
-                ::SendMessage(curScintilla,SCI_SETSELECTION,tagPosStart,tagPosEnd);
-            
-                char* tagText = new char[tagPosEnd-tagPosStart + 1];
-                ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(tagText));
-            
-                // Getting text from the 2nd line
-                int tagTypePosLineEnd = ::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,1,0);
-                ::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
-                int tagTypePosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-                ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-                ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)" ");
-                int tagTypePosEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-                if (tagTypePosEnd>tagTypePosLineEnd)
-                {
-                    tagTypePosEnd=tagTypePosLineEnd;
-                }
-                ::SendMessage(curScintilla,SCI_SETSELECTION,tagTypePosStart,tagTypePosEnd);
-            
-                char* tagTypeText = new char[tagTypePosEnd-tagTypePosStart + 1];
-                ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(tagTypeText));
-            
+                char* tagText; 
+                char* tagTypeText;
+                
+                getLineChecked(&tagText,curScintilla,0,TEXT("Error: Blank TriggerText. The ftd file may be corrupted."));
+                getLineChecked(&tagTypeText,curScintilla,1,TEXT("Error: Blank Scope. The ftd file may be corrupted."));
+                
                 // Getting text after the 3rd line until the tag !$[FingerTextData FingerTextData]@#
                 ::SendMessage(curScintilla,SCI_GOTOLINE,2,0);
                 int snippetPosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
@@ -1794,8 +1830,12 @@ void fingerText()
         }
 
         posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+
         //dynamic hotspot (chain snippet)
         chainSnippet(curScintilla, posCurrent);
+
+        //dynamic hotspot (keyword spot)
+        keyWordSpot(curScintilla, posCurrent);
         if (g_preserveSteps==1) 
 	    {
 		    ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
@@ -1831,10 +1871,19 @@ void testing()
     
     HWND curScintilla = getCurrentScintilla();
 
-    ::SendMessage(curScintilla, SCI_SETLINEINDENTATION, 0, 11);
-    ::SendMessage(curScintilla, SCI_SETLINEINDENTATION, 1, 11);
-    ::SendMessage(curScintilla, SCI_SETLINEINDENTATION, 2, 11);
-    ::SendMessage(curScintilla, SCI_SETLINEINDENTATION, 3, 11);
+    if (g_newUpdate)
+    {
+        ::MessageBox(nppData._nppHandle, TEXT("New!"), TEXT("Trace"), MB_OK);
+    } else
+    {
+        ::MessageBox(nppData._nppHandle, TEXT("Old!"), TEXT("Trace"), MB_OK);
+    }
+
+
+    //::SendMessage(curScintilla, SCI_SETLINEINDENTATION, 0, 11);
+    //::SendMessage(curScintilla, SCI_SETLINEINDENTATION, 1, 11);
+    //::SendMessage(curScintilla, SCI_SETLINEINDENTATION, 2, 11);
+    //::SendMessage(curScintilla, SCI_SETLINEINDENTATION, 3, 11);
 
     //int enc = ::SendMessage(curScintilla, SCI_GETLINEINDENTATION, 0, 0);
     //wchar_t countText[10];
