@@ -206,7 +206,12 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 
 == Credits
 
-Thanks Don Ho for making Notepad++ and providing a flexible and well documented api for plugin programming. Thanks Dave Brotherstone for his helpful comments and programmming help (especially for the sqlite support fork). Thanks Tsz Kin Chan for his suggestions on the UI. Also thanks for all the comments from sourceforge forum.  
+Many thanks to..........
+- Don Ho for making Notepad++ and providing a flexible and well documented api for plugin programming. 
+- Dave Brotherstone for his helpful comments and programmming help (especially for the sqlite support fork). 
+- Tsz Kin Chan for his suggestions on the UI.   
+- bbluemel for testing and suggesting solution for the indent reference function.
+- Also thanks for all the other comments from sourceforge forum.
 
 == License
 
