@@ -291,6 +291,16 @@ char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""), bool similar=fa
 	return expanded; //remember to delete the returned expanded after use.
 }
 
+void upgradeMessage()
+{
+    // This message is supressed for now and can be used later
+    //if (g_newUpdate)
+    //{
+    //
+    //    ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
+    //    ::SendMessage(getCurrentScintilla(), SCI_INSERTTEXT, 0, (LPARAM)WELCOME_TEXT);
+    //}
+}
 //void insertSnippet()
 //{
 //    sqlite3_stmt *stmt;
@@ -1056,11 +1066,18 @@ void setupConfigFile()
     g_chainLimit = GetPrivateProfileInt(TEXT("FingerText"), TEXT("chain_limit"), 0, g_iniPath);
     g_preserveSteps = GetPrivateProfileInt(TEXT("FingerText"), TEXT("preserve_steps"), 0, g_iniPath);
 
-    if (g_version!=414)
+    if (g_version != VERSION_LINEAR)
     {
-        g_version = 414;
-        ::WritePrivateProfileString(TEXT("FingerText"), TEXT("version"), TEXT("414"), g_iniPath);
+        g_version = VERSION_LINEAR;
+        ::WritePrivateProfileString(TEXT("FingerText"), TEXT("version"), VERSION_LINEAR_TEXT, g_iniPath);
         g_newUpdate = true;
+        
+        //TCHAR welcomeMessage[MAX_PATH] = TEXT("");
+        //::_tcscat(welcomeMessage,TEXT("Thanks for Upgrading to "));
+        //::_tcscat(welcomeMessage,VERSION_TEXT_LONG_WIDE);
+        //
+        //::MessageBox(nppData._nppHandle, welcomeMessage, TEXT("FingerText"), MB_OK);
+
     } else
     {
         g_newUpdate = false;
@@ -1948,7 +1965,9 @@ void testing()
     
     HWND curScintilla = getCurrentScintilla();
 
-    int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+    ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
+
+    //int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
 
     //snippetComplete(posCurrent);
     

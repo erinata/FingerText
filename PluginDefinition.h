@@ -125,6 +125,7 @@ void setupConfigFile();
 void convertToUTF8(TCHAR *orig, char **utf8);
 void showSnippetDock();
 void updateDockItems(bool withContent=false, bool withAll=false, char* tag = "%");
+void upgradeMessage();
 void saveSnippet();
 void createSnippet();
 void clearCache();

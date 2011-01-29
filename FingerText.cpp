@@ -105,6 +105,9 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 {
     switch(notifyCode->nmhdr.code)
     {
+        case NPPN_READY:
+            upgradeMessage();
+            break;
         case NPPN_SHUTDOWN:
             pluginShutdown();
             break;

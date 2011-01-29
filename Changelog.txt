@@ -1,5 +1,7 @@
 current development version
 
+
+
 0.4.14
 fixed heap corruption bug in edit snippet, getcurrenttag and hotspotnavigation
 fixed many things broken by live search 
