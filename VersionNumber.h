@@ -51,6 +51,7 @@ FingerText Quick Guide:\r\n\r\n\
 Insert Snippet --- Type in TriggerText and Hit the tab key\r\n\
 Navigate to next Hotspot --- Hit the tab key\r\n\
 Show SnippetDock --- Menu>Plugins>FingerText>Toggle On/Off SnippetDock\r\n\
+AutoComplete Tag --- Menu>Plugins>FingerText>Tag Completion\r\n\
 Goto Snippet Editor --- Double click snippets on the SnippetDock\r\n\
 Create New Snippets --- Click Create button on the SnippetDock\r\n\
 Save Snippet --- In the Snippet Editor View, Click Save Button or Ctrl+S\r\n\

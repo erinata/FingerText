@@ -4,7 +4,7 @@ Tab triggered snippet plugin for Notepad++.
 
 == Description
 
-FingerText is a tab triggered snippet plugin for Notepad++. Support global snippets and snippets for each file extension or file name, hotspots navigation, multiple hotspots simultaneous editing, hotspot text hint(instead of just a $ or # sign) and hotspot default value. Comments can be added to snippets. It also features a SnippetDock which shows a list of currently available snippets. (see screenshots) You can import or export your snippets and share it to others.
+FingerText is a tab triggered snippet plugin for Notepad++. Support multiple hotspots simultaneous editing, dynamic hotspots(a lot more than just plain text, you can run commands in your snippet), hotspot text hint(instead of just a $ or # sign) and hotspot default value. It also features a SnippetDock which shows a list of currently available snippets. (see screenshots) You can import or export your snippets and share it to others.
 
 If you are new to FingerText, follow the "Install", "Importing Sample Snippets" and "Basic Usage" sections in this file. That should give you a step by step tutorial on how to use FingerText.
 
@@ -12,7 +12,7 @@ If you are new to FingerText, follow the "Install", "Importing Sample Snippets" 
 
 This plugin is still in Alpha stage so do expect that it can be buggy. The development direction is to make it at least a working snippet plugin, and probably a tab triggered simple command plugin, a convenient console in the editor and finally snippets plugin with ruby scripting support.
 
-I am still experimenting different methods, so do expect non-backward compatible changes (just like the migration to sqlite3 from 0.3.2 to 0.4.1) in future releases. Things are getting more stable once I implement the "inline scripting" and "dynamic hotspots" features. I keep saying this because I am more than happy if people want to make snippets for this plugin and start using it. But as an ethical programmer I do not want to waste people's effort. And more importantly the project is really under active development so a stable version (at least an API stable version) is coming SOON.
+I am still experimenting different methods, so do expect non-backward compatible changes (just like the migration to sqlite3 from 0.3.2 to 0.4.1) in future releases. Things are getting more stable once I implement the "inline scripting" and "dynamic hotspots" features. I keep saying this because I am more than happy if people want to make snippets for this plugin and start using it. But as an ethical programmer I do not want to waste people¡¦s effort. And more importantly the project is really under active development so a stable version (at least an API stable version) is coming SOON.
 
 == Screenshots
 
@@ -24,23 +24,23 @@ https://github.com/downloads/erinata/FingerText/FingerText0.4.11_ScreenClip_3.pn
 
 == Install
 
-Download the file "FingerText - 0.4.11.zip" at 
-https://github.com/downloads/erinata/FingerText/FingerText%20-%200.4.11.zip
+Download the file "FingerText - 0.4.15.zip" at 
+https://github.com/downloads/erinata/FingerText/FingerText%20-%200.4.15.zip
 
 Unzip the package and copy the FingerText.dll to the plugins folder of Notepad++. This is the only file you need to run FingerText in notepad++.
 
-The changelog.txt and readme.rdoc is for your reference. 
+The changelog.txt and readme.rdoc are for your reference. And the FingerText0.4.15SampleSnippets.ftd is a file containing some sample snippets. (You need this if you want to follow the usage guide in this document)
 
 == Importing Sample Snippets
 
 You should have FingerText installed. If you are in doubt, go to the notepad++ menu, there should be "FingerText" under "Plugins".
 
-To import the sample snippets, download FingerText0.4.11SampleSnippets.ftd from 
-https://github.com/downloads/erinata/FingerText/FingerText0.4.11SampleSnippets.ftd
+To import the sample snippets, download FingerText0.4.15SampleSnippets.ftd from 
+https://github.com/downloads/erinata/FingerText/FingerText0.4.15SampleSnippets.ftd
 
-Go to notepad++ menu > plugin > FingerText > Import Snippets. Choose the file FingerText0.4.11SampleSnippets.ftd and all the sample snippets will be installed.
+Go to notepad++ menu > plugin > FingerText > Import Snippets. Choose the file FingerText0.4.15SampleSnippets.ftd and all the sample snippets will be installed.
 
-To verify you have imported the snippets correctly, go to notepad++ menu > Plugins > FingerText > Show SnippetDock. A Dialog with a list of available plugins should show up.
+To verify you have imported the snippets correctly, go to notepad++ menu > Plugins > FingerText > Show SnippetDock. A Dialog with a list of available snippets should show up.
 
 == Basic Usage
 
@@ -62,6 +62,10 @@ That's it. You can try triggering others snippets in the list. Snippet can be as
   lorem[Tab]
   npp[Tab]
 
+You probably have already notice, as you type, the SnippetDock is updated. When you type lor, FingerText is showing you there is a snippet "lorem", in case you forget how to spell it.
+
+How about if you do not want to type the whole word? just type lor and go to Menu>Plugins>FingerText>Tag completion. The word lorem is completed and you can trigger the snippet by hitting [tab]. Assign the Tag completion to a hot key if you plan you use it frequently.
+    
 Some snippets are file specific. Try to open a new file and save it as "test.cpp".
 
 Notice that the SnippetDock is updated. There are a bunch of snippets added to the list. One of them is called "<.cpp> ios". Try triggering it inside the test.cpp.
@@ -98,7 +102,7 @@ Be careful not to mess up the template when you are editing or creating snippets
 
 Deleting a snippet is easy, just select the snippet and click the delete button.
 
-== Advanced Snippet Editing
+== Basic Hotspots Editing
 
 Other than plain text, you can put one or more Hotspots in you snippet.
 
@@ -110,15 +114,24 @@ Any thing after the [>END<] will not be inserted into the document so you can co
 
 Chinese characters are supported in snippets. You can try it by triggering the snippet "chinese". All snippets should be encoded in UTF-8 and being triggered in UTF-8 document. Notice that Chinese character tag name are not supported. Actually sometimes it works sometimes it doesn't so it is not officially supported. 
 
+== Dynamic Hotspots
+FingerText support dynamic hotspots. Currently, there are three kinds of dynamic hotspots.
+
+- Chain - This is indicated by $[![(chain)somesnippet]!]. When the snippet is triggered, this hotspot is replaced by the text generated from activating another snippet "somesnippet". You can trigger the snippet "chain" to see how it works
+
+- Keyword - This is indicated by $[![(key)XXXXX]!]. And XXXXX is some predefined keyword. Currently the supported keywords are DATESHORT, DATELONG, TIMESHORT, TIMELONG, FILENAME, EXTNAME, DIRECTORY and PASTE. All of them are self-explaining (like DATESHORT will insert the current date in short format). And amount them the most important one is PASTE. If your snippet contain $[![(key)PASTE]!], it will be replaced by whatever text in your clipboard. The is very useful when you are writing tag language or want to turn a bunch of code into a function. To see this in action, copy a line of code and trigger the snippet "method". The code that you copy will be turned into a ruby method.
+
+- Command - This is indicated by $[![(cmd)XXXXX]!]. And XXXXX is some command that you can run in the console. For example $[![(cmd)dir]!] will fill your hotspot with the output that you would see when you run dir in console. Of course you can run a batch file if you want. Try snippet "cmddir" and "cmdbat" to see it in action.
+
+More dynmaic snippet types are coming.
+
 == Snippets Backup and Sharing
 
 To backup the snippets, you can go to notepad++ menu > Plugins > FingerText > Export Snippets. Choose a file name (which extension .ftd) and the snippets are exported. You can import them in the same way as importing the sample snippets.
 
-The .ftd files are in plain text so you can edit them directly too. But don't do that unless you know what you are doing because this can cause serious problem in importing and exporting. Editing .ftd files is not officially supported.
+The .ftd files are in plain text so you can edit them directly too. But don't do that unless you know what you are doing because this can cause serious problem in importing and exporting. Editing .ftd files is not officially supported. If you use sqlite, you can directly edit the snippet database too. It is not officially supported neither.
 
-If you use sqlite, you can directly edit the snippet database too. It is not officially supported though.
-
-== Upgrading from 0.4.4
+== Upgrading from 0.4.4 or 0.4.11
 
 Everything is compatibile. Just make sure that you restart notepad++ after updating the plugin.
 
@@ -133,6 +146,15 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 
 == Change log 
 (for full change log (including the development log) please refer to the CHANGELOG file in the repository)
+
+
+0.4.15
+- Add Dynamic Hotspots. Currently there are 3 types of dynamic hotspots (chain) (key) (cmd). More is coming.
+- Added Tag completion command
+- Added indentation reference
+- Added Live update SnippetDock
+- Fixed heap corruption bug in edit snippet, getcurrenttag and hotspotnavigation
+- Fixed snippetdock toggle bug
 
 0.4.11
 - Snippets TriggerText and Scope are NOT case sensitive now. Extension .c and .C are viewed as the same extension,and TriggerText "NpP" is the same as "nPp"

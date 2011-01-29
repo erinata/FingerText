@@ -182,7 +182,6 @@ void commandMenuCleanUp()
     delete funcItem[0]._pShKey;
 	// Don't forget to deallocate your shortcut here
 }
-
 //
 // This function help you to initialize your plugin commands
 //
@@ -672,8 +671,6 @@ void executeCommand(HWND &curScintilla, int startingPos)
             int resultLength;
             
             //pPipe = _popen( "ruby -e 'puts 1+1'", "rt" );
-            //pPipe = _popen( tag, "rt" );
-    
             if( (pPipe = _popen( cmdHotSpotText, "rt" )) == NULL )
             {    
                 break;
@@ -1416,8 +1413,6 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
 
     }
 
-
-
     for (int j=0;j<g_snippetCacheSize;j++)
     {
         if (g_snippetCache[j].scope !=NULL)
@@ -1964,7 +1959,7 @@ void fingerText()
             ::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
         }
         
-        ::SendMessage(curScintilla,SCI_AUTOCCANCEL,0,0);	 
+        //
         int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
         int posSelectionStart = ::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0);
         int posSelectionEnd = ::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0);
@@ -1975,6 +1970,7 @@ void fingerText()
             tagFound = triggerTag(posCurrent);
         }
 
+        if (tagFound) ::SendMessage(curScintilla,SCI_AUTOCCANCEL,0,0);
         posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
 
         //dynamic hotspot (chain snippet)
@@ -1983,6 +1979,7 @@ void fingerText()
         //dynamic hotspot (keyword spot)
         keyWordSpot(curScintilla, posCurrent);
 
+        //dynamic hotspot (Command Line)
         executeCommand(curScintilla, posCurrent);
 
         if (g_preserveSteps==1) 
@@ -2005,7 +2002,7 @@ void fingerText()
                 completeFound = snippetComplete(posCurrent);
 		    }
         }
-        
+        	 
 
         if ((spotFound == false) && (tagFound == false) && (completeFound==false)) 
         {
