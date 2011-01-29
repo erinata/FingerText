@@ -1,6 +1,7 @@
 current development version
 
-
+0.4.15
+add (cmd) dynamic hotpots
 
 0.4.14
 fixed heap corruption bug in edit snippet, getcurrenttag and hotspotnavigation

@@ -676,7 +676,7 @@ void executeCommand(HWND &curScintilla, int startingPos)
     
             if( (pPipe = _popen( cmdHotSpotText, "rt" )) == NULL )
             {    
-                exit( 1 );
+                break;
             }
     
             ::memset(psBuffer,0,sizeof(psBuffer));
@@ -1137,13 +1137,11 @@ void setupConfigFile()
         g_version = VERSION_LINEAR;
         ::WritePrivateProfileString(TEXT("FingerText"), TEXT("version"), VERSION_LINEAR_TEXT, g_iniPath);
         g_newUpdate = true;
-        
         //TCHAR welcomeMessage[MAX_PATH] = TEXT("");
         //::_tcscat(welcomeMessage,TEXT("Thanks for Upgrading to "));
         //::_tcscat(welcomeMessage,VERSION_TEXT_LONG_WIDE);
         //
         //::MessageBox(nppData._nppHandle, welcomeMessage, TEXT("FingerText"), MB_OK);
-
     } else
     {
         g_newUpdate = false;
