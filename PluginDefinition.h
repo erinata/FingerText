@@ -143,7 +143,7 @@ void showHelp();
 void showAbout();
 void insertDateTime(bool date,int type, HWND &curScintilla);
 void insertCurrentPath(int msg, HWND &curScintilla);
-void runCommand();
+void executeCommand();
 bool triggerTag(int &posCurrent, int triggerLength=0);
 void tagComplete();
 bool snippetComplete(int &posCurrent);

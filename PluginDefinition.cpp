@@ -301,6 +301,8 @@ void upgradeMessage()
     //    ::SendMessage(getCurrentScintilla(), SCI_INSERTTEXT, 0, (LPARAM)WELCOME_TEXT);
     //}
 }
+
+
 //void insertSnippet()
 //{
 //    sqlite3_stmt *stmt;
@@ -607,6 +609,7 @@ void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int
     ::SendMessage(curScintilla,SCI_TAB,0,0);	
 }
 
+// TODO: refactor the dynamic hotspot functions
 void chainSnippet(HWND &curScintilla, int startingPos)
 {
     char chainTagSign[] = "$[![(chain)";
@@ -627,12 +630,73 @@ void chainSnippet(HWND &curScintilla, int startingPos)
             int chainSecondPos = grabHotSpotContent(curScintilla, &chainHotSpotText, &chainHotSpot, chainFirstPos,chainTagSignLength);
             
             int triggerPos = strlen(chainHotSpotText)+chainFirstPos;
+
+            ///////////////////
             ::SendMessage(curScintilla,SCI_GOTOPOS,triggerPos,0);
             triggerTag(triggerPos,strlen(chainHotSpotText));
+            //////////////////////
         }
         chainLimitCounter++;
     } while ((chainSpot>=0) && (chainLimitCounter<g_chainLimit));
 
+    delete [] chainHotSpot;
+    delete [] chainHotSpotText;
+
+}
+
+void executeCommand(HWND &curScintilla, int startingPos)
+{
+    char cmdTagSign[] = "$[![(cmd)";
+    int cmdTagSignLength = strlen(cmdTagSign);
+    char* cmdHotSpotText;
+    char* cmdHotSpot;
+    int cmdSpot = -1;
+           
+    do 
+    {
+        ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos,0);
+        ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
+        cmdSpot=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)cmdTagSign);
+        if (cmdSpot>=0)
+	    {
+            int cmdFirstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+            int cmdSecondPos = grabHotSpotContent(curScintilla, &cmdHotSpotText, &cmdHotSpot, cmdFirstPos,cmdTagSignLength);
+
+            int triggerPos = strlen(cmdHotSpotText)+cmdFirstPos;
+            ///////////////////////////
+            ::SendMessage(curScintilla,SCI_SETSEL,cmdFirstPos,triggerPos);
+            ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+            
+            char  psBuffer[999];
+            FILE   *pPipe;
+            int resultLength;
+            
+            //pPipe = _popen( "ruby -e 'puts 1+1'", "rt" );
+            //pPipe = _popen( tag, "rt" );
+    
+            if( (pPipe = _popen( cmdHotSpotText, "rt" )) == NULL )
+            {    
+                exit( 1 );
+            }
+    
+            ::memset(psBuffer,0,sizeof(psBuffer));
+
+            while(fgets(psBuffer, 999, pPipe))
+            {
+
+                ::SendMessage(curScintilla, SCI_REPLACESEL, 128, (LPARAM)psBuffer);
+                ::memset (psBuffer,0,sizeof(psBuffer));
+            
+
+            }
+            _pclose( pPipe );
+
+            /////////////////////////
+        } 
+
+    } while (cmdSpot>=0);
+    delete [] cmdHotSpot;
+    delete [] cmdHotSpotText;
 }
 
 void keyWordSpot(HWND &curScintilla, int startingPos)
@@ -654,7 +718,10 @@ void keyWordSpot(HWND &curScintilla, int startingPos)
             int keyFirstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
             int keySecondPos = grabHotSpotContent(curScintilla, &keyHotSpotText, &keyHotSpot, keyFirstPos,keyTagSignLength);
 
+            
             int triggerPos = strlen(keyHotSpotText)+keyFirstPos;
+
+            ////////////////////////
             //::SendMessage(curScintilla,SCI_GOTOPOS,triggerPos,0);
             ::SendMessage(curScintilla,SCI_SETSEL,keyFirstPos,triggerPos);
             //TODO: probably should use enum type...........
@@ -692,17 +759,16 @@ void keyWordSpot(HWND &curScintilla, int startingPos)
                 
             }
             
-            //triggerTag(triggerPos);
+            //////////////////////
         }
         //keyLimitCounter++;
     } while (keySpot>=0);
     //while ((keySpot>=0) && (keyLimitCounter<g_keyLimit));
-
+    delete [] keyHotSpot;
+    delete [] keyHotSpotText;
 }
 
-void runCommand()
-{
-}
+
 
 void insertCurrentPath(int msg, HWND &curScintilla)
 {
@@ -1918,6 +1984,9 @@ void fingerText()
 
         //dynamic hotspot (keyword spot)
         keyWordSpot(curScintilla, posCurrent);
+
+        executeCommand(curScintilla, posCurrent);
+
         if (g_preserveSteps==1) 
 	    {
 		    ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
