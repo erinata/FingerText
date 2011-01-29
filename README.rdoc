@@ -155,6 +155,7 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 - Added Live update SnippetDock
 - Fixed heap corruption bug in edit snippet, getcurrenttag and hotspotnavigation
 - Fixed snippetdock toggle bug
+- Fixed incompatibility with tab autocompletion
 
 0.4.11
 - Snippets TriggerText and Scope are NOT case sensitive now. Extension .c and .C are viewed as the same extension,and TriggerText "NpP" is the same as "nPp"

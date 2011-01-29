@@ -1,5 +1,8 @@
 current development version
 
+0.4.16
+fixing bug of saving file in programfile folders without admin right
+
 0.4.15
 add (cmd) dynamic hotpots
 

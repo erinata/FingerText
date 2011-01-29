@@ -102,6 +102,7 @@ int g_liveHintUpdate;
 int g_indentReference;
 int g_chainLimit;
 int g_preserveSteps;
+int g_escapeChar;
 
 bool g_newUpdate;
 
@@ -634,23 +635,29 @@ void chainSnippet(HWND &curScintilla, int startingPos)
             ::SendMessage(curScintilla,SCI_GOTOPOS,triggerPos,0);
             triggerTag(triggerPos,strlen(chainHotSpotText));
             //////////////////////
+            chainLimitCounter++;
         }
-        chainLimitCounter++;
+        
     } while ((chainSpot>=0) && (chainLimitCounter<g_chainLimit));
 
-    delete [] chainHotSpot;
-    delete [] chainHotSpotText;
+    if (chainLimitCounter>0)
+    {
+        delete [] chainHotSpot;
+        delete [] chainHotSpotText;
+    }
 
 }
 
 void executeCommand(HWND &curScintilla, int startingPos)
 {
+    
     char cmdTagSign[] = "$[![(cmd)";
     int cmdTagSignLength = strlen(cmdTagSign);
     char* cmdHotSpotText;
     char* cmdHotSpot;
     int cmdSpot = -1;
-           
+
+    int cmdLimitCounter = 0;       
     do 
     {
         ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos,0);
@@ -688,12 +695,17 @@ void executeCommand(HWND &curScintilla, int startingPos)
             }
             _pclose( pPipe );
 
+            cmdLimitCounter++;
             /////////////////////////
         } 
 
-    } while (cmdSpot>=0);
-    delete [] cmdHotSpot;
-    delete [] cmdHotSpotText;
+    } while ((cmdSpot>=0) && (cmdLimitCounter<g_chainLimit));
+
+    if (cmdLimitCounter>0)
+    {
+        delete [] cmdHotSpot;
+        delete [] cmdHotSpotText;
+    }
 }
 
 void keyWordSpot(HWND &curScintilla, int startingPos)
@@ -704,7 +716,7 @@ void keyWordSpot(HWND &curScintilla, int startingPos)
     char* keyHotSpot;
     int keySpot = -1;
 
-    //int keyLimitCounter = 0;
+    int keyLimitCounter = 0;
     do 
     {
         ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos,0);
@@ -755,14 +767,19 @@ void keyWordSpot(HWND &curScintilla, int startingPos)
                 insertCurrentPath(NPPM_GETCURRENTDIRECTORY,curScintilla);
                 
             }
-            
+            keyLimitCounter++;
             //////////////////////
         }
-        //keyLimitCounter++;
-    } while (keySpot>=0);
+        
+    } while ((keySpot>=0) && (keyLimitCounter<g_chainLimit));
     //while ((keySpot>=0) && (keyLimitCounter<g_keyLimit));
-    delete [] keyHotSpot;
-    delete [] keyHotSpotText;
+
+    if (keyLimitCounter>0)
+    {
+        delete [] keyHotSpot;
+        delete [] keyHotSpotText;
+    }
+    
 }
 
 
@@ -1128,6 +1145,8 @@ void setupConfigFile()
     g_indentReference = GetPrivateProfileInt(TEXT("FingerText"), TEXT("indent_reference"), 0, g_iniPath);
     g_chainLimit = GetPrivateProfileInt(TEXT("FingerText"), TEXT("chain_limit"), 0, g_iniPath);
     g_preserveSteps = GetPrivateProfileInt(TEXT("FingerText"), TEXT("preserve_steps"), 0, g_iniPath);
+    g_escapeChar = GetPrivateProfileInt(TEXT("FingerText"), TEXT("escape_char_level"), 0, g_iniPath);
+    // 1: no escape  2: escape by <> 
 
     if (g_version != VERSION_LINEAR)
     {
@@ -1179,6 +1198,13 @@ void setupConfigFile()
         g_preserveSteps = 1;
         ::WritePrivateProfileString(TEXT("FingerText"), TEXT("preserve_steps"), TEXT("1"), g_iniPath);
     } 
+    if (g_escapeChar==NULL)
+    {
+        g_escapeChar = 1;
+        ::WritePrivateProfileString(TEXT("FingerText"), TEXT("escape_char_level"), TEXT("1"), g_iniPath);
+    } 
+
+    
 }
 
 
@@ -1189,8 +1215,23 @@ int getCurrentTag(HWND curScintilla, int posCurrent, char **buffer, int triggerL
     //TODO: some better way to get the tag than WORDSTARTPOSITION
     int posBeforeTag;
     if (triggerLength<=0)
-    {   
+    {
+        char* escapeChar;
+        if (g_escapeChar == 1)
+        {
+            escapeChar = "";
+            
+        } else if (g_escapeChar == 2)
+        {
+            escapeChar = "<>";
+        }
+
+        char wordChar[MAX_PATH]="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+        strcat(wordChar,escapeChar);
+
+        ::SendMessage(curScintilla,	SCI_SETWORDCHARS, 0, (LPARAM)wordChar);
 	    posBeforeTag = static_cast<int>(::SendMessage(curScintilla,	SCI_WORDSTARTPOSITION, posCurrent, 1));
+        ::SendMessage(curScintilla,	SCI_SETCHARSDEFAULT, 0, 0);
     } else
     {
         posBeforeTag = posCurrent - triggerLength;
@@ -1736,20 +1777,25 @@ void importSnippets()
 
 void promptSaveSnippet(TCHAR* message)
 {
-    HWND curScintilla = ::getCurrentScintilla();
+    if (g_editorView)
+    {
+        HWND curScintilla = ::getCurrentScintilla();
 
-    if ((message == NULL) && (g_editorView))
-    {
-        saveSnippet();
-    } else if (::SendMessage(curScintilla,SCI_GETMODIFY,0,0)!=0)
-    {
-        //TODO: can be merged with the function promptsavesnippet();
-        int messageReturn=::MessageBox(nppData._nppHandle, message, TEXT("FingerText"), MB_YESNO);
-        if (messageReturn==IDYES)
+        if (message == NULL)
         {
             saveSnippet();
+        } else if (::SendMessage(curScintilla,SCI_GETMODIFY,0,0)!=0)
+        {
+            //TODO: can be merged with the function promptsavesnippet();
+            int messageReturn=::MessageBox(nppData._nppHandle, message, TEXT("FingerText"), MB_YESNO);
+            if (messageReturn==IDYES)
+            {
+                saveSnippet();
+            }
         }
+
     }
+    
 }
 
 void updateMode()
@@ -1973,15 +2019,15 @@ void fingerText()
         if (tagFound) ::SendMessage(curScintilla,SCI_AUTOCCANCEL,0,0);
         posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
 
-        //dynamic hotspot (chain snippet)
+        ////dynamic hotspot (chain snippet)
         chainSnippet(curScintilla, posCurrent);
-
-        //dynamic hotspot (keyword spot)
+        //
+        ////dynamic hotspot (keyword spot)
         keyWordSpot(curScintilla, posCurrent);
-
-        //dynamic hotspot (Command Line)
+        //
+        ////dynamic hotspot (Command Line)
         executeCommand(curScintilla, posCurrent);
-
+        //
         if (g_preserveSteps==1) 
 	    {
 		    ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);

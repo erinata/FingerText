@@ -27,15 +27,15 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-#define VERSION_TEXT "0.4.15.0"
-#define VERSION_NUM 0,4,15,0
+#define VERSION_TEXT "0.4.15.1"
+#define VERSION_NUM 0,4,15,1
 #define VERSION_LINEAR 415
 #define VERSION_LINEAR_TEXT TEXT("415")
-#define VERSION_TEXT_LONG "FingerText 0.4.15.0(Alpha)"
-#define VERSION_TEXT_LONG_WIDE TEXT("FingerText 0.4.15.0(Alpha)")
-#define WELCOME_TEXT "Thanks for Upgrading to FingerText 0.4.15.0(Alpha)."
+#define VERSION_TEXT_LONG "FingerText 0.4.15.1(Alpha)"
+#define VERSION_TEXT_LONG_WIDE TEXT("FingerText 0.4.15.1(Alpha)")
+#define WELCOME_TEXT "Thanks for Upgrading to FingerText 0.4.15.1(Alpha)."
 #define VERSION_TEXT_FULL TEXT("\
-FingerText 0.4.15.0(Alpha)\r\n\
+FingerText 0.4.15.1(Alpha)\r\n\
 January 2011\r\n\r\n\
 Author: Tom Lam\r\n\
 Email: erinata@gmail.com\r\n\r\n\
