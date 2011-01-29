@@ -72,7 +72,7 @@ const TCHAR NPP_PLUGIN_NAME[] = TEXT("FingerText");
 //
 // Here define the number of your plugin commands
 //
-const int nbFunc = 10;
+const int nbFunc = 12;
 
 
 //
@@ -144,6 +144,8 @@ void insertDateTime(bool date,int type, HWND &curScintilla);
 void insertCurrentPath(int msg, HWND &curScintilla);
 void runCommand();
 bool triggerTag(int &posCurrent, int triggerLength=0);
+void tagComplete();
+bool snippetComplete(int &posCurrent);
 void fingerText();
 
 void testing();

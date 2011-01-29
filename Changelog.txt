@@ -3,6 +3,8 @@ current development version
 0.4.14
 fixed heap corruption bug in edit snippet, getcurrenttag and hotspotnavigation
 fixed many things broken by live search 
+Make permissive tag triggering an option and move it to a cmd "tag completion"
+Add basic (key) and (chain) hotspot
 
 0.4.13.1
 Added indentation reference (very ugly implementation)

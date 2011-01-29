@@ -97,7 +97,7 @@ bool g_editorView;
 int g_version;
 int g_snippetListLength;
 int g_snippetListOrderTagType;
-int g_permissiveTagTrigger;
+int g_tabTagCompletion;
 int g_liveHintUpdate;
 int g_indentReference;
 int g_chainLimit;
@@ -113,10 +113,12 @@ DockingDlg snippetDock;
 #define IMPORT_SNIPPETS_INDEX 3
 #define EXPORT_SNIPPETS_INDEX 4
 #define SEPARATOR_ONE_INDEX 5
-#define HELP_INDEX 6
-#define ABOUT_INDEX 7
-#define SEPARATOR_TWO_INDEX 8
-#define TESTING_INDEX 9
+#define TAG_COMPLETE_INDEX 6
+#define SEPARATOR_TWO_INDEX 7
+#define HELP_INDEX 8
+#define ABOUT_INDEX 9
+#define SEPARATOR_THREE_INDEX 10
+#define TESTING_INDEX 11
 //
 // Initialize your plugin data here
 // It will be called while plugin loading   
@@ -161,9 +163,11 @@ void commandMenuInit()
     setCommand(IMPORT_SNIPPETS_INDEX, TEXT("Import Snippets"), importSnippets, NULL, false);
     setCommand(EXPORT_SNIPPETS_INDEX, TEXT("Export Snippets"), exportSnippets, NULL, false);
     setCommand(SEPARATOR_ONE_INDEX, TEXT("---"), NULL, NULL, false);
+    setCommand(TAG_COMPLETE_INDEX, TEXT("Tag Completion"), tagComplete, NULL, false);
+    setCommand(SEPARATOR_TWO_INDEX, TEXT("---"), NULL, NULL, false);
     setCommand(HELP_INDEX, TEXT("Quick Guide"), showHelp, NULL, false);
     setCommand(ABOUT_INDEX, TEXT("About"), showAbout, NULL, false);
-    setCommand(SEPARATOR_TWO_INDEX, TEXT("---"), NULL, NULL, false);
+    setCommand(SEPARATOR_THREE_INDEX, TEXT("---"), NULL, NULL, false);
     setCommand(TESTING_INDEX, TEXT("Testing"), testing, NULL, false);
 
     setConfigAndDatabase();
@@ -216,13 +220,23 @@ void toggleDisable()
     updateMode();
 }
 
-char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""))
+char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""), bool similar=false)
 {
 	char *expanded = NULL;
 	sqlite3_stmt *stmt;
 
     // First create the SQLite SQL statement ("prepare" it for running)
-	if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY tag", -1, &stmt, NULL))
+    int sqlitePrepare;
+    if (similar == false)
+    {
+        sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY tag", -1, &stmt, NULL);
+    } else
+    {
+        sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY tag", -1, &stmt, NULL);
+    }
+    
+
+	if (g_dbOpen && SQLITE_OK == sqlitePrepare)
 	{
         char *tagType = NULL;
         if (level == 0)
@@ -248,7 +262,7 @@ char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""))
 		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
 		sqlite3_bind_text(stmt, 1, tagType, -1, SQLITE_STATIC);
 
-        if (g_permissiveTagTrigger==1)
+        if (similar==1)
         {
             char similarTag[MAX_PATH]="";
             strcat(similarTag,"%");
@@ -965,6 +979,7 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
     return true;
 }
 
+
 void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
 {
     delete [] g_snippetCache;
@@ -1035,7 +1050,7 @@ void setupConfigFile()
     g_version = ::GetPrivateProfileInt(TEXT("FingerText"), TEXT("version"), 0, g_iniPath);
     g_snippetListLength = GetPrivateProfileInt(TEXT("FingerText"), TEXT("snippet_list_length"), 0, g_iniPath);
     g_snippetListOrderTagType = GetPrivateProfileInt(TEXT("FingerText"), TEXT("snippet_list_order_tagtype"), 0, g_iniPath);
-    g_permissiveTagTrigger = GetPrivateProfileInt(TEXT("FingerText"), TEXT("permissive_tag_trigger"), 0, g_iniPath);
+    g_tabTagCompletion = GetPrivateProfileInt(TEXT("FingerText"), TEXT("tab_tag_completion"), 0, g_iniPath);
     g_liveHintUpdate = GetPrivateProfileInt(TEXT("FingerText"), TEXT("live_hint_update"), 0, g_iniPath);
     g_indentReference = GetPrivateProfileInt(TEXT("FingerText"), TEXT("indent_reference"), 0, g_iniPath);
     g_chainLimit = GetPrivateProfileInt(TEXT("FingerText"), TEXT("chain_limit"), 0, g_iniPath);
@@ -1061,10 +1076,10 @@ void setupConfigFile()
         g_snippetListOrderTagType = 1;
         ::WritePrivateProfileString(TEXT("FingerText"), TEXT("snippet_list_order_tagtype"), TEXT("1"), g_iniPath);
     }
-    if (g_permissiveTagTrigger==NULL)
+    if (g_tabTagCompletion==NULL)
     {
-        g_permissiveTagTrigger = 1;
-        ::WritePrivateProfileString(TEXT("FingerText"), TEXT("permissive_tag_trigger"), TEXT("1"), g_iniPath);
+        g_tabTagCompletion = 2;
+        ::WritePrivateProfileString(TEXT("FingerText"), TEXT("tab_tag_completion"), TEXT("2"), g_iniPath);
     } 
     if (g_liveHintUpdate==NULL)
     {
@@ -1495,7 +1510,7 @@ void importSnippets()
             int next=0;
             do
             {
-                //import snippet do have have the problem of " " in save snippet because of the space in  "!$[FingerTextData FingerTextData]@#"
+                //import snippet do not have the problem of " " in save snippet because of the space in  "!$[FingerTextData FingerTextData]@#"
                 
                 char* tagText; 
                 char* tagTypeText;
@@ -1770,7 +1785,7 @@ bool triggerTag(int &posCurrent, int triggerLength)
         int level=1;
         do
         {
-            expanded = findTagSQLite(tag,level); 
+            expanded = findTagSQLite(tag,level,TEXT(""),false); 
 			if (expanded)
             {
                 replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
@@ -1790,6 +1805,56 @@ bool triggerTag(int &posCurrent, int triggerLength)
     if (tagFound) ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
 
     return tagFound;
+}
+void tagComplete()
+{
+    HWND curScintilla = getCurrentScintilla();
+    int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+
+    snippetComplete(posCurrent);
+}
+
+bool snippetComplete(int &posCurrent)
+{
+    HWND curScintilla = getCurrentScintilla();
+
+    bool tagFound = false;
+    char *tag;
+	int tagLength = getCurrentTag(curScintilla, posCurrent, &tag);
+    int posBeforeTag=posCurrent-tagLength;
+    if (tagLength != 0)
+	{
+        char *expanded;
+
+        int level=1;
+        do
+        {
+            expanded = findTagSQLite(tag,level,TEXT(""),true); 
+			if (expanded)
+            {
+                ::SendMessage(curScintilla,SCI_SETSEL,posBeforeTag,posCurrent);
+                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)expanded);
+                posBeforeTag = posBeforeTag+strlen(expanded);
+                
+
+                //replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
+				tagFound = true;
+                break;
+            } 
+            level++;
+        } while (level<=3);
+
+        delete [] expanded;
+
+		delete [] tag;
+        // return to the original path 
+        // ::SetCurrentDirectory(curPath);
+    }
+    // return to the original position 
+    if (tagFound) ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
+
+    return tagFound;
+
 }
 
 void fingerText()
@@ -1844,12 +1909,24 @@ void fingerText()
         	  
         bool spotFound = hotSpotNavigation(curScintilla);
 
-        ::SendMessage(curScintilla, SCI_GOTOPOS, posCurrent, 0);
+        
 
-        if ((spotFound == false) && (tagFound == false)) 
-		{
-			restoreTab(curScintilla, posCurrent, posSelectionStart, posSelectionEnd);
-		}
+
+        bool completeFound = false;
+        if (g_tabTagCompletion == 1)
+        {
+            if ((spotFound == false) && (tagFound == false)) 
+		    {
+                ::SendMessage(curScintilla, SCI_GOTOPOS, posCurrent, 0);
+                completeFound = snippetComplete(posCurrent);
+		    }
+        }
+        
+
+        if ((spotFound == false) && (tagFound == false) && (completeFound==false)) 
+        {
+            restoreTab(curScintilla, posCurrent, posSelectionStart, posSelectionEnd);
+        }
 
         
         if (g_liveHintUpdate == 3)
@@ -1871,15 +1948,21 @@ void testing()
     
     HWND curScintilla = getCurrentScintilla();
 
-    if (g_newUpdate)
-    {
-        ::MessageBox(nppData._nppHandle, TEXT("New!"), TEXT("Trace"), MB_OK);
-    } else
-    {
-        ::MessageBox(nppData._nppHandle, TEXT("Old!"), TEXT("Trace"), MB_OK);
-    }
+    int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
 
+    //snippetComplete(posCurrent);
+    
 
+    //
+    //if (g_newUpdate)
+    //{
+    //    ::MessageBox(nppData._nppHandle, TEXT("New!"), TEXT("Trace"), MB_OK);
+    //} else
+    //{
+    //    ::MessageBox(nppData._nppHandle, TEXT("Old!"), TEXT("Trace"), MB_OK);
+    //}
+    //
+    //
     //::SendMessage(curScintilla, SCI_SETLINEINDENTATION, 0, 11);
     //::SendMessage(curScintilla, SCI_SETLINEINDENTATION, 1, 11);
     //::SendMessage(curScintilla, SCI_SETLINEINDENTATION, 2, 11);
