@@ -2037,7 +2037,6 @@ void fingerText()
       
             ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
         
-
             ////dynamic hotspot (chain snippet)
             chainSnippet(curScintilla, posCurrent);
             ////dynamic hotspot (keyword spot)

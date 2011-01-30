@@ -1,7 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
-#include <windows.h>
+#include "windows.h"
 /////////////////////////////////////////////////////////////////////////////
 // English (United States) resources
 
@@ -14,7 +14,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Dialog
 //
 
-IDD_SNIPPET_DOCK DIALOGEX 26, 41, 164, 351
+IDD_SNIPPET_DOCK DIALOGEX 26, 41, 163, 407
 STYLE DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW | WS_EX_WINDOWEDGE
 CAPTION "FingerText"
@@ -22,7 +22,7 @@ FONT 10, "Consolas", 0, 0, 0x0
 BEGIN
     EDITTEXT        ID_SNIPSHOW_EDIT,5,11,155,69,ES_MULTILINE | ES_READONLY
     PUSHBUTTON      "Edit",IDC_EDIT,44,81,35,15
-    LISTBOX         IDC_SNIPPET_LIST,3,131,157,217,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+    LISTBOX         IDC_SNIPPET_LIST,3,132,157,272,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
     PUSHBUTTON      "Save",IDC_SAVE,85,81,35,15
     PUSHBUTTON      "Create",IDC_CREATE,3,81,35,15
     PUSHBUTTON      "Delete",IDC_DELETE,126,81,35,15
@@ -66,8 +66,8 @@ GUIDELINES DESIGNINFO
 BEGIN
     IDD_SNIPPET_DOCK, DIALOG
     BEGIN
-        RIGHTMARGIN, 163
-        BOTTOMMARGIN, 348
+        RIGHTMARGIN, 162
+        BOTTOMMARGIN, 404
     END
 END
 #endif    // APSTUDIO_INVOKED
