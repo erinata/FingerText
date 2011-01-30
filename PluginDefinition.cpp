@@ -90,9 +90,7 @@ bool g_enable;
 bool g_editorView;
 //bool g_display;
 
-
-//char* snippetEditTemplate = "------ FingerText Snippet Editor View ------\r\n";
-
+// TODO: use a struct instead of a bunch of global variables
 // Config file content
 int g_version;
 int g_snippetListLength;
@@ -241,6 +239,8 @@ char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""), bool similar=fa
         char *tagType = NULL;
         if (level == 0)
         {
+            //sprintf(tagType,scope);
+            
             convertToUTF8(scope, &tagType);
         } else
         {            
@@ -441,6 +441,8 @@ void deleteSnippet()
 
 bool getLineChecked(char **buffer, HWND &curScintilla, int lineNumber, TCHAR* errorText)
 {
+    //TODO: consider using WORDENDPOSITION instead
+    // TODO: and check for more error, say the triggertext has to be one word
     bool problemSnippet;
 
     ::SendMessage(curScintilla,SCI_GOTOLINE,lineNumber,0);
@@ -452,7 +454,6 @@ bool getLineChecked(char **buffer, HWND &curScintilla, int lineNumber, TCHAR* er
         tagPosEnd = ::SendMessage(curScintilla,SCI_GETLENGTH,0,0);
     } else
     {
-
         int tagPosLineEnd = ::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,lineNumber,0);
         ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
         ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)" ");
@@ -610,9 +611,9 @@ void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int
 }
 
 // TODO: refactor the dynamic hotspot functions
-void chainSnippet(HWND &curScintilla, int startingPos)
+void chainSnippet(HWND &curScintilla, int &startingPos)
 {
-    char chainTagSign[] = "$[![(chain)";
+    char chainTagSign[] = "$[![(cha)";
     int chainTagSignLength = strlen(chainTagSign);
     char* chainHotSpotText;
     char* chainHotSpot;
@@ -648,7 +649,7 @@ void chainSnippet(HWND &curScintilla, int startingPos)
 
 }
 
-void executeCommand(HWND &curScintilla, int startingPos)
+void executeCommand(HWND &curScintilla, int &startingPos)
 {
     
     char cmdTagSign[] = "$[![(cmd)";
@@ -708,7 +709,7 @@ void executeCommand(HWND &curScintilla, int startingPos)
     }
 }
 
-void keyWordSpot(HWND &curScintilla, int startingPos)
+void keyWordSpot(HWND &curScintilla, int &startingPos)
 {
     char keyTagSign[] = "$[![(key)";
     int keyTagSignLength = strlen(keyTagSign);
@@ -739,6 +740,15 @@ void keyWordSpot(HWND &curScintilla, int startingPos)
             {
                 ::SendMessage(curScintilla,SCI_PASTE,0,0);
 	            
+            } else if (strcmp(keyHotSpotText,"CUT")==0)
+            {
+                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+                ::SendMessage(curScintilla,SCI_SETSEL,startingPos-1,startingPos);
+                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+                ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos-1,0);
+                ::SendMessage(curScintilla,SCI_WORDLEFTEXTEND,0,0);
+                startingPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+                ::SendMessage(curScintilla,SCI_CUT,0,0);
             } else if (strcmp(keyHotSpotText,"DATESHORT")==0)
             {
                 insertDateTime(true,DATE_SHORTDATE,curScintilla);
@@ -765,7 +775,6 @@ void keyWordSpot(HWND &curScintilla, int startingPos)
             } else if (strcmp(keyHotSpotText,"DIRECTORY")==0)
             {
                 insertCurrentPath(NPPM_GETCURRENTDIRECTORY,curScintilla);
-                
             }
             keyLimitCounter++;
             //////////////////////
@@ -781,7 +790,6 @@ void keyWordSpot(HWND &curScintilla, int startingPos)
     }
     
 }
-
 
 
 void insertCurrentPath(int msg, HWND &curScintilla)
@@ -811,7 +819,6 @@ void insertDateTime(bool date,int type, HWND &curScintilla)
 	char timeText[MAX_PATH];
 	WideCharToMultiByte((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, time, -1, timeText, MAX_PATH, NULL, NULL);
 	::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)timeText);
-
 }
 
 
@@ -899,7 +906,6 @@ bool hotSpotNavigation(HWND &curScintilla)
 
 int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, int firstPos, int signLength)
 {
-
     int posLine = ::SendMessage(curScintilla,SCI_LINEFROMPOSITION,0,0);
         
 	::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
@@ -978,7 +984,7 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
     int lineCurrent = ::SendMessage(curScintilla, SCI_LINEFROMPOSITION, posCurrent, 0);
     int initialIndent = ::SendMessage(curScintilla, SCI_GETLINEINDENTATION, lineCurrent, 0);
 
-    /////////////////
+    /////////////////////
     //::SendMessage(curScintilla,SCI_GOTOLINE,lineCurrent,0);
     //int posLineStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
     //::SendMessage(curScintilla,SCI_SETSELECTION,posLineStart,posLineStart+initialIndent);
@@ -1031,16 +1037,9 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
         int lineIndent=0;
         for (int i=lineCurrent+1;i<=lineInsertedSnippet;i++)
         {
-            /////////////
             lineIndent = ::SendMessage(curScintilla, SCI_GETLINEINDENTATION, i, 0);
-        
-            //::SendMessage(curScintilla, SCI_GOTOLINE, i, 0);
-            //::SendMessage(curScintilla, SCI_REPLACESEL, 0 , (LPARAM)indentText);
-            ///////////
             ::SendMessage(curScintilla, SCI_SETLINEINDENTATION, i, initialIndent+lineIndent);
         }
-
-        //delete [] indentText;
     }
     
     ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
@@ -1050,28 +1049,23 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
     ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
     ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
     ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"[>END<]");
-    //::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
     int posEndOfSnippet = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
         
     ::SendMessage(curScintilla,SCI_SETSELECTION,posEndOfSnippet,posEndOfInsertedText);
 
     ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
 	::SendMessage(curScintilla, SCI_GOTOPOS, posCurrent, 0);
-    // This cause problem when we trigger a long snippet and then a short snippet
-    // The problem is solved after using a better way to search for [>END<]
-
     //if (preserveSteps==false) 
 	//{
 	//	::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
 	//}
-
-    
     return true;
 }
 
 
 void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
 {
+    g_liveHintUpdate = 2;
     delete [] g_snippetCache;
     if (g_dbOpen)
     {
@@ -1207,7 +1201,6 @@ void setupConfigFile()
     
 }
 
-
 int getCurrentTag(HWND curScintilla, int posCurrent, char **buffer, int triggerLength)
 {
 	int length = 0;
@@ -1226,7 +1219,7 @@ int getCurrentTag(HWND curScintilla, int posCurrent, char **buffer, int triggerL
             escapeChar = "<>";
         }
 
-        char wordChar[MAX_PATH]="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+        char wordChar[MAX_PATH]="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         strcat(wordChar,escapeChar);
 
         ::SendMessage(curScintilla,	SCI_SETWORDCHARS, 0, (LPARAM)wordChar);
@@ -1240,12 +1233,12 @@ int getCurrentTag(HWND curScintilla, int posCurrent, char **buffer, int triggerL
     if (posCurrent - posBeforeTag < 100) // Max tag length 100
     {
         *buffer = new char[(posCurrent - posBeforeTag) + 1];
-		Sci_TextRange range;
-		range.chrg.cpMin = posBeforeTag;
-		range.chrg.cpMax = posCurrent;
-		range.lpstrText = *buffer;
+		Sci_TextRange tagRange;
+		tagRange.chrg.cpMin = posBeforeTag;
+		tagRange.chrg.cpMax = posCurrent;
+		tagRange.lpstrText = *buffer;
 
-	    ::SendMessage(curScintilla, SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
+	    ::SendMessage(curScintilla, SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&tagRange));
 		length = (posCurrent - posBeforeTag);
 	}
 	return length;
@@ -1296,7 +1289,6 @@ void snippetHintUpdate()
             int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
             char *partialTag;
 	        int tagLength = getCurrentTag(curScintilla, posCurrent, &partialTag);
-            //
             //wchar_t countText[10];
             //::_itow_s(tagLength, countText, 10, 10); 
             //::MessageBox(nppData._nppHandle, countText, TEXT("Trace"), MB_OK);
@@ -1454,15 +1446,27 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
 
     }
 
+    populateDockItems();
+
+    HWND curScintilla = getCurrentScintilla();
+    ::SendMessage(curScintilla,SCI_GRABFOCUS,0,0); 
+    
+    sqlite3_finalize(stmt);
+}
+
+void populateDockItems()
+{
     for (int j=0;j<g_snippetCacheSize;j++)
     {
         if (g_snippetCache[j].scope !=NULL)
         {
             char newText[200]=""; // TODO: this const length array problem has to be solve when we have scripting hotspot as the hotspot can get super long.
-        
+            
+            int triggerTextLength = strlen(g_snippetCache[j].triggerText);
+
             strcat(newText,"<");
             strcat(newText,g_snippetCache[j].scope);
-            strcat(newText,">   ");
+            strcat(newText,">     ");
             strcat(newText,g_snippetCache[j].triggerText);
 
             size_t origsize = strlen(newText) + 1;
@@ -1475,10 +1479,6 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
         }
     }
 
-    HWND curScintilla = getCurrentScintilla();
-    ::SendMessage(curScintilla,SCI_GRABFOCUS,0,0); 
-    
-    sqlite3_finalize(stmt);
 }
 
 void clearCache()
@@ -1842,16 +1842,17 @@ void showAbout()
     ::MessageBox(nppData._nppHandle, VERSION_TEXT_FULL, TEXT("FingerText"), MB_OK);
 }
 
-void keyUpdate()
-{
-    if (g_editorView)
-    {
-        refreshAnnotation();
-    } else
-    {
-        snippetHintUpdate();
-    }
-}
+//void keyUpdate()
+//{
+//    if (g_editorView)
+//    {
+//        refreshAnnotation();
+//    }
+//    //else
+//    //{
+//    //    snippetHintUpdate();
+//    //}
+//}
 
 void refreshAnnotation()
 {
@@ -1899,7 +1900,14 @@ bool triggerTag(int &posCurrent, int triggerLength)
     bool tagFound = false;
     char *tag;
 	int tagLength = getCurrentTag(curScintilla, posCurrent, &tag, triggerLength);
+
+
     int posBeforeTag=posCurrent-tagLength;
+
+    //char *argument;
+	//int separatorLength = getCurrentTag(curScintilla, posBeforeTag-1, &argument,0);
+    //int posBeforeseparator=posBeforeTag-separatorLength;
+    
     if (tagLength != 0)
 	{
         char *expanded;
@@ -1928,17 +1936,19 @@ bool triggerTag(int &posCurrent, int triggerLength)
 
     return tagFound;
 }
+
 void tagComplete()
+{
+    if (snippetComplete())
+    {
+        snippetHintUpdate();
+    }
+}
+
+bool snippetComplete()
 {
     HWND curScintilla = getCurrentScintilla();
     int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-
-    snippetComplete(posCurrent);
-}
-
-bool snippetComplete(int &posCurrent)
-{
-    HWND curScintilla = getCurrentScintilla();
 
     bool tagFound = false;
     char *tag;
@@ -2019,38 +2029,53 @@ void fingerText()
         if (tagFound) ::SendMessage(curScintilla,SCI_AUTOCCANCEL,0,0);
         posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
 
-        ////dynamic hotspot (chain snippet)
-        chainSnippet(curScintilla, posCurrent);
-        //
-        ////dynamic hotspot (keyword spot)
-        keyWordSpot(curScintilla, posCurrent);
-        //
-        ////dynamic hotspot (Command Line)
-        executeCommand(curScintilla, posCurrent);
-        //
+        ::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
+        int specialSpot=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"$[![");
+        
+        if (specialSpot>=0)
+        {
+      
+            ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
+        
+
+            ////dynamic hotspot (chain snippet)
+            chainSnippet(curScintilla, posCurrent);
+            ////dynamic hotspot (keyword spot)
+            keyWordSpot(curScintilla, posCurrent);
+            ////dynamic hotspot (Command Line)
+            executeCommand(curScintilla, posCurrent);
+
+        }
+            
         if (g_preserveSteps==1) 
 	    {
 		    ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
 	    }
-
-        	  
-        bool spotFound = hotSpotNavigation(curScintilla);
-
+        bool navSpot = false;
         
-
+        if (specialSpot>=0)
+        {
+            ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
+            navSpot = hotSpotNavigation(curScintilla);
+        }
+        
 
         bool completeFound = false;
         if (g_tabTagCompletion == 1)
         {
-            if ((spotFound == false) && (tagFound == false)) 
+            if ((navSpot == false) && (tagFound == false)) 
 		    {
                 ::SendMessage(curScintilla, SCI_GOTOPOS, posCurrent, 0);
-                completeFound = snippetComplete(posCurrent);
+                completeFound = snippetComplete();
+                if (completeFound)
+                {
+                    snippetHintUpdate();
+                }
 		    }
         }
         	 
 
-        if ((spotFound == false) && (tagFound == false) && (completeFound==false)) 
+        if ((navSpot == false) && (tagFound == false) && (completeFound==false)) 
         {
             restoreTab(curScintilla, posCurrent, posSelectionStart, posSelectionEnd);
         }

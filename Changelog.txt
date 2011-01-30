@@ -1,7 +1,12 @@
 current development version
 
 0.4.16
+Add (key)CUT dynamic hotspots
 fixing bug of saving file in programfile folders without admin right
+performance improvment in live search
+fixed tag completion not updating snippetdock hint
+fixed infinite recusion bug in keyword and command hotspot
+the chain snippet is indicated by $[![(cha)]!] instead of $[![(chain)]!] so that different hotspots can line up better.
 
 0.4.15
 add (cmd) dynamic hotpots

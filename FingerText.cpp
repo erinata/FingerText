@@ -118,22 +118,35 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
         case NPPN_BUFFERACTIVATED:
             
             updateMode();
-            keyUpdate();
+            //keyUpdate();
+            refreshAnnotation();
             updateDockItems();
             break;
         
             //TODO: Try to deal with repeated triggering of snippetHintUpdate and keyUpdate
+        case SCN_CHARADDED:
+            //keyUpdate();
+            refreshAnnotation();
+            //break;   // should also do snippetHintUpdate() when SCN_CHARADDED
         case SCN_MODIFIED:
+            //switch (notifyCode->modificationType)
+            //{
+            //    
+            //    case SC_MOD_DELETETEXT:
+            //        alert();
+            //        snippetHintUpdate();
+            //        break;
+            //    case SC_MOD_BEFOREDELETE:
+            //        alert();
+            //        snippetHintUpdate();
+            //        break;
+            //}
             snippetHintUpdate();
             break;
-        case SCN_CHARADDED:
-            keyUpdate();
-            // trigger when anything is typed
-            // possible implementation of live search of snippets
-            // alternatives can be SCN_CHARADDED, SCEN_CHANGE or SCN_MODIFIED
-            break;
+        
         case NPPN_FILESAVED:
-            keyUpdate();
+            //keyUpdate();
+            refreshAnnotation();
             promptSaveSnippet();
             break;
     }
