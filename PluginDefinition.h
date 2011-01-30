@@ -72,7 +72,7 @@ const TCHAR NPP_PLUGIN_NAME[] = TEXT("FingerText");
 //
 // Here define the number of your plugin commands
 //
-const int nbFunc = 12;
+const int nbFunc = 18;
 
 
 //
@@ -110,6 +110,9 @@ void pluginShutdown();
 
 HWND getCurrentScintilla();
 void toggleDisable();
+void writeConfig();
+void resetDefaultSettings();
+void writeConfigText(int configInt, TCHAR* section);
 void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
 void chainSnippet(HWND &curScintilla, int &startingPos);
 void executeCommand(HWND &curScintilla, int &startingPos);
@@ -117,6 +120,13 @@ void keyWordSpot(HWND &curScintilla, int &startingPos);
 bool hotSpotNavigation(HWND &curScintilla);
 int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, int firstPos, int signLength);
 void showPreview();
+void selectionToSnippet();
+void insertHotSpotSign();
+void insertChainSnippetSign();
+void insertKeyWordSpotSign();
+void insertCommandLineSign();
+void insertTagSign(char * tagSign, int position);
+bool getLineChecked(char **buffer, HWND &curScintilla, int lineNumber, TCHAR* errorText, bool import);
 bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBeforeTag);
 void openDatabase();
 int getCurrentTag(HWND curScintilla, int posCurrent, char **buffer, int triggerLength=0);
@@ -139,7 +149,6 @@ void importSnippets();
 void snippetHintUpdate();
 void promptSaveSnippet(TCHAR* message = NULL);
 void updateMode();
-//void keyUpdate();
 void refreshAnnotation();
 void showHelp();
 void showAbout();

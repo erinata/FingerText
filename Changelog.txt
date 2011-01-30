@@ -1,5 +1,11 @@
 current development version
 
+0.4.17
+restructure config loading
+adding command for inserting hotspots
+adding command to create snippet from selection
+
+
 0.4.16
 Add (key)CUT dynamic hotspots
 fixing bug of saving file in programfile folders without admin right

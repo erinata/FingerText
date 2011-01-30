@@ -232,16 +232,6 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 
 - Notepad++ 3.8.6(Unicode), Windows 7 Ultimate 64bit 
 
-== To Do List
-
-- Dynamic Snippets
-
-- More efficient import and export
-
-- More fault tolerant snippet editor.
-
-- Snippet Preview
-
 == Credits
 
 Many thanks to..........
