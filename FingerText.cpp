@@ -87,6 +87,7 @@ extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData)
 {
 	nppData = notpadPlusData;
 	commandMenuInit();
+    setConfigAndDatabase();
 }
 
 extern "C" __declspec(dllexport) const TCHAR * getName()
@@ -126,7 +127,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             //TODO: Try to deal with repeated triggering of snippetHintUpdate and keyUpdate
         case SCN_CHARADDED:
             //keyUpdate();
-            refreshAnnotation();
+            //refreshAnnotation();
             //break;   // should also do snippetHintUpdate() when SCN_CHARADDED
         case SCN_MODIFIED:
             //switch (notifyCode->modificationType)
@@ -142,11 +143,13 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             //        break;
             //}
             snippetHintUpdate();
+            
             break;
         
         case NPPN_FILESAVED:
             //keyUpdate();
-            refreshAnnotation();
+            snippetHintUpdate();
+            //refreshAnnotation();
             promptSaveSnippet();
             break;
     }

@@ -72,7 +72,6 @@ typedef void (__cdecl * PFUNCPLUGINCMD)();
 typedef void (__cdecl * PBENOTIFIED)(SCNotification *);
 typedef LRESULT (__cdecl * PMESSAGEPROC)(UINT Message, WPARAM wParam, LPARAM lParam);
 
-
 struct ShortcutKey {
 	bool _isCtrl;
 	bool _isAlt;

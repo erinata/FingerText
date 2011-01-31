@@ -72,7 +72,7 @@ const TCHAR NPP_PLUGIN_NAME[] = TEXT("FingerText");
 //
 // Here define the number of your plugin commands
 //
-const int nbFunc = 18;
+const int nbFunc = 19;
 
 
 //
@@ -120,12 +120,14 @@ void keyWordSpot(HWND &curScintilla, int &startingPos);
 bool hotSpotNavigation(HWND &curScintilla);
 int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, int firstPos, int signLength);
 void showPreview();
+int searchNext(HWND &curScintilla, char* searchText );
 void selectionToSnippet();
 void insertHotSpotSign();
 void insertChainSnippetSign();
 void insertKeyWordSpotSign();
 void insertCommandLineSign();
-void insertTagSign(char * tagSign, int position);
+bool getLineChecked(char **buffer, HWND &curScintilla, int lineNumber, TCHAR* errorText);
+void insertTagSign(char * tagSign);
 bool getLineChecked(char **buffer, HWND &curScintilla, int lineNumber, TCHAR* errorText, bool import);
 bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBeforeTag);
 void openDatabase();
@@ -150,6 +152,7 @@ void snippetHintUpdate();
 void promptSaveSnippet(TCHAR* message = NULL);
 void updateMode();
 void refreshAnnotation();
+void settings();
 void showHelp();
 void showAbout();
 void insertDateTime(bool date,int type, HWND &curScintilla);

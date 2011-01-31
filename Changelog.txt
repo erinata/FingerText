@@ -2,9 +2,10 @@ current development version
 
 0.4.17
 restructure config loading
-adding command for inserting hotspots
-adding command to create snippet from selection
-
+Added command for inserting different kinds of hotspots
+Added command to create snippet from selection
+Added command to change settings in config.ini
+SnippetDock items are lining up better
 
 0.4.16
 Add (key)CUT dynamic hotspots

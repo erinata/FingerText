@@ -65,16 +65,13 @@
     <ClInclude Include="DockingFeature\Window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="versionrc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DockingFeature\SnippetDock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DockingFeature\resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="VersionNumber.h">
+    <ClInclude Include="Version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
