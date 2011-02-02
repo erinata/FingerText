@@ -136,7 +136,6 @@ DockingDlg snippetDock;
 #define SEPARATOR_FOUR_INDEX 17
 #define TESTING_INDEX 18
 
-
 //
 // Initialize your plugin data here
 // It will be called while plugin loading   
@@ -416,7 +415,6 @@ void createSnippet()
     refreshAnnotation();
 }
 
-
 void editSnippet()
 {
     HWND curScintilla = getCurrentScintilla();
@@ -565,7 +563,6 @@ bool getLineChecked(char **buffer, HWND &curScintilla, int lineNumber, TCHAR* er
     return problemSnippet;
 }
 
-
 //TODO: saveSnippet() and importSnippet() need refactoring sooooooo badly..................
 void saveSnippet()
 {
@@ -685,185 +682,150 @@ void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int
 }
 
 // TODO: refactor the dynamic hotspot functions
-void chainSnippet(HWND &curScintilla, int &startingPos)
+void dynamicHotspot(HWND &curScintilla, int &startingPos, int hotSpotType)
 {
-    char chainTagSign[] = "$[![(cha)";
-    int chainTagSignLength = strlen(chainTagSign);
-    char* chainHotSpotText;
-    char* chainHotSpot;
-    int chainSpot = -1;
+    char* tagSign;
+    if (hotSpotType == 1)
+    {
+        tagSign = "$[![(cha)";
+    } else if (hotSpotType == 2)
+    {
+        tagSign = "$[![(key)";
+    } else
+    {
+        tagSign = "$[![(cmd)";
+    }
 
-    int chainLimitCounter = 0;
+    
+    int tagSignLength = strlen(tagSign);
+    char* hotSpotText;
+    char* hotSpot;
+    int spot = -1;
+
+    int limitCounter = 0;
     do 
     {
         ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos,0);
         //::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
         //chainSpot=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)chainTagSign);
-        chainSpot = searchNext(curScintilla, chainTagSign);
-        if (chainSpot>=0)
+        spot = searchNext(curScintilla, tagSign);
+        if (spot>=0)
 	    {
-            int chainFirstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-            int chainSecondPos = grabHotSpotContent(curScintilla, &chainHotSpotText, &chainHotSpot, chainFirstPos,chainTagSignLength);
+            int firstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+            int secondPos = grabHotSpotContent(curScintilla, &hotSpotText, &hotSpot, firstPos,tagSignLength);
             
-            int triggerPos = strlen(chainHotSpotText)+chainFirstPos;
-
             ///////////////////
-            ::SendMessage(curScintilla,SCI_GOTOPOS,triggerPos,0);
-            triggerTag(triggerPos,strlen(chainHotSpotText));
+            if (hotSpotType == 1)
+            {
+                chainSnippet(curScintilla, firstPos, hotSpotText);
+            } else  if (hotSpotType == 2)
+            {
+                keyWordSpot(curScintilla, firstPos,hotSpotText, startingPos);
+            } else
+            {
+                executeCommand(curScintilla, firstPos, hotSpotText);
+            }
             //////////////////////
-            chainLimitCounter++;
+            limitCounter++;
         }
         
-    } while ((chainSpot>=0) && (chainLimitCounter<g_chainLimit));
+    } while ((spot>=0) && (limitCounter<g_chainLimit));
 
-    if (chainLimitCounter>0)
+    if (limitCounter>=g_chainLimit)
     {
-        delete [] chainHotSpot;
-        delete [] chainHotSpotText;
+        ::MessageBox(nppData._nppHandle, TEXT("Dynamic hotspots triggering limit exceeded."), TEXT("FingerText"), MB_OK);
     }
+
+    if (limitCounter>0)
+    {
+        delete [] hotSpot;
+        delete [] hotSpotText;
+    }
+
+}
+void chainSnippet(HWND &curScintilla, int &firstPos, char* hotSpotText)
+{
+    int triggerPos = strlen(hotSpotText)+firstPos;
+    ::SendMessage(curScintilla,SCI_GOTOPOS,triggerPos,0);
+    triggerTag(triggerPos,strlen(hotSpotText));
+}
+void executeCommand(HWND &curScintilla, int &firstPos, char* hotSpotText)
+{
+    int triggerPos = strlen(hotSpotText)+firstPos;
+    ::SendMessage(curScintilla,SCI_SETSEL,firstPos,triggerPos);
+    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+    
+    char  psBuffer[999];
+    FILE   *pPipe;
+    int resultLength;
+    //TODO: try the createprocess instead of _popen?
+    //http://msdn.microsoft.com/en-us/library/ms682499(v=vs.85).aspx
+
+    //pPipe = _popen( "ruby -e 'puts 1+1'", "rt" );
+    if( (pPipe = _popen( hotSpotText, "rt" )) == NULL )
+    {    
+        return;
+    }
+    
+    ::memset(psBuffer,0,sizeof(psBuffer));
+
+    while(fgets(psBuffer, 999, pPipe))
+    {
+        ::SendMessage(curScintilla, SCI_REPLACESEL, 128, (LPARAM)psBuffer);
+        ::memset (psBuffer,0,sizeof(psBuffer));
+    }
+    _pclose( pPipe );
+
+
 }
 
-void executeCommand(HWND &curScintilla, int &startingPos)
+void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &startingPos)
 {
-    
-    char cmdTagSign[] = "$[![(cmd)";
-    int cmdTagSignLength = strlen(cmdTagSign);
-    char* cmdHotSpotText;
-    char* cmdHotSpot;
-    int cmdSpot = -1;
+    int triggerPos = strlen(hotSpotText)+firstPos;
+    //::SendMessage(curScintilla,SCI_GOTOPOS,triggerPos,0);
+    ::SendMessage(curScintilla,SCI_SETSEL,firstPos,triggerPos);
+    //TODO: probably should use enum type...........
 
-    int cmdLimitCounter = 0;       
-    do 
+    if (strcmp(hotSpotText,"PASTE")==0)
     {
-        ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos,0);
-        //::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-        //cmdSpot=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)cmdTagSign);
-        cmdSpot = searchNext(curScintilla, cmdTagSign);
-        if (cmdSpot>=0)
-	    {
-            int cmdFirstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-            int cmdSecondPos = grabHotSpotContent(curScintilla, &cmdHotSpotText, &cmdHotSpot, cmdFirstPos,cmdTagSignLength);
-
-            int triggerPos = strlen(cmdHotSpotText)+cmdFirstPos;
-            ///////////////////////////
-            ::SendMessage(curScintilla,SCI_SETSEL,cmdFirstPos,triggerPos);
-            ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
-            
-            char  psBuffer[999];
-            FILE   *pPipe;
-            int resultLength;
-            //TODO: try the createprocess instead of _popen?
-            //http://msdn.microsoft.com/en-us/library/ms682499(v=vs.85).aspx
-
-            //pPipe = _popen( "ruby -e 'puts 1+1'", "rt" );
-            if( (pPipe = _popen( cmdHotSpotText, "rt" )) == NULL )
-            {    
-                break;
-            }
-    
-            ::memset(psBuffer,0,sizeof(psBuffer));
-
-            while(fgets(psBuffer, 999, pPipe))
-            {
-                ::SendMessage(curScintilla, SCI_REPLACESEL, 128, (LPARAM)psBuffer);
-                ::memset (psBuffer,0,sizeof(psBuffer));
-            }
-            _pclose( pPipe );
-
-            
-            /////////////////////////
-            cmdLimitCounter++;
-        } 
-
-    } while ((cmdSpot>=0) && (cmdLimitCounter<g_chainLimit));
-
-    if (cmdLimitCounter>0)
+        ::SendMessage(curScintilla,SCI_PASTE,0,0);
+	    
+    } else if (strcmp(hotSpotText,"CUT")==0)
     {
-        delete [] cmdHotSpot;
-        delete [] cmdHotSpotText;
-    }
-}
-
-void keyWordSpot(HWND &curScintilla, int &startingPos)
-{
-    char keyTagSign[] = "$[![(key)";
-    int keyTagSignLength = strlen(keyTagSign);
-    char* keyHotSpotText;
-    char* keyHotSpot;
-    int keySpot = -1;
-
-    int keyLimitCounter = 0;
-    do 
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+        ::SendMessage(curScintilla,SCI_SETSEL,startingPos-1,startingPos);
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+        ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos-1,0);
+        ::SendMessage(curScintilla,SCI_WORDLEFTEXTEND,0,0);
+        startingPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+        ::SendMessage(curScintilla,SCI_CUT,0,0);
+    } else if (strcmp(hotSpotText,"DATESHORT")==0)
     {
-        ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos,0);
-        //::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-        //keySpot=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)keyTagSign);
-        keySpot = searchNext(curScintilla, keyTagSign);
-        if (keySpot>=0)
-	    {
-            int keyFirstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-            int keySecondPos = grabHotSpotContent(curScintilla, &keyHotSpotText, &keyHotSpot, keyFirstPos,keyTagSignLength);
-
-            int triggerPos = strlen(keyHotSpotText)+keyFirstPos;
-
-            ////////////////////////
-            //::SendMessage(curScintilla,SCI_GOTOPOS,triggerPos,0);
-            ::SendMessage(curScintilla,SCI_SETSEL,keyFirstPos,triggerPos);
-            //TODO: probably should use enum type...........
-
-            if (strcmp(keyHotSpotText,"PASTE")==0)
-            {
-                ::SendMessage(curScintilla,SCI_PASTE,0,0);
-	            
-            } else if (strcmp(keyHotSpotText,"CUT")==0)
-            {
-                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
-                ::SendMessage(curScintilla,SCI_SETSEL,startingPos-1,startingPos);
-                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
-                ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos-1,0);
-                ::SendMessage(curScintilla,SCI_WORDLEFTEXTEND,0,0);
-                startingPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-                ::SendMessage(curScintilla,SCI_CUT,0,0);
-            } else if (strcmp(keyHotSpotText,"DATESHORT")==0)
-            {
-                insertDateTime(true,DATE_SHORTDATE,curScintilla);
-	            
-            } else if (strcmp(keyHotSpotText,"DATELONG")==0)
-            {
-                insertDateTime(true,DATE_LONGDATE,curScintilla);
-                
-            } else if (strcmp(keyHotSpotText,"TIMESHORT")==0)
-            {
-                insertDateTime(false,TIME_NOSECONDS,curScintilla);
-                
-            } else if (strcmp(keyHotSpotText,"TIMELONG")==0)
-            {
-                insertDateTime(false,0,curScintilla);
-            } else if (strcmp(keyHotSpotText,"FILENAME")==0)
-            {
-                insertCurrentPath(NPPM_GETNAMEPART,curScintilla);
-                
-            } else if (strcmp(keyHotSpotText,"EXTNAME")==0)
-            {
-                insertCurrentPath(NPPM_GETEXTPART,curScintilla);
-                
-            } else if (strcmp(keyHotSpotText,"DIRECTORY")==0)
-            {
-                insertCurrentPath(NPPM_GETCURRENTDIRECTORY,curScintilla);
-            }
-            
-            //////////////////////
-            keyLimitCounter++;
-        }
+        insertDateTime(true,DATE_SHORTDATE,curScintilla);
+	    
+    } else if (strcmp(hotSpotText,"DATELONG")==0)
+    {
+        insertDateTime(true,DATE_LONGDATE,curScintilla);
         
-    } while ((keySpot>=0) && (keyLimitCounter<g_chainLimit));
-    //while ((keySpot>=0) && (keyLimitCounter<g_keyLimit));
-
-    if (keyLimitCounter>0)
+    } else if (strcmp(hotSpotText,"TIMESHORT")==0)
     {
-        delete [] keyHotSpot;
-        delete [] keyHotSpotText;
-    }
+        insertDateTime(false,TIME_NOSECONDS,curScintilla);
+        
+    } else if (strcmp(hotSpotText,"TIMELONG")==0)
+    {
+        insertDateTime(false,0,curScintilla);
+    } else if (strcmp(hotSpotText,"FILENAME")==0)
+    {
+        insertCurrentPath(NPPM_GETNAMEPART,curScintilla);
+        
+    } else if (strcmp(hotSpotText,"EXTNAME")==0)
+    {
+        insertCurrentPath(NPPM_GETEXTPART,curScintilla);
+        
+    } else if (strcmp(hotSpotText,"DIRECTORY")==0)
+    {
+        insertCurrentPath(NPPM_GETCURRENTDIRECTORY,curScintilla);
+    }  
 }
 
 void insertCurrentPath(int msg, HWND &curScintilla)
@@ -1067,7 +1029,6 @@ void insertTagSign(char * tagSign)
 {
     if (g_editorView)
     {
-        //TODO: Default value?
         HWND curScintilla = getCurrentScintilla();
         int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
         ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
@@ -1182,11 +1143,8 @@ void setConfigAndDatabase()
     WideCharToMultiByte(CP_UTF8, 0, path, -1, cpath, multibyteLength, 0, 0);
     strcat(cpath, "\\FingerText.db3");
     
-    if (PathFileExists(path) == FALSE) 
-    {
-		::CreateDirectory(path, NULL);
-	}
-
+    if (PathFileExists(path) == FALSE) ::CreateDirectory(path, NULL);
+    
     int rc = sqlite3_open(cpath, &g_db);
     if (rc)
     {
@@ -1402,6 +1360,8 @@ void snippetHintUpdate()
 void updateDockItems(bool withContent, bool withAll, char* tag)
 {
     //TODO: consider temporary turning off liveupdate when updating?
+    g_liveHintUpdate--;
+
     int scopeLength=0;
     int triggerLength=0;
     int contentLength=0;
@@ -1533,8 +1493,8 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
     sqlite3_finalize(stmt);
     populateDockItems();
     
-    ::SendMessage(getCurrentScintilla(),SCI_GRABFOCUS,0,0); 
-    
+    g_liveHintUpdate++;
+    ::SendMessage(getCurrentScintilla(),SCI_GRABFOCUS,0,0);   
     
 }
 
@@ -1553,15 +1513,12 @@ void populateDockItems()
             strcat(newText,"<");
             strcat(newText,g_snippetCache[j].scope);
             strcat(newText,">");
-            int scopeLength = strlen(g_snippetCache[j].scope);
-            scopeLength = 12 - scopeLength;
+            int scopeLength = 12 - strlen(g_snippetCache[j].scope);
             if (scopeLength < 3) scopeLength =3;
             for (int i=0;i<scopeLength;i++)
             {
                 strcat(newText," ");
             }
-
-
             strcat(newText,g_snippetCache[j].triggerText);
 
             size_t origsize = strlen(newText) + 1;
@@ -1752,8 +1709,6 @@ void importSnippets()
             
                 ::SendMessage(curScintilla,SCI_SETSELECTION,0,snippetPosEnd+1); // This +1 corrupt the ! in !$[FingerTextData FingerTextData]@# so that the program know a snippet is finished importing
                 ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
-
-
                 //::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
                 //::SendMessage(curScintilla,SCI_SETSELECTION,0,::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
                 //::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
@@ -1802,7 +1757,6 @@ void importSnippets()
                                 sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
                                 sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
                                 sqlite3_step(stmt);
-                        
                             } else
                             {
                                 ::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT("FingerText"), MB_OK);
@@ -1852,11 +1806,10 @@ void importSnippets()
                 wcscat(importCountText,TEXT(" snippets are imported."));
             } else if (importCount==1)
             {
-                wcscat(importCountText,TEXT("A snippet is imported."));
+                wcscat(importCountText,TEXT("1 snippet is imported."));
             } else
             {
                 wcscat(importCountText,TEXT("Snippet import is aborted."));
-          
             }
             //::MessageBox(nppData._nppHandle, TEXT("Complete importing snippets"), TEXT("FingerText"), MB_OK);
             ::MessageBox(nppData._nppHandle, importCountText, TEXT("FingerText"), MB_OK);
@@ -1890,7 +1843,7 @@ void promptSaveSnippet(TCHAR* message)
             saveSnippet();
         } else if (::SendMessage(curScintilla,SCI_GETMODIFY,0,0)!=0)
         {
-            //TODO: can be merged with the function promptsavesnippet();
+        
             int messageReturn=::MessageBox(nppData._nppHandle, message, TEXT("FingerText"), MB_YESNO);
             if (messageReturn==IDYES)
             {
@@ -2087,10 +2040,7 @@ bool triggerTag(int &posCurrent, int triggerLength)
 
 void tagComplete()
 {
-    if (snippetComplete())
-    {
-        snippetHintUpdate();
-    }
+    if (snippetComplete()) snippetHintUpdate();
 }
 
 bool snippetComplete()
@@ -2185,11 +2135,14 @@ void fingerText()
             ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
         
             ////dynamic hotspot (chain snippet)
-            chainSnippet(curScintilla, posCurrent);
+            //chainSnippet(curScintilla, posCurrent);
+            dynamicHotspot(curScintilla, posCurrent, 1);
             ////dynamic hotspot (keyword spot)
-            keyWordSpot(curScintilla, posCurrent);
+            //keyWordSpot(curScintilla, posCurrent);
+            dynamicHotspot(curScintilla, posCurrent, 2);
             ////dynamic hotspot (Command Line)
-            executeCommand(curScintilla, posCurrent);
+            //executeCommand(curScintilla, posCurrent);
+            dynamicHotspot(curScintilla, posCurrent, 3);
 
         }
             
@@ -2253,17 +2206,17 @@ void testing()
     ::MessageBox(nppData._nppHandle, TEXT("Testing!"), TEXT("Trace"), MB_OK);
     
     HWND curScintilla = getCurrentScintilla();
-    
-    // create process, no console window
-    STARTUPINFO         si;
-    PROCESS_INFORMATION pi;
-    //TCHAR               cmdLine[MAX_PATH] = L"npp -multiInst";
-    TCHAR               cmdLine[MAX_PATH] = L"dir > d:\\temp.txt";
 
-    ::ZeroMemory(&si, sizeof(si));
-    si.cb = sizeof(si);
-    
-    ::CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+    // create process, no console window
+    //STARTUPINFO         si;
+    //PROCESS_INFORMATION pi;
+    ////TCHAR               cmdLine[MAX_PATH] = L"npp -multiInst";
+    //TCHAR               cmdLine[MAX_PATH] = L"dir > d:\\temp.txt";
+    //
+    //::ZeroMemory(&si, sizeof(si));
+    //si.cb = sizeof(si);
+    //
+    //::CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
     
     
     //Console::ReadLine();

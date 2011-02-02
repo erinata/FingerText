@@ -44,7 +44,7 @@ To verify you have imported the snippets correctly, go to notepad++ menu > Plugi
 
 Here I assume the you have already install FingerText and imported the sample snippets. If you are not, please refer to previous sections.
 
-Open a new file in notepad++ and go to notepad++ menu > Plugins > FingerText > Show SnippetDock. A Dialog with a list of available plugins should show up. Here you can see a list of available snippets. There is one of them called "<GLOBAL> num". "num" is the trigger text of the snippet. To trigger it, type in "num" (with out quotes) and hit the [Tab] key.
+Open a new file in notepad++ and go to notepad++ menu > Plugins > FingerText > Show SnippetDock. A Dialog with a list of available plugins should show up. Here you can see a list of available snippets. There is one of them called "<GLOBAL> num". "num" is the trigger text of the snippet. To trigger it, type in "num" (without quotes) and hit the [Tab] key.
 
   num[Tab]
 

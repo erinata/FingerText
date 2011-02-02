@@ -36,7 +36,7 @@
 #define WELCOME_TEXT "Thanks for Upgrading to FingerText 0.4.17.0(Alpha)."
 #define VERSION_TEXT_FULL TEXT("\
 FingerText 0.4.17.0(Alpha)\r\n\
-January 2011\r\n\r\n\
+February 2011\r\n\r\n\
 Author: Tom Lam\r\n\
 Email: erinata@gmail.com\r\n\r\n\
 Update to the lastest version:\r\n\
@@ -53,7 +53,8 @@ Navigate to next Hotspot --- Hit the tab key\r\n\
 Show SnippetDock --- Menu>Plugins>FingerText>Toggle On/Off SnippetDock\r\n\
 AutoComplete Tag --- Menu>Plugins>FingerText>Tag Completion\r\n\
 Goto Snippet Editor --- Double click snippets on the SnippetDock\r\n\
-Create New Snippets --- Click Create button on the SnippetDock\r\n\
+Create New Snippet --- Click Create button on the SnippetDock\r\n\
+Create snippet from selection -- Menu>Plugins>FingerText>Create snippet from selection\r\n\
 Save Snippet --- In the Snippet Editor View, Click Save Button or Ctrl+S\r\n\
 Delete Snippet --- Select a snippet on SnippetDock and Click Delete Button\r\n\
 Export Snippets --- Menu>Plugins>FingerText>Export Snippets\r\n\
