@@ -22,21 +22,21 @@ https://github.com/downloads/erinata/FingerText/FingerText0.4.11_ScreenClip_3.pn
 
 == Install
 
-Download the file "FingerText - 0.4.16.zip" at 
-https://github.com/downloads/erinata/FingerText/FingerText%20-%200.4.16.zip
+Download the file "FingerText - 0.5.0.zip" at 
+https://github.com/downloads/erinata/FingerText/FingerText%20-%200.5.0.zip
 
 Unzip the package and copy the FingerText.dll to the plugins folder of Notepad++. This is the only file you need to run FingerText in notepad++.
 
-The changelog.txt and readme.rdoc are for your reference. And the FingerText0.4.16SampleSnippets.ftd is a file containing some sample snippets. (You need this if you want to follow the usage guide in this document)
+The changelog.txt and readme.rdoc are for your reference. And the FingerText0.5.0SampleSnippets.ftd is a file containing some sample snippets. (You need this if you want to follow the usage guide in this document)
 
 == Importing Sample Snippets
 
 You should have FingerText installed. If you are in doubt, go to the notepad++ menu, there should be "FingerText" under "Plugins".
 
-To import the sample snippets, download FingerText0.4.16SampleSnippets.ftd from 
-https://github.com/downloads/erinata/FingerText/FingerText0.4.16SampleSnippets.ftd
+To import the sample snippets, download FingerText0.5.0SampleSnippets.ftd from 
+https://github.com/downloads/erinata/FingerText/FingerText0.5.0SampleSnippets.ftd
 
-Go to notepad++ menu > plugin > FingerText > Import Snippets. Choose the file FingerText0.4.16SampleSnippets.ftd and all the sample snippets will be installed.
+Go to notepad++ menu > plugin > FingerText > Import Snippets. Choose the file FingerText0.5.0SampleSnippets.ftd and all the sample snippets will be installed.
 
 To verify you have imported the snippets correctly, go to notepad++ menu > Plugins > FingerText > Show SnippetDock. A Dialog with a list of available snippets should show up.
 
@@ -92,7 +92,9 @@ To see feature this in action, open a .cpp file and trigger the snippet "templat
 
 == Creating and Editing Snippets
 
-To create new snippets, click the create button at the SnippetDock. A new document is opened and you can edit the Trigger Text, Scope and you can enter your snippet content. REMEMBER to place a [>END<] at the end of the snippet. Click the save button when you finish editing, or you can use the shortkey Ctrl+S.
+To create new snippets, the easiest way is to select some text in your document, and go to menu>Plugins>FingerText>Create snippet from selection. The Snippet editor shows up and you can edit the TriggerText and Scope. Click the save button when you finish editing, or you can use the shortkey Ctrl+S.
+
+Alternatively, you can click the create button at the SnippetDock. The snippet editor shows up and you can edit the Trigger Text, Scope and you can enter your snippet content. REMEMBER to place a [>END<] at the end of the snippet. Click the save button when you finish editing, or you can use the shortkey Ctrl+S.
 
 To edit a snippet, select the snippet on the snippet list and click the edit button. You can also double click on the list to edit a particular snippet. Click the save button when you finish editing.
 
@@ -133,27 +135,35 @@ The .ftd files are in plain text so you can edit them directly too. But don't do
 - snippet triggering (stable) - snippets are default to be triggered by tab. You can change it to the hotkey you like but I assume that you are using the default hotkey
 - static hotspots (stable) - static hotspots are indicated by $[![XXXXX]!] where XXXXX is the default value of the hotspots. This won't be changed unless serious compatibility issues happen.
 - dynamic hotspots (not stable) - currently there are 3 kinds of dynamic hotspots, chain, keyword and command. They are indicated by $[![(cha)XXXXX]!], $[![(key)XXXXX]!] and $[![(cmd)XXXXX]!] respectively. I am still experimenting what's the best way to do it so do expect changes in future releases.
+- Folder Structure (stable) - the FingerText.ini and FingerText.db3 file are staying in config/FingerText folder.
 
-== Upgrading from 0.4.15
+== Upgrading from 0.4.15 or 0.4.16
+
+If you want to use your snippets after you upgrade to 0.5.0, you can go to the config folder and move the FingerText.db3 file to the config\FingerText folder after update.
 
 chain snippet is indicated by $[![(cha)]!] instead of $[![(chain)]!] 
 
 == Upgrading from 0.4.4 or 0.4.11
 
-Everything is compatibile. Just make sure that you restart notepad++ after updating the plugin.
+If you want to use your snippets after you upgrade to 0.5.0, you can go to the config folder and move the FingerText.db3 file to the config\FingerText folder after update.
 
 == Upgrading from 0.4.1
 
-If you want to use your snippets after you upgrade to 0.4.4, you can go to the %Notepad++ folder%\plugins\FingerText and get the old database file Snippets.db3. Rename is to FingerText.db3 and move it to the config folder after update.
+If you want to use your snippets after you upgrade to 0.5.0, you can go to the %Notepad++ folder%\plugins\FingerText and get the old database file Snippets.db3. Rename is to FingerText.db3 and move it to the config\FingerText folder after update.
 
 == Upgrading from 0.3.5 or below
 
 FingerText 0.3.5 or below use a "one snippet per file" system to store snippets, which is not compatibile with current version. If you really have a lot of snippets created using these early version, please send your snippet to erinata@gmail.com. I will try my best to import them into the database in the current version.
 
-
 == Change log 
 (for full change log (including the development log) please refer to the CHANGELOG file in the repository)
 
+0.5.0
+- Added command for inserting different kinds of hotspots
+- Added command to create snippet from selection
+- Added command to change settings in config.ini
+- SnippetDock items are lining up better
+- Group config and database files into a FingerText folder under config folder
 
 0.4.16
 - This is primary a bug fixing version
@@ -210,20 +220,8 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 0.3.2
 - Last stable version using the recusive file system to store snippets. All the snippets create under this version will not work in version later than FingerText - 0.3.5
 
-0.3.0
-- Implemented Snippet set for specific file name.
-- The priority is FileName > Ext > Global
-- performance improvement to path search
-
 0.2.6
 - Multiple hotspots selection and hotspot hint text replacement works simultaneously
-
-0.2.0
-- Fixed long tab problem
-- Fixed Spaces or tabspaces before tab problem
-- Fixed empty snippet problem
-- Emulate tab behaviour when no tag match or selection is rectangle
-- Snippet insertion recorded as one single undo step
 
 0.1.0 
 - First Alpha verison. Implemented basic tab trigger snippets and hotspots navigation

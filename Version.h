@@ -27,15 +27,14 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-#define VERSION_TEXT "0.4.17.0"
-#define VERSION_NUM 0,4,17,0
-#define VERSION_LINEAR 417
-#define VERSION_KEEP_CONFIG_START 415
-#define VERSION_KEEP_CONFIG_END 416
-#define VERSION_TEXT_LONG "FingerText 0.4.17.0(Alpha)"
-#define WELCOME_TEXT "Thanks for Upgrading to FingerText 0.4.17.0(Alpha)."
+#define VERSION_TEXT "0.5.0.0"
+#define VERSION_NUM 0,5,0,0
+#define VERSION_LINEAR 500
+#define VERSION_KEEP_CONFIG_START 500
+#define VERSION_KEEP_CONFIG_END 500
+#define VERSION_TEXT_LONG "FingerText 0.5.0.0(Alpha)"
 #define VERSION_TEXT_FULL TEXT("\
-FingerText 0.4.17.0(Alpha)\r\n\
+FingerText 0.5.0.0(Alpha)\r\n\
 February 2011\r\n\r\n\
 Author: Tom Lam\r\n\
 Email: erinata@gmail.com\r\n\r\n\
@@ -51,7 +50,7 @@ FingerText Quick Guide:\r\n\r\n\
 Insert Snippet --- Type in TriggerText and Hit the tab key\r\n\
 Navigate to next Hotspot --- Hit the tab key\r\n\
 Show SnippetDock --- Menu>Plugins>FingerText>Toggle On/Off SnippetDock\r\n\
-AutoComplete Tag --- Menu>Plugins>FingerText>Tag Completion\r\n\
+AutoComplete TriggerText --- Menu>Plugins>FingerText>TriggerText Completion\r\n\
 Goto Snippet Editor --- Double click snippets on the SnippetDock\r\n\
 Create New Snippet --- Click Create button on the SnippetDock\r\n\
 Create snippet from selection -- Menu>Plugins>FingerText>Create snippet from selection\r\n\
@@ -62,9 +61,23 @@ Import Snippets --- Menu>Plugins>FingerText>Import Snippets\r\n\
 About FingerText --- Menu>Plugins>FingerText>About\r\n\r\n\
 For step by step usage guide, please visit http://github.com/erinata/FingerText \
 ")
-
 #define SNIPPET_EDIT_TEMPLATE "------ FingerText Snippet Editor View ------\r\n"
 
+#define WELCOME_TEXT "Thanks for Upgrading to FingerText 0.5.0.0(Alpha).\r\n\
+Please read this document if you are upgrading from previous versions.\r\n\r\n\
+Upgrading from 0.4.15 or 0.4.16\r\n\
+If you want to use your snippets after you upgrade to 0.5.0, you can go to the config folder and move the FingerText.db3 file to the config\FingerText folder after update.\r\n\
+chain snippet is indicated by $[![(cha)]!] instead of $[![(chain)]!]\r\n\
+\r\n\
+Upgrading from 0.4.4 or 0.4.11\r\n\
+If you want to use your snippets after you upgrade to 0.5.0, you can go to the config folder and move the FingerText.db3 file to the config\FingerText folder after update.\r\n\
+\r\n\
+Upgrading from 0.4.1\r\n\
+If you want to use your snippets after you upgrade to 0.5.0, you can go to the %Notepad++ folder%\plugins\FingerText and get the old database file Snippets.db3. Rename is to FingerText.db3 and move it to the config\FingerText folder after update.\r\n\
+\r\n\
+Upgrading from 0.3.5 or below\r\n\
+FingerText 0.3.5 or below use a 'one snippet per file' system to store snippets, which is not compatibile with current version. If you really have a lot of snippets created using these early version, please send your snippet to erinata@gmail.com. I will try my best to import them into the database in the current version.\r\n\
+"
 
 
 #ifdef APSTUDIO_INVOKED

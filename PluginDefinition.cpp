@@ -7,6 +7,7 @@
 //Copyright (C) 2011 by Tom Lam
 //
 //Permission is hereby granted, free of charge, to any person 
+
 //obtaining a copy of this software and associated documentation 
 //files (the "Software"), to deal in the Software without 
 //restriction, including without limitation the rights to use, 
@@ -181,7 +182,7 @@ void commandMenuInit()
     setCommand(IMPORT_SNIPPETS_INDEX, TEXT("Import Snippets"), importSnippets, NULL, false);
     setCommand(EXPORT_SNIPPETS_INDEX, TEXT("Export Snippets"), exportSnippets, NULL, false);
     setCommand(SEPARATOR_ONE_INDEX, TEXT("---"), NULL, NULL, false);
-    setCommand(TAG_COMPLETE_INDEX, TEXT("Tag Completion"), tagComplete, NULL, false);
+    setCommand(TAG_COMPLETE_INDEX, TEXT("TriggerText Completion"), tagComplete, NULL, false);
     setCommand(SEPARATOR_TWO_INDEX, TEXT("---"), NULL, NULL, false);
     setCommand(INSERT_HOTSPOT_SIGN_INDEX, TEXT("Insert a static hotspot"), insertHotSpotSign, NULL, false);
     setCommand(INSERT_CHAIN_SIGN_INDEX, TEXT("Insert a dynamic hotspot (Chain snippet)"), insertChainSnippetSign, NULL, false);
@@ -191,8 +192,8 @@ void commandMenuInit()
     setCommand(SETTINGS_INDEX, TEXT("Settings"), settings, NULL, false);
     setCommand(HELP_INDEX, TEXT("Quick Guide"), showHelp, NULL, false);
     setCommand(ABOUT_INDEX, TEXT("About"), showAbout, NULL, false);
-    setCommand(SEPARATOR_FOUR_INDEX, TEXT("---"), NULL, NULL, false);
-    setCommand(TESTING_INDEX, TEXT("Testing"), testing, NULL, false);
+    //setCommand(SEPARATOR_FOUR_INDEX, TEXT("---"), NULL, NULL, false);
+    //setCommand(TESTING_INDEX, TEXT("Testing"), testing, NULL, false);
 
 }
 //
@@ -316,13 +317,12 @@ char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""), bool similar=fa
 
 void upgradeMessage()
 {
-    // This message is supressed for now and can be used later
-    //if (g_newUpdate)
-    //{
-    //
-    //    ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
-    //    ::SendMessage(getCurrentScintilla(), SCI_INSERTTEXT, 0, (LPARAM)WELCOME_TEXT);
-    //}
+     //This message is supressed for now and can be used later
+    if (g_newUpdate)
+    {
+        ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
+        ::SendMessage(getCurrentScintilla(), SCI_INSERTTEXT, 0, (LPARAM)WELCOME_TEXT);
+    }
 }
 
 int searchNext(HWND &curScintilla, char* searchText )
@@ -1138,6 +1138,7 @@ void setConfigAndDatabase()
     TCHAR path[MAX_PATH];
     char *cpath;
     ::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH, reinterpret_cast<LPARAM>(path));
+    ::_tcscat(path,TEXT("\\FingerText"));
     int multibyteLength = WideCharToMultiByte(CP_UTF8, 0, path, -1, NULL, 0, 0, 0);
     cpath = new char[multibyteLength + 50];
     WideCharToMultiByte(CP_UTF8, 0, path, -1, cpath, multibyteLength, 0, 0);
@@ -1149,7 +1150,7 @@ void setConfigAndDatabase()
     if (rc)
     {
         g_dbOpen = false;
-        MessageBox(nppData._nppHandle, TEXT("Cannot find or open FingerText.db3 in config folder"), TEXT("FingerText plugin"), MB_ICONERROR);
+        MessageBox(nppData._nppHandle, TEXT("Cannot find or open FingerText.db3 in config folder"), TEXT("FingerText"), MB_ICONERROR);
     } else
     {
         g_dbOpen = true;
@@ -1477,7 +1478,6 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
                     strcpy(g_snippetCache[row].content, tempContent);
                 }
                 row++;
-
             }
             else
             {

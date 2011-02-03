@@ -1,11 +1,12 @@
 current development version
 
-0.4.17
+0.5.0
 restructure config loading
 Added command for inserting different kinds of hotspots
 Added command to create snippet from selection
 Added command to change settings in config.ini
 SnippetDock items are lining up better
+group files into FingerText folder under config folder
 
 0.4.16
 Add (key)CUT dynamic hotspots
