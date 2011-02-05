@@ -1,5 +1,8 @@
 current development version
 
+0.5.1
+Fixed (Edit view not activate correctly when the screen is splitted)
+
 0.5.0
 restructure config loading
 Added command for inserting different kinds of hotspots

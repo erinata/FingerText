@@ -376,6 +376,8 @@ void selectionToSnippet()
     {
         ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_ftbPath);
     } 
+
+    curScintilla = getCurrentScintilla();
     promptSaveSnippet(TEXT("Do you wish to save the current snippet before creating a new one?"));
     
     ::SendMessage(curScintilla,SCI_CLEARALL,0,0);
@@ -417,7 +419,7 @@ void createSnippet()
 
 void editSnippet()
 {
-    HWND curScintilla = getCurrentScintilla();
+    
     int index = snippetDock.getCount() - snippetDock.getSelection()-1;
     char *tempTriggerText;
     char *tempScope;
@@ -447,7 +449,7 @@ void editSnippet()
             {
                 ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_ftbPath);
             }
-
+            HWND curScintilla = getCurrentScintilla();
             promptSaveSnippet(TEXT("Do you wish to save the current snippet before editing anotoher one?"));
             ::SendMessage(curScintilla,SCI_CLEARALL,0,0);
                
@@ -465,6 +467,7 @@ void editSnippet()
 	}
 	sqlite3_finalize(stmt);
 
+    HWND curScintilla = getCurrentScintilla();
     ::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
     ::SendMessage(curScintilla,SCI_EMPTYUNDOBUFFER,0,0);
 
