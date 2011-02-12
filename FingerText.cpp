@@ -55,7 +55,7 @@
 
 extern FuncItem funcItem[nbFunc];
 extern NppData nppData;
-extern DockingDlg _snippetDock;
+extern DockingDlg snippetDock;
 
 BOOL APIENTRY DllMain( HANDLE hModule, 
                        DWORD  reasonForCall, 

@@ -325,10 +325,15 @@ void upgradeMessage()
     }
 }
 
-int searchNext(HWND &curScintilla, char* searchText )
+int searchNext(HWND &curScintilla, char* searchText)
 {
     ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
     return ::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)searchText);
+}
+int searchPrev(HWND &curScintilla, char* searchText)
+{
+    ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
+    return ::SendMessage(curScintilla, SCI_SEARCHPREV, 0,(LPARAM)searchText);
 }
 //void insertSnippet()
 //{
@@ -365,6 +370,7 @@ int searchNext(HWND &curScintilla, char* searchText )
 
 void selectionToSnippet()
 {
+    //TODO: consolidate with create snippet
     HWND curScintilla = getCurrentScintilla();
     int selectionEnd = ::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0);
     int selectionStart = ::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0);
@@ -862,21 +868,28 @@ void insertDateTime(bool date,int type, HWND &curScintilla)
 
 bool hotSpotNavigation(HWND &curScintilla)
 {
+    //TODO: make nested hotspot work by referencing to ]!] instead of $[![
+    //TODO: a bug in calculating simultaneous hotspot, when 2 hotspots are 1 space from each others the hotspot cannot trigger simultaneously
+
     //::SendMessage(curScintilla,SCI_GOTOPOS,startingPos,0);
 
     // TODO: consolidate this part with dynamic hotspots?
     char tagSign[] = "$[![";
     int tagSignLength = strlen(tagSign);
+    char tagTail[] = "]!]";
+    int tagTailLength = strlen(tagTail);
 
     char *hotSpotText;
     char *hotSpot;
 
     //::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
     //int tagSpot=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)tagSign);
-    int tagSpot = searchNext(curScintilla, tagSign);    
+    int tagSpot = searchNext(curScintilla, tagTail);    
 	if (tagSpot>=0)
 	{
         if (g_preserveSteps==0) ::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
+
+        searchPrev(curScintilla, tagSign); 
         int firstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
         int secondPos = grabHotSpotContent(curScintilla, &hotSpotText, &hotSpot, firstPos,tagSignLength);
                 
