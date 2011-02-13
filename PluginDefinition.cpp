@@ -895,8 +895,10 @@ bool hotSpotNavigation(HWND &curScintilla)
                 
         int hotSpotFound=-1;
         int tempPos[100];
-
+        ::SendMessage(curScintilla,SCI_GOTOPOS,firstPos,0);
         int i=1;
+        //TODO: still a bug.....hotspot with the same name cannot be next to each others
+
         for (i=1;i<=98;i++)
         {
             tempPos[i]=0;
@@ -904,7 +906,7 @@ bool hotSpotNavigation(HWND &curScintilla)
             //::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
             //hotSpotFound=::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)hotSpot);
             hotSpotFound = searchNext(curScintilla, hotSpot);
-            if (hotSpotFound>=0)
+            if ((hotSpotFound>=0) && strlen(hotSpotText)>0)
             {
                 //::MessageBox(nppData._nppHandle, TEXT(">=0"), TEXT("Trace"), MB_OK);
                 
@@ -2114,14 +2116,6 @@ void fingerText()
     } else
     {
         g_liveHintUpdate--;
-        //if (g_liveHintUpdate == 1)  // Temporary turn off live update
-        //{
-        //    g_liveHintUpdate = 0;
-        //} else 
-        //{
-        //    g_liveHintUpdate = -1;
-        //}
-
 
         if (g_preserveSteps==0) 
         {
@@ -2196,15 +2190,6 @@ void fingerText()
         }
 
         g_liveHintUpdate++;
-        
-        //if (g_liveHintUpdate == -1)
-        //{
-        //    g_liveHintUpdate = 0;
-        //} else 
-        //{
-        //    g_liveHintUpdate = 1;
-        //}
-
     } 
 
 }

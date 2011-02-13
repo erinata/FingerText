@@ -1,5 +1,9 @@
 current development version
 
+0.5.3
+Nested (normal) hotspots
+fixed a bug causing hotspot with the same name not triggering correctly
+
 0.5.1
 Fixed (Edit view not activate correctly when the screen is splitted)
 
