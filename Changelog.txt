@@ -1,5 +1,9 @@
 current development version
 
+0.5.3.1
+fixed bug of autoscrolling when switch between file
+Multi pasting work for simultaneous hotspots
+
 0.5.3
 Nested (normal) hotspots
 fixed a bug causing hotspot with the same name not triggering correctly

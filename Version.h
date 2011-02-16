@@ -27,14 +27,15 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-#define VERSION_TEXT "0.5.3.0"
-#define VERSION_NUM 0,5,3,0
+//TODO: simplify version.h
+#define VERSION_TEXT "0.5.3.1"
+#define VERSION_NUM 0,5,3,1
 #define VERSION_LINEAR 503
 #define VERSION_KEEP_CONFIG_START 500
 #define VERSION_KEEP_CONFIG_END 503
-#define VERSION_TEXT_LONG "FingerText 0.5.3.0(Alpha)"
+#define VERSION_TEXT_LONG "FingerText 0.5.3.1(Alpha)"
 #define VERSION_TEXT_FULL TEXT("\
-FingerText 0.5.3.0(Alpha)\r\n\
+FingerText 0.5.3.1(Alpha)\r\n\
 February 2011\r\n\r\n\
 Author: Tom Lam\r\n\
 Email: erinata@gmail.com\r\n\r\n\
@@ -63,7 +64,7 @@ For step by step usage guide, please visit http://github.com/erinata/FingerText 
 ")
 #define SNIPPET_EDIT_TEMPLATE "------ FingerText Snippet Editor View ------\r\n"
 
-#define WELCOME_TEXT "Thanks for Upgrading to FingerText 0.5.3.0(Alpha).\r\n\
+#define WELCOME_TEXT "Thanks for Upgrading to FingerText 0.5.3.1(Alpha).\r\n\
 Please read this document if you are upgrading from previous versions.\r\n\r\n\
 Upgrading from 0.4.15 or 0.4.16\r\n\
 If you want to use your snippets after you upgrade to 0.5.3, you can go to the config folder and move the FingerText.db3 file to the config\FingerText folder after update.\r\n\

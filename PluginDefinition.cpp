@@ -317,12 +317,14 @@ char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""), bool similar=fa
 
 void upgradeMessage()
 {
+    HWND curScintilla = getCurrentScintilla();
      //This message is supressed for now and can be used later
     if (g_newUpdate)
     {
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
-        ::SendMessage(getCurrentScintilla(), SCI_INSERTTEXT, 0, (LPARAM)WELCOME_TEXT);
+        ::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)WELCOME_TEXT);
     }
+    ::SendMessage(curScintilla,SCI_SETMULTIPASTE,1,0); // TODO: this is temporary, relocate this setting to elsewhere
 }
 
 int searchNext(HWND &curScintilla, char* searchText)
@@ -901,7 +903,7 @@ bool hotSpotNavigation(HWND &curScintilla)
 
         for (i=1;i<=98;i++)
         {
-            tempPos[i]=0;
+            tempPos[i]=-1;
         
             //::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
             //hotSpotFound=::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)hotSpot);
@@ -1875,15 +1877,13 @@ void promptSaveSnippet(TCHAR* message)
 
 void updateMode()
 {
+    // FIXME: Fix the bug of auto moving cursor when switch tabs
     HWND curScintilla = getCurrentScintilla();
-
-    int curPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
     
-    ::SendMessage(curScintilla,SCI_GOTOPOS,0,0);
-    //::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-    //::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"- FingerText Snippet Editor View -");
-    searchNext(curScintilla, "- FingerText Snippet Editor View -");
-    if ((::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0) == 5) && (::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0) == 39))
+    TCHAR fileType[MAX_PATH];
+    ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
+
+    if (::_tcscmp(fileType,TEXT(".ftb"))==0)
     {
         snippetDock.toggleSave(true);
         g_editorView = true;
@@ -1901,7 +1901,35 @@ void updateMode()
         snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Disabled]\r\n(To enable: Plugins>FingerText>Toggle FingerText On/Off)\r\nList of Available Snippets"));
 
     }
-    ::SendMessage(curScintilla,SCI_GOTOPOS,curPos,0);
+
+
+
+
+    //int curPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+    //
+    //::SendMessage(curScintilla,SCI_GOTOPOS,0,0);
+    ////::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
+    ////::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"- FingerText Snippet Editor View -");
+    //searchNext(curScintilla, "- FingerText Snippet Editor View -");
+    //if ((::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0) == 5) && (::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0) == 39))
+    //{
+    //    snippetDock.toggleSave(true);
+    //    g_editorView = true;
+    //    snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("EDIT MODE\r\n(Double click item in list to edit another snippet, Ctrl+S to save)\r\nList of All Snippets"));
+    //} else if (g_enable)
+    //{
+    //    snippetDock.toggleSave(false);
+    //    g_editorView = false;
+    //    snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Enabled]\r\n(Type trigger text and hit tab to insert snippet)\r\nList of Available Snippets"));
+    //    
+    //} else
+    //{
+    //    snippetDock.toggleSave(false);
+    //    g_editorView = false;
+    //    snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Disabled]\r\n(To enable: Plugins>FingerText>Toggle FingerText On/Off)\r\nList of Available Snippets"));
+    //
+    //}
+    //::SendMessage(curScintilla,SCI_GOTOPOS,curPos,0);
 }
 
 void settings()
@@ -1974,6 +2002,7 @@ void showAbout()
 
 void refreshAnnotation()
 {
+
     if (g_editorView)
     {
         g_modifyResponse = false;
@@ -2105,10 +2134,13 @@ bool snippetComplete()
 
 void fingerText()
 {
+
     //bool preserveSteps=false;
 
 
     HWND curScintilla = getCurrentScintilla();
+    
+    
 
     if ((g_enable==false) || (g_editorView==true) || (::SendMessage(curScintilla,SCI_SELECTIONISRECTANGLE,0,0)==1))
     {
