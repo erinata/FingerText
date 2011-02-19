@@ -6,7 +6,7 @@ Tab triggered snippet plugin for Notepad++.
 
 FingerText is a tab triggered snippet plugin for Notepad++. Support multiple hotspots simultaneous editing, dynamic hotspots(a lot more than just plain text, you can run commands in your snippet), hotspot text hint(instead of just a $ or # sign) and hotspot default value. It also features a SnippetDock which shows a list of currently available snippets. (see screenshots) You can import or export your snippets and share it to others.
 
-If you are new to FingerText, follow the "Install", "Importing Sample Snippets" and "Basic Usage" sections in this file. That should give you a step by step tutorial on how to use FingerText.
+If you are new to FingerText, follow the section "Install", "Importing Sample Snippets" and "Basic Usage" in this file. That should give you a step by step tutorial on how to use FingerText.
 
 == Development Status
 
@@ -163,18 +163,18 @@ If you want to use your snippets after you upgrade to 0.5.4, you can go to the %
 FingerText 0.3.5 or below use a "one snippet per file" system to store snippets, which is not compatibile with current version. If you really have a lot of snippets created using these early version, please send your snippet to erinata@gmail.com. I will try my best to import them into the database in the current version.
 
 == Change log 
-(for full change log (including the development log) please refer to the CHANGELOG file in the repository)
+(for the detail change log (including the development log) please refer to the CHANGELOG file in the repository)
 
 0.5.4
-The create button will create snippet using selection if selection is not empty.
-Multi pasting work for simultaneous hotspots
-Nested (normal) hotspots
-Empty hotspots are independent of each others.
-Fixed: Snippetdock not updating when save a file with another extension name
-Fixed: Autoscrolling when switch between file
-Fixed: a bug causing hotspot with the same name not triggering correctly
-Fixed: Edit view not activate correctly when the screen is splitted
-More reliable edit mode
+- The create button will create snippet using selection if selection is not empty.
+- Multi pasting work for simultaneous hotspots
+- Nested (normal) hotspots
+- Empty hotspots are independent of each others.
+- Fixed: Snippetdock not updating when save a file with another extension name
+- Fixed: Autoscrolling when switch between file
+- Fixed: a bug causing hotspot with the same name not triggering correctly
+- Fixed: Edit view not activa te correctly when the screen is splitted
+- More reliable edit mode
 
 0.5.0
 - Added command for inserting different kinds of hotspots
