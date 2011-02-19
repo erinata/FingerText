@@ -1,4 +1,4 @@
-= FingerText
+= FingerText (current version 0.5.4)
 
 Tab triggered snippet plugin for Notepad++.
 
@@ -112,16 +112,16 @@ Hotspots are indicated by $[![Whatever name]!]. The "Whatever name" can be a hin
 
 Notice that hotspots with the same name will be highlighted at the same time. Try editing the snippet "for" which you have triggered in previous section. You can see that there are a bunch of $[![(var)]!], which will be highlighted simultaneously when the snippet is triggered.
 
-Any thing after the [>END<] will not be inserted into the document so you can comment about your snippet there.
+Anything after [>END<] will not be inserted into the document so you can write comment about the snippet there.
 
-Chinese characters are supported in snippets. You can try it by triggering the snippet "chinese". All snippets should be encoded in UTF-8 and being triggered in UTF-8 document. Notice that Chinese character tag name are not supported. Actually sometimes it works sometimes it doesn't so it is not officially supported. 
+Chinese characters are supported. You can try it by triggering the snippet "chinese". All snippets should be encoded in UTF-8 and being triggered in UTF-8 document. Notice that Chinese character tag names are not supported. Actually sometimes it works sometimes it doesn't so it is not officially supported. 
 
 == Dynamic Hotspots
 FingerText support dynamic hotspots. Currently, there are three kinds of dynamic hotspots.
 
 - Chain - This is indicated by $[![(cha)somesnippet]!]. When the snippet is triggered, this hotspot is replaced by the text generated from activating another snippet "somesnippet". You can trigger the snippet "chain" to see how it works
 
-- Keyword - This is indicated by $[![(key)XXXXX]!]. And XXXXX is some predefined keyword. Currently the supported keywords are DATESHORT, DATELONG, TIMESHORT, TIMELONG, FILENAME, EXTNAME, DIRECTORY and PASTE. All of them are self-explaining (like DATESHORT will insert the current date in short format). And amount them the most important one is PASTE. If your snippet contain $[![(key)PASTE]!], it will be replaced by whatever text in your clipboard. The is very useful when you are writing tag language or want to turn a bunch of code into a function. To see this in action, copy a line of code and trigger the snippet "method". The code that you copy will be turned into a ruby method.
+- Keyword - This is indicated by $[![(key)XXXXX]!]. And XXXXX is some predefined keyword. Currently the supported keywords are DATESHORT, DATELONG, TIMESHORT, TIMELONG, FILENAME, EXTNAME, DIRECTORY and PASTE. All of them are self-explaining (like DATESHORT will insert the current date in short format). And among them the most important one is PASTE. If your snippet contain $[![(key)PASTE]!], it will be replaced by whatever text in the clipboard. This is very useful in tag languages or snippets that turn a bunch of code into a function. To see this in action, copy a line of code and trigger the snippet "method". The code that you copied will be turned into a ruby method.
 
 - Command - This is indicated by $[![(cmd)XXXXX]!]. And XXXXX is some command that you can run in the console. For example $[![(cmd)dir]!] will fill your hotspot with the output that you would see when you run dir in console. Of course you can run a batch file if you want. Try snippet "cmddir" and "cmdbat" to see it in action.
 
@@ -138,6 +138,7 @@ The .ftd files are in plain text so you can edit them directly too. But don't do
 - static hotspots (stable) - static hotspots are indicated by $[![XXXXX]!] where XXXXX is the default value of the hotspots. This won't be changed unless serious compatibility issues happen.
 - dynamic hotspots (not stable) - currently there are 3 kinds of dynamic hotspots, chain, keyword and command. They are indicated by $[![(cha)XXXXX]!], $[![(key)XXXXX]!] and $[![(cmd)XXXXX]!] respectively. I am still experimenting what's the best way to do it so do expect changes in future releases.
 - Folder Structure (stable) - the FingerText.ini and FingerText.db3 file are staying in config/FingerText folder.
+- Database Structure (not stable) - the structure of FingerText.db3 is nore stable yet but the user is not supposed to edit the database file directly
 
 == Upgrading from 0.5.0 or above
 
