@@ -1870,11 +1870,8 @@ int promptSaveSnippet(TCHAR* message)
                 saveSnippet();
             }
         }
-
     }
-
     return messageReturn;
-    
 }
 
 void updateMode()
@@ -1903,9 +1900,6 @@ void updateMode()
         snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Disabled]\r\n(To enable: Plugins>FingerText>Toggle FingerText On/Off)\r\nList of Available Snippets"));
 
     }
-
-
-
 
     //int curPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
     //
@@ -2004,15 +1998,14 @@ void showAbout()
 
 void refreshAnnotation()
 {
-    //TODO: This is not very efficient ( as this is triggered in buffer activated event), need to think of another way.
-    g_modifyResponse = false;
-    HWND curScintilla = getCurrentScintilla();
-    
-
+    //TODO: There is a bug which can be fixed by doing clearall everytime when this is trigger. But it is not very efficient ( as this is triggered in buffer activated event), need to think of another way.
+   
     if (g_editorView)
     {
-        ::SendMessage(getCurrentScintilla(), SCI_ANNOTATIONCLEARALL, 0, 0);
-        //::SendMessage(curScintilla, SCI_ANNOTATIONCLEARALL, 0, 0);
+         g_modifyResponse = false;
+         HWND curScintilla = getCurrentScintilla();
+        //::SendMessage(getCurrentScintilla(), SCI_ANNOTATIONCLEARALL, 0, 0);
+        ::SendMessage(curScintilla, SCI_ANNOTATIONCLEARALL, 0, 0);
 
         ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"\
                 # The first line in this document should always be this    \r\n\
@@ -2040,12 +2033,8 @@ void refreshAnnotation()
         ::SendMessage(curScintilla, SCI_ANNOTATIONSETSTYLE, 2, STYLE_INDENTGUIDE);
     
         ::SendMessage(curScintilla, SCI_ANNOTATIONSETVISIBLE, 2, 0);
-        
-    } else
-    {
-        ::SendMessage(getCurrentScintilla(), SCI_ANNOTATIONCLEARALL, 0, 0);
+        g_modifyResponse = true;
     }
-    g_modifyResponse = true;
 }
 
 
@@ -2056,7 +2045,6 @@ bool triggerTag(int &posCurrent, int triggerLength)
     bool tagFound = false;
     char *tag;
 	int tagLength = getCurrentTag(curScintilla, posCurrent, &tag, triggerLength);
-
 
     int posBeforeTag=posCurrent-tagLength;
 
@@ -2080,9 +2068,7 @@ bool triggerTag(int &posCurrent, int triggerLength)
             } 
             level++;
         } while (level<=3);
-
         delete [] expanded;
-
 		delete [] tag;
         // return to the original path 
         // ::SetCurrentDirectory(curPath);
@@ -2142,13 +2128,10 @@ bool snippetComplete()
 
 void fingerText()
 {
-
     //bool preserveSteps=false;
 
     HWND curScintilla = getCurrentScintilla();
     
-    
-
     if ((g_enable==false) || (g_editorView==true) || (::SendMessage(curScintilla,SCI_SELECTIONISRECTANGLE,0,0)==1))
     {
         ::SendMessage(curScintilla,SCI_TAB,0,0);	
