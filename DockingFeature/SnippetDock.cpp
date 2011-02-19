@@ -101,7 +101,8 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 
                 case IDC_CREATE:
                 {
-                    createSnippet();
+                    selectionToSnippet();
+                    //createSnippet();
                     return TRUE;
                 }
 

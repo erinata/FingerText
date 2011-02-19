@@ -1,5 +1,9 @@
 current development version
 
+0.5.4
+combine createsnippet and selectiontosnippet
+Fixed bug of snippetdock not updating when save a file with another extension name
+
 0.5.3.1
 fixed bug of autoscrolling when switch between file
 Multi pasting work for simultaneous hotspots

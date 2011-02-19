@@ -282,7 +282,7 @@ char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""), bool similar=fa
             convertToUTF8(fileType, &tagType);
             delete [] fileType;
         }
-		
+
 		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
 		sqlite3_bind_text(stmt, 1, tagType, -1, SQLITE_STATIC);
 
@@ -317,13 +317,14 @@ char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""), bool similar=fa
 
 void upgradeMessage()
 {
+    //TODO: dynamic upgrade message
     HWND curScintilla = getCurrentScintilla();
-     //This message is supressed for now and can be used later
     if (g_newUpdate)
     {
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
         ::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)WELCOME_TEXT);
     }
+
     ::SendMessage(curScintilla,SCI_SETMULTIPASTE,1,0); // TODO: this is temporary, relocate this setting to elsewhere
 }
 
@@ -372,12 +373,21 @@ int searchPrev(HWND &curScintilla, char* searchText)
 
 void selectionToSnippet()
 {
-    //TODO: consolidate with create snippet
     HWND curScintilla = getCurrentScintilla();
     int selectionEnd = ::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0);
     int selectionStart = ::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0);
 
     char* selection = new char [selectionEnd - selectionStart +1];
+    
+    if (selectionEnd>selectionStart)
+    {
+        ::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
+    } else
+    {
+        selection = "New snippet is here.\r\nNew snippet is here.\r\nNew snippet is here.\r\n";
+    }
+        
+    
     ::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
     
     if (!::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
@@ -386,45 +396,82 @@ void selectionToSnippet()
     } 
 
     curScintilla = getCurrentScintilla();
+
+    //TODO: consider using YES NO CANCEL dialog in promptsavesnippet
     promptSaveSnippet(TEXT("Do you wish to save the current snippet before creating a new one?"));
     
+
     ::SendMessage(curScintilla,SCI_CLEARALL,0,0);
+    //TODO: there is a bug here. if you create snippet from selection by selecting some text at line 0 1 2 3. The annaotation will not only go into the snippet editor, but also to the original document.
 
     ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)SNIPPET_EDIT_TEMPLATE);
     ::SendMessage(curScintilla,SCI_INSERTTEXT,::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"triggertext\r\nGLOBAL\r\n");
     ::SendMessage(curScintilla,SCI_INSERTTEXT,::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)selection);
     ::SendMessage(curScintilla,SCI_INSERTTEXT,::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"[>END<]");
+
+    g_editorView = 1;    
+    updateDockItems(false,false);
+    //updateMode();
     refreshAnnotation();
-    g_editorView = 1;
     ::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
     ::SendMessage(curScintilla,SCI_WORDRIGHTEXTEND,1,0);
 }
 
-void createSnippet()
-{
-    //::MessageBox(nppData._nppHandle, TEXT("CREATE~!"), TEXT("Trace"), MB_OK);
-    //::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
-    if (!::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
-    {
-        ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_ftbPath);
-    } 
-    promptSaveSnippet(TEXT("Do you wish to save the current snippet before creating a new one?"));
-    
-    HWND curScintilla = getCurrentScintilla();
-    ::SendMessage(curScintilla,SCI_CLEARALL,0,0);
-    
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)SNIPPET_EDIT_TEMPLATE);
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"newtriggertext\r\nGLOBAL\r\nThis is a new snippet.\r\nThis new snippet is awesome.\r\nNew snippet is here.\r\n[>END<]");
-    
-    //::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
-    ::SendMessage(curScintilla,SCI_EMPTYUNDOBUFFER,0,0);
-
-    g_editorView = true;
-    updateDockItems(false,false);
-    updateMode();
-    refreshAnnotation();
-}
-
+//void selectionToSnippet()
+//{
+//    //TODO: consolidate with create snippet
+//    HWND curScintilla = getCurrentScintilla();
+//    int selectionEnd = ::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0);
+//    int selectionStart = ::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0);
+//
+//    char* selection = new char [selectionEnd - selectionStart +1];
+//    ::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
+//    
+//    if (!::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
+//    {
+//        ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_ftbPath);
+//    } 
+//
+//    curScintilla = getCurrentScintilla();
+//    promptSaveSnippet(TEXT("Do you wish to save the current snippet before creating a new one?"));
+//    
+//    ::SendMessage(curScintilla,SCI_CLEARALL,0,0);
+//
+//    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)SNIPPET_EDIT_TEMPLATE);
+//    ::SendMessage(curScintilla,SCI_INSERTTEXT,::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"triggertext\r\nGLOBAL\r\n");
+//    ::SendMessage(curScintilla,SCI_INSERTTEXT,::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)selection);
+//    ::SendMessage(curScintilla,SCI_INSERTTEXT,::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"[>END<]");
+//    refreshAnnotation();
+//    g_editorView = 1;
+//    ::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
+//    ::SendMessage(curScintilla,SCI_WORDRIGHTEXTEND,1,0);
+//}
+//
+//void createSnippet()
+//{
+//    //::MessageBox(nppData._nppHandle, TEXT("CREATE~!"), TEXT("Trace"), MB_OK);
+//    //::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
+//    if (!::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
+//    {
+//        ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_ftbPath);
+//    } 
+//    promptSaveSnippet(TEXT("Do you wish to save the current snippet before creating a new one?"));
+//    
+//    HWND curScintilla = getCurrentScintilla();
+//    ::SendMessage(curScintilla,SCI_CLEARALL,0,0);
+//    
+//    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)SNIPPET_EDIT_TEMPLATE);
+//    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"newtriggertext\r\nGLOBAL\r\nThis is a new snippet.\r\nThis new snippet is awesome.\r\nNew snippet is here.\r\n[>END<]");
+//    
+//    //::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
+//    ::SendMessage(curScintilla,SCI_EMPTYUNDOBUFFER,0,0);
+//
+//    g_editorView = true;
+//    updateDockItems(false,false);
+//    updateMode();
+//    refreshAnnotation();
+//}
+//
 void editSnippet()
 {
     
@@ -556,9 +603,6 @@ bool getLineChecked(char **buffer, HWND &curScintilla, int lineNumber, TCHAR* er
     if (lineNumber == 3)
     {
         ::SendMessage(curScintilla,SCI_GOTOPOS,tagPosStart,0);
-
-        //::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-	    //int spot=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"[>END<]");
         int spot = searchNext(curScintilla, "[>END<]");
         if (spot<0)
         {
@@ -717,8 +761,6 @@ void dynamicHotspot(HWND &curScintilla, int &startingPos, int hotSpotType)
     do 
     {
         ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos,0);
-        //::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-        //chainSpot=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)chainTagSign);
         spot = searchNext(curScintilla, tagSign);
         if (spot>=0)
 	    {
@@ -884,8 +926,6 @@ bool hotSpotNavigation(HWND &curScintilla)
     char *hotSpotText;
     char *hotSpot;
 
-    //::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-    //int tagSpot=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)tagSign);
     int tagSpot = searchNext(curScintilla, tagTail);    
 	if (tagSpot>=0)
 	{
@@ -905,8 +945,6 @@ bool hotSpotNavigation(HWND &curScintilla)
         {
             tempPos[i]=-1;
         
-            //::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-            //hotSpotFound=::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)hotSpot);
             hotSpotFound = searchNext(curScintilla, hotSpot);
             if ((hotSpotFound>=0) && strlen(hotSpotText)>0)
             {
@@ -961,8 +999,6 @@ int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, in
 {
     int posLine = ::SendMessage(curScintilla,SCI_LINEFROMPOSITION,0,0);
         
-	//::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-	//::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"]!]");
     searchNext(curScintilla, "]!]");
 	int secondPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
 
@@ -1099,8 +1135,6 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
 	::SendMessage(curScintilla, SCI_SETTARGETEND, posCurrent, 0);
     ::SendMessage(curScintilla, SCI_REPLACETARGET, strlen(expanded), reinterpret_cast<LPARAM>(expanded));
 
-    //::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
-    //::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"`[SnippetInserting]");
     searchNext(curScintilla, "`[SnippetInserting]");
     int posEndOfInsertedText = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0)+19;
 
@@ -1116,15 +1150,10 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
             ::SendMessage(curScintilla, SCI_SETLINEINDENTATION, i, initialIndent+lineIndent);
         }
     }
-    
-    //::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
-    //::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"`[SnippetInserting]");
     searchNext(curScintilla, "`[SnippetInserting]");
     posEndOfInsertedText = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0)+19;
                     
     ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
-    //::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
-    //::SendMessage(curScintilla, SCI_SEARCHNEXT, 0,(LPARAM)"[>END<]");
     searchNext(curScintilla, "[>END<]");
     int posEndOfSnippet = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
         
@@ -1566,13 +1595,7 @@ void clearCache()
 void exportSnippets()
 {
     g_liveHintUpdate--;  // Temporary turn off live update as it disturb exporting
-    //if (g_liveHintUpdate == 1)  
-    //{
-    //    g_liveHintUpdate = 0;
-    //} else 
-    //{
-    //    g_liveHintUpdate = -1;
-    //}
+
     HWND curScintilla = getCurrentScintilla();
 
     OPENFILENAME ofn;
@@ -1633,13 +1656,6 @@ void exportSnippets()
 
     g_liveHintUpdate++;
 
-    //if (g_liveHintUpdate == -1)
-    //{
-    //    g_liveHintUpdate = 0;
-    //} else 
-    //{
-    //    g_liveHintUpdate = 1;
-    //}
     
 }
 
@@ -1649,13 +1665,6 @@ void exportSnippets()
 void importSnippets()
 {
     g_liveHintUpdate--;
-    //if (g_liveHintUpdate == 1)
-    //{
-    //    g_liveHintUpdate = 0;
-    //} else 
-    //{
-    //    g_liveHintUpdate = -1;
-    //}
     
     OPENFILENAME ofn;
     char fileName[MAX_PATH] = "";
@@ -1718,8 +1727,6 @@ void importSnippets()
                 int snippetPosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
                 //int snippetPosEnd = ::SendMessage(curScintilla,SCI_GETLENGTH,0,0);
 
-                //::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-                //::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"!$[FingerTextData FingerTextData]@#");
                 searchNext(curScintilla, "!$[FingerTextData FingerTextData]@#");
                 int snippetPosEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
                 ::SendMessage(curScintilla,SCI_SETSELECTION,snippetPosStart,snippetPosEnd);
@@ -1813,8 +1820,6 @@ void importSnippets()
                 updateDockItems(false,false);
             
                 ::SendMessage(curScintilla,SCI_GOTOPOS,0,0);
-                //::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-                //next = ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"!$[FingerTextData FingerTextData]@#");
                 next = searchNext(curScintilla, "!$[FingerTextData FingerTextData]@#");
             } while (next>=0);
         
@@ -1843,17 +1848,12 @@ void importSnippets()
         delete [] fileText;
     }
     g_liveHintUpdate++;
-    //if (g_liveHintUpdate == -1)
-    //{
-    //    g_liveHintUpdate = 0;
-    //} else 
-    //{
-    //    g_liveHintUpdate = 1;
-    //}
+
 }
 
-void promptSaveSnippet(TCHAR* message)
+int promptSaveSnippet(TCHAR* message)
 {
+    int messageReturn = IDNO;
     if (g_editorView)
     {
         HWND curScintilla = ::getCurrentScintilla();
@@ -1864,7 +1864,7 @@ void promptSaveSnippet(TCHAR* message)
         } else if (::SendMessage(curScintilla,SCI_GETMODIFY,0,0)!=0)
         {
         
-            int messageReturn=::MessageBox(nppData._nppHandle, message, TEXT("FingerText"), MB_YESNO);
+            messageReturn=::MessageBox(nppData._nppHandle, message, TEXT("FingerText"), MB_YESNO);
             if (messageReturn==IDYES)
             {
                 saveSnippet();
@@ -1872,12 +1872,14 @@ void promptSaveSnippet(TCHAR* message)
         }
 
     }
+
+    return messageReturn;
     
 }
 
 void updateMode()
 {
-    // FIXME: Fix the bug of auto moving cursor when switch tabs
+    //TODO: use same method to check file ext name in edit snippet
     HWND curScintilla = getCurrentScintilla();
     
     TCHAR fileType[MAX_PATH];
@@ -2002,13 +2004,15 @@ void showAbout()
 
 void refreshAnnotation()
 {
+    //TODO: This is not very efficient ( as this is triggered in buffer activated event), need to think of another way.
+    g_modifyResponse = false;
+    HWND curScintilla = getCurrentScintilla();
+    
 
     if (g_editorView)
     {
-        g_modifyResponse = false;
-        HWND curScintilla = getCurrentScintilla();
-
-        ::SendMessage(curScintilla, SCI_ANNOTATIONCLEARALL, 0, 0);
+        ::SendMessage(getCurrentScintilla(), SCI_ANNOTATIONCLEARALL, 0, 0);
+        //::SendMessage(curScintilla, SCI_ANNOTATIONCLEARALL, 0, 0);
 
         ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"\
                 # The first line in this document should always be this    \r\n\
@@ -2036,8 +2040,12 @@ void refreshAnnotation()
         ::SendMessage(curScintilla, SCI_ANNOTATIONSETSTYLE, 2, STYLE_INDENTGUIDE);
     
         ::SendMessage(curScintilla, SCI_ANNOTATIONSETVISIBLE, 2, 0);
-        g_modifyResponse = true;
+        
+    } else
+    {
+        ::SendMessage(getCurrentScintilla(), SCI_ANNOTATIONCLEARALL, 0, 0);
     }
+    g_modifyResponse = true;
 }
 
 
@@ -2137,7 +2145,6 @@ void fingerText()
 
     //bool preserveSteps=false;
 
-
     HWND curScintilla = getCurrentScintilla();
     
     
@@ -2168,8 +2175,6 @@ void fingerText()
         if (tagFound) ::SendMessage(curScintilla,SCI_AUTOCCANCEL,0,0);
         posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
 
-        //::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-        //int specialSpot=::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"$[![");
         int specialSpot = searchNext(curScintilla, "$[![");
 
         if (specialSpot>=0)

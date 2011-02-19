@@ -144,7 +144,7 @@ void updateDockItems(bool withContent=false, bool withAll=false, char* tag = "%"
 void populateDockItems();
 void upgradeMessage();
 void saveSnippet();
-void createSnippet();
+//void createSnippet();
 void clearCache();
 void editSnippet();
 void deleteSnippet();
@@ -152,7 +152,7 @@ void insertSnippet();
 void exportSnippets();
 void importSnippets();
 void snippetHintUpdate();
-void promptSaveSnippet(TCHAR* message = NULL);
+int promptSaveSnippet(TCHAR* message = NULL);
 void updateMode();
 void refreshAnnotation();
 void settings();
