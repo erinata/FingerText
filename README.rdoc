@@ -139,19 +139,23 @@ The .ftd files are in plain text so you can edit them directly too. But don't do
 - dynamic hotspots (not stable) - currently there are 3 kinds of dynamic hotspots, chain, keyword and command. They are indicated by $[![(cha)XXXXX]!], $[![(key)XXXXX]!] and $[![(cmd)XXXXX]!] respectively. I am still experimenting what's the best way to do it so do expect changes in future releases.
 - Folder Structure (stable) - the FingerText.ini and FingerText.db3 file are staying in config/FingerText folder.
 
+== Upgrading from 0.5.0 or above
+
+Everything is compatible.
+
 == Upgrading from 0.4.15 or 0.4.16
 
-If you want to use your snippets after you upgrade to 0.5.0, you can go to the config folder and move the FingerText.db3 file to the config\FingerText folder after update.
+If you want to use your snippets after you upgrade to 0.5.4, you can go to the config folder and move the FingerText.db3 file to the config\FingerText folder after update.
 
 chain snippet is indicated by $[![(cha)]!] instead of $[![(chain)]!] 
 
 == Upgrading from 0.4.4 or 0.4.11
 
-If you want to use your snippets after you upgrade to 0.5.0, you can go to the config folder and move the FingerText.db3 file to the config\FingerText folder after update.
+If you want to use your snippets after you upgrade to 0.5.4, you can go to the config folder and move the FingerText.db3 file to the config\FingerText folder after update.
 
 == Upgrading from 0.4.1
 
-If you want to use your snippets after you upgrade to 0.5.0, you can go to the %Notepad++ folder%\plugins\FingerText and get the old database file Snippets.db3. Rename is to FingerText.db3 and move it to the config\FingerText folder after update.
+If you want to use your snippets after you upgrade to 0.5.4, you can go to the %Notepad++ folder%\plugins\FingerText and get the old database file Snippets.db3. Rename is to FingerText.db3 and move it to the config\FingerText folder after update.
 
 == Upgrading from 0.3.5 or below
 
