@@ -16,9 +16,9 @@ This plugin is still in Alpha stage so do expect that it can be buggy. However, 
 
 Screenshots are available here:
 
-https://github.com/downloads/erinata/FingerText/FingerText0.4.11_ScreenClip.png
-https://github.com/downloads/erinata/FingerText/FingerText0.4.11_ScreenClip_2.png
-https://github.com/downloads/erinata/FingerText/FingerText0.4.11_ScreenClip_3.png
+https://github.com/downloads/erinata/FingerText/FingerText0.5.4_ScreenClip_1.png
+https://github.com/downloads/erinata/FingerText/FingerText0.5.4_ScreenClip_2.png
+https://github.com/downloads/erinata/FingerText/FingerText0.5.4_ScreenClip_3.png
 
 == Install
 
