@@ -59,7 +59,7 @@
 #include "Version.h"
 
 #include <fstream>
-#include <process.h>
+//#include <process.h>
 
 //#include <string.h>
 
@@ -84,6 +84,7 @@ struct SnipIndex {
 
 TCHAR g_iniPath[MAX_PATH];
 TCHAR g_ftbPath[MAX_PATH];
+TCHAR g_fttempPath[MAX_PATH];
 
 SnipIndex* g_snippetCache;
 int g_snippetCacheSize;
@@ -381,6 +382,7 @@ void selectionToSnippet()
     
     if (selectionEnd>selectionStart)
     {
+        
         ::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
     } else
     {
@@ -476,8 +478,8 @@ void editSnippet()
 {
     
     int index = snippetDock.getCount() - snippetDock.getSelection()-1;
-    char *tempTriggerText;
-    char *tempScope;
+    char* tempTriggerText;
+    char* tempScope;
     //char * tempSnippetText;
     tempTriggerText = new char [strlen(g_snippetCache[index].triggerText)];
     tempScope = new char [strlen(g_snippetCache[index].scope)];
@@ -516,18 +518,25 @@ void editSnippet()
             ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"\r\n");
 
             ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)snippetText);
+
             g_editorView = true;
             refreshAnnotation();
-		}		
+
+		}
+
 	}
+    
 	sqlite3_finalize(stmt);
 
     HWND curScintilla = getCurrentScintilla();
     ::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
     ::SendMessage(curScintilla,SCI_EMPTYUNDOBUFFER,0,0);
 
-    //delete [] tempTriggerText; // deleting them cause error
-    //delete [] tempScope;
+    //if (tempTriggerText)
+    //{
+        //delete [] tempTriggerText; // deleting them cause error
+    //}
+    //if (tempScope) delete [] tempScope;
 }
 
 void deleteSnippet()
@@ -878,7 +887,31 @@ void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &star
     } else if (strcmp(hotSpotText,"DIRECTORY")==0)
     {
         insertCurrentPath(NPPM_GETCURRENTDIRECTORY,curScintilla);
-    }  
+    } else if (strcmp(hotSpotText,"GETSCRIPT")==0) 
+    {
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+        int scriptFound = searchPrev(curScintilla,"${FingerText Script}");
+        if (scriptFound>=0)
+        {
+            int scriptStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+            int selectionEnd = startingPos;
+            int selectionStart = scriptStart+20;
+            ::SendMessage(curScintilla,SCI_SETSEL,selectionStart,selectionEnd);
+
+            char* selection = new char [selectionEnd - selectionStart +1];
+            ::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
+            ::SendMessage(curScintilla,SCI_SETSEL,scriptStart,selectionEnd);
+            ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+            startingPos = startingPos - (selectionEnd - scriptStart);
+            std::ofstream myfile(g_fttempPath);
+            if (myfile.is_open())
+            {
+                myfile << selection;
+                myfile.close();
+            }
+
+        }
+    }
 }
 
 void insertCurrentPath(int msg, HWND &curScintilla)
@@ -912,8 +945,8 @@ void insertDateTime(bool date,int type, HWND &curScintilla)
 
 bool hotSpotNavigation(HWND &curScintilla)
 {
-    //TODO: make nested hotspot work by referencing to ]!] instead of $[![
-    //TODO: a bug in calculating simultaneous hotspot, when 2 hotspots are 1 space from each others the hotspot cannot trigger simultaneously
+
+    //TODO: a bug in calculating simultaneous hotspot, when 2 hotspots are next to each others the hotspot cannot trigger simultaneously
 
     //::SendMessage(curScintilla,SCI_GOTOPOS,startingPos,0);
 
@@ -1216,15 +1249,24 @@ void setConfigAndDatabase()
 
     ::_tcscpy(g_iniPath,path);
     ::_tcscpy(g_ftbPath,path);
+    ::_tcscpy(g_fttempPath,path);
     ::_tcscat(g_iniPath,TEXT("\\FingerText.ini"));
     ::_tcscat(g_ftbPath,TEXT("\\SnippetEditor.ftb"));
+    ::_tcscat(g_fttempPath,TEXT("\\FingerText.fttemp"));
     //::MessageBox(nppData._nppHandle, path, TEXT("Trace"), MB_OK);
 
     setupConfigFile();
 
+
+    //TODO: should use ostream to write empty file
     if (PathFileExists(g_ftbPath) == FALSE)
 	{
         ::WritePrivateProfileString(TEXT("Dummy"), TEXT("Dummy"), TEXT("Dummy"), g_ftbPath);
+        //::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, 0, (LPARAM)ftbPath);
+    }
+    if (PathFileExists(g_fttempPath) == FALSE)
+	{
+        ::WritePrivateProfileString(TEXT("Dummy"), TEXT("Dummy"), TEXT("Dummy"), g_fttempPath);
         //::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, 0, (LPARAM)ftbPath);
     }
 }
@@ -1409,7 +1451,6 @@ void snippetHintUpdate()
 
 void updateDockItems(bool withContent, bool withAll, char* tag)
 {
-    //TODO: consider temporary turning off liveupdate when updating?
     g_liveHintUpdate--;
 
     int scopeLength=0;
@@ -1658,7 +1699,6 @@ void exportSnippets()
 
     
 }
-
 
 //TODO: importsnippet and savesnippets need refactoring sooooo badly
 //TODO: Or it should be rewrite, import snippet should open the snippetediting.ftb, turn or annotation, and cut and paste the snippet on to that file and use the saveSnippet function

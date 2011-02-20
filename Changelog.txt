@@ -1,5 +1,8 @@
 current development version
 
+0.5.5
+Add GETSCRIPT keyword
+
 0.5.4
 combine createsnippet and selectiontosnippet
 Fixed bug of snippetdock not updating when save a file with another extension name
