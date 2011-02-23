@@ -72,7 +72,7 @@ const TCHAR NPP_PLUGIN_NAME[] = TEXT("FingerText");
 //
 // Here define the number of your plugin commands
 //
-const int nbFunc = 17;
+const int nbFunc = 15;
 
 
 //
@@ -121,13 +121,18 @@ void chainSnippet(HWND &curScintilla, int &firstPos, char* hotSpotText);
 bool hotSpotNavigation(HWND &curScintilla);
 int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, int firstPos, int signLength);
 void showPreview();
+void emptyFile(TCHAR* fileName);
 int searchNext(HWND &curScintilla, char* searchText);
 int searchPrev(HWND &curScintilla, char* searchText);
 void selectionToSnippet();
 void insertHotSpotSign();
-void insertChainSnippetSign();
-void insertKeyWordSpotSign();
-void insertCommandLineSign();
+void insertWarmSpotSign();
+void goToWarmSpot();
+bool warmSpotNavigation(HWND &curScintilla);
+bool hotSpotNavigation(HWND &curScintilla);
+//void insertChainSnippetSign();
+//void insertKeyWordSpotSign();
+//void insertCommandLineSign();
 bool getLineChecked(char **buffer, HWND &curScintilla, int lineNumber, TCHAR* errorText);
 void insertTagSign(char * tagSign);
 bool getLineChecked(char **buffer, HWND &curScintilla, int lineNumber, TCHAR* errorText, bool import);
@@ -158,7 +163,8 @@ void settings();
 void showHelp();
 void showAbout();
 void insertDateTime(bool date,int type, HWND &curScintilla);
-void insertCurrentPath(int msg, HWND &curScintilla);
+void insertPath(TCHAR* path, HWND &curScintilla);
+void insertNppPath(int msg, HWND &curScintilla);
 void executeCommand();
 bool triggerTag(int &posCurrent, int triggerLength=0);
 void tagComplete();

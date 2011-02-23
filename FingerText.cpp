@@ -167,7 +167,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam, LPARAM lParam)
 {
 
-    
+
 	//if (Message == WM_MOVE)
 	//{
 	//	::MessageBox(NULL, TEXT("move"), TEXT(""), MB_OK);

@@ -1,7 +1,14 @@
-current development version
+changelog (for developers only, include unreleased versions)
+
+0.5.6
+remove GETSCRIPT, add a more general keyword GET
 
 0.5.5
 Add GETSCRIPT keyword
+Fixed snippet editor annotation infinite loop bug
+can trigger snippet in edit mode. (but hotspot navigation is not, as it disturb snippet editing, also live update would not be available in edit mode)
+Experimental feature: warmspot
+remove insert dynmaic hotspot menu command.
 
 0.5.4
 combine createsnippet and selectiontosnippet

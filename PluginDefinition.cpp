@@ -118,25 +118,27 @@ int g_escapeChar;
 
 DockingDlg snippetDock;
 
-#define TRIGGER_TAB_INDEX 0
-#define SNIPPET_DOCK_INDEX 1
-#define TOGGLE_ENABLE_INDEX 2
-#define SELECTION_TO_SNIPPETS_INDEX 3
-#define IMPORT_SNIPPETS_INDEX 4
-#define EXPORT_SNIPPETS_INDEX 5
-#define SEPARATOR_ONE_INDEX 6
-#define TAG_COMPLETE_INDEX 7
-#define SEPARATOR_TWO_INDEX 8
-#define INSERT_HOTSPOT_SIGN_INDEX 9
-#define INSERT_CHAIN_SIGN_INDEX 10
-#define INSERT_KEY_SIGN_INDEX 11
-#define INSERT_COMMAND_SIGN_INDEX 12
-#define SEPARATOR_THREE_INDEX 13
-#define SETTINGS_INDEX 14
-#define HELP_INDEX 15
-#define ABOUT_INDEX 16
-#define SEPARATOR_FOUR_INDEX 17
-#define TESTING_INDEX 18
+#define TRIGGER_SNIPPET_INDEX 0
+#define WARMSPOT_NAVIGATION_INDEX 1
+#define SNIPPET_DOCK_INDEX 2
+#define TOGGLE_ENABLE_INDEX 3
+#define SELECTION_TO_SNIPPETS_INDEX 4
+#define IMPORT_SNIPPETS_INDEX 5
+#define EXPORT_SNIPPETS_INDEX 6
+//#define SEPARATOR_ONE_INDEX 7
+#define TAG_COMPLETE_INDEX 8
+//#define SEPARATOR_TWO_INDEX 9
+#define INSERT_HOTSPOT_SIGN_INDEX 10
+//#define INSERT_WARMSPOT_SIGN_INDEX 11
+//#define INSERT_CHAIN_SIGN_INDEX 10
+//#define INSERT_KEY_SIGN_INDEX 11
+//#define INSERT_COMMAND_SIGN_INDEX 12
+//#define SEPARATOR_THREE_INDEX 12
+#define SETTINGS_INDEX 12
+#define HELP_INDEX 13
+#define ABOUT_INDEX 14
+//#define SEPARATOR_FOUR_INDEX 16
+#define TESTING_INDEX 17
 
 //
 // Initialize your plugin data here
@@ -176,20 +178,29 @@ void commandMenuInit()
 	shKey->_isCtrl = false;
 	shKey->_isShift = false;
 	shKey->_key = VK_TAB;
-    setCommand(TRIGGER_TAB_INDEX, TEXT("Trigger FingerText"), fingerText, shKey, false);
+
+    //ShortcutKey *shKey2 = new ShortcutKey;
+	//shKey2->_isAlt = false;
+	//shKey2->_isCtrl = true;
+	//shKey2->_isShift = false;
+	//shKey2->_key = VK_F4;
+
+    setCommand(TRIGGER_SNIPPET_INDEX, TEXT("Trigger Snippet/Navigate to Hotspot"), fingerText, shKey, false);
+    //setCommand(WARMSPOT_NAVIGATION_INDEX, TEXT("Navigate to Warmspot"), goToWarmSpot, shKey2, false);
     setCommand(SNIPPET_DOCK_INDEX, TEXT("Toggle On/off SnippetDock"), showSnippetDock, NULL, false);
     setCommand(TOGGLE_ENABLE_INDEX, TEXT("Toggle On/Off FingerText"), toggleDisable, NULL, false);
     setCommand(SELECTION_TO_SNIPPETS_INDEX, TEXT("Create Snippet from Selection"),  selectionToSnippet, NULL, false);
     setCommand(IMPORT_SNIPPETS_INDEX, TEXT("Import Snippets"), importSnippets, NULL, false);
     setCommand(EXPORT_SNIPPETS_INDEX, TEXT("Export Snippets"), exportSnippets, NULL, false);
-    setCommand(SEPARATOR_ONE_INDEX, TEXT("---"), NULL, NULL, false);
+    //setCommand(SEPARATOR_ONE_INDEX, TEXT("---"), NULL, NULL, false);
     setCommand(TAG_COMPLETE_INDEX, TEXT("TriggerText Completion"), tagComplete, NULL, false);
-    setCommand(SEPARATOR_TWO_INDEX, TEXT("---"), NULL, NULL, false);
-    setCommand(INSERT_HOTSPOT_SIGN_INDEX, TEXT("Insert a static hotspot"), insertHotSpotSign, NULL, false);
-    setCommand(INSERT_CHAIN_SIGN_INDEX, TEXT("Insert a dynamic hotspot (Chain snippet)"), insertChainSnippetSign, NULL, false);
-    setCommand(INSERT_KEY_SIGN_INDEX, TEXT("Insert a dynamic hotspot (Keyword Spot)"), insertKeyWordSpotSign, NULL, false);
-    setCommand(INSERT_COMMAND_SIGN_INDEX, TEXT("Insert a dynamic hotspot (Command)"), insertCommandLineSign, NULL, false);
-    setCommand(SEPARATOR_THREE_INDEX, TEXT("---"), NULL, NULL, false);
+    //setCommand(SEPARATOR_TWO_INDEX, TEXT("---"), NULL, NULL, false);
+    setCommand(INSERT_HOTSPOT_SIGN_INDEX, TEXT("Insert a hotspot"), insertHotSpotSign, NULL, false);
+    //setCommand(INSERT_WARMSPOT_SIGN_INDEX, TEXT("Insert a warmspot"), insertWarmSpotSign, NULL, false);
+    //setCommand(INSERT_CHAIN_SIGN_INDEX, TEXT("Insert a dynamic hotspot (Chain snippet)"), insertChainSnippetSign, NULL, false);
+    //setCommand(INSERT_KEY_SIGN_INDEX, TEXT("Insert a dynamic hotspot (Keyword Spot)"), insertKeyWordSpotSign, NULL, false);
+    //setCommand(INSERT_COMMAND_SIGN_INDEX, TEXT("Insert a dynamic hotspot (Command)"), insertCommandLineSign, NULL, false);
+    //setCommand(SEPARATOR_THREE_INDEX, TEXT("---"), NULL, NULL, false);
     setCommand(SETTINGS_INDEX, TEXT("Settings"), settings, NULL, false);
     setCommand(HELP_INDEX, TEXT("Quick Guide"), showHelp, NULL, false);
     setCommand(ABOUT_INDEX, TEXT("About"), showAbout, NULL, false);
@@ -414,9 +425,10 @@ void selectionToSnippet()
     g_editorView = 1;    
     updateDockItems(false,false);
     //updateMode();
-    refreshAnnotation();
+    //refreshAnnotation();
     ::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
     ::SendMessage(curScintilla,SCI_WORDRIGHTEXTEND,1,0);
+    delete [] selection;
 }
 
 //void selectionToSnippet()
@@ -878,24 +890,35 @@ void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &star
         insertDateTime(false,0,curScintilla);
     } else if (strcmp(hotSpotText,"FILENAME")==0)
     {
-        insertCurrentPath(NPPM_GETNAMEPART,curScintilla);
+        insertNppPath(NPPM_GETNAMEPART,curScintilla);
         
     } else if (strcmp(hotSpotText,"EXTNAME")==0)
     {
-        insertCurrentPath(NPPM_GETEXTPART,curScintilla);
+        insertNppPath(NPPM_GETEXTPART,curScintilla);
         
     } else if (strcmp(hotSpotText,"DIRECTORY")==0)
     {
-        insertCurrentPath(NPPM_GETCURRENTDIRECTORY,curScintilla);
-    } else if (strcmp(hotSpotText,"GETSCRIPT")==0) 
+        insertNppPath(NPPM_GETCURRENTDIRECTORY,curScintilla);
+    //} else if (strcmp(hotSpotText,"GETSCRIPT")==0) 
+    } else if (strcmp(hotSpotText,"TEMPFILE")==0)
     {
+        insertPath(g_fttempPath,curScintilla);
+
+    }else if (strncmp(hotSpotText,"GET",3)==0) 
+    {
+        emptyFile(g_fttempPath);
+        char* getTerm;
+        getTerm = new char[strlen(hotSpotText)];
+        strcpy(getTerm,hotSpotText+3);
         ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
-        int scriptFound = searchPrev(curScintilla,"${FingerText Script}");
+        int scriptFound = -1;
+        if (strlen(getTerm)>0) scriptFound = searchPrev(curScintilla,getTerm);
+        delete [] getTerm;
         if (scriptFound>=0)
         {
             int scriptStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
             int selectionEnd = startingPos;
-            int selectionStart = scriptStart+20;
+            int selectionStart = scriptStart+strlen(hotSpotText)-3;
             ::SendMessage(curScintilla,SCI_SETSEL,selectionStart,selectionEnd);
 
             char* selection = new char [selectionEnd - selectionStart +1];
@@ -909,12 +932,19 @@ void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &star
                 myfile << selection;
                 myfile.close();
             }
-
+            delete [] selection;
         }
     }
 }
 
-void insertCurrentPath(int msg, HWND &curScintilla)
+void insertPath(TCHAR* path, HWND &curScintilla)
+{
+    char pathText[MAX_PATH];
+	WideCharToMultiByte((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, path, -1, pathText, MAX_PATH, NULL, NULL);
+    ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)pathText);
+}
+
+void insertNppPath(int msg, HWND &curScintilla)
 {
 
 	TCHAR path[MAX_PATH];
@@ -943,6 +973,27 @@ void insertDateTime(bool date,int type, HWND &curScintilla)
 	::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)timeText);
 }
 
+
+void goToWarmSpot()
+{
+    HWND curScintilla = getCurrentScintilla();
+    if (!warmSpotNavigation(curScintilla))
+    {
+        ::SendMessage(curScintilla,SCI_BACKTAB,0,0);	
+        
+    }
+
+}
+
+bool warmSpotNavigation(HWND &curScintilla)
+{
+    
+    bool spotFound = searchNext(curScintilla,"${!{}!}");
+    ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
+    return spotFound;
+}
+
+
 bool hotSpotNavigation(HWND &curScintilla)
 {
 
@@ -959,7 +1010,7 @@ bool hotSpotNavigation(HWND &curScintilla)
     char *hotSpotText;
     char *hotSpot;
 
-    int tagSpot = searchNext(curScintilla, tagTail);    
+    int tagSpot = searchNext(curScintilla, tagTail);    // Find the tail first so that nested snippets are triggered correctly
 	if (tagSpot>=0)
 	{
         if (g_preserveSteps==0) ::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
@@ -1097,37 +1148,49 @@ void showPreview()
 }
 
 
+
+
 void insertHotSpotSign()
 {
-    insertTagSign("$[![defaulttext]!]");
+    insertTagSign("$[![]!]");
 }
-void insertChainSnippetSign()
+
+void insertWarmSpotSign()
 {
-    insertTagSign("$[![(cha)snippetname]!]");
+    insertTagSign("${!{}!}");
 }
-void insertKeyWordSpotSign()
-{
-    insertTagSign("$[![(key)somekeyword]!]");
-}
-void insertCommandLineSign()
-{
-    insertTagSign("$[![(cmd)somecommand]!]");
-}
+//void insertChainSnippetSign()
+//{
+//    insertTagSign("$[![(cha)snippetname]!]");
+//}
+//void insertKeyWordSpotSign()
+//{
+//    insertTagSign("$[![(key)somekeyword]!]");
+//}
+//void insertCommandLineSign()
+//{
+//    insertTagSign("$[![(cmd)somecommand]!]");
+//}
 
 void insertTagSign(char * tagSign)
 {
-    if (g_editorView)
-    {
-        HWND curScintilla = getCurrentScintilla();
-        int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-        ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
-        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)tagSign);
-        ::SendMessage(curScintilla,SCI_SETSEL,posCurrent+strlen(tagSign)-3-11,posCurrent+strlen(tagSign)-3);
-        //::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent+strlen(tagSign)-3,0);
-    } else
-    {
-        ::MessageBox(nppData._nppHandle, TEXT("Hotspots can be inserted only when you are editing snippets."), TEXT("FingerText"), MB_OK);
-    }
+    HWND curScintilla = getCurrentScintilla();
+    int posStart = ::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0);
+    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)tagSign);
+    //int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+    ::SendMessage(curScintilla,SCI_GOTOPOS,posStart+4,0);
+    //if (g_editorView)
+    //{
+        //HWND curScintilla = getCurrentScintilla();
+        //int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+        //::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
+        //::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)tagSign);
+        //::SendMessage(curScintilla,SCI_SETSEL,posCurrent+strlen(tagSign)-3-11,posCurrent+strlen(tagSign)-3);
+        ////::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent+strlen(tagSign)-3,0);
+    //} else
+    //{
+    //    ::MessageBox(nppData._nppHandle, TEXT("Hotspots can be inserted only when you are editing snippets."), TEXT("FingerText"), MB_OK);
+    //}
 }
 
 
@@ -1257,18 +1320,27 @@ void setConfigAndDatabase()
 
     setupConfigFile();
 
+    if (PathFileExists(g_ftbPath) == FALSE) emptyFile(g_ftbPath);
+    if (PathFileExists(g_fttempPath) == FALSE) emptyFile(g_fttempPath);
+    //if (PathFileExists(g_ftbPath) == FALSE)
+	//{
+    //    ::WritePrivateProfileString(TEXT("Dummy"), TEXT("Dummy"), TEXT("Dummy"), g_ftbPath);
+    //    //::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, 0, (LPARAM)ftbPath);
+    //}
+    //if (PathFileExists(g_fttempPath) == FALSE)
+	//{
+    //    ::WritePrivateProfileString(TEXT("Dummy"), TEXT("Dummy"), TEXT("Dummy"), g_fttempPath);
+    //    //::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, 0, (LPARAM)ftbPath);
+    //}
+}
 
-    //TODO: should use ostream to write empty file
-    if (PathFileExists(g_ftbPath) == FALSE)
-	{
-        ::WritePrivateProfileString(TEXT("Dummy"), TEXT("Dummy"), TEXT("Dummy"), g_ftbPath);
-        //::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, 0, (LPARAM)ftbPath);
-    }
-    if (PathFileExists(g_fttempPath) == FALSE)
-	{
-        ::WritePrivateProfileString(TEXT("Dummy"), TEXT("Dummy"), TEXT("Dummy"), g_fttempPath);
-        //::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, 0, (LPARAM)ftbPath);
-    }
+void emptyFile(TCHAR* fileName)
+{
+    //	if (PathFileExists(g_consolePath) == FALSE) emptyFile(g_consolePath);
+    //if (PathFileExists(g_switcherPath) == FALSE) emptyFile(g_switcherPath);
+    std::ofstream File;
+    File.open(fileName,std::ios::out|std::ios::trunc);
+    File.close();
 }
 
 void resetDefaultSettings()
@@ -1704,6 +1776,7 @@ void exportSnippets()
 //TODO: Or it should be rewrite, import snippet should open the snippetediting.ftb, turn or annotation, and cut and paste the snippet on to that file and use the saveSnippet function
 void importSnippets()
 {
+    
     g_liveHintUpdate--;
     
     OPENFILENAME ofn;
@@ -1916,8 +1989,7 @@ int promptSaveSnippet(TCHAR* message)
 
 void updateMode()
 {
-    //TODO: use same method to check file ext name in edit snippet
-    HWND curScintilla = getCurrentScintilla();
+    //HWND curScintilla = getCurrentScintilla();
     
     TCHAR fileType[MAX_PATH];
     ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
@@ -2038,46 +2110,53 @@ void showAbout()
 
 void refreshAnnotation()
 {
-    //TODO: There is a bug which can be fixed by doing clearall everytime when this is trigger. But it is not very efficient ( as this is triggered in buffer activated event), need to think of another way.
-   
     if (g_editorView)
     {
-         g_modifyResponse = false;
-         HWND curScintilla = getCurrentScintilla();
-        //::SendMessage(getCurrentScintilla(), SCI_ANNOTATIONCLEARALL, 0, 0);
-        ::SendMessage(curScintilla, SCI_ANNOTATIONCLEARALL, 0, 0);
+        g_modifyResponse = false;
+        TCHAR fileType[MAX_PATH];
+        ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
 
-        ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"\
-                # The first line in this document should always be this    \r\n\
-                # ------ FingerText Snippet Editor View ------ \r\n\
-                # line. Don't mess it up! \r\n\r\n");
-        ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 1, (LPARAM)"\
-                # The second part is the trigger text. For example if you \r\n\
-                # put \"npp\" (without quotes) in this line, the snippet will\r\n\
-                # be triggered when you type npp and hit tab.\r\n\
-                # Trigger text with more than 30 characters is NOT recommended\r\n\
-                # Only alphanumerics are allowed.\r\n\r\n");
-        ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 2, (LPARAM)"\
-                # The third part is the scope of the snippet. \r\n\
-                # e.g. \"GLOBAL\" (without quotes) for globally available\r\n\
-                # snippets, and \".cpp\" (without quotes) for snippets that  \r\n\
-                # is only available in .cpp documents.\r\n\r\n\r\n\r\n\
-                # Anywhere below here is the snippet content. It can be\r\n\
-                # as long as many paragraphs or just several words.\r\n\
-                # Remember to place an [>END<] at the end of the snippet\r\n\
-                # content.\r\n");
+        if (::_tcscmp(fileType,TEXT(".ftb"))==0)
+        {
+            
+            HWND curScintilla = getCurrentScintilla();
+            //::SendMessage(getCurrentScintilla(), SCI_ANNOTATIONCLEARALL, 0, 0);
+            ::SendMessage(curScintilla, SCI_ANNOTATIONCLEARALL, 0, 0);
+
+            ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"\
+                    # The first line in this document should always be this    \r\n\
+                    # ------ FingerText Snippet Editor View ------ \r\n\
+                    # line. Don't mess it up! \r\n\r\n");
+            ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 1, (LPARAM)"\
+                    # The second part is the trigger text. For example if you \r\n\
+                    # put \"npp\" (without quotes) in this line, the snippet will\r\n\
+                    # be triggered when you type npp and hit tab.\r\n\
+                    # Trigger text with more than 30 characters is NOT recommended\r\n\
+                    # Only alphanumerics are allowed.\r\n\r\n");
+            ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 2, (LPARAM)"\
+                    # The third part is the scope of the snippet. \r\n\
+                    # e.g. \"GLOBAL\" (without quotes) for globally available\r\n\
+                    # snippets, and \".cpp\" (without quotes) for snippets that  \r\n\
+                    # is only available in .cpp documents.\r\n\r\n\r\n\r\n\
+                    # Anywhere below here is the snippet content. It can be\r\n\
+                    # as long as many paragraphs or just several words.\r\n\
+                    # Remember to place an [>END<] at the end of the snippet\r\n\
+                    # content.\r\n");
     
     
-        ::SendMessage(curScintilla, SCI_ANNOTATIONSETSTYLE, 0, STYLE_INDENTGUIDE);
-        ::SendMessage(curScintilla, SCI_ANNOTATIONSETSTYLE, 1, STYLE_INDENTGUIDE);
-        ::SendMessage(curScintilla, SCI_ANNOTATIONSETSTYLE, 2, STYLE_INDENTGUIDE);
+            ::SendMessage(curScintilla, SCI_ANNOTATIONSETSTYLE, 0, STYLE_INDENTGUIDE);
+            ::SendMessage(curScintilla, SCI_ANNOTATIONSETSTYLE, 1, STYLE_INDENTGUIDE);
+            ::SendMessage(curScintilla, SCI_ANNOTATIONSETSTYLE, 2, STYLE_INDENTGUIDE);
     
-        ::SendMessage(curScintilla, SCI_ANNOTATIONSETVISIBLE, 2, 0);
+            ::SendMessage(curScintilla, SCI_ANNOTATIONSETVISIBLE, 2, 0);
+            
+        }
         g_modifyResponse = true;
     }
 }
 
 
+//TODO: better triggertag, should allow for a list of scopes
 //TODO: consolidate triggerTag and snippet complete 
 bool triggerTag(int &posCurrent, int triggerLength)
 {
@@ -2172,7 +2251,7 @@ void fingerText()
 
     HWND curScintilla = getCurrentScintilla();
     
-    if ((g_enable==false) || (g_editorView==true) || (::SendMessage(curScintilla,SCI_SELECTIONISRECTANGLE,0,0)==1))
+    if ((g_enable==false) || (::SendMessage(curScintilla,SCI_SELECTIONISRECTANGLE,0,0)==1))
     {
         ::SendMessage(curScintilla,SCI_TAB,0,0);	
     } else
@@ -2184,7 +2263,6 @@ void fingerText()
             ::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
         }
         
-        //
         int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
         int posSelectionStart = ::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0);
         int posSelectionEnd = ::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0);
@@ -2198,36 +2276,40 @@ void fingerText()
         if (tagFound) ::SendMessage(curScintilla,SCI_AUTOCCANCEL,0,0);
         posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
 
-        int specialSpot = searchNext(curScintilla, "$[![");
-
-        if (specialSpot>=0)
-        {
-            ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
-        
-            ////dynamic hotspot (chain snippet)
-            //chainSnippet(curScintilla, posCurrent);
-            dynamicHotspot(curScintilla, posCurrent, 1);
-            ////dynamic hotspot (keyword spot)
-            //keyWordSpot(curScintilla, posCurrent);
-            dynamicHotspot(curScintilla, posCurrent, 2);
-            ////dynamic hotspot (Command Line)
-            //executeCommand(curScintilla, posCurrent);
-            dynamicHotspot(curScintilla, posCurrent, 3);
-
-        }
-            
-        if (g_preserveSteps==0) 
-	    {
-		    ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
-	    }
         bool navSpot = false;
-        
-        if (specialSpot>=0)
+        if (g_editorView==false)
         {
-            ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
-            navSpot = hotSpotNavigation(curScintilla);
+            int specialSpot = searchNext(curScintilla, "$[![");
+
+            if (specialSpot>=0)
+            {
+                ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
+            
+                ////dynamic hotspot (chain snippet)
+                //chainSnippet(curScintilla, posCurrent);
+                dynamicHotspot(curScintilla, posCurrent, 1);
+                ////dynamic hotspot (keyword spot)
+                //keyWordSpot(curScintilla, posCurrent);
+                dynamicHotspot(curScintilla, posCurrent, 2);
+                ////dynamic hotspot (Command Line)
+                //executeCommand(curScintilla, posCurrent);
+                dynamicHotspot(curScintilla, posCurrent, 3);
+
+            }
+                
+            if (g_preserveSteps==0) 
+	        {
+		        ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
+	        }
+            
+            
+            if (specialSpot>=0)
+            {
+                ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
+                navSpot = hotSpotNavigation(curScintilla);
+                if (navSpot) ::SendMessage(curScintilla,SCI_AUTOCCANCEL,0,0);
+            }
         }
-        
 
         bool completeFound = false;
         if (g_tabTagCompletion == 1)
@@ -2238,6 +2320,7 @@ void fingerText()
                 completeFound = snippetComplete();
                 if (completeFound)
                 {
+                    ::SendMessage(curScintilla,SCI_AUTOCCANCEL,0,0);
                     snippetHintUpdate();
                 }
 		    }
