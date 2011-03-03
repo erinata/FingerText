@@ -186,6 +186,7 @@ void commandMenuInit()
 	//shKey2->_key = VK_F4;
 
     setCommand(TRIGGER_SNIPPET_INDEX, TEXT("Trigger Snippet/Navigate to Hotspot"), fingerText, shKey, false);
+    
     //setCommand(WARMSPOT_NAVIGATION_INDEX, TEXT("Navigate to Warmspot"), goToWarmSpot, shKey2, false);
     setCommand(SNIPPET_DOCK_INDEX, TEXT("Toggle On/off SnippetDock"), showSnippetDock, NULL, false);
     setCommand(TOGGLE_ENABLE_INDEX, TEXT("Toggle On/Off FingerText"), toggleDisable, NULL, false);
@@ -205,8 +206,8 @@ void commandMenuInit()
     setCommand(HELP_INDEX, TEXT("Quick Guide"), showHelp, NULL, false);
     setCommand(ABOUT_INDEX, TEXT("About"), showAbout, NULL, false);
     //setCommand(SEPARATOR_FOUR_INDEX, TEXT("---"), NULL, NULL, false);
-    //setCommand(TESTING_INDEX, TEXT("Testing"), testing, NULL, false);
-
+    setCommand(TESTING_INDEX, TEXT("Testing"), testing, NULL, false);
+    //testing();
 }
 //
 // Here you can do the clean up (especially for the shortcut)
@@ -233,6 +234,7 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
     funcItem[index]._pFunc = pFunc;
     funcItem[index]._init2Check = check0nInit;
     funcItem[index]._pShKey = sk;
+
 
     return true;
 }
@@ -429,6 +431,7 @@ void selectionToSnippet()
     ::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
     ::SendMessage(curScintilla,SCI_WORDRIGHTEXTEND,1,0);
     delete [] selection;
+    refreshAnnotation();
 }
 
 //void selectionToSnippet()
@@ -1275,6 +1278,7 @@ void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
 
 void setConfigAndDatabase()
 {
+    
     g_modifyResponse = true;
     g_enable = true;
     //g_display=false;
@@ -2343,6 +2347,30 @@ void fingerText()
 //    
 //}
 
+void GenerateKey(int vk, BOOL bExtended) {
+
+    KEYBDINPUT  kb = {0};
+    INPUT       Input = {0};
+
+    /* Generate a "key down" */
+    if (bExtended) { kb.dwFlags  = KEYEVENTF_EXTENDEDKEY; }
+    kb.wVk  = vk;
+    Input.type  = INPUT_KEYBOARD;
+    Input.ki  = kb;
+    SendInput(1, &Input, sizeof(Input));
+
+    /* Generate a "key up" */
+    ZeroMemory(&kb, sizeof(KEYBDINPUT));
+    ZeroMemory(&Input, sizeof(INPUT));
+    kb.dwFlags  =  KEYEVENTF_KEYUP;
+    if (bExtended) { kb.dwFlags |= KEYEVENTF_EXTENDEDKEY; }
+    kb.wVk = vk;
+    Input.type = INPUT_KEYBOARD;
+    Input.ki = kb;
+    SendInput(1, &Input, sizeof(Input));
+
+    return;
+}
 
 void testing()
 {
@@ -2350,7 +2378,15 @@ void testing()
     ::MessageBox(nppData._nppHandle, TEXT("Testing!"), TEXT("Trace"), MB_OK);
     
     HWND curScintilla = getCurrentScintilla();
+    //setCommand(TRIGGER_SNIPPET_INDEX, TEXT("Trigger Snippet/Navigate to Hotspot"), fingerText, NULL, false);
+    //::GenerateKey(VK_TAB, TRUE);
 
+    //ShortcutKey *shKey = new ShortcutKey;
+	//shKey->_isAlt = true;
+	//shKey->_isCtrl = true;
+	//shKey->_isShift = true;
+	//shKey->_key = VK_TAB;
+    //setCommand(TRIGGER_SNIPPET_INDEX, TEXT("Trigger Snippet/Navigate to Hotspot"), fingerText, shKey, false);
     // create process, no console window
     //STARTUPINFO         si;
     //PROCESS_INFORMATION pi;
