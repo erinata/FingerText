@@ -339,7 +339,13 @@ void upgradeMessage()
         ::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)WELCOME_TEXT);
     }
 
-    ::SendMessage(curScintilla,SCI_SETMULTIPASTE,1,0); // TODO: this is temporary, relocate this setting to elsewhere
+    
+}
+
+void initialize()
+{
+    HWND curScintilla = getCurrentScintilla();
+    ::SendMessage(curScintilla,SCI_SETMULTIPASTE,1,0); 
 }
 
 int searchNext(HWND &curScintilla, char* searchText)
@@ -427,11 +433,11 @@ void selectionToSnippet()
     g_editorView = 1;    
     updateDockItems(false,false);
     //updateMode();
-    //refreshAnnotation();
+    refreshAnnotation();
     ::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
     ::SendMessage(curScintilla,SCI_WORDRIGHTEXTEND,1,0);
     delete [] selection;
-    refreshAnnotation();
+    
 }
 
 //void selectionToSnippet()
@@ -862,7 +868,7 @@ void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &star
     //::SendMessage(curScintilla,SCI_GOTOPOS,triggerPos,0);
     ::SendMessage(curScintilla,SCI_SETSEL,firstPos,triggerPos);
     //TODO: probably should use enum type...........
-
+    //TODO: At least I should rearrange the keyword a little bit for efficiency
     if (strcmp(hotSpotText,"PASTE")==0)
     {
         ::SendMessage(curScintilla,SCI_PASTE,0,0);
@@ -907,12 +913,13 @@ void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &star
     {
         insertPath(g_fttempPath,curScintilla);
 
-    }else if (strncmp(hotSpotText,"GET",3)==0) 
+    }else if (strncmp(hotSpotText,"GET:",4)==0) 
     {
+        //TODO: putting this chunk into a separate function
         emptyFile(g_fttempPath);
         char* getTerm;
         getTerm = new char[strlen(hotSpotText)];
-        strcpy(getTerm,hotSpotText+3);
+        strcpy(getTerm,hotSpotText+4);
         ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
         int scriptFound = -1;
         if (strlen(getTerm)>0) scriptFound = searchPrev(curScintilla,getTerm);
@@ -1112,8 +1119,16 @@ void showPreview()
     HWND curScintilla = getCurrentScintilla();
     int posCurrent = ::SendMessage(curScintilla, SCI_GETCURRENTPOS,0,0);
 
+    //if (!selectionChanged) snippetDock.setSelction();
+
     int index = snippetDock.getCount() - snippetDock.getSelection()-1;
     
+
+    //else
+    //{
+    //    index = snippetDock.getCount()-1;
+    //}
+        
     if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
 	{
 		// Then bind the two ? parameters in the SQLite SQL to the real parameter values

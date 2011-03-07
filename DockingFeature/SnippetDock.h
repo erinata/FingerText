@@ -131,6 +131,14 @@ public :
 
     }
 
+    void setSelction()
+    {
+
+        HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
+
+        SendMessage(hwndList, LB_SETANCHORINDEX, 0, 0);
+    }
+
     int getCount()
     {
         int retVal;

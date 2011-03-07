@@ -110,6 +110,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
     {
         case NPPN_READY:
             upgradeMessage();
+            initialize();
             break;
         case NPPN_SHUTDOWN:
             pluginShutdown();
@@ -141,6 +142,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             //refreshAnnotation();
             //break;   // should also do snippetHintUpdate() when SCN_CHARADDED
             snippetHintUpdate();
+            //showPreview();
             break;
         case SCN_MODIFIED:
             //alert();
