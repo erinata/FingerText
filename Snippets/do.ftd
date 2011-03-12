@@ -1,0 +1,53 @@
+foreach
+.do
+foreach i in $[![[variable list]]!]{
+    $[![[Body]]!]
+}
+[>END<]
+!$[FingerTextData FingerTextData]@#forvalues
+.do
+forvalues i = $[![[start]]!]($[![[step]]!])$[![[end]]!]{
+    $[![[Body]]!]
+}
+[>END<]
+!$[FingerTextData FingerTextData]@#infile
+.do
+infile using "$[![[Dictionary Name]]!]", clear[>END<]
+!$[FingerTextData FingerTextData]@#lag1check
+.do
+($[![[variable]]!]==$[![[variable]]!][_n-1])[>END<]
+!$[FingerTextData FingerTextData]@#reshape
+.do
+reshape $[![[long|wide]]!] $[![[Variable List]]!] , i($[![[ID]]!]) j($[![[period]]!])[>END<]
+!$[FingerTextData FingerTextData]@#run
+.do
+$[![(cmd)E:\Programs\Stata10\wmpstata.exe $[![(key)DIRECTORY]!]\$[![(key)FILENAME]!]$[![(key)EXTNAME]!]]!]
+[>END<]  
+!$[FingerTextData FingerTextData]@#save
+.do
+cap save "$[![[File Name]]!]",replace[>END<]
+!$[FingerTextData FingerTextData]@#template
+.do
+ /* Name:           $[![{Program Name}]!]*/
+ /* Description:    $[![{description}]!] */
+ /* Inputs:         $[![{inputs here}]!] */
+ /* Outputs:        $[![{outputs here}]!]*/
+ /* Date Created:   $[![{date}]!]        */
+ /* Author:         $[![{your name}]!]   */
+
+/* initialize */
+#delimit cr
+clear all
+cap set mem 500m
+cap set more off
+
+/* open new logging */
+cap log close
+cap log using "$[![{Log File Name}]!]",replace
+
+$[![[Body]]!]
+
+/* tidy up*/
+cap log close
+[>END<]   
+!$[FingerTextData FingerTextData]@#

@@ -1,0 +1,100 @@
+do
+.c
+do 
+{
+	  $[![(Body)]!]
+} $[![while]!][>END<]
+
+!$[FingerTextData FingerTextData]@#else
+.c
+else
+{
+    $[![[Body]]!]
+}[>END<]
+
+!$[FingerTextData FingerTextData]@#elseif
+.c
+else if ($[![(Condition)]!])
+{
+    $[![(Body)]!]
+}[>END<]
+
+!$[FingerTextData FingerTextData]@#for
+.c
+for ( int $[![[var]]!]= 0; $[![[var]]!]$[![[Condition]]!]; ++$[![[var]]!]) {
+	  $[![[Body]]!]
+}[>END<]
+
+!$[FingerTextData FingerTextData]@#helloworld
+.c
+//============================================================================
+// Name         : HelloWorld.c
+// Author       : 
+// Version      : 
+// Date         :
+// Copyright    : 
+// Description  : Hello World in C
+//============================================================================
+
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+  	puts("!!!Hello World!!!");
+  	return EXIT_SUCCESS;
+}
+[>END<]
+
+!$[FingerTextData FingerTextData]@#if
+.c
+if ($[![(condition)]!])
+{
+    $[![(Body)]!]
+} $[![else]!][>END<]
+
+!$[FingerTextData FingerTextData]@#main
+.c
+int main(int argc, char* argv[]) 
+{
+	  $[![(Body)]!]
+}[>END<]
+
+!$[FingerTextData FingerTextData]@#switch
+.c
+switch ($[![(Key)]!]) 
+{
+  	case $[![(Value)]!]:
+		    $[![(Body)]!]
+		    break;
+	  default:
+		    break;
+}[>END<]
+
+!$[FingerTextData FingerTextData]@#template
+.c
+//============================================================================
+// Name         : $[![(File Name)]!]
+// Author       : $[![(Author)]!]
+// Version      : $[![(Version)]!]
+// Date         : $[![(Date)]!]
+// Copyright    : $[![(Copyright notice)]!]
+// Description  : $[![(Description)]!]
+//============================================================================
+
+#include $[![(include)]!]
+
+int main() {
+    $[![(Body)]!]
+    return 0;
+}
+[>END<]
+
+!$[FingerTextData FingerTextData]@#testing
+.c
+testing snippet for .c
+[>END<] 
+!$[FingerTextData FingerTextData]@#while
+.c
+while ($[![[Condition]]!]);[>END<]
+
+!$[FingerTextData FingerTextData]@#

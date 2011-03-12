@@ -1,0 +1,14 @@
+makefile
+Makefile
+This is a makefile snippet.[>END<]
+
+!$[FingerTextData FingerTextData]@#simple
+Makefile
+all:
+	g++ -c -Wall $[![[FileName]]!].cpp
+	g++ $[![[FileName]]!].o -o $[![[FileName]]!][>END<]
+!$[FingerTextData FingerTextData]@#template
+Makefile
+This is a makefile template.[>END<]
+
+!$[FingerTextData FingerTextData]@#

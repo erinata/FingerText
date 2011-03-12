@@ -6,7 +6,7 @@ a
 <a href="$[![]!]">
 	<img src="$[![]!].jpg" alt="$[![]!]" title="$[![]!]" />
 </a>
-[>END<] 
+$[![]!][>END<]  
 !$[FingerTextData FingerTextData]@#auto
 .html
 autocomplete="$[![off]!]"[>END<] 
@@ -19,7 +19,7 @@ autocomplete="$[![off]!]"[>END<]
 $[![]!][>END<] 
 !$[FingerTextData FingerTextData]@#button
 .html
-<input name="$[![]!]"  value="$[![]!]" id="$[![]!]" type="button" />[>END<]   
+<input name="$[![]!]" value="$[![]!]" id="$[![]!]" type="button" />[>END<]    
 !$[FingerTextData FingerTextData]@#checkbox
 .html
 <input name="$[![]!]" value="$[![]!]" $[![checked="checked"]!] id="$[![]!]" type="checkbox" />[>END<]   
@@ -138,7 +138,7 @@ name="$[![]!]"[>END<]
 <input name="$[![]!]" value$[![]!] id="$[![]!]" max$[![]!] type="password" />$[![]!][>END<]  
 !$[FingerTextData FingerTextData]@#php
 .html
-<?php $[![]!]?>[>END<] 
+<?php $[![]!];?>[>END<]  
 !$[FingerTextData FingerTextData]@#pre
 .html
 <pre></pre>[>END<] 

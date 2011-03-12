@@ -1,0 +1,36 @@
+for
+.m
+for i=1:n,
+   $[![]!]
+end
+[>END<] 
+!$[FingerTextData FingerTextData]@#if
+.m
+if $[![{condition}]!],
+  $[![]!]
+end
+[>END<] 
+!$[FingerTextData FingerTextData]@#template
+.m
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+% Name:           $[![{program name}]!]
+% 
+% Description:    $[![{description}]!]
+% 
+% Inputs:         $[![{inputs here}]!]
+% 
+% Outputs:        $[![{outputs here}]!]
+% 
+% Date Created:   $[![{date}]!]
+% 
+% Author:         $[![{your name}]!]
+% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+try
+  % Main code here
+  $[![]!]
+catch
+  % Exception handling here
+end[>END<] 
+!$[FingerTextData FingerTextData]@#

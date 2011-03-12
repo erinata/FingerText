@@ -1,0 +1,97 @@
+cout
+.cpp
+cout << "$[![[Text]]!]" << endl;[>END<]
+
+!$[FingerTextData FingerTextData]@#do
+.cpp
+do 
+{ 
+	$[![(Body)]!] 
+} while ($[![(Condition)]!]); [>END<]
+
+!$[FingerTextData FingerTextData]@#elseif
+.cpp
+else if ($[![(Condition)]!])
+{
+    $[![(Body)]!]
+}[>END<]
+
+!$[FingerTextData FingerTextData]@#for
+.cpp
+for ( $[![[var]]!]= 0; $[![[Condition]]!]; ++$[![[var]]!]) {
+	  $[![[Body]]!]
+}[>END<]
+
+!$[FingerTextData FingerTextData]@#helloworld
+.cpp
+//============================================================================
+// Name        : HelloWorld.cpp
+// Author      : 
+// Version     : 
+// Copyright   : 
+// Description : Hello World in C++
+//============================================================================
+
+#include <iostream>
+using namespace std;
+
+int main() {
+    cout << "!!!Hello World!!!" << endl; 
+    cin.get();
+    return 0;
+}
+[>END<]
+
+!$[FingerTextData FingerTextData]@#if
+.cpp
+if ($[![(condition)]!])
+{
+    $[![(Body)]!]
+} $[![else]!][>END<]
+
+!$[FingerTextData FingerTextData]@#ios
+.cpp
+#include <iostream>
+using namespace std;
+
+$[![]!]
+[>END<]
+
+!$[FingerTextData FingerTextData]@#main
+.cpp
+int main(int argc, char* argv[]) 
+{
+	  $[![[Body]]!]
+}[>END<]
+
+!$[FingerTextData FingerTextData]@#switch
+.cpp
+switch ($[![(Key)]!]) 
+{
+  	case $[![(Value)]!]:
+		    $[![(Body)]!]
+		    break;
+	  default:
+		    break;
+}[>END<]
+
+!$[FingerTextData FingerTextData]@#template
+.cpp
+//============================================================================
+// Name         : $[![(File Name)]!]
+// Author       : $[![(Author)]!]
+// Version      : $[![(Version)]!]
+// Date         : $[![(Date)]!]
+// Copyright    : $[![(Copyright notice)]!]
+// Description  : $[![(Description)]!]
+//============================================================================
+
+#include $[![(include)]!]
+
+int main() {
+    $[![(Body)]!]
+    return 0;
+}
+[>END<]
+
+!$[FingerTextData FingerTextData]@#
