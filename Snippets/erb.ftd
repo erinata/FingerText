@@ -3,22 +3,28 @@ conf
 <% content_for :$[![(yield_label)]!] do -%>
 	$[![]!]
 <% end -%>[>END<] 
-!$[FingerTextData FingerTextData]@#ffcb
+!$[FingerTextData FingerTextData]@#
+ffcb
 .erb
 f.check_box :$[![(attribute)]!][>END<]    
-!$[FingerTextData FingerTextData]@#ffl
+!$[FingerTextData FingerTextData]@#
+ffl
 .erb
 f.label :$[![(attribute)]!], "$[![(attribute)]!]"$[![]!][>END<] 
-!$[FingerTextData FingerTextData]@#ffpf
+!$[FingerTextData FingerTextData]@#
+ffpf
 .erb
 f.password_field :$[![(attribute)]!][>END<] 
-!$[FingerTextData FingerTextData]@#ffrb
+!$[FingerTextData FingerTextData]@#
+ffrb
 .erb
 f.radio_button :$[![(attribute)]!], :$[![(tag_value)]!]$[![]!][>END<] 
-!$[FingerTextData FingerTextData]@#ffta
+!$[FingerTextData FingerTextData]@#
+ffta
 .erb
 f.text_area :$[![(attribute)]!]$[![]!][>END<] 
-!$[FingerTextData FingerTextData]@#fftf
+!$[FingerTextData FingerTextData]@#
+fftf
 .erb
 f.text_field :$[![(attribute)]!]$[![]!][>END<] 
 !$[FingerTextData FingerTextData]@#

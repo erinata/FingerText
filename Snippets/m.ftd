@@ -4,13 +4,15 @@ for i=1:n,
    $[![]!]
 end
 [>END<] 
-!$[FingerTextData FingerTextData]@#if
+!$[FingerTextData FingerTextData]@#
+if
 .m
 if $[![{condition}]!],
   $[![]!]
 end
 [>END<] 
-!$[FingerTextData FingerTextData]@#template
+!$[FingerTextData FingerTextData]@#
+template
 .m
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 
