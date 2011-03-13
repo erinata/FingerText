@@ -1,91 +1,114 @@
 a
 .html
 <a href="$[![]!]">$[![]!]</a>[>END<] 
-!$[FingerTextData FingerTextData]@#aimg
+!$[FingerTextData FingerTextData]@#
+aimg
 .html
 <a href="$[![]!]">
 	<img src="$[![]!].jpg" alt="$[![]!]" title="$[![]!]" />
 </a>
 $[![]!][>END<]  
-!$[FingerTextData FingerTextData]@#auto
+!$[FingerTextData FingerTextData]@#
+auto
 .html
 autocomplete="$[![off]!]"[>END<] 
-!$[FingerTextData FingerTextData]@#b
+!$[FingerTextData FingerTextData]@#
+b
 .html
 <strong>$[![]!]</strong>[>END<] 
-!$[FingerTextData FingerTextData]@#br
+!$[FingerTextData FingerTextData]@#
+br
 .html
 <br/>
 $[![]!][>END<] 
-!$[FingerTextData FingerTextData]@#button
+!$[FingerTextData FingerTextData]@#
+button
 .html
 <input name="$[![]!]" value="$[![]!]" id="$[![]!]" type="button" />[>END<]    
-!$[FingerTextData FingerTextData]@#checkbox
+!$[FingerTextData FingerTextData]@#
+checkbox
 .html
 <input name="$[![]!]" value="$[![]!]" $[![checked="checked"]!] id="$[![]!]" type="checkbox" />[>END<]   
-!$[FingerTextData FingerTextData]@#class
+!$[FingerTextData FingerTextData]@#
+class
 .html
 class="$[![]!]"[>END<] 
-!$[FingerTextData FingerTextData]@#code
+!$[FingerTextData FingerTextData]@#
+code
 .html
 <code>$[![]!]</code>[>END<] 
-!$[FingerTextData FingerTextData]@#div
+!$[FingerTextData FingerTextData]@#
+div
 .html
 <div id="$[![Unique ID]!]">
 
 	$[![]!]
 
 </div><!-- End of $[![Unique ID]!] -->[>END<]    
-!$[FingerTextData FingerTextData]@#divc
+!$[FingerTextData FingerTextData]@#
+divc
 .html
 <div class="$[![Class Name]!]">
 
 	$[![]!]
 
 </div>[>END<] 
-!$[FingerTextData FingerTextData]@#em
+!$[FingerTextData FingerTextData]@#
+em
 .html
 <em>$[![]!]</em>[>END<] 
-!$[FingerTextData FingerTextData]@#euro
+!$[FingerTextData FingerTextData]@#
+euro
 .html
 &euro;$[![]!][>END<] 
-!$[FingerTextData FingerTextData]@#field
+!$[FingerTextData FingerTextData]@#
+field
 .html
 <label for="$[![Field Name]!]">$[![Field Label]!]
   <input name="$[![Field Name]!]" id="$[![Field Name]!]" value$[![]!] type="text" />
 </label>
 $[![]!][>END<]  
-!$[FingerTextData FingerTextData]@#fieldset
+!$[FingerTextData FingerTextData]@#
+fieldset
 .html
 <fieldset>
   <legend>$[![]!]</legend>
 </fieldset>[>END<]  
-!$[FingerTextData FingerTextData]@#form
+!$[FingerTextData FingerTextData]@#
+form
 .html
 <form name="$[![Form Name]!]" action="$[![Action Url]!]" method="$[![post]!]">
 
   $[![]!]
 
 </form>[>END<] 
-!$[FingerTextData FingerTextData]@#gt
+!$[FingerTextData FingerTextData]@#
+gt
 .html
 &gt;$[![]!][>END<] 
-!$[FingerTextData FingerTextData]@#h1
+!$[FingerTextData FingerTextData]@#
+h1
 .html
 <h1>$[![]!]</h1>[>END<] 
-!$[FingerTextData FingerTextData]@#h2
+!$[FingerTextData FingerTextData]@#
+h2
 .html
 <h2>$[![]!]</h2>[>END<] 
-!$[FingerTextData FingerTextData]@#h3
+!$[FingerTextData FingerTextData]@#
+h3
 .html
 <h3>$[![]!]</h3>[>END<] 
-!$[FingerTextData FingerTextData]@#hidden
+!$[FingerTextData FingerTextData]@#
+hidden
 .html
 <input name="$[![]!]" value="$[![]!]" id$[![]!] type="hidden" />$[![]!][>END<]  
-!$[FingerTextData FingerTextData]@#hr
+!$[FingerTextData FingerTextData]@#
+hr
 .html
-<hr/>[>END<] 
-!$[FingerTextData FingerTextData]@#html5
+<hr/>
+$[![]!][>END<]  
+!$[FingerTextData FingerTextData]@#
+html5
 .html
 <!DOCTYPE html>
 <html>
@@ -99,53 +122,68 @@ $[![]!]
 
 </body>
 </html>[>END<]   
-!$[FingerTextData FingerTextData]@#i
+!$[FingerTextData FingerTextData]@#
+i
 .html
 <em>$[![]!]</em>[>END<] 
-!$[FingerTextData FingerTextData]@#id
+!$[FingerTextData FingerTextData]@#
+id
 .html
 id="$[![]!]"[>END<]  
-!$[FingerTextData FingerTextData]@#img
+!$[FingerTextData FingerTextData]@#
+img
 .html
 <img src="$[![]!].jpg" alt="$[![]!]" $[![align="left"]!] />[>END<] 
-!$[FingerTextData FingerTextData]@#label
+!$[FingerTextData FingerTextData]@#
+label
 .html
 <label for="$[![Field ID]!]">
 	$[![]!]
 </label>[>END<] 
-!$[FingerTextData FingerTextData]@#lt
+!$[FingerTextData FingerTextData]@#
+lt
 .html
 &lt;$[![]!][>END<] 
-!$[FingerTextData FingerTextData]@#max
+!$[FingerTextData FingerTextData]@#
+max
 .html
 maxlength="$[![]!]"[>END<] 
-!$[FingerTextData FingerTextData]@#meta
+!$[FingerTextData FingerTextData]@#
+meta
 .html
 <meta name="robots" content="index,follow" />
 <meta name="description" content="$[![]!]" />
 <meta name="keywords" content="$[![]!]" />[>END<]  
-!$[FingerTextData FingerTextData]@#name
+!$[FingerTextData FingerTextData]@#
+name
 .html
 name="$[![]!]"[>END<]   
-!$[FingerTextData FingerTextData]@#nbsp
+!$[FingerTextData FingerTextData]@#
+nbsp
 .html
 &nbsp;$[![]!][>END<] 
-!$[FingerTextData FingerTextData]@#option
+!$[FingerTextData FingerTextData]@#
+option
 .html
 <option value="$[![]!]" $[![selected="selected"]!]>$[![]!]</option>[>END<] 
-!$[FingerTextData FingerTextData]@#pass
+!$[FingerTextData FingerTextData]@#
+pass
 .html
 <input name="$[![]!]" value$[![]!] id="$[![]!]" max$[![]!] type="password" />$[![]!][>END<]  
-!$[FingerTextData FingerTextData]@#php
+!$[FingerTextData FingerTextData]@#
+php
 .html
 <?php $[![]!];?>[>END<]  
-!$[FingerTextData FingerTextData]@#pre
+!$[FingerTextData FingerTextData]@#
+pre
 .html
 <pre></pre>[>END<] 
-!$[FingerTextData FingerTextData]@#radio
+!$[FingerTextData FingerTextData]@#
+radio
 .html
 <input name="$[![]!]" value="$[![]!]" id="$[![]!]" $[![checked="checked"]!] type="radio" />$[![]!][>END<] 
-!$[FingerTextData FingerTextData]@#script
+!$[FingerTextData FingerTextData]@#
+script
 .html
 <script type="text/javascript">
 <!--
@@ -154,24 +192,30 @@ name="$[![]!]"[>END<]
 
 //-->
 </script>[>END<] 
-!$[FingerTextData FingerTextData]@#scriptx
+!$[FingerTextData FingerTextData]@#
+scriptx
 .html
 <script type="text/javascript" src="$[![]!].js"></script>[>END<] 
-!$[FingerTextData FingerTextData]@#select
+!$[FingerTextData FingerTextData]@#
+select
 .html
 <select name="$[![]!]" id="$[![]!]">
 	<option value="$[![]!]" $[![selected="selected"]!]>$[![]!]</option>
 </select>[>END<] 
-!$[FingerTextData FingerTextData]@#size
+!$[FingerTextData FingerTextData]@#
+size
 .html
 size="$[![20]!]"[>END<] 
-!$[FingerTextData FingerTextData]@#span
+!$[FingerTextData FingerTextData]@#
+span
 .html
 <span class="$[![]!]"></span>[>END<] 
-!$[FingerTextData FingerTextData]@#strong
+!$[FingerTextData FingerTextData]@#
+strong
 .html
 <strong>$[![]!]</strong>[>END<] 
-!$[FingerTextData FingerTextData]@#style
+!$[FingerTextData FingerTextData]@#
+style
 .html
 <style type="text/css">
 <!--
@@ -180,22 +224,28 @@ $[![]!]
 
 -->
 </style>[>END<] 
-!$[FingerTextData FingerTextData]@#stylex
+!$[FingerTextData FingerTextData]@#
+stylex
 .html
 <link rel="stylesheet" type="text/css" href="$[![]!].css">[>END<] 
-!$[FingerTextData FingerTextData]@#sub
+!$[FingerTextData FingerTextData]@#
+sub
 .html
 <sub>$[![]!]</sub>[>END<] 
-!$[FingerTextData FingerTextData]@#submit
+!$[FingerTextData FingerTextData]@#
+submit
 .html
 <input value="$[![Submit]!]" type="submit" />[>END<] 
-!$[FingerTextData FingerTextData]@#sup
+!$[FingerTextData FingerTextData]@#
+sup
 .html
 <sup>$[![]!]</sup>[>END<] 
-!$[FingerTextData FingerTextData]@#tabindex
+!$[FingerTextData FingerTextData]@#
+tabindex
 .html
 tabindex="$[![]!]"[>END<]   
-!$[FingerTextData FingerTextData]@#table
+!$[FingerTextData FingerTextData]@#
+table
 .html
 <table $[![border="0"]!]>
   <thead>
@@ -211,41 +261,51 @@ tabindex="$[![]!]"[>END<]
   </tbody>
 </table>
 $[![]!][>END<] 
-!$[FingerTextData FingerTextData]@#tag
+!$[FingerTextData FingerTextData]@#
+tag
 .html
 $[![(key)CUT]!]<$[![(key)PASTE]!]>$[![]!]</$[![(key)PASTE]!]>[>END<]     
-!$[FingerTextData FingerTextData]@#td
+!$[FingerTextData FingerTextData]@#
+td
 .html
 <td>$[![]!]</td>[>END<] 
-!$[FingerTextData FingerTextData]@#textarea
+!$[FingerTextData FingerTextData]@#
+textarea
 .html
 <textarea name="$[![]!]" id="$[![]!]" rows="$[![]!]" cols="$[![]!]"></textarea>
 $[![]!][>END<] 
-!$[FingerTextData FingerTextData]@#th
+!$[FingerTextData FingerTextData]@#
+th
 .html
 <th>$[![]!]</th>[>END<] 
-!$[FingerTextData FingerTextData]@#title
+!$[FingerTextData FingerTextData]@#
+title
 .html
 title="$[![]!]"[>END<] 
-!$[FingerTextData FingerTextData]@#tr
+!$[FingerTextData FingerTextData]@#
+tr
 .html
 <tr>
   $[![]!]
 </tr>[>END<] 
-!$[FingerTextData FingerTextData]@#type
+!$[FingerTextData FingerTextData]@#
+type
 .html
 type="$[![]!]"[>END<]    
-!$[FingerTextData FingerTextData]@#u
+!$[FingerTextData FingerTextData]@#
+u
 .html
 <u>$[![]!]</u>[>END<] 
-!$[FingerTextData FingerTextData]@#ul
+!$[FingerTextData FingerTextData]@#
+ul
 .html
 <ul $[![]!]>
 	<li>$[![]!]</li>
 	<li>$[![]!]</li>
 </ul>
 [>END<] 
-!$[FingerTextData FingerTextData]@#value
+!$[FingerTextData FingerTextData]@#
+value
 .html
 value="$[![]!]"[>END<] 
 !$[FingerTextData FingerTextData]@#

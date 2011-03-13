@@ -5,27 +5,31 @@ do
 	  $[![(Body)]!]
 } $[![while]!][>END<]
 
-!$[FingerTextData FingerTextData]@#else
+!$[FingerTextData FingerTextData]@#
+else
 .c
 else
 {
     $[![[Body]]!]
 }[>END<]
 
-!$[FingerTextData FingerTextData]@#elseif
+!$[FingerTextData FingerTextData]@#
+elseif
 .c
 else if ($[![(Condition)]!])
 {
     $[![(Body)]!]
 }[>END<]
 
-!$[FingerTextData FingerTextData]@#for
+!$[FingerTextData FingerTextData]@#
+for
 .c
 for ( int $[![[var]]!]= 0; $[![[var]]!]$[![[Condition]]!]; ++$[![[var]]!]) {
 	  $[![[Body]]!]
 }[>END<]
 
-!$[FingerTextData FingerTextData]@#helloworld
+!$[FingerTextData FingerTextData]@#
+helloworld
 .c
 //============================================================================
 // Name         : HelloWorld.c
@@ -45,21 +49,24 @@ int main(void) {
 }
 [>END<]
 
-!$[FingerTextData FingerTextData]@#if
+!$[FingerTextData FingerTextData]@#
+if
 .c
 if ($[![(condition)]!])
 {
     $[![(Body)]!]
 } $[![else]!][>END<]
 
-!$[FingerTextData FingerTextData]@#main
+!$[FingerTextData FingerTextData]@#
+main
 .c
 int main(int argc, char* argv[]) 
 {
 	  $[![(Body)]!]
 }[>END<]
 
-!$[FingerTextData FingerTextData]@#switch
+!$[FingerTextData FingerTextData]@#
+switch
 .c
 switch ($[![(Key)]!]) 
 {
@@ -70,7 +77,8 @@ switch ($[![(Key)]!])
 		    break;
 }[>END<]
 
-!$[FingerTextData FingerTextData]@#template
+!$[FingerTextData FingerTextData]@#
+template
 .c
 //============================================================================
 // Name         : $[![(File Name)]!]
@@ -89,11 +97,13 @@ int main() {
 }
 [>END<]
 
-!$[FingerTextData FingerTextData]@#testing
+!$[FingerTextData FingerTextData]@#
+testing
 .c
 testing snippet for .c
 [>END<] 
-!$[FingerTextData FingerTextData]@#while
+!$[FingerTextData FingerTextData]@#
+while
 .c
 while ($[![[Condition]]!]);[>END<]
 

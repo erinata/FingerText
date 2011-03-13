@@ -2,27 +2,31 @@ cout
 .cpp
 cout << "$[![[Text]]!]" << endl;[>END<]
 
-!$[FingerTextData FingerTextData]@#do
+!$[FingerTextData FingerTextData]@#
+do
 .cpp
 do 
 { 
 	$[![(Body)]!] 
 } while ($[![(Condition)]!]); [>END<]
 
-!$[FingerTextData FingerTextData]@#elseif
+!$[FingerTextData FingerTextData]@#
+elseif
 .cpp
 else if ($[![(Condition)]!])
 {
     $[![(Body)]!]
 }[>END<]
 
-!$[FingerTextData FingerTextData]@#for
+!$[FingerTextData FingerTextData]@#
+for
 .cpp
 for ( $[![[var]]!]= 0; $[![[Condition]]!]; ++$[![[var]]!]) {
 	  $[![[Body]]!]
 }[>END<]
 
-!$[FingerTextData FingerTextData]@#helloworld
+!$[FingerTextData FingerTextData]@#
+helloworld
 .cpp
 //============================================================================
 // Name        : HelloWorld.cpp
@@ -42,14 +46,16 @@ int main() {
 }
 [>END<]
 
-!$[FingerTextData FingerTextData]@#if
+!$[FingerTextData FingerTextData]@#
+if
 .cpp
 if ($[![(condition)]!])
 {
     $[![(Body)]!]
 } $[![else]!][>END<]
 
-!$[FingerTextData FingerTextData]@#ios
+!$[FingerTextData FingerTextData]@#
+ios
 .cpp
 #include <iostream>
 using namespace std;
@@ -57,14 +63,16 @@ using namespace std;
 $[![]!]
 [>END<]
 
-!$[FingerTextData FingerTextData]@#main
+!$[FingerTextData FingerTextData]@#
+main
 .cpp
 int main(int argc, char* argv[]) 
 {
 	  $[![[Body]]!]
 }[>END<]
 
-!$[FingerTextData FingerTextData]@#switch
+!$[FingerTextData FingerTextData]@#
+switch
 .cpp
 switch ($[![(Key)]!]) 
 {
@@ -75,7 +83,8 @@ switch ($[![(Key)]!])
 		    break;
 }[>END<]
 
-!$[FingerTextData FingerTextData]@#template
+!$[FingerTextData FingerTextData]@#
+template
 .cpp
 //============================================================================
 // Name         : $[![(File Name)]!]

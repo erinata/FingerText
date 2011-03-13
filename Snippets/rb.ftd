@@ -1,37 +1,45 @@
 aa
 .rb
 attr_accessor :$[![(attr name)]!][>END<] 
-!$[FingerTextData FingerTextData]@#alias
+!$[FingerTextData FingerTextData]@#
+alias
 .rb
 alias_method :$[![(new name)]!], :$[![(old name)]!][>END<] 
-!$[FingerTextData FingerTextData]@#case
+!$[FingerTextData FingerTextData]@#
+case
 .rb
 case $[![(object)]!]
 when $[![(condition)]!]
   $[![(body)]!]
 end
 [>END<] 
-!$[FingerTextData FingerTextData]@#collect
+!$[FingerTextData FingerTextData]@#
+collect
 .rb
 collect { |$[![e]!]| $[![(content)]!]}[>END<]   
-!$[FingerTextData FingerTextData]@#def
+!$[FingerTextData FingerTextData]@#
+def
 .rb
 def $[![(method name)]!]
   $[![(body)]!]
 end
 [>END<]   
-!$[FingerTextData FingerTextData]@#dir
+!$[FingerTextData FingerTextData]@#
+dir
 .rb
 File.dirname(__FILE__)[>END<]   
-!$[FingerTextData FingerTextData]@#do
+!$[FingerTextData FingerTextData]@#
+do
 .rb
 do |$[![(variable)]!]|
   $[![(body)]!]
 end[>END<]   
-!$[FingerTextData FingerTextData]@#flash
+!$[FingerTextData FingerTextData]@#
+flash
 .rb
 flash[:$[![notice]!]] = "$[![(content)]!]"[>END<] 
-!$[FingerTextData FingerTextData]@#if
+!$[FingerTextData FingerTextData]@#
+if
 .rb
 if $[![(condition)]!]
   $[![(body1)]!]
@@ -39,19 +47,23 @@ else
   $[![(body2)]!]
 end
 [>END<] 
-!$[FingerTextData FingerTextData]@#lambda
+!$[FingerTextData FingerTextData]@#
+lambda
 .rb
 lambda { |$[![e]!]| $[![(content)]!]}[>END<]    
-!$[FingerTextData FingerTextData]@#method
+!$[FingerTextData FingerTextData]@#
+method
 .rb
 def $[![(method name)]!]
   $[![(key)PASTE]!]
 end
 [>END<]  
-!$[FingerTextData FingerTextData]@#run
+!$[FingerTextData FingerTextData]@#
+run
 .rb
 $[![(cmd)ruby $[![(key)DIRECTORY]!]\$[![(key)FILENAME]!]$[![(key)EXTNAME]!]]!][>END<] 
-!$[FingerTextData FingerTextData]@#shebang
+!$[FingerTextData FingerTextData]@#
+shebang
 .rb
 #!/usr/bin/env ruby[>END<] 
 !$[FingerTextData FingerTextData]@#
