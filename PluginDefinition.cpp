@@ -264,10 +264,10 @@ char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""), bool similar=fa
     int sqlitePrepare;
     if (similar == false)
     {
-        sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY tag", -1, &stmt, NULL);
+        sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY LENGTH(tag)", -1, &stmt, NULL);
     } else
     {
-        sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY tag", -1, &stmt, NULL);
+        sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY LENGTH(tag)", -1, &stmt, NULL);
     }
     
 
@@ -1548,10 +1548,10 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
     {
         if (withAll)
         {
-            sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets ORDER BY tagType DESC,tag DESC LIMIT ? ", -1, &stmt, NULL);
+            sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets ORDER BY tagType DESC, LENGTH(tag) DESC, tag DESC LIMIT ? ", -1, &stmt, NULL);
         } else 
         {
-            sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets WHERE (tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ?) AND tag LIKE ? ORDER BY tagType DESC,tag DESC LIMIT ? ", -1, &stmt, NULL);
+            sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets WHERE (tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ?) AND tag LIKE ? ORDER BY tagType DESC, LENGTH(tag) DESC, tag DESC LIMIT ? ", -1, &stmt, NULL);
         }
 
     } else
