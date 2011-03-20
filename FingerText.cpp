@@ -88,6 +88,7 @@ extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData)
 	nppData = notpadPlusData;
 	commandMenuInit();
     setConfigAndDatabase();
+    
 }
 
 extern "C" __declspec(dllexport) const TCHAR * getName()
@@ -104,10 +105,12 @@ extern "C" __declspec(dllexport) FuncItem * getFuncsArray(int *nbF)
 
 extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 {
+    
     switch(notifyCode->nmhdr.code)
     {
         case NPPN_READY:
             upgradeMessage();
+            initialize();
             break;
         case NPPN_SHUTDOWN:
             pluginShutdown();
@@ -125,25 +128,31 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             break;
         
             //TODO: Try to deal with repeated triggering of snippetHintUpdate and keyUpdate
+        case SCN_KEY:
+            alert();
+            break;
         case SCN_CHARADDED:
+
+            //switch(notifyCode->ch)
+            //{
+            
+            //}
+            
             //keyUpdate();
             //refreshAnnotation();
             //break;   // should also do snippetHintUpdate() when SCN_CHARADDED
-        case SCN_MODIFIED:
-            //switch (notifyCode->modificationType)
-            //{
-            //    
-            //    case SC_MOD_DELETETEXT:
-            //        alert();
-            //        snippetHintUpdate();
-            //        break;
-            //    case SC_MOD_BEFOREDELETE:
-            //        alert();
-            //        snippetHintUpdate();
-            //        break;
-            //}
             snippetHintUpdate();
-            
+            //showPreview();
+            break;
+        case SCN_MODIFIED:
+            //alert();
+            //if (notifyCode->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT))
+            if (notifyCode->modificationType & (SC_MOD_DELETETEXT | SC_LASTSTEPINUNDOREDO))
+            {
+                
+                snippetHintUpdate();
+                refreshAnnotation();
+            }
             break;
         
         case NPPN_FILESAVED:
