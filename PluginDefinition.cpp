@@ -295,6 +295,8 @@ char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""), bool similar=fa
             delete [] fileType;
         }
 
+		strcat(tagType, "%");
+
 		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
 		sqlite3_bind_text(stmt, 1, tagType, -1, SQLITE_STATIC);
 
@@ -593,7 +595,7 @@ bool getLineChecked(char **buffer, HWND &curScintilla, int lineNumber, TCHAR* er
         char* wordChar;
         if (lineNumber==2)
         {
-            wordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.";
+            wordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_. ";
             
         } else //if (lineNumber==1)
         {
@@ -1586,10 +1588,16 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
         {
             ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType1);
             convertToUTF8(fileType1, &tagType1);
+
+			strcat(tagType1, "%");
+
             sqlite3_bind_text(stmt, 1, tagType1, -1, SQLITE_STATIC);
         		
             ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType2);
             convertToUTF8(fileType2, &tagType2);
+
+			strcat(tagType2, "%");
+
             sqlite3_bind_text(stmt, 2, tagType2, -1, SQLITE_STATIC);
         
             sqlite3_bind_text(stmt, 3, "GLOBAL", -1, SQLITE_STATIC);
