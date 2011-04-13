@@ -305,7 +305,7 @@ char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""), bool similar=fa
         if (similar==1)
         {
             char similarTag[MAX_PATH]="";
-            strcat(similarTag,"%");
+            //strcat(similarTag,"%");
             strcat(similarTag,tag);
             strcat(similarTag,"%");
             //::SendMessage(getCurrentScintilla(),SCI_INSERTTEXT,0,(LPARAM)similarTag);
