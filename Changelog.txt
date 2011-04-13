@@ -4,6 +4,7 @@ changelog (for developers only, include unreleased versions)
 performance improvement for live update snippet hint
 fixed: Annotation not shown correctly in editmode
 change keyword GET to GET:
+update quick guide
 
 0.5.6
 remove GETSCRIPT, add a more general keyword GET
