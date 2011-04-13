@@ -1,4 +1,4 @@
-= FingerText (current version 0.5.6)
+= FingerText (current version 0.5.7)
 
 Tab triggered snippet plugin for Notepad++.
 
@@ -14,12 +14,12 @@ This plugin is still in Alpha stage so do expect that it can be buggy. However, 
 
 == Install
 
-Download the file "FingerText - 0.5.6.zip" at
-http://sourceforge.net/projects/fingertext/files/Alpha%20Releases/FingerText%20-%200.5.6.zip/download
+Download the file "FingerText - 0.5.7.zip" at
+http://sourceforge.net/projects/fingertext/files/Alpha%20Releases/FingerText%20-%200.5.7.zip/download
 
 Unzip the package and copy the FingerText.dll to the plugins folder of Notepad++. This is the only file you need to run FingerText in notepad++.
 
-The readme.rdoc file is for your reference. And the FingerText0.5.6SampleSnippets.ftd is a file containing some sample snippets. (You need this if you want to follow the usage guide in this document)
+The readme.rdoc file is for your reference. And the FingerText0.5.7SampleSnippets.ftd is a file containing some sample snippets. (You need this if you want to follow the usage guide in this document)
 
 == Screenshots
 
@@ -35,9 +35,9 @@ https://github.com/downloads/erinata/FingerText/FingerText0.5.4_ScreenClip_4.png
 
 You should have FingerText installed. If you are in doubt, go to the notepad++ menu, there should be "FingerText" under "Plugins".
 
-To import the sample snippets, go to notepad++ menu > plugin > FingerText > Import Snippets. Choose the file FingerText0.5.6SampleSnippets.ftd (which is the file you downloaded with the FingerText.dll) and all the sample snippets will be installed.
+To import the sample snippets, go to notepad++ menu > plugin > FingerText > Import Snippets. Choose the file FingerText0.5.7SampleSnippets.ftd (which is the file you downloaded with the FingerText.dll) and all the sample snippets will be installed.
 
-If you are using plugin Manager to download FingerText or you just cannot locate the sample snippet file, you can download it from https://github.com/downloads/erinata/FingerText/FingerText0.5.6SampleSnippets.ftd
+If you are using plugin Manager to download FingerText or you just cannot locate the sample snippet file, you can download it from https://github.com/downloads/erinata/FingerText/FingerText0.5.7SampleSnippets.ftd
 
 To verify you have imported the snippets correctly, go to notepad++ menu > Plugins > FingerText > Show SnippetDock. A Dialog with a list of available snippets should show up.
 
@@ -165,6 +165,11 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 
 == Change log 
 (for the detail change log (including the development log) please refer to the CHANGELOG file in the repository)
+0.5.7
+performance improvement for live update snippet hint
+fixed: Annotation not shown correctly in editmode
+update quick guide
+Other small typos fixed
 
 0.5.6
 - Added: You can trigger snippets in editor mode (but you cannot navigate to hotspots in editor mode as it will disturb snippet editing)
