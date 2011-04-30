@@ -305,6 +305,9 @@ char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""), bool similar=fa
         if (similar==1)
         {
             char similarTag[MAX_PATH]="";
+            /**
+             * tab_tag_completion is too inclusive with the wildcart at the beginning
+             */
             //strcat(similarTag,"%");
             strcat(similarTag,tag);
             strcat(similarTag,"%");
@@ -1524,7 +1527,11 @@ void snippetHintUpdate()
 
             if ((tagLength>0) && (tagLength<30))
             {
-                char similarTag[MAX_PATH] = "%";
+                /**
+                 * tab_tag_completion is too inclusive with wildcard at the beginning
+                 */
+                //char similarTag[MAX_PATH] = "%";
+                char similarTag[MAX_PATH] = "";
                 strcat(similarTag,partialTag);
                 strcat(similarTag,"%");
         
