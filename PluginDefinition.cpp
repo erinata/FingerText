@@ -396,13 +396,14 @@ void selectionToSnippet()
     HWND curScintilla = getCurrentScintilla();
     int selectionEnd = ::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0);
     int selectionStart = ::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0);
+    bool withSelection = false;
 
     char* selection = new char [selectionEnd - selectionStart +1];
     
     if (selectionEnd>selectionStart)
     {
-        
         ::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
+        withSelection = true;
     } else
     {
         selection = "New snippet is here.\r\nNew snippet is here.\r\nNew snippet is here.\r\n";
@@ -436,8 +437,10 @@ void selectionToSnippet()
     refreshAnnotation();
     ::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
     ::SendMessage(curScintilla,SCI_WORDRIGHTEXTEND,1,0);
-    delete [] selection;
-    
+
+    if (withSelection) delete [] selection;
+
+    //alert();
 }
 
 //void selectionToSnippet()
