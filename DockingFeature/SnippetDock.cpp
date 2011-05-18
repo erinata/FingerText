@@ -115,6 +115,14 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 			return FALSE;
 		}
 
+
+        case WM_SIZE:
+        {
+            //TODO: this is triggering too many times esp when npp is starting up, some efficiency improvment can be done
+            resizeListBox(HIWORD(lParam));
+            //alert();
+        }
+
         case WM_SETFOCUS:
         {
 

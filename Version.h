@@ -28,14 +28,14 @@
 //DEALINGS IN THE SOFTWARE.
 
 //TODO: simplify version.h
-#define VERSION_TEXT "0.5.7.4"
-#define VERSION_NUM 0,5,7,4
+#define VERSION_TEXT "0.5.7.5"
+#define VERSION_NUM 0,5,7,5
 #define VERSION_LINEAR 507
 #define VERSION_KEEP_CONFIG_START 500
 #define VERSION_KEEP_CONFIG_END 507
-#define VERSION_TEXT_LONG "FingerText 0.5.7.4(Alpha)"
+#define VERSION_TEXT_LONG "FingerText 0.5.7.5(Alpha)"
 #define VERSION_TEXT_FULL TEXT("\
-FingerText 0.5.7.4(Alpha)\r\n\
+FingerText 0.5.7.5(Alpha)\r\n\
 April 2011\r\n\r\n\
 Author: Tom Lam\r\n\
 Email: erinata@gmail.com\r\n\r\n\

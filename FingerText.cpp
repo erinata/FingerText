@@ -108,13 +108,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
     
     switch(notifyCode->nmhdr.code)
     {
-        case NPPN_READY:
-            upgradeMessage();
-            initialize();
-            break;
-        case NPPN_SHUTDOWN:
-            pluginShutdown();
-            break;
+
         //case NPPN_FILEOPENED:
         //    updateDockItems();
         //    updateMode();
@@ -129,7 +123,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
         
             //TODO: Try to deal with repeated triggering of snippetHintUpdate and keyUpdate
         case SCN_KEY:
-            alert();
+            //alert();
             break;
         case SCN_CHARADDED:
 
@@ -145,7 +139,12 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             //showPreview();
             break;
         case SCN_MODIFIED:
-            //alert();
+            //if (notifyCode->modificationType & SC_MOD_BEFOREINSERT)
+            //{
+            //    alert();
+            //    if (strlen(notifyCode->text)>1) alert();
+            //    
+            //}
             //if (notifyCode->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT))
             if (notifyCode->modificationType & (SC_MOD_DELETETEXT | SC_LASTSTEPINUNDOREDO))
             {
@@ -162,6 +161,14 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             promptSaveSnippet();
             //snippetHintUpdate();
             updateDockItems();
+            break;
+
+        case NPPN_READY:
+            upgradeMessage();
+            initialize();
+            break;
+        case NPPN_SHUTDOWN:
+            pluginShutdown();
             break;
         
     }
