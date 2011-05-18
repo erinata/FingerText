@@ -33,7 +33,7 @@
 #define VERSION_LINEAR 507
 #define VERSION_KEEP_CONFIG_START 500
 #define VERSION_KEEP_CONFIG_END 507
-#define VERSION_TEXT_LONG "FingerText 0.5.7.3(Alpha)"
+#define VERSION_TEXT_LONG "FingerText 0.5.7.4(Alpha)"
 #define VERSION_TEXT_FULL TEXT("\
 FingerText 0.5.7.4(Alpha)\r\n\
 April 2011\r\n\r\n\

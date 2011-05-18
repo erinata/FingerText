@@ -1,5 +1,8 @@
 changelog (for developers only, include unreleased versions)
 
+0.5.8
+fixed: creating snippet with empty selection sometimes cause freeze
+
 0.5.7
 performance improvement for live update snippet hint
 fixed: Annotation not shown correctly in editmode
