@@ -84,12 +84,12 @@ public :
         SendMessage(GetDlgItem(_hSelf, IDC_SNIPPET_LIST), LB_INSERTSTRING, 0, (LPARAM)dockItem); 
     }
 
-    void resizeListBox(int height)
+    void resizeListBox(int height,int width)
     {
         //TODO: less hardcoding......make snippet dock size configurable
-        height = height - 270;
+        height = height - 255;
         if (height < 100) height = 100;
-        SetWindowPos(GetDlgItem(_hSelf, IDC_SNIPPET_LIST),NULL,0,250,300,height,SWP_NOMOVE & SWP_NOACTIVATE);
+        SetWindowPos(GetDlgItem(_hSelf, IDC_SNIPPET_LIST),NULL,0,250,285,height,SWP_NOMOVE & SWP_NOACTIVATE);
     }
 
     void clearDock()
