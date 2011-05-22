@@ -14,7 +14,9 @@ This plugin is still in Alpha stage so do expect that it can be buggy. However, 
 
 == Install
 
-Download the file "FingerText - 0.5.7.zip" at
+I guess most notepad++ users are using plugin manager. You can just go to Plugins>Plugin Manager>Show Plugin Manager and look for Fingertext to install this plugin.
+
+However if you would like to install it manually, download the file "FingerText - 0.5.7.zip" at
 http://sourceforge.net/projects/fingertext/files/Alpha%20Releases/FingerText%20-%200.5.7.zip/download
 
 Unzip the package and copy the FingerText.dll to the plugins folder of Notepad++. This is the only file you need to run FingerText in notepad++.

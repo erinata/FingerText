@@ -4,6 +4,9 @@ changelog (for developers only, include unreleased versions)
 fixed: creating snippet with empty selection sometimes cause freeze
 rearrange notification listening
 Dynamically resize snippet list
+Fixed: Extra space added to the end of snippet everytime a snippet is saved.
+change the wording when no snippets are imported or exported
+
 
 0.5.7
 performance improvement for live update snippet hint

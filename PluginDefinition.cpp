@@ -658,7 +658,8 @@ void saveSnippet()
 
     int docLength = ::SendMessage(curScintilla, SCI_GETLENGTH,0,0);
     // insert a space at the end of the doc so the ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)" "); will not get into error
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, docLength, (LPARAM)" ");
+    // TODO: Make sure that it is not necessary to keep this line
+    //::SendMessage(curScintilla, SCI_INSERTTEXT, docLength, (LPARAM)" ");
     
     bool problemSnippet = false;
 
@@ -1780,7 +1781,7 @@ void exportSnippets()
             wcscat(exportCountText,TEXT("1 snippet is exported."));
         } else
         {
-            wcscat(exportCountText,TEXT("Snippet export is aborted."));
+            wcscat(exportCountText,TEXT("No snippets are exported."));
           
         }
         
@@ -1885,49 +1886,80 @@ void importSnippets()
                     sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
                     if(SQLITE_ROW == sqlite3_step(stmt))
                     {
-                        sqlite3_finalize(stmt);
-                        // TODO: may be moving the message to earlier location so that the text editor will be showing the message that is about to be overwriting into the database
-                        // TODO: try showing the conflict message on the editor
+                        const char* snippetTextNew = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
 
-                        ::SendMessage(curScintilla,SCI_GOTOLINE,0,0);
-  
-                        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\nConflicting Snippet: \r\n\r\n     ");
-                        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)tagText);
-                        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"  <");
-                        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)tagTypeText);
-                        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)">\r\n");
-                        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n\r\n   (More details of the conflicts will be shown in future releases)");
-                        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n----------------------------------------\r\n");
-                        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"---------- [ Pending Imports ] ---------\r\n");
-                        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"----------------------------------------\r\n");
-
-                        int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("A snippet already exists, overwrite?"), TEXT("FingerText"), MB_YESNO);
-                        if (messageReturn==IDNO)
+                        //if (strlen(snippetTextNew) == strlen(snippetText)) alert();
+                        if (strcmp(snippetText,snippetTextNew) == 0)
                         {
-                            //delete [] tagText;
-                            //delete [] tagTypeText;
-                            //delete [] snippetText;
-                            // not overwrite
-                            //::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), TEXT("FingerText"), MB_OK);
+
                             notOverWrite = true;
-            
+                            sqlite3_finalize(stmt);
+
+                            
+
                         } else
                         {
-                            // delete existing entry
-                            if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
+                            
+                            sqlite3_finalize(stmt);
+
+
+
+
+
+
+                            // TODO: may be moving the message to earlier location so that the text editor will be showing the message that is about to be overwriting into the database
+                            // TODO: try showing the conflict message on the editor
+
+                            ::SendMessage(curScintilla,SCI_GOTOLINE,0,0);
+  
+                            ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\nConflicting Snippet: \r\n\r\n     ");
+                            ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)tagText);
+                            ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"  <");
+                            ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)tagTypeText);
+                            ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)">\r\n");
+                            ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n\r\n   (More details of the conflicts will be shown in future releases)");
+                            ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n----------------------------------------\r\n");
+                            ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"---------- [ Pending Imports ] ---------\r\n");
+                            ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"----------------------------------------\r\n");
+
+                            int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("A snippet already exists, overwrite?"), TEXT("FingerText"), MB_YESNO);
+                            if (messageReturn==IDNO)
                             {
-                                sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
-                                sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
-                                sqlite3_step(stmt);
+                                //delete [] tagText;
+                                //delete [] tagTypeText;
+                                //delete [] snippetText;
+                                // not overwrite
+                                //::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), TEXT("FingerText"), MB_OK);
+                                notOverWrite = true;
+
+                                
+            
                             } else
                             {
-                                ::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT("FingerText"), MB_OK);
-                            }
+                                // delete existing entry
+                                if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
+                                {
+                                    sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
+                                    sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
+                                    sqlite3_step(stmt);
+                                } else
+                                {
+                                    ::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT("FingerText"), MB_OK);
+                                }
                     
+                            }
+                            ::SendMessage(curScintilla,SCI_GOTOLINE,17,0);
+                            ::SendMessage(curScintilla,SCI_SETSELECTION,0,::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
+                            ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+
+
                         }
-                        ::SendMessage(curScintilla,SCI_GOTOLINE,17,0);
-                        ::SendMessage(curScintilla,SCI_SETSELECTION,0,::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
-                        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+                        
+                        
+                        
+
+                        
+                        
                     } else
                     {
                         sqlite3_finalize(stmt);
@@ -1969,7 +2001,7 @@ void importSnippets()
                 wcscat(importCountText,TEXT("1 snippet is imported."));
             } else
             {
-                wcscat(importCountText,TEXT("Snippet import is aborted."));
+                wcscat(importCountText,TEXT("No Snippets are imported."));
             }
             //::MessageBox(nppData._nppHandle, TEXT("Complete importing snippets"), TEXT("FingerText"), MB_OK);
             ::MessageBox(nppData._nppHandle, importCountText, TEXT("FingerText"), MB_OK);

@@ -57,7 +57,13 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 {
 	switch (message) 
 	{
-        
+        case WM_SIZE:
+        {
+            //TODO: this is triggering too many times esp when npp is starting up, some efficiency improvment can be done
+            resizeListBox(HIWORD(lParam),LOWORD(lParam));
+            //alert();
+        }
+
 		case WM_COMMAND : 
 		{
 
@@ -116,12 +122,7 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 		}
 
 
-        case WM_SIZE:
-        {
-            //TODO: this is triggering too many times esp when npp is starting up, some efficiency improvment can be done
-            resizeListBox(HIWORD(lParam),LOWORD(lParam));
-            //alert();
-        }
+
 
         case WM_SETFOCUS:
         {
