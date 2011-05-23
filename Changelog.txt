@@ -1,6 +1,8 @@
 changelog (for developers only, include unreleased versions)
 
 0.5.8
+Added: generation of conflict copy instead of overwrite
+Allow for underscore and period in triggertext
 fixed: creating snippet with empty selection sometimes cause freeze
 rearrange notification listening
 Dynamically resize snippet list
