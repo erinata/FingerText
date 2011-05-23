@@ -847,7 +847,7 @@ void executeCommand(HWND &curScintilla, int &firstPos, char* hotSpotText)
     ::SendMessage(curScintilla,SCI_SETSEL,firstPos,triggerPos);
     ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
     
-    char  psBuffer[999];
+    char  psBuffer[130];
     FILE   *pPipe;
     int resultLength;
     //TODO: try the createprocess instead of _popen?
@@ -859,9 +859,17 @@ void executeCommand(HWND &curScintilla, int &firstPos, char* hotSpotText)
         return;
     }
     
+    //::memset(psBuffer,0,sizeof(psBuffer));
+    //
+    //while(fgets(psBuffer, 999, pPipe))
+    //{
+    //    ::SendMessage(curScintilla, SCI_REPLACESEL, 128, (LPARAM)psBuffer);
+    //    ::memset (psBuffer,0,sizeof(psBuffer));
+    //}
+
     ::memset(psBuffer,0,sizeof(psBuffer));
 
-    while(fgets(psBuffer, 999, pPipe))
+    while(fgets(psBuffer, 129, pPipe))
     {
         ::SendMessage(curScintilla, SCI_REPLACESEL, 128, (LPARAM)psBuffer);
         ::memset (psBuffer,0,sizeof(psBuffer));
@@ -924,7 +932,9 @@ void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &star
 
     }else if (strncmp(hotSpotText,"GET:",4)==0) 
     {
+        //TODO: write a function to get the command and parameter sepearately. or turn this whole thing into a new type of hotspot
         //TODO: putting this chunk into a separate function
+        
         emptyFile(g_fttempPath);
         char* getTerm;
         getTerm = new char[strlen(hotSpotText)];
