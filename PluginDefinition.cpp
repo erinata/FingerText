@@ -1878,6 +1878,7 @@ void importSnippets()
             ::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
             ::SendMessage(curScintilla, SCI_NEWLINE, 0, 0);
             int importCount=0;
+            int conflictCount=0;
             int next=0;
             do
             {
@@ -2047,7 +2048,7 @@ void importSnippets()
             
                                     
                                     sqlite3_step(stmt);
-
+                                    conflictCount++;
                                     delete [] tagTextsuffixed;
                                     
                                 }
@@ -2098,7 +2099,7 @@ void importSnippets()
                 next = searchNext(curScintilla, "!$[FingerTextData FingerTextData]@#");
             } while (next>=0);
         
-            wchar_t importCountText[35] = TEXT("");
+            wchar_t importCountText[200] = TEXT("");
 
             if (importCount>1)
             {
@@ -2111,6 +2112,18 @@ void importSnippets()
             {
                 wcscat(importCountText,TEXT("No Snippets are imported."));
             }
+
+            //wchar_t conflictCountText[35] = TEXT("");
+
+            if (conflictCount>0)
+            {
+                //::_itow_s(conflictCount, conflictCountText, 10, 10);
+
+                wcscat(importCountText,TEXT("\r\n\r\nThere are some conflicts between the imported and existing snippets. You may go to the snippet editor to clean them up."));
+                
+            }
+
+            
             //::MessageBox(nppData._nppHandle, TEXT("Complete importing snippets"), TEXT("FingerText"), MB_OK);
             ::MessageBox(nppData._nppHandle, importCountText, TEXT("FingerText"), MB_OK);
 
@@ -2509,30 +2522,30 @@ void fingerText()
 //    
 //}
 
-void GenerateKey(int vk, BOOL bExtended) {
-
-    KEYBDINPUT  kb = {0};
-    INPUT       Input = {0};
-
-    /* Generate a "key down" */
-    if (bExtended) { kb.dwFlags  = KEYEVENTF_EXTENDEDKEY; }
-    kb.wVk  = vk;
-    Input.type  = INPUT_KEYBOARD;
-    Input.ki  = kb;
-    SendInput(1, &Input, sizeof(Input));
-
-    /* Generate a "key up" */
-    ZeroMemory(&kb, sizeof(KEYBDINPUT));
-    ZeroMemory(&Input, sizeof(INPUT));
-    kb.dwFlags  =  KEYEVENTF_KEYUP;
-    if (bExtended) { kb.dwFlags |= KEYEVENTF_EXTENDEDKEY; }
-    kb.wVk = vk;
-    Input.type = INPUT_KEYBOARD;
-    Input.ki = kb;
-    SendInput(1, &Input, sizeof(Input));
-
-    return;
-}
+//void GenerateKey(int vk, BOOL bExtended) {
+//
+//    KEYBDINPUT  kb = {0};
+//    INPUT       Input = {0};
+//
+//    /* Generate a "key down" */
+//    if (bExtended) { kb.dwFlags  = KEYEVENTF_EXTENDEDKEY; }
+//    kb.wVk  = vk;
+//    Input.type  = INPUT_KEYBOARD;
+//    Input.ki  = kb;
+//    SendInput(1, &Input, sizeof(Input));
+//
+//    /* Generate a "key up" */
+//    ZeroMemory(&kb, sizeof(KEYBDINPUT));
+//    ZeroMemory(&Input, sizeof(INPUT));
+//    kb.dwFlags  =  KEYEVENTF_KEYUP;
+//    if (bExtended) { kb.dwFlags |= KEYEVENTF_EXTENDEDKEY; }
+//    kb.wVk = vk;
+//    Input.type = INPUT_KEYBOARD;
+//    Input.ki = kb;
+//    SendInput(1, &Input, sizeof(Input));
+//
+//    return;
+//}
 
 void testing()
 {
