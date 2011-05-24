@@ -2,6 +2,7 @@ changelog (for developers only, include unreleased versions)
 
 0.5.9
 A temporary fix for cmd line error
+Fixed: bug in importing snippets with different endline characters.
 
 0.5.8
 Added: generation of conflict copy instead of overwrite

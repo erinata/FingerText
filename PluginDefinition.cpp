@@ -1818,16 +1818,15 @@ void exportSnippets()
 
 
 
-char* removeSpaces( char *str )
+char* cleanupString( char *str )
 {
-if ( NULL == str ) return NULL;
+    if ( NULL == str ) return NULL;
 
-char *from, *to;
-from=to=str;
+    char *from, *to;
+    from=to=str;
 
-while ((*from != '\r') && (*to++=*from),
-*from++);
-return str;
+    while ((*from != '\r') && (*to++=*from),*from++);
+    return str;
 }  
 
 //TODO: importsnippet and savesnippets need refactoring sooooo badly
@@ -1835,7 +1834,12 @@ return str;
 void importSnippets()
 {
     // TODO: close snippet editing window before import 
-    
+    if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
+    {
+        ::MessageBox(nppData._nppHandle, TEXT("Please close all the snippet editing tabs (SnippetEditor.ftb) before importing any snippet pack."), TEXT("FingerText"), MB_OK);
+        return;
+    }
+
     g_liveHintUpdate--;
     
     OPENFILENAME ofn;
@@ -1941,40 +1945,24 @@ void importSnippets()
                         memset(snippetTextOld,0,strlen(snippetTextOld));
                         strcat(snippetTextOld, extracted);
 
-                        char* snippetTextNew; 
-                        snippetTextNew = new char[strlen(extracted)];
-                        memset(snippetTextNew,0,strlen(snippetTextNew));
+                        char* snippetTextOldCleaned; 
+                        snippetTextOldCleaned = new char[strlen(extracted)];
+                        memset(snippetTextOldCleaned,0,strlen(snippetTextOldCleaned));
 
 
                         //char* snippetTextOldConverted; 
                         //snippetTextOldConverted = new char[strlen(extracted)];
                         //snippetTextOldConverted = convertEol(snippetTextOld);
                         
-                        snippetTextNew = removeSpaces(snippetTextOld);
-                        //char *as;
-                        ////as = new char[1000];
-                        //strcpy(as,"");
-                        //
-                        //char *df;
-                        //
-                        //df = strtok(snippetTextOld, "\r");
-                        //
-                        //while (df != NULL)
-                        //{
-                        //    strcat(as,df);
-                        //    df = strtok(NULL, "\r");
-                        //
-                        //    //memset (df, 0, strlen (df));
-                        //
-                        //}
-                        //strcat(as,df);
-                        
+                        snippetTextOldCleaned = cleanupString(snippetTextOld);
+                 
                         
                         //if (strlen(snippetTextNew) == strlen(snippetText)) alert();
 
                         //if (strncmp(snippetText,snippetTextNew,3) == 0)
-                        if (strcmp(snippetText,snippetTextNew) == 0)
+                        if (strcmp(snippetText,snippetTextOldCleaned) == 0)
                         {
+
                             notOverWrite = true;
                             sqlite3_finalize(stmt);
 
@@ -1982,12 +1970,11 @@ void importSnippets()
 
                         } else
                         {
-                            
-                            alertNumber(strlen(snippetText));
-                            alertNumber(strlen(snippetTextNew));
-
-                            alertCharArray(snippetText);
-                            alertCharArray(snippetTextNew);
+                            //alertNumber(strlen(snippetText));
+                            //alertNumber(strlen(snippetTextNew));
+                            //
+                            //alertCharArray(snippetText);
+                            //alertCharArray(snippetTextNew);
 
                             sqlite3_finalize(stmt);
 

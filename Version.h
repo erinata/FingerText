@@ -28,15 +28,15 @@
 //DEALINGS IN THE SOFTWARE.
 
 //TODO: simplify version.h
-#define VERSION_TEXT "0.5.8.0"
-#define VERSION_NUM 0,5,8,0
+#define VERSION_TEXT "0.5.8.2"
+#define VERSION_NUM 0,5,8,2
 #define VERSION_LINEAR 508
 #define VERSION_KEEP_CONFIG_START 500
 #define VERSION_KEEP_CONFIG_END 508
-#define VERSION_TEXT_LONG "FingerText 0.5.8.0(Alpha)"
+#define VERSION_TEXT_LONG "FingerText 0.5.8.2(Alpha)"
 #define VERSION_TEXT_FULL TEXT("\
-FingerText 0.5.8.0(Alpha)\r\n\
-April 2011\r\n\r\n\
+FingerText 0.5.8.2(Alpha)\r\n\
+May 2011\r\n\r\n\
 Author: Tom Lam\r\n\
 Email: erinata@gmail.com\r\n\r\n\
 Update to the lastest version:\r\n\
@@ -64,7 +64,7 @@ For step by step usage guide, please visit http://github.com/erinata/FingerText 
 ")
 #define SNIPPET_EDIT_TEMPLATE "------ FingerText Snippet Editor View ------\r\n"
 
-#define WELCOME_TEXT "Thanks for Upgrading to FingerText 0.5.8.0(Alpha).\r\n\
+#define WELCOME_TEXT "Thanks for Upgrading to FingerText 0.5.8.2(Alpha).\r\n\
 Please read this document if you are upgrading from previous versions.\r\n\r\n\
 Upgrading from 0.5.0 or above\r\n\
 Everything is compatibile.\r\n\

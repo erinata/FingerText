@@ -150,6 +150,7 @@ void initialize();
 void upgradeMessage();
 void saveSnippet();
 //void createSnippet();
+char* cleanupString( char *str );
 void clearCache();
 void editSnippet();
 void deleteSnippet();
