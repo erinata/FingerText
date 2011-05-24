@@ -592,7 +592,7 @@ bool getLineChecked(char **buffer, HWND &curScintilla, int lineNumber, TCHAR* er
     // TODO: and check for more error, say the triggertext has to be one word
     // TODO: consolidate also the snippet content extraction of savesnippet
 
-    bool problemSnippet;
+    bool problemSnippet = false;
 
     ::SendMessage(curScintilla,SCI_GOTOLINE,lineNumber,0);
 
@@ -1899,27 +1899,34 @@ void importSnippets()
             int importCount=0;
             int conflictCount=0;
             int next=0;
+            char* snippetText;
+            char* tagText; 
+            char* tagTypeText;
+            int snippetPosStart;
+            int snippetPosEnd;
+            bool notOverWrite;
+            char* snippetTextOld;
+            char* snippetTextOldCleaned;
             do
             {
                 //import snippet do not have the problem of " " in save snippet because of the space in  "!$[FingerTextData FingerTextData]@#"
                 ::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
                 
-                char* tagText; 
-                char* tagTypeText;
+                
                 
                 getLineChecked(&tagText,curScintilla,1,TEXT("Error: Invalid TriggerText. The ftd file may be corrupted."));
                 getLineChecked(&tagTypeText,curScintilla,2,TEXT("Error: Invalid Scope. The ftd file may be corrupted."));
                 
                 // Getting text after the 3rd line until the tag !$[FingerTextData FingerTextData]@#
                 ::SendMessage(curScintilla,SCI_GOTOLINE,3,0);
-                int snippetPosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+                snippetPosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
                 //int snippetPosEnd = ::SendMessage(curScintilla,SCI_GETLENGTH,0,0);
 
                 searchNext(curScintilla, "!$[FingerTextData FingerTextData]@#");
-                int snippetPosEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+                snippetPosEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
                 ::SendMessage(curScintilla,SCI_SETSELECTION,snippetPosStart,snippetPosEnd);
             
-                char* snippetText = new char[snippetPosEnd-snippetPosStart + 1];
+                snippetText = new char[snippetPosEnd-snippetPosStart + 1];
                 ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(snippetText));
             
                 ::SendMessage(curScintilla,SCI_SETSELECTION,0,snippetPosEnd+1); // This +1 corrupt the ! in !$[FingerTextData FingerTextData]@# so that the program know a snippet is finished importing
@@ -1931,7 +1938,7 @@ void importSnippets()
                 sqlite3_stmt *stmt;
                 
             
-                bool notOverWrite = false;
+                notOverWrite = false;
 
                 if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
                 {
@@ -1940,13 +1947,11 @@ void importSnippets()
                     if(SQLITE_ROW == sqlite3_step(stmt))
                     {
                         const char* extracted = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
-                        char* snippetTextOld; 
                         snippetTextOld = new char[strlen(extracted)];
                         memset(snippetTextOld,0,strlen(snippetTextOld));
                         strcat(snippetTextOld, extracted);
 
-                        char* snippetTextOldCleaned; 
-                        snippetTextOldCleaned = new char[strlen(extracted)];
+                        snippetTextOldCleaned = new char[strlen(snippetTextOld)];
                         memset(snippetTextOldCleaned,0,strlen(snippetTextOldCleaned));
 
 
@@ -2596,6 +2601,7 @@ void testing()
     ::MessageBox(nppData._nppHandle, TEXT("Testing!"), TEXT("Trace"), MB_OK);
     
     HWND curScintilla = getCurrentScintilla();
+
     //setCommand(TRIGGER_SNIPPET_INDEX, TEXT("Trigger Snippet/Navigate to Hotspot"), fingerText, NULL, false);
     //::GenerateKey(VK_TAB, TRUE);
 
