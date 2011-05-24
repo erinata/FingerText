@@ -174,5 +174,6 @@ void fingerText();
 
 void testing();
 void alert();
-
+void alertNumber(int input);
+void alertCharArray(char* input);
 #endif //PLUGINDEFINITION_H

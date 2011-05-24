@@ -58,6 +58,7 @@
 #include "SnippetDock.h"
 #include "Version.h"
 
+
 #include <fstream>
 //#include <process.h>
 
@@ -1815,6 +1816,20 @@ void exportSnippets()
     
 }
 
+
+
+char* removeSpaces( char *str )
+{
+if ( NULL == str ) return NULL;
+
+char *from, *to;
+from=to=str;
+
+while ((*from != '\r') && (*to++=*from),
+*from++);
+return str;
+}  
+
 //TODO: importsnippet and savesnippets need refactoring sooooo badly
 //TODO: Or it should be rewrite, import snippet should open the snippetediting.ftb, turn or annotation, and cut and paste the snippet on to that file and use the saveSnippet function
 void importSnippets()
@@ -1910,6 +1925,7 @@ void importSnippets()
                 //::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
 
                 sqlite3_stmt *stmt;
+                
             
                 bool notOverWrite = false;
 
@@ -1919,12 +1935,46 @@ void importSnippets()
                     sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
                     if(SQLITE_ROW == sqlite3_step(stmt))
                     {
-                        const char* snippetTextNew = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
+                        const char* extracted = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
+                        char* snippetTextOld; 
+                        snippetTextOld = new char[strlen(extracted)];
+                        memset(snippetTextOld,0,strlen(snippetTextOld));
+                        strcat(snippetTextOld, extracted);
 
+                        char* snippetTextNew; 
+                        snippetTextNew = new char[strlen(extracted)];
+                        memset(snippetTextNew,0,strlen(snippetTextNew));
+
+
+                        //char* snippetTextOldConverted; 
+                        //snippetTextOldConverted = new char[strlen(extracted)];
+                        //snippetTextOldConverted = convertEol(snippetTextOld);
+                        
+                        snippetTextNew = removeSpaces(snippetTextOld);
+                        //char *as;
+                        ////as = new char[1000];
+                        //strcpy(as,"");
+                        //
+                        //char *df;
+                        //
+                        //df = strtok(snippetTextOld, "\r");
+                        //
+                        //while (df != NULL)
+                        //{
+                        //    strcat(as,df);
+                        //    df = strtok(NULL, "\r");
+                        //
+                        //    //memset (df, 0, strlen (df));
+                        //
+                        //}
+                        //strcat(as,df);
+                        
+                        
                         //if (strlen(snippetTextNew) == strlen(snippetText)) alert();
+
+                        //if (strncmp(snippetText,snippetTextNew,3) == 0)
                         if (strcmp(snippetText,snippetTextNew) == 0)
                         {
-
                             notOverWrite = true;
                             sqlite3_finalize(stmt);
 
@@ -1933,6 +1983,12 @@ void importSnippets()
                         } else
                         {
                             
+                            alertNumber(strlen(snippetText));
+                            alertNumber(strlen(snippetTextNew));
+
+                            alertCharArray(snippetText);
+                            alertCharArray(snippetTextNew);
+
                             sqlite3_finalize(stmt);
 
                             if (conflictOverwrite==IDYES)
@@ -2687,4 +2743,20 @@ void testing()
 void alert()
 {
      ::MessageBox(nppData._nppHandle, TEXT("Alert!"), TEXT("Trace"), MB_OK);
+}
+
+void alertNumber(int input)
+{
+    wchar_t countText[10];
+    ::_itow_s(input, countText, 10, 10);
+    ::MessageBox(nppData._nppHandle, countText, TEXT("Trace"), MB_OK);
+}
+void alertCharArray(char* input)
+{
+    size_t origsize = strlen(input) + 1;
+    const size_t newsize = 200;
+    size_t convertedChars = 0;
+    wchar_t wcstring[newsize];
+    mbstowcs_s(&convertedChars, wcstring, origsize, input, _TRUNCATE);
+    ::MessageBox(nppData._nppHandle, wcstring, TEXT("Trace"), MB_OK);
 }
