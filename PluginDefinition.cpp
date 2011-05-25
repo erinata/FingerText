@@ -109,6 +109,7 @@ bool g_editorView;
 #define DEFAULT_ESCAPE_CHAR 0
 #define DEFAULT_IMPORT_OVERWRITE_OPTION 0
 #define DEFAULT_IMPORT_OVERWRITE_CONFIRM 0
+#define DEFAULT_INCLUSIVE_TRIGGERTEXT_COMPLETION 1
 
 int g_snippetListLength;
 int g_snippetListOrderTagType;
@@ -120,6 +121,7 @@ int g_preserveSteps;
 int g_escapeChar;
 int g_importOverWriteOption;
 int g_importOverWriteConfirm;
+int g_inclusiveTriggerTextCompletion;
 
 DockingDlg snippetDock;
 
@@ -308,7 +310,7 @@ char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""), bool similar=fa
         if (similar==1)
         {
             char similarTag[MAX_PATH]="";
-            strcat(similarTag,"%");
+            if (g_inclusiveTriggerTextCompletion==1) strcat(similarTag,"%");
             strcat(similarTag,tag);
             strcat(similarTag,"%");
             //::SendMessage(getCurrentScintilla(),SCI_INSERTTEXT,0,(LPARAM)similarTag);
@@ -1407,6 +1409,8 @@ void writeConfig()
     writeConfigText(g_escapeChar,TEXT("escape_char_level"));
     writeConfigText(g_importOverWriteOption,TEXT("import_overwrite_option"));
     writeConfigText(g_importOverWriteConfirm,TEXT("import_overwrite_confirm"));
+    writeConfigText(g_inclusiveTriggerTextCompletion,TEXT("inclusive_triggertext_completion"));
+    
 }
 
 void loadConfig()
@@ -1421,6 +1425,7 @@ void loadConfig()
     g_escapeChar = GetPrivateProfileInt(TEXT("FingerText"), TEXT("escape_char_level"), DEFAULT_ESCAPE_CHAR, g_iniPath);
     g_importOverWriteOption = GetPrivateProfileInt(TEXT("FingerText"), TEXT("import_overwrite_option"), DEFAULT_IMPORT_OVERWRITE_OPTION, g_iniPath);
     g_importOverWriteConfirm = GetPrivateProfileInt(TEXT("FingerText"), TEXT("import_overwrite_confirm"), DEFAULT_IMPORT_OVERWRITE_CONFIRM, g_iniPath);
+    g_inclusiveTriggerTextCompletion = GetPrivateProfileInt(TEXT("FingerText"), TEXT("inclusive_triggertext_completion"), DEFAULT_INCLUSIVE_TRIGGERTEXT_COMPLETION, g_iniPath);
 }
 
 void setupConfigFile()
@@ -1547,7 +1552,8 @@ void snippetHintUpdate()
 
             if ((tagLength>0) && (tagLength<30))
             {
-                char similarTag[MAX_PATH] = "%";
+                char similarTag[MAX_PATH]="";
+                if (g_inclusiveTriggerTextCompletion==1) strcat(similarTag,"%");
                 strcat(similarTag,partialTag);
                 strcat(similarTag,"%");
         
@@ -1829,95 +1835,14 @@ char* cleanupString( char *str )
     return str;
 }  
 
-void importSnippetsNew()
-{
-    if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
-    {
-        ::MessageBox(nppData._nppHandle, TEXT("Please close all the snippet editing tabs (SnippetEditor.ftb) before importing any snippet pack."), TEXT("FingerText"), MB_OK);
-        return;
-    }
-
-    if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_fttempPath))
-    {
-        ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_SAVE);
-        ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
-    }   
-
-    g_liveHintUpdate--;
-    
-    OPENFILENAME ofn;
-    char fileName[MAX_PATH] = "";
-    ZeroMemory(&ofn, sizeof(ofn));
-
-    ofn.lStructSize = sizeof(OPENFILENAME);
-    ofn.hwndOwner = NULL;
-    ofn.lpstrFilter = TEXT("FingerText Datafiles (*.ftd)\0*.ftd\0");
-    ofn.lpstrFile = (LPWSTR)fileName;
-    ofn.nMaxFile = MAX_PATH;
-    ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-    ofn.lpstrDefExt = TEXT("");
-    
-
-
-    if (::GetOpenFileName(&ofn))
-    {
-        //::MessageBox(nppData._nppHandle, (LPCWSTR)fileName, TEXT("Trace"), MB_OK);
-        std::ifstream file;
-
-        file.open((LPCWSTR)fileName);   // This part may cause problem in chinese file names
-
-        file.seekg(0, std::ios::end);
-        int fileLength = file.tellg();
-        file.seekg(0, std::ios::beg);
-
-
-        //wchar_t countText[10];
-        //::_itow_s(fileLength, countText, 10, 10); 
-        //::MessageBox(nppData._nppHandle, countText, TEXT("Trace"), MB_OK);
-        
-        char* fileText = new char[fileLength+1];
-        ZeroMemory(fileText,strlen(fileText));
-
-        if (file.is_open())
-        {
-            file.read(fileText,fileLength);
-            file.close();
-        
-            ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
-            int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
-            ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
-
-
-
-            HWND curScintilla = getCurrentScintilla();
-            int conflictOverwrite = IDNO;
-            if (g_importOverWriteOption==1)
-            {
-               conflictOverwrite = ::MessageBox(nppData._nppHandle, TEXT("Do you want to overwrite the database when the imported snippets has conflicts with existing snippets? Press Yes if you want to overwrite, No if you want to keep both versions."), TEXT("FingerText"), MB_YESNO);
-            }
-
-            ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)fileText);
-            ::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
-            ::SendMessage(curScintilla, SCI_NEWLINE, 0, 0);
-
-
-        }
-
-    }
-
-
-    g_liveHintUpdate++;
-
-}
-
-
-
 //TODO: importsnippet and savesnippets need refactoring sooooo badly
 //TODO: Or it should be rewrite, import snippet should open the snippetediting.ftb, turn or annotation, and cut and paste the snippet on to that file and use the saveSnippet function
 void importSnippets()
 {
+    //TODO: importing snippet will change the current directory, which is not desirable effect
     if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
     {
+        //TODO: prompt for closing tab instead of just warning
         ::MessageBox(nppData._nppHandle, TEXT("Please close all the snippet editing tabs (SnippetEditor.ftb) before importing any snippet pack."), TEXT("FingerText"), MB_OK);
         return;
     }
@@ -1927,7 +1852,6 @@ void importSnippets()
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_SAVE);
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
     }   
-
 
     g_liveHintUpdate--;
     
@@ -1954,10 +1878,6 @@ void importSnippets()
         int fileLength = file.tellg();
         file.seekg(0, std::ios::beg);
 
-        //wchar_t countText[10];
-        //::_itow_s(fileLength, countText, 10, 10); 
-        //::MessageBox(nppData._nppHandle, countText, TEXT("Trace"), MB_OK);
-        
         char* fileText = new char[fileLength+1];
         ZeroMemory(fileText,fileLength);
         if (file.is_open())
@@ -1969,8 +1889,6 @@ void importSnippets()
             int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
             ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
         
-        
-        
             HWND curScintilla = getCurrentScintilla();
         
             int conflictOverwrite = IDNO;
@@ -1978,14 +1896,10 @@ void importSnippets()
             {
                conflictOverwrite = ::MessageBox(nppData._nppHandle, TEXT("Do you want to overwrite the database when the imported snippets has conflicts with existing snippets? Press Yes if you want to overwrite, No if you want to keep both versions."), TEXT("FingerText"), MB_YESNO);
             }
-        
-            
-        
             //::SendMessage(curScintilla, SCI_SETCODEPAGE,65001,0);
             ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)fileText);
             ::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
             ::SendMessage(curScintilla, SCI_NEWLINE, 0, 0);
-            
         
             int importCount=0;
             int conflictCount=0;
@@ -2034,39 +1948,26 @@ void importSnippets()
                         const char* extracted = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
                         
                         snippetTextOld = new char[strlen(extracted)+1];
-                        
-                        //*//ZeroMemory(snippetTextOld,strlen(snippetTextOld)-1);
+                        ZeroMemory(snippetTextOld,sizeof(snippetTextOld));
                         strcpy(snippetTextOld, extracted);
                         //
                         snippetTextOldCleaned = new char[strlen(snippetTextOld)];
-                        //*//ZeroMemory(snippetTextOldCleaned,strlen(snippetTextOldCleaned)-1);
-                        
-                        
-                            //char* snippetTextOldConverted; 
-                            //snippetTextOldConverted = new char[strlen(extracted)];
-                            //snippetTextOldConverted = convertEol(snippetTextOld);
+                        ZeroMemory(snippetTextOldCleaned,sizeof(snippetTextOldCleaned));
                         
                         snippetTextOldCleaned = cleanupString(snippetTextOld);
-                 
                         
-                            //if (strlen(snippetTextNew) == strlen(snippetText)) alert();
-            
-                            //if (strncmp(snippetText,snippetTextNew,3) == 0)
+                        //if (strlen(snippetTextNew) == strlen(snippetText)) alert();
                         if (strcmp(snippetText,snippetTextOldCleaned) == 0)
                         {
-                        
                             notOverWrite = true;
                             //sqlite3_finalize(stmt);
                         } else
                         {
                         //    sqlite3_finalize(stmt);
-                        //
                             if (conflictOverwrite==IDYES)
                             {
                                 if (g_importOverWriteConfirm == 1)
                                 {
-                        
-                        
                                     // TODO: may be moving the message to earlier location so that the text editor will be showing the message that is about to be overwriting into the database
                                     // TODO: try showing the conflict message on the editor
                         
@@ -2170,23 +2071,9 @@ void importSnippets()
                                     //sqlite3_finalize(stmt);
                                     conflictCount++;
                                     delete [] tagTextsuffixed;
-                                    
                                 }
-                                
-                        
-                        
                             }
-                        
-                        
-                        
-                        
                         }
-                        
-                        
-                        
-            
-                        
-                        
                     } else
                     {
                         sqlite3_finalize(stmt);
@@ -2728,6 +2615,8 @@ void settings()
  ;                            --            1: No confirmation message box when you overwrite a snippet.\r\n\
  ; import_overwrite_option    --  (default) 0: When there is a conflicting snippet during snippet importing, Fingertext will keep both copies.\r\n\
  ;                            --            1: When there is a conflicting snippet during snippet importing, you may choose to overwrite existing snippet.\r\n\
+ ; inclusive_triggertext_completion --            0: Tiggertext completion will only include triggertext which starts with the characters you are typing.\r\n\
+ ;                                  --  (default) 1: Tiggertext completion will only include triggertext which includes the characters you are typing.\r\n\
         ");
         ::SendMessage(curScintilla, SCI_ANNOTATIONSETSTYLE, lineCount, STYLE_INDENTGUIDE);
         ::SendMessage(curScintilla, SCI_ANNOTATIONSETVISIBLE, lineCount, 0);

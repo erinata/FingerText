@@ -1,8 +1,11 @@
 changelog (for developers only, include unreleased versions)
 
 0.5.9
-A temporary fix for cmd line error
+Added: Option to make triggertext completion less inclusive
 Fixed: bug in importing snippets with different endline characters.
+Fixed: unknown exception and bad allocation in import snippet function
+Added: Close the temp file and Prompt to close the ftb file before import
+Fixed: A temporary fix for cmd line error
 
 0.5.8
 Added: generation of conflict copy instead of overwrite
