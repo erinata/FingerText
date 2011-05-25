@@ -10,7 +10,7 @@ If you are new to FingerText, follow the section "Install", "Importing Sample Sn
 
 == Development Status
 
-This plugin is still in Alpha stage so do expect that it can be buggy. However, things are getting more and more stable now so I am listing out the stability of different parts of the program instead of just saying that "everything can be changed in future releases". Please scroll down to the section "Snippet Syntax and Program Structure Stability" for more details.
+This plugin is still in Alpha stage so do expect that it can be buggy. However, things are getting more and more stable now so I am listing out the stability of different parts of the program instead of just saying that "everything can be changed in future releases". Please scroll down to the section "Snippet Syntax and Program Structure Stability" for more details. 
 
 == Install
 
@@ -141,7 +141,8 @@ The .ftd files are in plain text so you can edit them directly too. But don't do
 - static hotspots (stable) - static hotspots are indicated by $[![XXXXX]!] where XXXXX is the default value of the hotspots. This won't be changed unless serious compatibility issues happen.
 - dynamic hotspots (not stable) - currently there are 3 kinds of dynamic hotspots, chain, keyword and command. They are indicated by $[![(cha)XXXXX]!], $[![(key)XXXXX]!] and $[![(cmd)XXXXX]!] respectively. I am still experimenting what's the best way to do it so do expect changes in future releases.
 - Folder Structure (stable) - the FingerText.ini and FingerText.db3 file are staying in config/FingerText folder.
-- Database Structure (not stable) - the structure of FingerText.db3 is nore stable yet but the user is not supposed to edit the database file directly
+- Database Structure (not stable) - the structure of FingerText.db3 is not stable yet but the user is not supposed to edit the database file directly.
+- Snippet Package format (not stable) - currently using the ftd format.
 
 == Upgrading from 0.5.0 or above
 
@@ -167,6 +168,7 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 
 == Change log 
 (for the detail change log (including the development log) please refer to the CHANGELOG file in the repository)
+
 0.5.9
 - Dynamically resize snippet list
 - In case of conflicting snippets during import, Fingertext will generate a conflict copy instead of keep asking whether you want to overwrite or not
