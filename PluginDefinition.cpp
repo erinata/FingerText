@@ -1829,16 +1829,105 @@ char* cleanupString( char *str )
     return str;
 }  
 
-//TODO: importsnippet and savesnippets need refactoring sooooo badly
-//TODO: Or it should be rewrite, import snippet should open the snippetediting.ftb, turn or annotation, and cut and paste the snippet on to that file and use the saveSnippet function
-void importSnippets()
+void importSnippetsNew()
 {
-    // TODO: close snippet editing window before import 
     if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
     {
         ::MessageBox(nppData._nppHandle, TEXT("Please close all the snippet editing tabs (SnippetEditor.ftb) before importing any snippet pack."), TEXT("FingerText"), MB_OK);
         return;
     }
+
+    if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_fttempPath))
+    {
+        ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_SAVE);
+        ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
+    }   
+
+    g_liveHintUpdate--;
+    
+    OPENFILENAME ofn;
+    char fileName[MAX_PATH] = "";
+    ZeroMemory(&ofn, sizeof(ofn));
+
+    ofn.lStructSize = sizeof(OPENFILENAME);
+    ofn.hwndOwner = NULL;
+    ofn.lpstrFilter = TEXT("FingerText Datafiles (*.ftd)\0*.ftd\0");
+    ofn.lpstrFile = (LPWSTR)fileName;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+    ofn.lpstrDefExt = TEXT("");
+    
+
+
+    if (::GetOpenFileName(&ofn))
+    {
+        //::MessageBox(nppData._nppHandle, (LPCWSTR)fileName, TEXT("Trace"), MB_OK);
+        std::ifstream file;
+
+        file.open((LPCWSTR)fileName);   // This part may cause problem in chinese file names
+
+        file.seekg(0, std::ios::end);
+        int fileLength = file.tellg();
+        file.seekg(0, std::ios::beg);
+
+
+        //wchar_t countText[10];
+        //::_itow_s(fileLength, countText, 10, 10); 
+        //::MessageBox(nppData._nppHandle, countText, TEXT("Trace"), MB_OK);
+        
+        char* fileText = new char[fileLength+1];
+        ZeroMemory(fileText,strlen(fileText));
+
+        if (file.is_open())
+        {
+            file.read(fileText,fileLength);
+            file.close();
+        
+            ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
+            int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
+            ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
+
+
+
+            HWND curScintilla = getCurrentScintilla();
+            int conflictOverwrite = IDNO;
+            if (g_importOverWriteOption==1)
+            {
+               conflictOverwrite = ::MessageBox(nppData._nppHandle, TEXT("Do you want to overwrite the database when the imported snippets has conflicts with existing snippets? Press Yes if you want to overwrite, No if you want to keep both versions."), TEXT("FingerText"), MB_YESNO);
+            }
+
+            ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)fileText);
+            ::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
+            ::SendMessage(curScintilla, SCI_NEWLINE, 0, 0);
+
+
+        }
+
+    }
+
+
+    g_liveHintUpdate++;
+
+}
+
+
+
+//TODO: importsnippet and savesnippets need refactoring sooooo badly
+//TODO: Or it should be rewrite, import snippet should open the snippetediting.ftb, turn or annotation, and cut and paste the snippet on to that file and use the saveSnippet function
+void importSnippets()
+{
+    if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
+    {
+        ::MessageBox(nppData._nppHandle, TEXT("Please close all the snippet editing tabs (SnippetEditor.ftb) before importing any snippet pack."), TEXT("FingerText"), MB_OK);
+        return;
+    }
+
+    if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_fttempPath))
+    {
+        ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_SAVE);
+        ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
+    }   
+
 
     g_liveHintUpdate--;
     
@@ -1870,7 +1959,7 @@ void importSnippets()
         //::MessageBox(nppData._nppHandle, countText, TEXT("Trace"), MB_OK);
         
         char* fileText = new char[fileLength+1];
-
+        ZeroMemory(fileText,fileLength);
         if (file.is_open())
         {
             file.read(fileText,fileLength);
@@ -1879,23 +1968,25 @@ void importSnippets()
             ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
             int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
             ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
-
-
-
+        
+        
+        
             HWND curScintilla = getCurrentScintilla();
-
+        
             int conflictOverwrite = IDNO;
             if (g_importOverWriteOption==1)
             {
                conflictOverwrite = ::MessageBox(nppData._nppHandle, TEXT("Do you want to overwrite the database when the imported snippets has conflicts with existing snippets? Press Yes if you want to overwrite, No if you want to keep both versions."), TEXT("FingerText"), MB_YESNO);
             }
-
+        
             
-
+        
             //::SendMessage(curScintilla, SCI_SETCODEPAGE,65001,0);
             ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)fileText);
             ::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
             ::SendMessage(curScintilla, SCI_NEWLINE, 0, 0);
+            
+        
             int importCount=0;
             int conflictCount=0;
             int next=0;
@@ -1911,9 +2002,7 @@ void importSnippets()
             {
                 //import snippet do not have the problem of " " in save snippet because of the space in  "!$[FingerTextData FingerTextData]@#"
                 ::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
-                
-                
-                
+                                
                 getLineChecked(&tagText,curScintilla,1,TEXT("Error: Invalid TriggerText. The ftd file may be corrupted."));
                 getLineChecked(&tagTypeText,curScintilla,2,TEXT("Error: Invalid Scope. The ftd file may be corrupted."));
                 
@@ -1921,7 +2010,7 @@ void importSnippets()
                 ::SendMessage(curScintilla,SCI_GOTOLINE,3,0);
                 snippetPosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
                 //int snippetPosEnd = ::SendMessage(curScintilla,SCI_GETLENGTH,0,0);
-
+            
                 searchNext(curScintilla, "!$[FingerTextData FingerTextData]@#");
                 snippetPosEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
                 ::SendMessage(curScintilla,SCI_SETSELECTION,snippetPosStart,snippetPosEnd);
@@ -1931,15 +2020,11 @@ void importSnippets()
             
                 ::SendMessage(curScintilla,SCI_SETSELECTION,0,snippetPosEnd+1); // This +1 corrupt the ! in !$[FingerTextData FingerTextData]@# so that the program know a snippet is finished importing
                 ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
-                //::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
-                //::SendMessage(curScintilla,SCI_SETSELECTION,0,::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
-                //::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
 
                 sqlite3_stmt *stmt;
                 
-            
                 notOverWrite = false;
-
+            
                 if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
                 {
                     sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
@@ -1947,53 +2032,46 @@ void importSnippets()
                     if(SQLITE_ROW == sqlite3_step(stmt))
                     {
                         const char* extracted = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
-                        snippetTextOld = new char[strlen(extracted)];
-                        memset(snippetTextOld,0,strlen(snippetTextOld));
-                        strcat(snippetTextOld, extracted);
-
+                        
+                        snippetTextOld = new char[strlen(extracted)+1];
+                        
+                        //*//ZeroMemory(snippetTextOld,strlen(snippetTextOld)-1);
+                        strcpy(snippetTextOld, extracted);
+                        //
                         snippetTextOldCleaned = new char[strlen(snippetTextOld)];
-                        memset(snippetTextOldCleaned,0,strlen(snippetTextOldCleaned));
-
-
-                        //char* snippetTextOldConverted; 
-                        //snippetTextOldConverted = new char[strlen(extracted)];
-                        //snippetTextOldConverted = convertEol(snippetTextOld);
+                        //*//ZeroMemory(snippetTextOldCleaned,strlen(snippetTextOldCleaned)-1);
+                        
+                        
+                            //char* snippetTextOldConverted; 
+                            //snippetTextOldConverted = new char[strlen(extracted)];
+                            //snippetTextOldConverted = convertEol(snippetTextOld);
                         
                         snippetTextOldCleaned = cleanupString(snippetTextOld);
                  
                         
-                        //if (strlen(snippetTextNew) == strlen(snippetText)) alert();
-
-                        //if (strncmp(snippetText,snippetTextNew,3) == 0)
+                            //if (strlen(snippetTextNew) == strlen(snippetText)) alert();
+            
+                            //if (strncmp(snippetText,snippetTextNew,3) == 0)
                         if (strcmp(snippetText,snippetTextOldCleaned) == 0)
                         {
-
+                        
                             notOverWrite = true;
-                            sqlite3_finalize(stmt);
-
-                            
-
+                            //sqlite3_finalize(stmt);
                         } else
                         {
-                            //alertNumber(strlen(snippetText));
-                            //alertNumber(strlen(snippetTextNew));
-                            //
-                            //alertCharArray(snippetText);
-                            //alertCharArray(snippetTextNew);
-
-                            sqlite3_finalize(stmt);
-
+                        //    sqlite3_finalize(stmt);
+                        //
                             if (conflictOverwrite==IDYES)
                             {
                                 if (g_importOverWriteConfirm == 1)
                                 {
-
-
+                        
+                        
                                     // TODO: may be moving the message to earlier location so that the text editor will be showing the message that is about to be overwriting into the database
                                     // TODO: try showing the conflict message on the editor
-
+                        
                                     ::SendMessage(curScintilla,SCI_GOTOLINE,0,0);
-  
+                        
                                     ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\nConflicting Snippet: \r\n\r\n     ");
                                     ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)tagText);
                                     ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"  <");
@@ -2003,7 +2081,7 @@ void importSnippets()
                                     ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n----------------------------------------\r\n");
                                     ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"---------- [ Pending Imports ] ---------\r\n");
                                     ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"----------------------------------------\r\n");
-
+                        
                                     int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("A snippet already exists, overwrite?"), TEXT("FingerText"), MB_YESNO);
                                     if (messageReturn==IDNO)
                                     {
@@ -2013,9 +2091,9 @@ void importSnippets()
                                         // not overwrite
                                         //::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), TEXT("FingerText"), MB_OK);
                                         notOverWrite = true;
-
+                        
                                         
-            
+                        
                                     } else
                                     {
                                         // delete existing entry
@@ -2028,12 +2106,12 @@ void importSnippets()
                                         {
                                             ::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT("FingerText"), MB_OK);
                                         }
-                    
+                        
                                     }
                                     ::SendMessage(curScintilla,SCI_GOTOLINE,17,0);
                                     ::SendMessage(curScintilla,SCI_SETSELECTION,0,::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
                                     ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
-
+                        
                                 } else
                                 {
                                     // delete existing entry
@@ -2046,12 +2124,12 @@ void importSnippets()
                                     {
                                         ::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT("FingerText"), MB_OK);
                                     }
-
+                        
                                 }
-
-
-
-
+                        
+                        
+                        
+                        
                             } else
                             {
                                 notOverWrite = true;
@@ -2061,8 +2139,8 @@ void importSnippets()
                                     
                                     char* tagTextsuffixed;
                                     tagTextsuffixed = new char [strlen(tagText)+255];
-
-
+                                
+                                
                                     //TODO: refactor the timestamp generation to a new function
                                         TCHAR time[128];
                                         TCHAR date[128];
@@ -2071,19 +2149,12 @@ void importSnippets()
                                         //::GetTimeFormat(LOCALE_USER_DEFAULT, TIME_FORCE24HOURFORMAT + TIME_NOTIMEMARKER, &formatTime, NULL, time, 128);
                                         ::GetTimeFormat(LOCALE_USER_DEFAULT, 0, &formatTime, TEXT("HHmmss"), time, 128);
                                         ::GetDateFormat(LOCALE_USER_DEFAULT, 0, &formatTime, TEXT("yyyyMMdd"), date, 128);
-
-                                        //if (date)
-                                        //{
-                                        //    ::GetDateFormat(LOCALE_USER_DEFAULT, type, &formatTime, NULL, time, 128);
-                                        //} else
-                                        //{
-                                            
-                                        //}
+                                
                                         char timeText[MAX_PATH];
 	                                    WideCharToMultiByte((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, time, -1, timeText, MAX_PATH, NULL, NULL);
                                         char dateText[MAX_PATH];
 	                                    WideCharToMultiByte((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, date, -1, dateText, MAX_PATH, NULL, NULL);
-
+                                
                                     strcpy(tagTextsuffixed,tagText);
                                     strcat(tagTextsuffixed,".Conflict");
                                     strcat(tagTextsuffixed,dateText);
@@ -2093,26 +2164,27 @@ void importSnippets()
                                     sqlite3_bind_text(stmt, 1, tagTextsuffixed, -1, SQLITE_STATIC);
                                     sqlite3_bind_text(stmt, 2, tagTypeText, -1, SQLITE_STATIC);
                                     sqlite3_bind_text(stmt, 3, snippetText, -1, SQLITE_STATIC);
-            
+                                
                                     
                                     sqlite3_step(stmt);
+                                    //sqlite3_finalize(stmt);
                                     conflictCount++;
                                     delete [] tagTextsuffixed;
                                     
                                 }
-                                sqlite3_finalize(stmt);
-
-
+                                
+                        
+                        
                             }
-
-
-
-
+                        
+                        
+                        
+                        
                         }
                         
                         
                         
-
+            
                         
                         
                     } else
@@ -2136,9 +2208,9 @@ void importSnippets()
                     //::MessageBox(nppData._nppHandle, TEXT("The Snippet is saved."), TEXT("FingerText"), MB_OK);
                 }
                 sqlite3_finalize(stmt);
-                delete [] tagText;
-                delete [] tagTypeText;
-                delete [] snippetText;
+                //delete [] tagText;
+                //delete [] tagTypeText;
+                //delete [] snippetText;
             
                 ::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
                 updateDockItems(false,false);
@@ -2146,9 +2218,9 @@ void importSnippets()
                 ::SendMessage(curScintilla,SCI_GOTOPOS,0,0);
                 next = searchNext(curScintilla, "!$[FingerTextData FingerTextData]@#");
             } while (next>=0);
-        
+            
             wchar_t importCountText[200] = TEXT("");
-
+            
             if (importCount>1)
             {
                 ::_itow_s(importCount, importCountText, 10, 10);
@@ -2161,31 +2233,381 @@ void importSnippets()
                 wcscat(importCountText,TEXT("No Snippets are imported."));
             }
 
-            //wchar_t conflictCountText[35] = TEXT("");
-
             if (conflictCount>0)
             {
-                //::_itow_s(conflictCount, conflictCountText, 10, 10);
-
                 wcscat(importCountText,TEXT("\r\n\r\nThere are some conflicts between the imported and existing snippets. You may go to the snippet editor to clean them up."));
-                
             }
-
-            
             //::MessageBox(nppData._nppHandle, TEXT("Complete importing snippets"), TEXT("FingerText"), MB_OK);
             ::MessageBox(nppData._nppHandle, importCountText, TEXT("FingerText"), MB_OK);
-
+            
             ::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
             ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
 
-            //updateMode();
-            //updateDockItems();
+                //updateMode();
+                //updateDockItems();
         }
-        delete [] fileText;
+        //delete [] fileText;
     }
     g_liveHintUpdate++;
 
 }
+
+//void importSnippetsBackup()
+//{
+//    // TODO: close snippet editing window before import 
+//    if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
+//    {
+//        ::MessageBox(nppData._nppHandle, TEXT("Please close all the snippet editing tabs (SnippetEditor.ftb) before importing any snippet pack."), TEXT("FingerText"), MB_OK);
+//        return;
+//    }
+//
+//    g_liveHintUpdate--;
+//    
+//    OPENFILENAME ofn;
+//    char fileName[MAX_PATH] = "";
+//    ZeroMemory(&ofn, sizeof(ofn));
+//
+//    ofn.lStructSize = sizeof(OPENFILENAME);
+//    ofn.hwndOwner = NULL;
+//    ofn.lpstrFilter = TEXT("FingerText Datafiles (*.ftd)\0*.ftd\0");
+//    ofn.lpstrFile = (LPWSTR)fileName;
+//    ofn.nMaxFile = MAX_PATH;
+//    ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+//    ofn.lpstrDefExt = TEXT("");
+//    
+//    if (::GetOpenFileName(&ofn))
+//    {
+//        //::MessageBox(nppData._nppHandle, (LPCWSTR)fileName, TEXT("Trace"), MB_OK);
+//        std::ifstream file;
+//
+//        file.open((LPCWSTR)fileName);   // This part may cause problem in chinese file names
+//
+//        file.seekg(0, std::ios::end);
+//        int fileLength = file.tellg();
+//        file.seekg(0, std::ios::beg);
+//
+//        //wchar_t countText[10];
+//        //::_itow_s(fileLength, countText, 10, 10); 
+//        //::MessageBox(nppData._nppHandle, countText, TEXT("Trace"), MB_OK);
+//        
+//        char* fileText = new char[fileLength+1];
+//        ZeroMemory(fileText,strlen(fileText));
+//        if (file.is_open())
+//        {
+//            file.read(fileText,fileLength);
+//            file.close();
+//        
+//            ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
+//            int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
+//            ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
+//
+//
+//
+//            HWND curScintilla = getCurrentScintilla();
+//
+//            int conflictOverwrite = IDNO;
+//            if (g_importOverWriteOption==1)
+//            {
+//               conflictOverwrite = ::MessageBox(nppData._nppHandle, TEXT("Do you want to overwrite the database when the imported snippets has conflicts with existing snippets? Press Yes if you want to overwrite, No if you want to keep both versions."), TEXT("FingerText"), MB_YESNO);
+//            }
+//
+//            
+//
+//            //::SendMessage(curScintilla, SCI_SETCODEPAGE,65001,0);
+//            ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)fileText);
+//            ::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
+//            ::SendMessage(curScintilla, SCI_NEWLINE, 0, 0);
+//            int importCount=0;
+//            int conflictCount=0;
+//            int next=0;
+//            char* snippetText;
+//            char* tagText; 
+//            char* tagTypeText;
+//            int snippetPosStart;
+//            int snippetPosEnd;
+//            bool notOverWrite;
+//            char* snippetTextOld;
+//            char* snippetTextOldCleaned;
+//            do
+//            {
+//                //import snippet do not have the problem of " " in save snippet because of the space in  "!$[FingerTextData FingerTextData]@#"
+//                ::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
+//                
+//                
+//                
+//                getLineChecked(&tagText,curScintilla,1,TEXT("Error: Invalid TriggerText. The ftd file may be corrupted."));
+//                getLineChecked(&tagTypeText,curScintilla,2,TEXT("Error: Invalid Scope. The ftd file may be corrupted."));
+//                
+//                // Getting text after the 3rd line until the tag !$[FingerTextData FingerTextData]@#
+//                ::SendMessage(curScintilla,SCI_GOTOLINE,3,0);
+//                snippetPosStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+//                //int snippetPosEnd = ::SendMessage(curScintilla,SCI_GETLENGTH,0,0);
+//
+//                searchNext(curScintilla, "!$[FingerTextData FingerTextData]@#");
+//                snippetPosEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+//                ::SendMessage(curScintilla,SCI_SETSELECTION,snippetPosStart,snippetPosEnd);
+//            
+//                snippetText = new char[snippetPosEnd-snippetPosStart + 1];
+//                ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(snippetText));
+//            
+//                ::SendMessage(curScintilla,SCI_SETSELECTION,0,snippetPosEnd+1); // This +1 corrupt the ! in !$[FingerTextData FingerTextData]@# so that the program know a snippet is finished importing
+//                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+//                //::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
+//                //::SendMessage(curScintilla,SCI_SETSELECTION,0,::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
+//                //::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+//
+//                sqlite3_stmt *stmt;
+//                
+//            
+//                notOverWrite = false;
+//
+//                if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
+//                {
+//                    sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
+//                    sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
+//                    if(SQLITE_ROW == sqlite3_step(stmt))
+//                    {
+//                        const char* extracted = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
+//                        snippetTextOld = new char[strlen(extracted)];
+//                        memset(snippetTextOld,0,strlen(snippetTextOld));
+//                        strcat(snippetTextOld, extracted);
+//
+//                        snippetTextOldCleaned = new char[strlen(snippetTextOld)];
+//                        memset(snippetTextOldCleaned,0,strlen(snippetTextOldCleaned));
+//
+//
+//                        //char* snippetTextOldConverted; 
+//                        //snippetTextOldConverted = new char[strlen(extracted)];
+//                        //snippetTextOldConverted = convertEol(snippetTextOld);
+//                        
+//                        snippetTextOldCleaned = cleanupString(snippetTextOld);
+//                 
+//                        
+//                        //if (strlen(snippetTextNew) == strlen(snippetText)) alert();
+//
+//                        //if (strncmp(snippetText,snippetTextNew,3) == 0)
+//                        if (strcmp(snippetText,snippetTextOldCleaned) == 0)
+//                        {
+//
+//                            notOverWrite = true;
+//                            sqlite3_finalize(stmt);
+//
+//                            
+//
+//                        } else
+//                        {
+//                            //alertNumber(strlen(snippetText));
+//                            //alertNumber(strlen(snippetTextNew));
+//                            //
+//                            //alertCharArray(snippetText);
+//                            //alertCharArray(snippetTextNew);
+//
+//                            sqlite3_finalize(stmt);
+//
+//                            if (conflictOverwrite==IDYES)
+//                            {
+//                                if (g_importOverWriteConfirm == 1)
+//                                {
+//
+//
+//                                    // TODO: may be moving the message to earlier location so that the text editor will be showing the message that is about to be overwriting into the database
+//                                    // TODO: try showing the conflict message on the editor
+//
+//                                    ::SendMessage(curScintilla,SCI_GOTOLINE,0,0);
+//  
+//                                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\nConflicting Snippet: \r\n\r\n     ");
+//                                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)tagText);
+//                                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"  <");
+//                                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)tagTypeText);
+//                                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)">\r\n");
+//                                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n\r\n   (More details of the conflicts will be shown in future releases)");
+//                                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n----------------------------------------\r\n");
+//                                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"---------- [ Pending Imports ] ---------\r\n");
+//                                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"----------------------------------------\r\n");
+//
+//                                    int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("A snippet already exists, overwrite?"), TEXT("FingerText"), MB_YESNO);
+//                                    if (messageReturn==IDNO)
+//                                    {
+//                                        //delete [] tagText;
+//                                        //delete [] tagTypeText;
+//                                        //delete [] snippetText;
+//                                        // not overwrite
+//                                        //::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), TEXT("FingerText"), MB_OK);
+//                                        notOverWrite = true;
+//
+//                                        
+//            
+//                                    } else
+//                                    {
+//                                        // delete existing entry
+//                                        if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
+//                                        {
+//                                            sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
+//                                            sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
+//                                            sqlite3_step(stmt);
+//                                        } else
+//                                        {
+//                                            ::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT("FingerText"), MB_OK);
+//                                        }
+//                    
+//                                    }
+//                                    ::SendMessage(curScintilla,SCI_GOTOLINE,17,0);
+//                                    ::SendMessage(curScintilla,SCI_SETSELECTION,0,::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
+//                                    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+//
+//                                } else
+//                                {
+//                                    // delete existing entry
+//                                    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
+//                                    {
+//                                        sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
+//                                        sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
+//                                        sqlite3_step(stmt);
+//                                    } else
+//                                    {
+//                                        ::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT("FingerText"), MB_OK);
+//                                    }
+//
+//                                }
+//
+//
+//
+//
+//                            } else
+//                            {
+//                                notOverWrite = true;
+//                                if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "INSERT INTO snippets VALUES(?,?,?)", -1, &stmt, NULL))
+//                                {
+//                                    importCount++;
+//                                    
+//                                    char* tagTextsuffixed;
+//                                    tagTextsuffixed = new char [strlen(tagText)+255];
+//
+//
+//                                    //TODO: refactor the timestamp generation to a new function
+//                                        TCHAR time[128];
+//                                        TCHAR date[128];
+//                                        SYSTEMTIME formatTime;
+//	                                    ::GetLocalTime(&formatTime);
+//                                        //::GetTimeFormat(LOCALE_USER_DEFAULT, TIME_FORCE24HOURFORMAT + TIME_NOTIMEMARKER, &formatTime, NULL, time, 128);
+//                                        ::GetTimeFormat(LOCALE_USER_DEFAULT, 0, &formatTime, TEXT("HHmmss"), time, 128);
+//                                        ::GetDateFormat(LOCALE_USER_DEFAULT, 0, &formatTime, TEXT("yyyyMMdd"), date, 128);
+//
+//                                        //if (date)
+//                                        //{
+//                                        //    ::GetDateFormat(LOCALE_USER_DEFAULT, type, &formatTime, NULL, time, 128);
+//                                        //} else
+//                                        //{
+//                                            
+//                                        //}
+//                                        char timeText[MAX_PATH];
+//	                                    WideCharToMultiByte((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, time, -1, timeText, MAX_PATH, NULL, NULL);
+//                                        char dateText[MAX_PATH];
+//	                                    WideCharToMultiByte((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, date, -1, dateText, MAX_PATH, NULL, NULL);
+//
+//                                    strcpy(tagTextsuffixed,tagText);
+//                                    strcat(tagTextsuffixed,".Conflict");
+//                                    strcat(tagTextsuffixed,dateText);
+//                                    strcat(tagTextsuffixed,timeText);
+//                                    
+//                                    
+//                                    sqlite3_bind_text(stmt, 1, tagTextsuffixed, -1, SQLITE_STATIC);
+//                                    sqlite3_bind_text(stmt, 2, tagTypeText, -1, SQLITE_STATIC);
+//                                    sqlite3_bind_text(stmt, 3, snippetText, -1, SQLITE_STATIC);
+//            
+//                                    
+//                                    sqlite3_step(stmt);
+//                                    conflictCount++;
+//                                    delete [] tagTextsuffixed;
+//                                    
+//                                }
+//                                sqlite3_finalize(stmt);
+//
+//
+//                            }
+//
+//
+//
+//
+//                        }
+//                        
+//                        
+//                        
+//
+//                        
+//                        
+//                    } else
+//                    {
+//                        sqlite3_finalize(stmt);
+//                    }
+//                }
+//            
+//                if (notOverWrite == false && g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "INSERT INTO snippets VALUES(?,?,?)", -1, &stmt, NULL))
+//                {
+//                    
+//                    importCount++;
+//                    
+//                    // Then bind the two ? parameters in the SQLite SQL to the real parameter values
+//                    sqlite3_bind_text(stmt, 1, tagText, -1, SQLITE_STATIC);
+//                    sqlite3_bind_text(stmt, 2, tagTypeText, -1, SQLITE_STATIC);
+//                    sqlite3_bind_text(stmt, 3, snippetText, -1, SQLITE_STATIC);
+//            
+//                    // Run the query with sqlite3_step
+//                    sqlite3_step(stmt); // SQLITE_ROW 100 sqlite3_step() has another row ready
+//                    //::MessageBox(nppData._nppHandle, TEXT("The Snippet is saved."), TEXT("FingerText"), MB_OK);
+//                }
+//                sqlite3_finalize(stmt);
+//                //delete [] tagText;
+//                //delete [] tagTypeText;
+//                //delete [] snippetText;
+//            
+//                ::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
+//                updateDockItems(false,false);
+//            
+//                ::SendMessage(curScintilla,SCI_GOTOPOS,0,0);
+//                next = searchNext(curScintilla, "!$[FingerTextData FingerTextData]@#");
+//            } while (next>=0);
+//        
+//            wchar_t importCountText[200] = TEXT("");
+//
+//            if (importCount>1)
+//            {
+//                ::_itow_s(importCount, importCountText, 10, 10);
+//                wcscat(importCountText,TEXT(" snippets are imported."));
+//            } else if (importCount==1)
+//            {
+//                wcscat(importCountText,TEXT("1 snippet is imported."));
+//            } else
+//            {
+//                wcscat(importCountText,TEXT("No Snippets are imported."));
+//            }
+//
+//            //wchar_t conflictCountText[35] = TEXT("");
+//
+//            if (conflictCount>0)
+//            {
+//                //::_itow_s(conflictCount, conflictCountText, 10, 10);
+//
+//                wcscat(importCountText,TEXT("\r\n\r\nThere are some conflicts between the imported and existing snippets. You may go to the snippet editor to clean them up."));
+//                
+//            }
+//
+//            
+//            //::MessageBox(nppData._nppHandle, TEXT("Complete importing snippets"), TEXT("FingerText"), MB_OK);
+//            ::MessageBox(nppData._nppHandle, importCountText, TEXT("FingerText"), MB_OK);
+//
+//            ::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
+//            ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
+//
+//            //updateMode();
+//            //updateDockItems();
+//        }
+//        delete [] fileText;
+//    }
+//    g_liveHintUpdate++;
+//
+//}
+//
 
 int promptSaveSnippet(TCHAR* message)
 {
