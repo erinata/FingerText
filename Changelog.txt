@@ -1,5 +1,9 @@
 changelog (for developers only, include unreleased versions)
 
+0.5.10
+rewriting the triggerTag, snippetComplete and findTagSQLite functions
+
+
 0.5.9
 Added: Option to make triggertext completion less inclusive
 Fixed: bug in importing snippets with different endline characters.

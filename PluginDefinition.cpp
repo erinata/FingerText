@@ -213,7 +213,7 @@ void commandMenuInit()
     setCommand(HELP_INDEX, TEXT("Quick Guide"), showHelp, NULL, false);
     setCommand(ABOUT_INDEX, TEXT("About"), showAbout, NULL, false);
     //setCommand(SEPARATOR_FOUR_INDEX, TEXT("---"), NULL, NULL, false);
-//    setCommand(TESTING_INDEX, TEXT("Testing"), testing, NULL, false);
+    setCommand(TESTING_INDEX, TEXT("Testing"), testing, NULL, false);
     //testing();
 }
 //
@@ -264,48 +264,25 @@ void toggleDisable()
     updateMode();
 }
 
-char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""), bool similar=false)
+char *findTagSQLite(char *tag, char *tagCompare, bool similar=false)
 {
+    //alertCharArray(tagCompare);
 	char *expanded = NULL;
 	sqlite3_stmt *stmt;
 
     // First create the SQLite SQL statement ("prepare" it for running)
-    int sqlitePrepare;
+    char *sqlitePrepareStatement;
     if (similar == false)
     {
-        sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY tag", -1, &stmt, NULL);
+        sqlitePrepareStatement = "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY tag";
     } else
     {
-        sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY tag", -1, &stmt, NULL);
+        sqlitePrepareStatement = "SELECT tag FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY tag";
     }
     
-
-	if (g_dbOpen && SQLITE_OK == sqlitePrepare)
+    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, sqlitePrepareStatement, -1, &stmt, NULL))
 	{
-        char *tagType = NULL;
-        if (level == 0)
-        {
-            //sprintf(tagType,scope);
-            
-            convertToUTF8(scope, &tagType);
-        } else
-        {            
-            TCHAR *fileType = NULL;
-            fileType = new TCHAR[MAX_PATH];
-            ::swprintf(fileType,TEXT("GLOBAL"));
-            if (level == 1)
-            {
-	            ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-            } else if (level == 2)
-            {
-	            ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-            }
-            convertToUTF8(fileType, &tagType);
-            delete [] fileType;
-        }
-
-		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
-		sqlite3_bind_text(stmt, 1, tagType, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 1, tagCompare, -1, SQLITE_STATIC);
 
         if (similar==1)
         {
@@ -317,7 +294,6 @@ char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""), bool similar=fa
             sqlite3_bind_text(stmt, 2, similarTag, -1, SQLITE_STATIC);
         } else
         {
-
 		    sqlite3_bind_text(stmt, 2, tag, -1, SQLITE_STATIC);
         }
 
@@ -336,6 +312,69 @@ char *findTagSQLite(char *tag, int level, TCHAR* scope=TEXT(""), bool similar=fa
 	return expanded; //remember to delete the returned expanded after use.
 }
 
+//char *findTagSQLiteBackup(char *tag, int level, bool similar=false)
+//{
+//	char *expanded = NULL;
+//	sqlite3_stmt *stmt;
+//
+//    // First create the SQLite SQL statement ("prepare" it for running)
+//    char *sqlitePrepareStatement;
+//    if (similar == false)
+//    {
+//        sqlitePrepareStatement = "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY tag";
+//    } else
+//    {
+//        sqlitePrepareStatement = "SELECT tag FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY tag";
+//    }
+//    
+//    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, sqlitePrepareStatement, -1, &stmt, NULL))
+//	{
+//        char *tagType = NULL;
+//   
+//        TCHAR *fileType = NULL;
+//        fileType = new TCHAR[MAX_PATH];
+//        ::swprintf(fileType,TEXT("GLOBAL"));
+//        if (level == 1)
+//        {
+//	        ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
+//        } else if (level == 2)
+//        {
+//	        ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
+//        }
+//        convertToUTF8(fileType, &tagType);
+//        delete [] fileType;
+// 
+//		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
+//		sqlite3_bind_text(stmt, 1, tagType, -1, SQLITE_STATIC);
+//
+//        if (similar==1)
+//        {
+//            char similarTag[MAX_PATH]="";
+//            if (g_inclusiveTriggerTextCompletion==1) strcat(similarTag,"%");
+//            strcat(similarTag,tag);
+//            strcat(similarTag,"%");
+//            //::SendMessage(getCurrentScintilla(),SCI_INSERTTEXT,0,(LPARAM)similarTag);
+//            sqlite3_bind_text(stmt, 2, similarTag, -1, SQLITE_STATIC);
+//        } else
+//        {
+//		    sqlite3_bind_text(stmt, 2, tag, -1, SQLITE_STATIC);
+//        }
+//
+//		// Run the query with sqlite3_step
+//		if(SQLITE_ROW == sqlite3_step(stmt))  // SQLITE_ROW 100 sqlite3_step() has another row ready
+//		{
+//			const char* expandedSQL = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
+//			expanded = new char[strlen(expandedSQL)*4 + 1];
+//			strcpy(expanded, expandedSQL);
+//		}
+//	}
+//    // Close the SQLite statement, as we don't need it anymore
+//	// This also has the effect of free'ing the result from sqlite3_column_text 
+//	// (i.e. in our case, expandedSQL)
+//	sqlite3_finalize(stmt);
+//	return expanded; //remember to delete the returned expanded after use.
+//}
+
 void upgradeMessage()
 {
     //TODO: dynamic upgrade message
@@ -345,8 +384,6 @@ void upgradeMessage()
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
         ::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)WELCOME_TEXT);
     }
-
-    
 }
 
 void initialize()
@@ -450,61 +487,6 @@ void selectionToSnippet()
     //alert();
 }
 
-//void selectionToSnippet()
-//{
-//    //TODO: consolidate with create snippet
-//    HWND curScintilla = getCurrentScintilla();
-//    int selectionEnd = ::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0);
-//    int selectionStart = ::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0);
-//
-//    char* selection = new char [selectionEnd - selectionStart +1];
-//    ::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
-//    
-//    if (!::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
-//    {
-//        ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_ftbPath);
-//    } 
-//
-//    curScintilla = getCurrentScintilla();
-//    promptSaveSnippet(TEXT("Do you wish to save the current snippet before creating a new one?"));
-//    
-//    ::SendMessage(curScintilla,SCI_CLEARALL,0,0);
-//
-//    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)SNIPPET_EDIT_TEMPLATE);
-//    ::SendMessage(curScintilla,SCI_INSERTTEXT,::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"triggertext\r\nGLOBAL\r\n");
-//    ::SendMessage(curScintilla,SCI_INSERTTEXT,::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)selection);
-//    ::SendMessage(curScintilla,SCI_INSERTTEXT,::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"[>END<]");
-//    refreshAnnotation();
-//    g_editorView = 1;
-//    ::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
-//    ::SendMessage(curScintilla,SCI_WORDRIGHTEXTEND,1,0);
-//}
-//
-//void createSnippet()
-//{
-//    //::MessageBox(nppData._nppHandle, TEXT("CREATE~!"), TEXT("Trace"), MB_OK);
-//    //::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
-//    if (!::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
-//    {
-//        ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_ftbPath);
-//    } 
-//    promptSaveSnippet(TEXT("Do you wish to save the current snippet before creating a new one?"));
-//    
-//    HWND curScintilla = getCurrentScintilla();
-//    ::SendMessage(curScintilla,SCI_CLEARALL,0,0);
-//    
-//    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)SNIPPET_EDIT_TEMPLATE);
-//    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"newtriggertext\r\nGLOBAL\r\nThis is a new snippet.\r\nThis new snippet is awesome.\r\nNew snippet is here.\r\n[>END<]");
-//    
-//    //::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
-//    ::SendMessage(curScintilla,SCI_EMPTYUNDOBUFFER,0,0);
-//
-//    g_editorView = true;
-//    updateDockItems(false,false);
-//    updateMode();
-//    refreshAnnotation();
-//}
-//
 void editSnippet()
 {
     
@@ -842,7 +824,7 @@ void chainSnippet(HWND &curScintilla, int &firstPos, char* hotSpotText)
 {
     int triggerPos = strlen(hotSpotText)+firstPos;
     ::SendMessage(curScintilla,SCI_GOTOPOS,triggerPos,0);
-    triggerTag(triggerPos,strlen(hotSpotText));
+    triggerTag(triggerPos,false, strlen(hotSpotText));
 }
 void executeCommand(HWND &curScintilla, int &firstPos, char* hotSpotText)
 {
@@ -1363,16 +1345,6 @@ void setConfigAndDatabase()
 
     if (PathFileExists(g_ftbPath) == FALSE) emptyFile(g_ftbPath);
     if (PathFileExists(g_fttempPath) == FALSE) emptyFile(g_fttempPath);
-    //if (PathFileExists(g_ftbPath) == FALSE)
-	//{
-    //    ::WritePrivateProfileString(TEXT("Dummy"), TEXT("Dummy"), TEXT("Dummy"), g_ftbPath);
-    //    //::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, 0, (LPARAM)ftbPath);
-    //}
-    //if (PathFileExists(g_fttempPath) == FALSE)
-	//{
-    //    ::WritePrivateProfileString(TEXT("Dummy"), TEXT("Dummy"), TEXT("Dummy"), g_fttempPath);
-    //    //::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, 0, (LPARAM)ftbPath);
-    //}
 }
 
 void emptyFile(TCHAR* fileName)
@@ -2574,6 +2546,8 @@ void updateMode()
 
 void settings()
 {
+
+    // TODO: try putting settings into the ini files instead of just using annotation
     int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Change the settings only when you know what you are doing. Messing up the ini can cause FingerText to stop working.\r\n\r\n Do you wish to continue?"), TEXT("FingerText"), MB_YESNO);
     if (messageReturn == IDYES)
     {
@@ -2693,87 +2667,89 @@ void refreshAnnotation()
     }
 }
 
+void tagComplete()
+{
+    HWND curScintilla = getCurrentScintilla();
+    int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+    if (triggerTag(posCurrent,true)) snippetHintUpdate();
+    //if (snippetComplete()) snippetHintUpdate();
+}
 
 //TODO: better triggertag, should allow for a list of scopes
-//TODO: consolidate triggerTag and snippet complete 
-bool triggerTag(int &posCurrent, int triggerLength)
+bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
 {
     HWND curScintilla = getCurrentScintilla();
     bool tagFound = false;
     char *tag;
 	int tagLength = getCurrentTag(curScintilla, posCurrent, &tag, triggerLength);
-
     int posBeforeTag=posCurrent-tagLength;
-
-    //char *argument;
-	//int separatorLength = getCurrentTag(curScintilla, posBeforeTag-1, &argument,0);
-    //int posBeforeseparator=posBeforeTag-separatorLength;
     
     if (tagLength != 0)
 	{
-        char *expanded;
+        char *expanded = NULL;
+        char *tagType = NULL;
+        
+        TCHAR *fileType = NULL;
+        fileType = new TCHAR[MAX_PATH];
 
-        int level=1;
-        do
+        
+        ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
+        convertToUTF8(fileType, &tagType);
+        expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
+
+        if (!expanded)
         {
-            expanded = findTagSQLite(tag,level,TEXT(""),false); 
-			if (expanded)
-            {
-                replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
-				tagFound = true;
-                break;
-            } 
-            level++;
-        } while (level<=3);
-        delete [] expanded;
-		delete [] tag;
-        // return to the original path 
-        // ::SetCurrentDirectory(curPath);
-    }
-    // return to the original position 
-    if (tagFound) ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
-
-    return tagFound;
-}
-
-void tagComplete()
-{
-    if (snippetComplete()) snippetHintUpdate();
-}
-
-bool snippetComplete()
-{
-    HWND curScintilla = getCurrentScintilla();
-    int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-
-    bool tagFound = false;
-    char *tag;
-	int tagLength = getCurrentTag(curScintilla, posCurrent, &tag);
-    int posBeforeTag=posCurrent-tagLength;
-    if (tagLength != 0)
-	{
-        char *expanded;
-
-        int level=1;
-        do
+            ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
+            convertToUTF8(fileType, &tagType);
+            expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
+        }
+        
+        if (!expanded)
         {
-            expanded = findTagSQLite(tag,level,TEXT(""),true); 
-			if (expanded)
+            expanded = findTagSQLite(tag,"GLOBAL",triggerTextComplete); 
+        }
+
+        if (expanded)
+        {
+            if (triggerTextComplete)
             {
                 ::SendMessage(curScintilla,SCI_SETSEL,posBeforeTag,posCurrent);
                 ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)expanded);
                 posBeforeTag = posBeforeTag+strlen(expanded);
+            } else
+            {
+                replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
+            }
                 
+		    tagFound = true;
+        }
 
-                //replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
-				tagFound = true;
-                break;
-            } 
-            level++;
-        } while (level<=3);
 
+        //int level=1;
+        //do
+        //{
+        //    expanded = findTagSQLite(tag,level,triggerTextComplete); 
+        //    
+		//	if (expanded)
+        //    {
+        //        if (triggerTextComplete)
+        //        {
+        //            ::SendMessage(curScintilla,SCI_SETSEL,posBeforeTag,posCurrent);
+        //            ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)expanded);
+        //            posBeforeTag = posBeforeTag+strlen(expanded);
+        //        } else
+        //        {
+        //            replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
+        //        }
+        //        
+		//		tagFound = true;
+        //        break;
+        //    } 
+        //    level++;
+        //} while (level<=3);
+        delete [] fileType;
+        delete [] tagType;
         delete [] expanded;
-
 		delete [] tag;
         // return to the original path 
         // ::SetCurrentDirectory(curPath);
@@ -2783,10 +2759,49 @@ bool snippetComplete()
     return tagFound;
 }
 
+
+
+//bool snippetComplete()
+//{
+//    HWND curScintilla = getCurrentScintilla();
+//    int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+//    bool tagFound = false;
+//    char *tag;
+//	int tagLength = getCurrentTag(curScintilla, posCurrent, &tag);
+//    int posBeforeTag=posCurrent-tagLength;
+//    if (tagLength != 0)
+//	{
+//        char *expanded;
+//
+//        int level=1;
+//        do
+//        {
+//            expanded = findTagSQLite(tag,level,true); 
+//			if (expanded)
+//            {
+//                ::SendMessage(curScintilla,SCI_SETSEL,posBeforeTag,posCurrent);
+//                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)expanded);
+//                posBeforeTag = posBeforeTag+strlen(expanded);
+//                
+//                //replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
+//				tagFound = true;
+//                break;
+//            } 
+//            level++;
+//        } while (level<=3);
+//
+//        delete [] expanded;
+//		delete [] tag;
+//        // return to the original path 
+//        // ::SetCurrentDirectory(curPath);
+//    }
+//    // return to the original position 
+//    if (tagFound) ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
+//    return tagFound;
+//}
+
 void fingerText()
 {
-    //bool preserveSteps=false;
-
     HWND curScintilla = getCurrentScintilla();
     
     if ((g_enable==false) || (::SendMessage(curScintilla,SCI_SELECTIONISRECTANGLE,0,0)==1))
@@ -2855,7 +2870,8 @@ void fingerText()
             if ((navSpot == false) && (tagFound == false)) 
 		    {
                 ::SendMessage(curScintilla, SCI_GOTOPOS, posCurrent, 0);
-                completeFound = snippetComplete();
+                //completeFound = snippetComplete();
+                completeFound = triggerTag(posCurrent,true);
                 if (completeFound)
                 {
                     ::SendMessage(curScintilla,SCI_AUTOCCANCEL,0,0);
@@ -2912,6 +2928,46 @@ void testing()
     ::MessageBox(nppData._nppHandle, TEXT("Testing!"), TEXT("Trace"), MB_OK);
     
     HWND curScintilla = getCurrentScintilla();
+
+    // Testing array of char array
+    char *s[] = {"Jan","Feb","Mar","April"};
+    char* a = "December";
+    s[1] = a;
+    alertCharArray(s[0]);
+    alertCharArray(s[1]);
+    alertCharArray(s[2]);
+    alertCharArray(s[3]);
+
+    char* b = "July";
+    s[1] = b;
+    alertCharArray(s[0]);
+    alertCharArray(s[1]);
+    alertCharArray(s[2]);
+    alertCharArray(s[3]);
+
+
+    // Testing array of char array
+    //const char *s[]={"Jan","Feb","Mar","April"};
+    //const char **p;
+    //size_t i;
+    //
+    //#define countof(X) ( (size_t) ( sizeof(X)/sizeof*(X) ) )
+    //
+    //alertCharArray("Loop 1:");
+    //for (i = 0; i < countof(s); i++)
+    //alertCharArray((char*)(s[i]));
+    //
+    //alertCharArray("Loop 2:");
+    //for (p = s, i = 0; i < countof(s); i++)
+    //alertCharArray((char*)(p[i]));
+    //
+    //alertCharArray("Loop 3:");
+    //for (p = s; p < &s[countof(s)]; p++)
+    //alertCharArray((char*)(*p));
+    
+
+
+
 
     //setCommand(TRIGGER_SNIPPET_INDEX, TEXT("Trigger Snippet/Navigate to Hotspot"), fingerText, NULL, false);
     //::GenerateKey(VK_TAB, TRUE);
@@ -3058,7 +3114,7 @@ void alertNumber(int input)
 void alertCharArray(char* input)
 {
     size_t origsize = strlen(input) + 1;
-    const size_t newsize = 200;
+    const size_t newsize = 1000;
     size_t convertedChars = 0;
     wchar_t wcstring[newsize];
     mbstowcs_s(&convertedChars, wcstring, origsize, input, _TRUNCATE);
