@@ -1,3 +1,38 @@
+//This file is part of FingerText, a notepad++ snippet plugin.
+//
+//FingerText is released under MIT License.
+//
+//MIT license
+//
+//Copyright (C) 2011 by Tom Lam
+//
+//Permission is hereby granted, free of charge, to any person 
+
+//obtaining a copy of this software and associated documentation 
+//files (the "Software"), to deal in the Software without 
+//restriction, including without limitation the rights to use, 
+//copy, modify, merge, publish, distribute, sublicense, and/or 
+//sell copies of the Software, and to permit persons to whom the 
+//Software is furnished to do so, subject to the following 
+//conditions:
+//
+//The above copyright notice and this permission notice shall be 
+//included in all copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
+//EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES 
+//OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+//NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT 
+//HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
+//WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+//DEALINGS IN THE SOFTWARE.
+///////////////////////////////////////////////////////
+//
+//This file is modified from the NppPluginTemplate provided by Don Ho. 
+//The License of the template is shown below. 
+//
+//
 //this file is part of notepad++
 //Copyright (C)2003 Don HO <donho@altern.org>
 //
@@ -26,7 +61,7 @@ enum LangType {L_TXT, L_PHP , L_C, L_CPP, L_CS, L_OBJC, L_JAVA, L_RC,\
 			   L_TEX, L_FORTRAN, L_BASH, L_FLASH, L_NSIS, L_TCL, L_LISP, L_SCHEME,\
 			   L_ASM, L_DIFF, L_PROPS, L_PS, L_RUBY, L_SMALLTALK, L_VHDL, L_KIX, L_AU3,\
 			   L_CAML, L_ADA, L_VERILOG, L_MATLAB, L_HASKELL, L_INNO, L_SEARCHRESULT,\
-			   L_CMAKE, L_YAML,\
+			   L_CMAKE, L_YAML,L_COBOL,L_GUI4CLI,L_D,L_POWERSHELL,L_R,\
 			   // The end of enumated language type, so it should be always at the end
 			   L_EXTERNAL};
 enum winVer{WV_UNKNOWN, WV_WIN32S, WV_95, WV_98, WV_ME, WV_NT, WV_W2K, WV_XP, WV_S2003, WV_XPX64, WV_VISTA, WV_WIN7};

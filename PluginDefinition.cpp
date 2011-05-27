@@ -86,6 +86,7 @@ struct SnipIndex {
 TCHAR g_iniPath[MAX_PATH];
 TCHAR g_ftbPath[MAX_PATH];
 TCHAR g_fttempPath[MAX_PATH];
+TCHAR g_groupPath[MAX_PATH];
 
 SnipIndex* g_snippetCache;
 int g_snippetCacheSize;
@@ -97,9 +98,6 @@ bool g_modifyResponse;
 bool g_enable;
 bool g_editorView;
 
-
-
-// TODO: use a struct instead of a bunch of global variables
 // Config file content
 #define DEFAULT_SNIPPET_LIST_LENGTH 100
 #define DEFAULT_SNIPPET_LIST_ORDER_TAG_TYPE 1
@@ -270,6 +268,27 @@ void toggleDisable()
     }
     updateMode();
 }
+
+//char *getGroupScope(TCHAR* group, int position)
+//{
+//    char *scope = NULL;
+//    char *scopeListConverted = NULL;
+//    TCHAR *scopeList = new TCHAR[MAX_PATH];
+//
+//    GetPrivateProfileString(TEXT("Snippet Group"), group,NULL,scopeList,MAX_PATH,g_groupPath);
+//    convertToUTF8(scopeList,&scopeListConverted);
+//
+//    scope = strtok(scopeListConverted, "|");
+//    while (position>0 && scope!=NULL) 
+//    {
+//        scope = strtok(NULL, "|");
+//        position--;
+//    } 
+//    
+//    delete [] scopeList;
+//    return scope;
+//
+//}
 
 char *findTagSQLite(char *tag, char *tagCompare, bool similar=false)
 {
@@ -891,7 +910,7 @@ void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &star
         ::SendMessage(curScintilla,SCI_WORDLEFTEXTEND,0,0);
         startingPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
         ::SendMessage(curScintilla,SCI_CUT,0,0);
-    } else if (strcmp(hotSpotText,"DATESHORT")==0)
+    } else if (strcmp(hotSpotText,"DATESHORT")==0) //TODO: more flexible date and time
     {
         insertDateTime(true,DATE_SHORTDATE,curScintilla);
 	    
@@ -1345,15 +1364,19 @@ void setConfigAndDatabase()
     ::_tcscpy(g_iniPath,path);
     ::_tcscpy(g_ftbPath,path);
     ::_tcscpy(g_fttempPath,path);
+    //::_tcscpy(g_groupPath,path);
     ::_tcscat(g_iniPath,TEXT("\\FingerText.ini"));
     ::_tcscat(g_ftbPath,TEXT("\\SnippetEditor.ftb"));
     ::_tcscat(g_fttempPath,TEXT("\\FingerText.fttemp"));
-    //::MessageBox(nppData._nppHandle, path, TEXT("Trace"), MB_OK);
+    //::_tcscat(g_groupPath,TEXT("\\SnippetGroup.ini"));
+    
 
     setupConfigFile();
 
     if (PathFileExists(g_ftbPath) == FALSE) emptyFile(g_ftbPath);
     if (PathFileExists(g_fttempPath) == FALSE) emptyFile(g_fttempPath);
+
+    //if (PathFileExists(g_groupPath) == FALSE) writeDefaultGroupFile(); 
 }
 
 void emptyFile(TCHAR* fileName)
@@ -1369,6 +1392,7 @@ void writeConfigTextChar(TCHAR* configChar, TCHAR* section)
 {
     ::WritePrivateProfileString(TEXT("FingerText"), section, configChar, g_iniPath);
 }
+
 
 void resetDefaultSettings()
 {   
@@ -1458,6 +1482,19 @@ void writeConfigText(int configInt, TCHAR* section)
     _itow_s(configInt,configText, 10,10);
     ::WritePrivateProfileString(TEXT("FingerText"), section, configText, g_iniPath);
 }
+
+
+//void writeDefaultGroupFile()
+//{
+//    //TODO: use writeConfigTextChar 
+//    ::WritePrivateProfileString(TEXT("Snippet Group"), TEXT("LANG_0"), TEXT(".txt|.ini|.log"), g_groupPath);
+//    ::WritePrivateProfileString(TEXT("Snippet Group"), TEXT("LANG_1"), TEXT(".php"), g_groupPath);
+//    ::WritePrivateProfileString(TEXT("Snippet Group"), TEXT("LANG_2"), TEXT(".c|.h"), g_groupPath);
+//    ::WritePrivateProfileString(TEXT("Snippet Group"), TEXT("LANG_3"), TEXT(".cpp|.hpp"), g_groupPath);
+//
+//    //::WritePrivateProfileString(TEXT("Snippet Group"), TEXT("GROUP.rb"), TEXT(".rb"), g_groupPath);
+// 
+//}
 
 
 int getCurrentTag(HWND curScintilla, int posCurrent, char **buffer, int triggerLength)
@@ -1651,6 +1688,7 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
 
             //int cols = sqlite3_column_count(stmt);
             //tagType = itoa(snippetCacheSize,tagType,10);
+            //TODO: potential performance improvement by just setting 100
             char snippetCacheSizeText[10];
             ::_itoa(g_snippetCacheSize, snippetCacheSizeText, 10); 
 
@@ -1813,7 +1851,6 @@ void exportSnippets()
         } else
         {
             wcscat(exportCountText,TEXT("No snippets are exported."));
-          
         }
         
         ::SendMessage(curScintilla,SCI_SETSAVEPOINT,0,0);
@@ -1825,8 +1862,6 @@ void exportSnippets()
 
     
 }
-
-
 
 char* cleanupString( char *str )
 {
@@ -2526,7 +2561,6 @@ int promptSaveSnippet(TCHAR* message)
 void updateMode()
 {
     //HWND curScintilla = getCurrentScintilla();
-    
     TCHAR fileType[MAX_PATH];
     ::SendMessage(nppData._nppHandle, NPPM_GETFILENAME, (WPARAM)MAX_PATH, (LPARAM)fileType);
         
@@ -2540,19 +2574,16 @@ void updateMode()
         snippetDock.toggleSave(false);
         g_editorView = false;
         snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Enabled]\r\n(Type trigger text and hit tab to insert snippet)"));
-        
     } else
     {
         snippetDock.toggleSave(false);
         g_editorView = false;
         snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Disabled]\r\n(To enable: Plugins>FingerText>Toggle FingerText On/Off)"));
-
     }
 }
 
 void settings()
 {
-
     // TODO: try putting settings into the ini files instead of just using annotation
     int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Change the settings only when you know what you are doing. Messing up the ini can cause FingerText to stop working.\r\n\r\n Do you wish to continue?"), TEXT("FingerText"), MB_YESNO);
     if (messageReturn == IDYES)
@@ -2597,7 +2628,7 @@ void settings()
  ;                                          1: When there is a conflicting snippet during snippet importing, you may choose to overwrite existing snippet.\r\n\
  ; inclusive_triggertext_completion --            0: Tiggertext completion will only include triggertext which starts with the characters you are typing.\r\n\
  ;                                      (default) 1: Tiggertext completion will only include triggertext which includes the characters you are typing.\r\n\
- ; custom_scope               --  A user defined custom scope. For example if you put .cpp here, you can use all the .cpp snippets in any files.\r\n\
+ ; custom_scope               --  A user defined custom scope. For example if you put .rb here, you can use all the .rb snippets in any files.\r\n\
         ");
         ::SendMessage(curScintilla, SCI_ANNOTATIONSETSTYLE, lineCount, STYLE_INDENTGUIDE);
         ::SendMessage(curScintilla, SCI_ANNOTATIONSETVISIBLE, lineCount, 0);
@@ -2606,7 +2637,6 @@ void settings()
 void showHelp()
 {
     ::MessageBox(nppData._nppHandle, HELP_TEXT_FULL, TEXT("FingerText"), MB_OK);
-
      //ShellExecute(NULL, TEXT("open"), TEXT("https://github.com/erinata/FingerText"), NULL, NULL, SW_SHOWNORMAL);
 }
 
@@ -2691,6 +2721,17 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
     char *tag;
 	int tagLength = getCurrentTag(curScintilla, posCurrent, &tag, triggerLength);
     int posBeforeTag=posCurrent-tagLength;
+    int position = 0;
+    bool groupChecked = false;
+
+    int curLang = 0;
+    ::SendMessage(nppData._nppHandle,NPPM_GETCURRENTLANGTYPE ,0,(LPARAM)&curLang);
+    wchar_t curLangNumber[10];
+    wchar_t curLangText[20];
+    ::wcscpy(curLangText, TEXT("LANG_"));
+    ::_itow_s(curLang, curLangNumber, 10, 10);
+    ::wcscat(curLangText, curLangNumber);
+
     
     if (tagLength != 0)
 	{
@@ -2700,12 +2741,11 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
         TCHAR *fileType = NULL;
         fileType = new TCHAR[MAX_PATH];
 
-
-        
+        // Check for custom scope
         convertToUTF8(g_customScope, &tagType);
         expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
-        //expanded = findTagSQLite(tag,g_customScope,triggerTextComplete); 
 
+        // Check for snippets which matches ext part
         if (!expanded)
         {
             ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
@@ -2713,18 +2753,43 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
             expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
         }
 
+        // Check for snippets which matches name part
         if (!expanded)
         {
             ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
             convertToUTF8(fileType, &tagType);
             expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
         }
+
+        // Check for snippets which matches the current language group
+        //if (!expanded)
+        //{
+        //    groupChecked = true;
+        //    position = 0;
+        //    do
+        //    {   
+        //        tagType = getGroupScope(curLangText,position);
+        //        if (tagType)
+        //        {
+        //            expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
+        //            
+        //        } else
+        //        {
+        //            break;
+        //        }
+        //        position++;
+        //    } while (!expanded);
+        //}
+
         
+        // Check for snippets which matches GLOBAL
         if (!expanded)
         {
+            groupChecked = false;
             expanded = findTagSQLite(tag,"GLOBAL",triggerTextComplete); 
         }
 
+        // Only if a tag is found in the above process, a replace tag or trigger text completion action will be done.
         if (expanded)
         {
             if (triggerTextComplete)
@@ -2764,7 +2829,7 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
         //    level++;
         //} while (level<=3);
         delete [] fileType;
-        delete [] tagType;
+        if (!groupChecked) delete [] tagType;
         delete [] expanded;
 		delete [] tag;
         // return to the original path 
@@ -2815,6 +2880,9 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
 //    if (tagFound) ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
 //    return tagFound;
 //}
+
+
+
 
 void fingerText()
 {
@@ -2945,12 +3013,32 @@ void testing()
     
     HWND curScintilla = getCurrentScintilla();
 
+    //char* testScope = NULL;
+    //testScope = getGroupScope(TEXT("LANG_4"),0);
+    //
+    //alertCharArray(testScope);
+    //testScope = getGroupScope(TEXT("LANG_4"),1);
+    //alertCharArray(testScope);
+    //testScope = getGroupScope(TEXT("LANG_4"),2);
+    //alertCharArray(testScope);
+    //testScope = getGroupScope(TEXT("LANG_4"),3);
+    //if (testScope) alertCharArray(testScope);
+    //if (testScope) delete [] testScope;
+
+    //Test current language check
+    //int curLang = 0;
+    //::SendMessage(nppData._nppHandle,NPPM_GETCURRENTLANGTYPE ,0,(LPARAM)&curLang);
+    //
+    //alertNumber(curLang);
+
+    
+
     //g_customScope = TEXT(".cpp");
     //saveCustomScope();
 
     
     // Testing array of char array
-    //char *s[] = {"Jan","Feb","Mar","April"};
+    //char *s[] = {"Jan","Feb","Mar","April","May"};
     //char* a = "December";
     //s[1] = a;
     //alertCharArray(s[0]);
@@ -2958,13 +3046,17 @@ void testing()
     //alertCharArray(s[2]);
     //alertCharArray(s[3]);
     //
+    //alertNumber(sizeof(s));
+    //alertNumber(sizeof*(s));
+
     //char* b = "July";
     //s[1] = b;
     //alertCharArray(s[0]);
     //alertCharArray(s[1]);
     //alertCharArray(s[2]);
     //alertCharArray(s[3]);
-
+    //
+    //
 
     // Testing array of char array
     //const char *s[]={"Jan","Feb","Mar","April"};

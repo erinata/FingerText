@@ -124,6 +124,7 @@ bool hotSpotNavigation(HWND &curScintilla);
 int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, int firstPos, int signLength);
 void showPreview();
 void emptyFile(TCHAR* fileName);
+void writeDefaultGroupFile();
 int searchNext(HWND &curScintilla, char* searchText);
 int searchPrev(HWND &curScintilla, char* searchText);
 void selectionToSnippet();
