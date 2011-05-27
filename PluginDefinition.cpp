@@ -97,6 +97,8 @@ bool g_modifyResponse;
 bool g_enable;
 bool g_editorView;
 
+
+
 // TODO: use a struct instead of a bunch of global variables
 // Config file content
 #define DEFAULT_SNIPPET_LIST_LENGTH 100
@@ -111,6 +113,8 @@ bool g_editorView;
 #define DEFAULT_IMPORT_OVERWRITE_CONFIRM 0
 #define DEFAULT_INCLUSIVE_TRIGGERTEXT_COMPLETION 1
 
+#define DEFAULT_CUSTOM_SCOPE TEXT("")
+
 int g_snippetListLength;
 int g_snippetListOrderTagType;
 int g_tabTagCompletion;
@@ -122,6 +126,8 @@ int g_escapeChar;
 int g_importOverWriteOption;
 int g_importOverWriteConfirm;
 int g_inclusiveTriggerTextCompletion;
+
+TCHAR* g_customScope;
 
 DockingDlg snippetDock;
 
@@ -161,6 +167,7 @@ void pluginInit(HANDLE hModule)
 void pluginCleanUp()
 {
     g_liveHintUpdate = 0;
+    //saveCustomScope();
     //writeConfig();
 }
 
@@ -1300,6 +1307,8 @@ void setConfigAndDatabase()
     
     g_modifyResponse = true;
     g_enable = true;
+    g_customScope = new TCHAR[MAX_PATH];
+    //g_customScope = "";
     //g_display=false;
     updateMode();
     
@@ -1356,6 +1365,11 @@ void emptyFile(TCHAR* fileName)
     File.close();
 }
 
+void writeConfigTextChar(TCHAR* configChar, TCHAR* section)
+{
+    ::WritePrivateProfileString(TEXT("FingerText"), section, configChar, g_iniPath);
+}
+
 void resetDefaultSettings()
 {   
     g_snippetListLength = DEFAULT_SNIPPET_LIST_LENGTH;
@@ -1367,6 +1381,11 @@ void resetDefaultSettings()
     g_preserveSteps = DEFAULT_PRESERVE_STEPS;
     g_escapeChar = DEFAULT_ESCAPE_CHAR;
     g_importOverWriteConfirm = DEFAULT_IMPORT_OVERWRITE_CONFIRM;
+}
+
+void saveCustomScope()
+{
+    writeConfigTextChar(g_customScope,TEXT("custom_scope"));
 }
 
 void writeConfig()
@@ -1383,6 +1402,7 @@ void writeConfig()
     writeConfigText(g_importOverWriteConfirm,TEXT("import_overwrite_confirm"));
     writeConfigText(g_inclusiveTriggerTextCompletion,TEXT("inclusive_triggertext_completion"));
     
+    writeConfigTextChar(g_customScope,TEXT("custom_scope"));
 }
 
 void loadConfig()
@@ -1398,6 +1418,8 @@ void loadConfig()
     g_importOverWriteOption = GetPrivateProfileInt(TEXT("FingerText"), TEXT("import_overwrite_option"), DEFAULT_IMPORT_OVERWRITE_OPTION, g_iniPath);
     g_importOverWriteConfirm = GetPrivateProfileInt(TEXT("FingerText"), TEXT("import_overwrite_confirm"), DEFAULT_IMPORT_OVERWRITE_CONFIRM, g_iniPath);
     g_inclusiveTriggerTextCompletion = GetPrivateProfileInt(TEXT("FingerText"), TEXT("inclusive_triggertext_completion"), DEFAULT_INCLUSIVE_TRIGGERTEXT_COMPLETION, g_iniPath);
+
+    GetPrivateProfileString(TEXT("FingerText"), TEXT("custom_scope"),DEFAULT_CUSTOM_SCOPE,g_customScope,MAX_PATH,g_iniPath);
 }
 
 void setupConfigFile()
@@ -1573,7 +1595,7 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
             sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets ORDER BY tagType DESC,tag DESC LIMIT ? ", -1, &stmt, NULL);
         } else 
         {
-            sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets WHERE (tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ?) AND tag LIKE ? ORDER BY tagType DESC,tag DESC LIMIT ? ", -1, &stmt, NULL);
+            sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets WHERE (tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ?) AND tag LIKE ? ORDER BY tagType DESC,tag DESC LIMIT ? ", -1, &stmt, NULL);
         }
 
     } else
@@ -1583,19 +1605,24 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
             sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets ORDER BY tag DESC,tagType DESC LIMIT ? ", -1, &stmt, NULL);
         } else 
         {
-            sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets WHERE (tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ?) AND tag LIKE ? ORDER BY tag DESC,tagType DESC LIMIT ? ", -1, &stmt, NULL);
+            sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets WHERE (tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ?) AND tag LIKE ? ORDER BY tag DESC,tagType DESC LIMIT ? ", -1, &stmt, NULL);
         }
     }
     
     
 	if (g_dbOpen && SQLITE_OK == sqlitePrepare)
 	{
+
+        char *customScope = NULL;
+        customScope = new char[MAX_PATH];
+
         char *tagType1 = NULL;
         TCHAR *fileType1 = NULL;
 		fileType1 = new TCHAR[MAX_PATH];
         char *tagType2 = NULL;
         TCHAR *fileType2 = NULL;
 		fileType2 = new TCHAR[MAX_PATH];
+
 
         if (withAll)
         {
@@ -1606,24 +1633,28 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
 
         } else
         {
+            
+            convertToUTF8(g_customScope, &customScope);
+            sqlite3_bind_text(stmt, 1, customScope, -1, SQLITE_STATIC);
+            
             ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType1);
             convertToUTF8(fileType1, &tagType1);
-            sqlite3_bind_text(stmt, 1, tagType1, -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 2, tagType1, -1, SQLITE_STATIC);
         		
             ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType2);
             convertToUTF8(fileType2, &tagType2);
-            sqlite3_bind_text(stmt, 2, tagType2, -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 3, tagType2, -1, SQLITE_STATIC);
         
-            sqlite3_bind_text(stmt, 3, "GLOBAL", -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 4, "GLOBAL", -1, SQLITE_STATIC);
 
-            sqlite3_bind_text(stmt, 4, tag, -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 5, tag, -1, SQLITE_STATIC);
 
             //int cols = sqlite3_column_count(stmt);
             //tagType = itoa(snippetCacheSize,tagType,10);
             char snippetCacheSizeText[10];
             ::_itoa(g_snippetCacheSize, snippetCacheSizeText, 10); 
 
-            sqlite3_bind_text(stmt, 5, snippetCacheSizeText, -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 6, snippetCacheSizeText, -1, SQLITE_STATIC);
         }
     
         int row = 0;
@@ -1669,6 +1700,7 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
             }
         }
 
+        delete [] customScope;
         delete [] tagType1;
         delete [] fileType1;
         delete [] tagType2;
@@ -2496,52 +2528,26 @@ void updateMode()
     //HWND curScintilla = getCurrentScintilla();
     
     TCHAR fileType[MAX_PATH];
-    ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-
-    if (::_tcscmp(fileType,TEXT(".ftb"))==0)
+    ::SendMessage(nppData._nppHandle, NPPM_GETFILENAME, (WPARAM)MAX_PATH, (LPARAM)fileType);
+        
+    if (::_tcscmp(fileType,TEXT("SnippetEditor.ftb"))==0)
     {
         snippetDock.toggleSave(true);
         g_editorView = true;
-        snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("EDIT MODE\r\n(Double click item in list to edit another snippet, Ctrl+S to save)\r\nList of All Snippets"));
+        snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("EDIT MODE\r\n(Double click item in list to edit another snippet, Ctrl+S to save)"));
     } else if (g_enable)
     {
         snippetDock.toggleSave(false);
         g_editorView = false;
-        snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Enabled]\r\n(Type trigger text and hit tab to insert snippet)\r\nList of Available Snippets"));
+        snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Enabled]\r\n(Type trigger text and hit tab to insert snippet)"));
         
     } else
     {
         snippetDock.toggleSave(false);
         g_editorView = false;
-        snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Disabled]\r\n(To enable: Plugins>FingerText>Toggle FingerText On/Off)\r\nList of Available Snippets"));
+        snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Disabled]\r\n(To enable: Plugins>FingerText>Toggle FingerText On/Off)"));
 
     }
-
-    //int curPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-    //
-    //::SendMessage(curScintilla,SCI_GOTOPOS,0,0);
-    ////::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-    ////::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"- FingerText Snippet Editor View -");
-    //searchNext(curScintilla, "- FingerText Snippet Editor View -");
-    //if ((::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0) == 5) && (::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0) == 39))
-    //{
-    //    snippetDock.toggleSave(true);
-    //    g_editorView = true;
-    //    snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("EDIT MODE\r\n(Double click item in list to edit another snippet, Ctrl+S to save)\r\nList of All Snippets"));
-    //} else if (g_enable)
-    //{
-    //    snippetDock.toggleSave(false);
-    //    g_editorView = false;
-    //    snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Enabled]\r\n(Type trigger text and hit tab to insert snippet)\r\nList of Available Snippets"));
-    //    
-    //} else
-    //{
-    //    snippetDock.toggleSave(false);
-    //    g_editorView = false;
-    //    snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Disabled]\r\n(To enable: Plugins>FingerText>Toggle FingerText On/Off)\r\nList of Available Snippets"));
-    //
-    //}
-    //::SendMessage(curScintilla,SCI_GOTOPOS,curPos,0);
 }
 
 void settings()
@@ -2569,7 +2575,7 @@ void settings()
  ; snippet_list_order_tagtype --            0: The SnippetDock will order the snippets by trigger text\r\n\
  ;                                (default) 1: The SnippetDock will order the snippets by scope\r\n\
  ; indent_reference           --            0: The snippnet content will be inserted without any change in indentation\r\n\
- ;                            --  (default) 1: The snippnet content will be inserted at the same indentation\r\n\
+ ;                                (default) 1: The snippnet content will be inserted at the same indentation\r\n\
  ;                                             level as the trigger text\r\n\
  ; chain_limit                --  This is the maximum number dynamic hotspots that can be triggered in one \r\n\
  ;                                snippet. Default is 20\r\n\
@@ -2577,20 +2583,21 @@ void settings()
  ;                                is 100 \r\n\
  ; tab_tag_completion         --  (default) 0: When a snippet is not found when the user hit [tab] key, FingerText\r\n\
  ;                                             will just send a tab\r\n\
- ;                            --            1: When a snippet is not found when the user hit [tab] key, FingerText will try\r\n\
+ ;                                          1: When a snippet is not found when the user hit [tab] key, FingerText will try\r\n\
  ;                                             to find the closest match snippet name\r\n\
  ; live_hint_update           --            0: Turn off SnippetDock live update\r\n\
- ;                            --  (default) 1: Turn on SnippetDock live update\r\n\
+ ;                                (default) 1: Turn on SnippetDock live update\r\n\
  ; preserve_steps             --  Default is 0 and don't change it. It's for debugging purpose\r\n\
  ; escape_char_level          --  (default) 0: no escape characters\r\n\
- ;                            --            1: < is set as the escaping character. That means any characters type after the\r\n\
+ ;                                          1: < is set as the escaping character. That means any characters type after the\r\n\
  ;                                             character < will not be consider as snippet trigger text.\r\n\
  ; import_overwrite_confirm   --  (default) 0: A pop up confirmation message box everytime you overwrite a snippet.\r\n\
- ;                            --            1: No confirmation message box when you overwrite a snippet.\r\n\
+ ;                                          1: No confirmation message box when you overwrite a snippet.\r\n\
  ; import_overwrite_option    --  (default) 0: When there is a conflicting snippet during snippet importing, Fingertext will keep both copies.\r\n\
- ;                            --            1: When there is a conflicting snippet during snippet importing, you may choose to overwrite existing snippet.\r\n\
+ ;                                          1: When there is a conflicting snippet during snippet importing, you may choose to overwrite existing snippet.\r\n\
  ; inclusive_triggertext_completion --            0: Tiggertext completion will only include triggertext which starts with the characters you are typing.\r\n\
- ;                                  --  (default) 1: Tiggertext completion will only include triggertext which includes the characters you are typing.\r\n\
+ ;                                      (default) 1: Tiggertext completion will only include triggertext which includes the characters you are typing.\r\n\
+ ; custom_scope               --  A user defined custom scope. For example if you put .cpp here, you can use all the .cpp snippets in any files.\r\n\
         ");
         ::SendMessage(curScintilla, SCI_ANNOTATIONSETSTYLE, lineCount, STYLE_INDENTGUIDE);
         ::SendMessage(curScintilla, SCI_ANNOTATIONSETVISIBLE, lineCount, 0);
@@ -2626,9 +2633,10 @@ void refreshAnnotation()
     {
         g_modifyResponse = false;
         TCHAR fileType[MAX_PATH];
-        ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-
-        if (::_tcscmp(fileType,TEXT(".ftb"))==0)
+        //::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
+        ::SendMessage(nppData._nppHandle, NPPM_GETFILENAME, (WPARAM)MAX_PATH, (LPARAM)fileType);
+        
+        if (::_tcscmp(fileType,TEXT("SnippetEditor.ftb"))==0)
         {
             
             HWND curScintilla = getCurrentScintilla();
@@ -2692,10 +2700,18 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
         TCHAR *fileType = NULL;
         fileType = new TCHAR[MAX_PATH];
 
+
         
-        ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-        convertToUTF8(fileType, &tagType);
+        convertToUTF8(g_customScope, &tagType);
         expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
+        //expanded = findTagSQLite(tag,g_customScope,triggerTextComplete); 
+
+        if (!expanded)
+        {
+            ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
+            convertToUTF8(fileType, &tagType);
+            expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
+        }
 
         if (!expanded)
         {
@@ -2929,21 +2945,25 @@ void testing()
     
     HWND curScintilla = getCurrentScintilla();
 
-    // Testing array of char array
-    char *s[] = {"Jan","Feb","Mar","April"};
-    char* a = "December";
-    s[1] = a;
-    alertCharArray(s[0]);
-    alertCharArray(s[1]);
-    alertCharArray(s[2]);
-    alertCharArray(s[3]);
+    //g_customScope = TEXT(".cpp");
+    //saveCustomScope();
 
-    char* b = "July";
-    s[1] = b;
-    alertCharArray(s[0]);
-    alertCharArray(s[1]);
-    alertCharArray(s[2]);
-    alertCharArray(s[3]);
+    
+    // Testing array of char array
+    //char *s[] = {"Jan","Feb","Mar","April"};
+    //char* a = "December";
+    //s[1] = a;
+    //alertCharArray(s[0]);
+    //alertCharArray(s[1]);
+    //alertCharArray(s[2]);
+    //alertCharArray(s[3]);
+    //
+    //char* b = "July";
+    //s[1] = b;
+    //alertCharArray(s[0]);
+    //alertCharArray(s[1]);
+    //alertCharArray(s[2]);
+    //alertCharArray(s[3]);
 
 
     // Testing array of char array
@@ -3119,4 +3139,9 @@ void alertCharArray(char* input)
     wchar_t wcstring[newsize];
     mbstowcs_s(&convertedChars, wcstring, origsize, input, _TRUNCATE);
     ::MessageBox(nppData._nppHandle, wcstring, TEXT("Trace"), MB_OK);
+}
+
+void alertTCharArray(TCHAR* input)
+{
+    ::MessageBox(nppData._nppHandle, input, TEXT("Trace"), MB_OK);
 }

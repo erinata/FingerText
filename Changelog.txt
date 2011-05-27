@@ -1,7 +1,10 @@
 changelog (for developers only, include unreleased versions)
 
 0.5.10
+Added: Custom Scope, a user defined Global scope
 rewriting the triggerTag, snippetComplete and findTagSQLite functions
+edit mode detect full file name before changing mode
+"List of All Snippet" is now on static text
 
 
 0.5.9

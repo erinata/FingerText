@@ -111,6 +111,8 @@ void pluginShutdown();
 HWND getCurrentScintilla();
 void toggleDisable();
 void writeConfig();
+void saveCustomScope();
+void writeConfigTextChar(TCHAR* configChar, TCHAR* section);
 void resetDefaultSettings();
 void writeConfigText(int configInt, TCHAR* section);
 void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
@@ -177,4 +179,5 @@ void testing();
 void alert();
 void alertNumber(int input);
 void alertCharArray(char* input);
+void alertTCharArray(TCHAR* input);
 #endif //PLUGINDEFINITION_H
