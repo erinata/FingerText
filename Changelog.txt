@@ -1,6 +1,7 @@
 changelog (for developers only, include unreleased versions)
 
-
+0.5.12
+Added: Language based snippets
 
 0.5.11
 Added: User customizable escape character

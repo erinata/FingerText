@@ -251,7 +251,6 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
     funcItem[index]._init2Check = check0nInit;
     funcItem[index]._pShKey = sk;
 
-
     return true;
 }
 
@@ -521,14 +520,18 @@ void editSnippet()
     char* tempTriggerText;
     char* tempScope;
     //char * tempSnippetText;
-    tempTriggerText = new char [strlen(g_snippetCache[index].triggerText)];
-    tempScope = new char [strlen(g_snippetCache[index].scope)];
+
+    //tempTriggerText = new char [strlen(g_snippetCache[index].triggerText)];
+    //tempScope = new char [strlen(g_snippetCache[index].scope)];
 
     //strcpy(tempTriggerText, g_snippetCache[index].triggerText);
     //strcpy(tempScope, g_snippetCache[index].scope);
-    sprintf(tempTriggerText, g_snippetCache[index].triggerText);
-    sprintf(tempScope, g_snippetCache[index].scope);
-    
+    //sprintf(tempTriggerText, g_snippetCache[index].triggerText);
+    //sprintf(tempScope, g_snippetCache[index].scope);
+    //
+    tempTriggerText = g_snippetCache[index].triggerText;
+    tempScope = g_snippetCache[index].scope;
+
     sqlite3_stmt *stmt;
 
     if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType = ? AND tag = ?", -1, &stmt, NULL))
@@ -581,6 +584,7 @@ void editSnippet()
 
 void deleteSnippet()
 {
+    //TODO: should scroll back to original position after delete
     HWND curScintilla = getCurrentScintilla();
     int index = snippetDock.getCount() - snippetDock.getSelection()-1;
 
@@ -621,7 +625,7 @@ bool getLineChecked(char **buffer, HWND &curScintilla, int lineNumber, TCHAR* er
         char* wordChar;
         if (lineNumber==2)
         {
-            wordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.|";
+            wordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.:";
             
         } else //if (lineNumber==1)
         {
@@ -948,7 +952,8 @@ void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &star
     {
         //TODO: write a function to get the command and parameter sepearately. or turn this whole thing into a new type of hotspot
         //TODO: putting this chunk into a separate function
-        
+        //TODO: cater the cse where hotspottext length is 4 (there is no argument passed)
+
         emptyFile(g_fttempPath);
         char* getTerm;
         getTerm = new char[strlen(hotSpotText)];
@@ -1104,7 +1109,6 @@ bool hotSpotNavigation(HWND &curScintilla)
         ::SendMessage(curScintilla,SCI_SETMAINSELECTION,0,0);
         ::SendMessage(curScintilla,SCI_LINESCROLL,0,0);
         
-
         if (g_preserveSteps==0) ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
         return true;
 	} else
@@ -1113,8 +1117,6 @@ bool hotSpotNavigation(HWND &curScintilla)
         //delete [] hotSpotText;
         return false;
     }
-
-    //::MessageBox(nppData._nppHandle, TEXT("<0"), TEXT("Trace"), MB_OK);
     return false;
 }
 
@@ -1144,6 +1146,7 @@ int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, in
 
 void showPreview(bool top)
 {
+    //TODO: Testing using LB_SETANCHORINDEX LB_GETANCHORINDEX LB_SETCARETINDEX LB_GETCARETINDEX to change the selection in list box 
     sqlite3_stmt *stmt;
     int index = 0;
 
@@ -1523,6 +1526,7 @@ int getCurrentTag(HWND curScintilla, int posCurrent, char **buffer, int triggerL
         char wordChar[MAX_PATH]="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.";
 
         //alertNumber(wcslen(g_customEscapeChar));
+        //TODO: potential performance improvement by forming the wordchar with escape char that the initialization
         if (wcslen(g_customEscapeChar)>0)
         {
             char *customEscapeChar = NULL;
@@ -1677,7 +1681,6 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
     
 	if (g_dbOpen && SQLITE_OK == sqlitePrepare)
 	{
-
         char *customScope = NULL;
         customScope = new char[MAX_PATH];
         
@@ -1688,17 +1691,13 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
         TCHAR *fileType2 = NULL;
 		fileType2 = new TCHAR[MAX_PATH];
 
-
         if (withAll)
         {
             char snippetCacheSizeText[10];
             ::_itoa(g_snippetCacheSize, snippetCacheSizeText, 10); 
-
             sqlite3_bind_text(stmt, 1, snippetCacheSizeText, -1, SQLITE_STATIC);
-
         } else
-        {
-            
+        {   
             convertToUTF8(g_customScope, &customScope);
             sqlite3_bind_text(stmt, 1, customScope, -1, SQLITE_STATIC);
             
@@ -1716,12 +1715,9 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
 
             sqlite3_bind_text(stmt, 6, tag, -1, SQLITE_STATIC);
 
-            //int cols = sqlite3_column_count(stmt);
-            //tagType = itoa(snippetCacheSize,tagType,10);
             //TODO: potential performance improvement by just setting 100
             char snippetCacheSizeText[10];
             ::_itoa(g_snippetCacheSize, snippetCacheSizeText, 10); 
-
             sqlite3_bind_text(stmt, 7, snippetCacheSizeText, -1, SQLITE_STATIC);
         }
     
@@ -1764,6 +1760,7 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
             }
             else
             {
+                
                 break;  
             }
         }
@@ -1809,6 +1806,7 @@ void populateDockItems()
             strcat(newText,">");
             //}
             
+            //TODO: make this 14 customizable in settings
             int scopeLength = 14 - strlen(newText);
             if (scopeLength < 3) scopeLength =3;
             for (int i=0;i<scopeLength;i++)
@@ -1841,6 +1839,8 @@ void clearCache()
 
 void exportSnippets()
 {
+    //TODO: Can actually add some informtiaon at the end of the exported snippets......can be useful information like version number or just describing the package
+
     g_liveHintUpdate--;  // Temporary turn off live update as it disturb exporting
 
     HWND curScintilla = getCurrentScintilla();
@@ -2076,9 +2076,6 @@ void importSnippets()
                                         // not overwrite
                                         //::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), TEXT("FingerText"), MB_OK);
                                         notOverWrite = true;
-                        
-                                        
-                        
                                     } else
                                     {
                                         // delete existing entry
@@ -2109,12 +2106,7 @@ void importSnippets()
                                     {
                                         ::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT("FingerText"), MB_OK);
                                     }
-                        
                                 }
-                        
-                        
-                        
-                        
                             } else
                             {
                                 notOverWrite = true;
@@ -2145,12 +2137,10 @@ void importSnippets()
                                     strcat(tagTextsuffixed,dateText);
                                     strcat(tagTextsuffixed,timeText);
                                     
-                                    
                                     sqlite3_bind_text(stmt, 1, tagTextsuffixed, -1, SQLITE_STATIC);
                                     sqlite3_bind_text(stmt, 2, tagTypeText, -1, SQLITE_STATIC);
                                     sqlite3_bind_text(stmt, 3, snippetText, -1, SQLITE_STATIC);
                                 
-                                    
                                     sqlite3_step(stmt);
                                     //sqlite3_finalize(stmt);
                                     conflictCount++;
@@ -2168,7 +2158,6 @@ void importSnippets()
                 {
                     
                     importCount++;
-                    
                     // Then bind the two ? parameters in the SQLite SQL to the real parameter values
                     sqlite3_bind_text(stmt, 1, tagText, -1, SQLITE_STATIC);
                     sqlite3_bind_text(stmt, 2, tagTypeText, -1, SQLITE_STATIC);
@@ -2206,6 +2195,7 @@ void importSnippets()
 
             if (conflictCount>0)
             {
+                //TODO: more detail messages and count the number of conflict or problematic snippets
                 wcscat(importCountText,TEXT("\r\n\r\nThere are some conflicts between the imported and existing snippets. You may go to the snippet editor to clean them up."));
             }
             //::MessageBox(nppData._nppHandle, TEXT("Complete importing snippets"), TEXT("FingerText"), MB_OK);
@@ -2812,7 +2802,7 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
                 // Check for language specific snippets
                 if (!expanded)
                 {
-                    //expanded = findTagSQLite(tag,getLangTagType(),triggerTextComplete); 
+                    expanded = findTagSQLite(tag,getLangTagType(),triggerTextComplete); 
                 
                     
                     // Check for snippets which matches the current language group
@@ -2945,21 +2935,22 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
 char* getLangTagType()
 {
 
-    //int curLang = 0;
-    //::SendMessage(nppData._nppHandle,NPPM_GETCURRENTLANGTYPE ,0,(LPARAM)&curLang);
-    ////alertNumber(curLang);
-    //
-    //if (curLang>54) return "";
-    //
-    //char *s[] = {"LANG|TXT","LANG|PHP ","LANG|C","LANG|CPP","LANG|CS","LANG|OBJC","LANG|JAVA","LANG|RC",
-    //             "LANG|HTML","LANG|XML","LANG|MAKEFILE","LANG|PASCAL","LANG|BATCH","LANG|INI","LANG|NFO","LANG|USER",
-    //             "LANG|ASP","LANG|SQL","LANG|VB","LANG|JS","LANG|CSS","LANG|PERL","LANG|PYTHON","LANG|LUA",
-    //             "LANG|TEX","LANG|FORTRAN","LANG|BASH","LANG|FLASH","LANG|NSIS","LANG|TCL","LANG|LISP","LANG|SCHEME",
-    //             "LANG|ASM","LANG|DIFF","LANG|PROPS","LANG|PS","LANG|RUBY","LANG|SMALLTALK","LANG|VHDL","LANG|KIX",
-    //             "LANG|AU3","LANG|CAML","LANG|ADA","LANG|VERILOG","LANG|MATLAB","LANG|HASKELL","LANG|INNO","LANG|SEARCHRESULT",
-    //             "LANG|CMAKE","LANG|YAML","LANG|COBOL","LANG|GUI4CLI","LANG|D","LANG|POWERSHELL","LANG|R"};
-    //
-    //return s[curLang];
+    int curLang = 0;
+    ::SendMessage(nppData._nppHandle,NPPM_GETCURRENTLANGTYPE ,0,(LPARAM)&curLang);
+    //alertNumber(curLang);
+    
+    if ((curLang>54) || (curLang<0)) return "";
+
+    //support the languages supported by npp 0.5.9, excluding "user defined language" abd "search results"
+    char *s[] = {"Lang:TXT","Lang:PHP ","Lang:C","Lang:CPP","Lang:CS","Lang:OBJC","Lang:JAVA","Lang:RC",
+                 "Lang:HTML","Lang:XML","Lang:MAKEFILE","Lang:PASCAL","Lang:BATCH","Lang:INI","Lang:NFO","",
+                 "Lang:ASP","Lang:SQL","Lang:VB","Lang:JS","Lang:CSS","Lang:PERL","Lang:PYTHON","Lang:LUA",
+                 "Lang:TEX","Lang:FORTRAN","Lang:BASH","Lang:FLASH","Lang:NSIS","Lang:TCL","Lang:LISP","Lang:SCHEME",
+                 "Lang:ASM","Lang:DIFF","Lang:PROPS","Lang:PS","Lang:RUBY","Lang:SMALLTALK","Lang:VHDL","Lang:KIX",
+                 "Lang:AU3","Lang:CAML","Lang:ADA","Lang:VERILOG","Lang:MATLAB","Lang:HASKELL","Lang:INNO","",
+                 "Lang:CMAKE","Lang:YAML","Lang:COBOL","Lang:GUI4CLI","Lang:D","Lang:POWERSHELL","Lang:R"};
+    
+    return s[curLang];
     return "";
 }
 
@@ -2994,7 +2985,7 @@ void fingerText()
         posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
 
         bool navSpot = false;
-        if (g_editorView==false)
+        if (g_editorView == false)
         {
             int specialSpot = searchNext(curScintilla, "$[![");
 
@@ -3015,12 +3006,8 @@ void fingerText()
 
             }
                 
-            if (g_preserveSteps==0) 
-	        {
-		        ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
-	        }
-            
-            
+            if (g_preserveSteps==0) ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
+	        
             if (specialSpot>=0)
             {
                 ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
