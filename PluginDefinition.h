@@ -122,7 +122,7 @@ void executeCommand(HWND &curScintilla, int &firstPos, char* hotSpotText);
 void chainSnippet(HWND &curScintilla, int &firstPos, char* hotSpotText);
 bool hotSpotNavigation(HWND &curScintilla);
 int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, int firstPos, int signLength);
-void showPreview();
+void showPreview(bool top = false);
 void emptyFile(TCHAR* fileName);
 void writeDefaultGroupFile();
 int searchNext(HWND &curScintilla, char* searchText);

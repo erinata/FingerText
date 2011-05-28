@@ -1,5 +1,12 @@
 changelog (for developers only, include unreleased versions)
 
+
+0.5.11
+Added: User customizable escape character
+Performance improvement in snippet triggering
+Fixed: Snippet export limited by list length
+Added: snippet preview box live update
+
 0.5.10
 Added: Language based snippets
 Added: Custom Scope, a user defined Global scope

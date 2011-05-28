@@ -59,7 +59,7 @@
 #include "Version.h"
 
 
-#include <fstream>
+//#include <fstream>
 //#include <process.h>
 
 //#include <string.h>
@@ -110,8 +110,10 @@ bool g_editorView;
 #define DEFAULT_IMPORT_OVERWRITE_OPTION 0
 #define DEFAULT_IMPORT_OVERWRITE_CONFIRM 0
 #define DEFAULT_INCLUSIVE_TRIGGERTEXT_COMPLETION 1
+#define DEFAULT_LIVE_PREVIEW_BOX 1
 
 #define DEFAULT_CUSTOM_SCOPE TEXT("")
+#define DEFAULT_CUSTOM_ESCAPE_CHAR TEXT("")
 
 int g_snippetListLength;
 int g_snippetListOrderTagType;
@@ -120,11 +122,13 @@ int g_liveHintUpdate;
 int g_indentReference;
 int g_chainLimit;
 int g_preserveSteps;
-int g_escapeChar;
+//int g_escapeChar;
 int g_importOverWriteOption;
 int g_importOverWriteConfirm;
 int g_inclusiveTriggerTextCompletion;
+int g_livePreviewBox;
 
+TCHAR* g_customEscapeChar;
 TCHAR* g_customScope;
 
 DockingDlg snippetDock;
@@ -479,8 +483,7 @@ void selectionToSnippet()
     {
         selection = "New snippet is here.\r\nNew snippet is here.\r\nNew snippet is here.\r\n";
     }
-        
-    
+
     ::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
     
     if (!::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
@@ -509,8 +512,6 @@ void selectionToSnippet()
     ::SendMessage(curScintilla,SCI_WORDRIGHTEXTEND,1,0);
 
     if (withSelection) delete [] selection;
-
-    //alert();
 }
 
 void editSnippet()
@@ -785,6 +786,8 @@ void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int
     ::SendMessage(curScintilla,SCI_TAB,0,0);	
 }
 
+
+
 // TODO: refactor the dynamic hotspot functions
 void dynamicHotspot(HWND &curScintilla, int &startingPos, int hotSpotType)
 {
@@ -1013,26 +1016,23 @@ void insertDateTime(bool date,int type, HWND &curScintilla)
 	::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)timeText);
 }
 
-
-void goToWarmSpot()
-{
-    HWND curScintilla = getCurrentScintilla();
-    if (!warmSpotNavigation(curScintilla))
-    {
-        ::SendMessage(curScintilla,SCI_BACKTAB,0,0);	
-        
-    }
-
-}
-
-bool warmSpotNavigation(HWND &curScintilla)
-{
-    
-    bool spotFound = searchNext(curScintilla,"${!{}!}");
-    ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
-    return spotFound;
-}
-
+//void goToWarmSpot()
+//{
+//    HWND curScintilla = getCurrentScintilla();
+//    if (!warmSpotNavigation(curScintilla))
+//    {
+//        ::SendMessage(curScintilla,SCI_BACKTAB,0,0);	
+//    }
+//
+//}
+//
+//bool warmSpotNavigation(HWND &curScintilla)
+//{
+//    
+//    bool spotFound = searchNext(curScintilla,"${!{}!}");
+//    ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)"");
+//    return spotFound;
+//}
 
 bool hotSpotNavigation(HWND &curScintilla)
 {
@@ -1063,7 +1063,7 @@ bool hotSpotNavigation(HWND &curScintilla)
         int tempPos[100];
         ::SendMessage(curScintilla,SCI_GOTOPOS,firstPos,0);
         int i=1;
-        //TODO: still a bug.....hotspot with the same name cannot be next to each others
+        //TODO: still a bug.....hotspot with the same name cannot be next to each others (can be a bug in npp?)
 
         for (i=1;i<=98;i++)
         {
@@ -1142,71 +1142,74 @@ int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, in
     return secondPos;  
 }
 
-void showPreview()
+void showPreview(bool top)
 {
     sqlite3_stmt *stmt;
+    int index = 0;
 
     HWND curScintilla = getCurrentScintilla();
     int posCurrent = ::SendMessage(curScintilla, SCI_GETCURRENTPOS,0,0);
 
-    //if (!selectionChanged) snippetDock.setSelction();
-
-    int index = snippetDock.getCount() - snippetDock.getSelection()-1;
-    
+    if (top)
+    {
+        index = snippetDock.getCount()-1;
+    } else
+    {
+        index = snippetDock.getCount() - snippetDock.getSelection()-1;
+    }
 
     //else
     //{
     //    index = snippetDock.getCount()-1;
     //}
+    if (index >= 1)
+    {
+        if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
+	    {
+	    	// Then bind the two ? parameters in the SQLite SQL to the real parameter values
+	    	sqlite3_bind_text(stmt, 1, g_snippetCache[index].scope , -1, SQLITE_STATIC);
+	    	sqlite3_bind_text(stmt, 2, g_snippetCache[index].triggerText, -1, SQLITE_STATIC);
+
+	    	// Run the query with sqlite3_step
+	    	if(SQLITE_ROW == sqlite3_step(stmt))  // SQLITE_ROW 100 sqlite3_step() has another row ready
+	    	{
+	    		const char* snippetText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
+                //size_t origsize = strlen(snippetText) + 1; 
+                size_t convertedChars = 0; 
+                wchar_t previewText[270]; 
+                mbstowcs_s(&convertedChars, previewText, 190, snippetText, _TRUNCATE);
+                
+                if (convertedChars>=184)
+                {
+                    const TCHAR etcText[] = TEXT(" . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .");
+                    ::_tcscat(previewText,etcText);
+                }
+                
+                snippetDock.setDlgText(ID_SNIPSHOW_EDIT,previewText);
+
+                //wchar_t countText[10];
+                //::_itow_s(convertedChars, countText, 10, 10); 
+                //::MessageBox(nppData._nppHandle, countText, TEXT("Trace"), MB_OK);
+	    	}	
+	    }
+	    sqlite3_finalize(stmt);
+    } else
+    {
         
-    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
-	{
-		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
-		sqlite3_bind_text(stmt, 1, g_snippetCache[index].scope , -1, SQLITE_STATIC);
-		sqlite3_bind_text(stmt, 2, g_snippetCache[index].triggerText, -1, SQLITE_STATIC);
-
-		// Run the query with sqlite3_step
-		if(SQLITE_ROW == sqlite3_step(stmt))  // SQLITE_ROW 100 sqlite3_step() has another row ready
-		{
-			const char* snippetText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
-            //size_t origsize = strlen(snippetText) + 1; 
-            size_t convertedChars = 0; 
-            wchar_t previewText[270]; 
-            mbstowcs_s(&convertedChars, previewText, 190, snippetText, _TRUNCATE);
-            
-            if (convertedChars>=184)
-            {
-                const TCHAR etcText[] = TEXT(" . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .");
-                ::_tcscat(previewText,etcText);
-            }
-            
-            snippetDock.setDlgText(ID_SNIPSHOW_EDIT,previewText);
-
-            //wchar_t countText[10];
-            //::_itow_s(convertedChars, countText, 10, 10); 
-            //::MessageBox(nppData._nppHandle, countText, TEXT("Trace"), MB_OK);
-            
-            //replaceTag(curScintilla, tempSnippetText, posCurrent, posCurrent);
-            
-            //::SendMessage(curScintilla, SCI_INSERTTEXT, posCurrent, (LPARAM)snippetText);
-		}	
-	}
-	sqlite3_finalize(stmt);
+        snippetDock.setDlgText(ID_SNIPSHOW_EDIT,TEXT("Select an item in SnippetDock to view the snippet preview here."));
+    }
     //::SendMessage(curScintilla,SCI_GRABFOCUS,0,0); 
 }
-
-
-
 
 void insertHotSpotSign()
 {
     insertTagSign("$[![]!]");
 }
 
-void insertWarmSpotSign()
-{
-    insertTagSign("${!{}!}");
-}
+//void insertWarmSpotSign()
+//{
+//    insertTagSign("${!{}!}");
+//}
 //void insertChainSnippetSign()
 //{
 //    insertTagSign("$[![(cha)snippetname]!]");
@@ -1252,7 +1255,7 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
     int lineCurrent = ::SendMessage(curScintilla, SCI_LINEFROMPOSITION, posCurrent, 0);
     int initialIndent = ::SendMessage(curScintilla, SCI_GETLINEINDENTATION, lineCurrent, 0);
 
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, posCurrent, (LPARAM)"_____________________________`[SnippetInserting]");
+    ::SendMessage(curScintilla, SCI_INSERTTEXT, posCurrent, (LPARAM)"____`[SnippetInserting]");
 
         // Failed attempt to cater unicode snippets
         //if (::IsTextUnicode(snip,sniplength,0))
@@ -1327,6 +1330,7 @@ void setConfigAndDatabase()
     g_modifyResponse = true;
     g_enable = true;
     g_customScope = new TCHAR[MAX_PATH];
+    g_customEscapeChar = new TCHAR[MAX_PATH];
     //g_customScope = "";
     //g_display=false;
     updateMode();
@@ -1403,14 +1407,20 @@ void resetDefaultSettings()
     g_indentReference = DEFAULT_INDENT_REFERENCE;
     g_chainLimit = DEFAULT_CHAIN_LIMIT;
     g_preserveSteps = DEFAULT_PRESERVE_STEPS;
-    g_escapeChar = DEFAULT_ESCAPE_CHAR;
+    //g_escapeChar = DEFAULT_ESCAPE_CHAR;
+    g_importOverWriteOption = DEFAULT_IMPORT_OVERWRITE_OPTION;
     g_importOverWriteConfirm = DEFAULT_IMPORT_OVERWRITE_CONFIRM;
+    g_inclusiveTriggerTextCompletion = DEFAULT_INCLUSIVE_TRIGGERTEXT_COMPLETION;
+    g_livePreviewBox = DEFAULT_LIVE_PREVIEW_BOX;
+
+    g_customScope = DEFAULT_CUSTOM_SCOPE;
+    g_customEscapeChar = DEFAULT_CUSTOM_ESCAPE_CHAR;
 }
 
-void saveCustomScope()
-{
-    writeConfigTextChar(g_customScope,TEXT("custom_scope"));
-}
+//void saveCustomScope()
+//{
+//    writeConfigTextChar(g_customScope,TEXT("custom_scope"));
+//}
 
 void writeConfig()
 {
@@ -1421,11 +1431,13 @@ void writeConfig()
     writeConfigText(g_indentReference,TEXT("indent_reference"));
     writeConfigText(g_chainLimit,TEXT("chain_limit"));
     writeConfigText(g_preserveSteps,TEXT("preserve_steps"));
-    writeConfigText(g_escapeChar,TEXT("escape_char_level"));
+    //writeConfigText(g_escapeChar,TEXT("escape_char_level"));
     writeConfigText(g_importOverWriteOption,TEXT("import_overwrite_option"));
     writeConfigText(g_importOverWriteConfirm,TEXT("import_overwrite_confirm"));
     writeConfigText(g_inclusiveTriggerTextCompletion,TEXT("inclusive_triggertext_completion"));
+    writeConfigText(g_livePreviewBox,TEXT("live_preview_box"));
     
+    writeConfigTextChar(g_customEscapeChar,TEXT("escape_char"));
     writeConfigTextChar(g_customScope,TEXT("custom_scope"));
 }
 
@@ -1438,11 +1450,13 @@ void loadConfig()
     g_indentReference = GetPrivateProfileInt(TEXT("FingerText"), TEXT("indent_reference"), DEFAULT_INDENT_REFERENCE, g_iniPath);
     g_chainLimit = GetPrivateProfileInt(TEXT("FingerText"), TEXT("chain_limit"), DEFAULT_CHAIN_LIMIT, g_iniPath);
     g_preserveSteps = GetPrivateProfileInt(TEXT("FingerText"), TEXT("preserve_steps"), DEFAULT_PRESERVE_STEPS, g_iniPath);
-    g_escapeChar = GetPrivateProfileInt(TEXT("FingerText"), TEXT("escape_char_level"), DEFAULT_ESCAPE_CHAR, g_iniPath);
+    //g_escapeChar = GetPrivateProfileInt(TEXT("FingerText"), TEXT("escape_char_level"), DEFAULT_ESCAPE_CHAR, g_iniPath);
     g_importOverWriteOption = GetPrivateProfileInt(TEXT("FingerText"), TEXT("import_overwrite_option"), DEFAULT_IMPORT_OVERWRITE_OPTION, g_iniPath);
     g_importOverWriteConfirm = GetPrivateProfileInt(TEXT("FingerText"), TEXT("import_overwrite_confirm"), DEFAULT_IMPORT_OVERWRITE_CONFIRM, g_iniPath);
     g_inclusiveTriggerTextCompletion = GetPrivateProfileInt(TEXT("FingerText"), TEXT("inclusive_triggertext_completion"), DEFAULT_INCLUSIVE_TRIGGERTEXT_COMPLETION, g_iniPath);
+    g_livePreviewBox = GetPrivateProfileInt(TEXT("FingerText"), TEXT("live_preview_box"), DEFAULT_LIVE_PREVIEW_BOX, g_iniPath);
 
+    GetPrivateProfileString(TEXT("FingerText"), TEXT("escape_char"),DEFAULT_CUSTOM_ESCAPE_CHAR,g_customEscapeChar,MAX_PATH,g_iniPath);
     GetPrivateProfileString(TEXT("FingerText"), TEXT("custom_scope"),DEFAULT_CUSTOM_SCOPE,g_customScope,MAX_PATH,g_iniPath);
 }
 
@@ -1471,6 +1485,7 @@ void setupConfigFile()
         resetDefaultSettings();
         
         writeConfig();
+        //saveCustomScope();
         g_newUpdate = true;
     }
 }
@@ -1507,10 +1522,20 @@ int getCurrentTag(HWND curScintilla, int posCurrent, char **buffer, int triggerL
         //TODO: global variable for word Char?
         char wordChar[MAX_PATH]="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.";
 
-        if (g_escapeChar == 1)
+        //alertNumber(wcslen(g_customEscapeChar));
+        if (wcslen(g_customEscapeChar)>0)
         {
-            strcat(wordChar,"<");
+            char *customEscapeChar = NULL;
+            customEscapeChar = new char[MAX_PATH];
+            convertToUTF8(g_customEscapeChar, &customEscapeChar);
+            strcat(wordChar,customEscapeChar);
+            delete [] customEscapeChar;
         }
+
+        //if (g_escapeChar == 1)
+        //{
+        //    strcat(wordChar,"<");
+        //}
 
         ::SendMessage(curScintilla,	SCI_SETWORDCHARS, 0, (LPARAM)wordChar);
 	    posBeforeTag = static_cast<int>(::SendMessage(curScintilla,	SCI_WORDSTARTPOSITION, posCurrent, 1));
@@ -1653,7 +1678,7 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
 
         char *customScope = NULL;
         customScope = new char[MAX_PATH];
-
+        
         char *tagType1 = NULL;
         TCHAR *fileType1 = NULL;
 		fileType1 = new TCHAR[MAX_PATH];
@@ -1750,6 +1775,8 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
     sqlite3_finalize(stmt);
     populateDockItems();
     
+    if (g_livePreviewBox==1) showPreview(true);
+
     g_liveHintUpdate++;
     ::SendMessage(getCurrentScintilla(),SCI_GRABFOCUS,0,0);   
     
@@ -1834,6 +1861,8 @@ void exportSnippets()
         int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
         ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
 
+        g_snippetListLength = 100000;
+
         updateDockItems(true,true,"%");
 
         int exportCount = 0;
@@ -1871,6 +1900,7 @@ void exportSnippets()
         ::MessageBox(nppData._nppHandle, exportCountText, TEXT("FingerText"), MB_OK);
     }
 
+    g_snippetListLength = GetPrivateProfileInt(TEXT("FingerText"), TEXT("snippet_list_length"), DEFAULT_SNIPPET_LIST_LENGTH, g_iniPath);
     g_liveHintUpdate++;
 
     
@@ -2573,6 +2603,8 @@ int promptSaveSnippet(TCHAR* message)
 
 void updateMode()
 {
+
+    //TODO: should change to edit mode and normal mode by a button, and dynamically adjust the dock content
     //HWND curScintilla = getCurrentScintilla();
     TCHAR fileType[MAX_PATH];
     ::SendMessage(nppData._nppHandle, NPPM_GETFILENAME, (WPARAM)MAX_PATH, (LPARAM)fileType);
@@ -2632,16 +2664,21 @@ void settings()
  ; live_hint_update           --            0: Turn off SnippetDock live update\r\n\
  ;                                (default) 1: Turn on SnippetDock live update\r\n\
  ; preserve_steps             --  Default is 0 and don't change it. It's for debugging purpose\r\n\
- ; escape_char_level          --  (default) 0: no escape characters\r\n\
- ;                                          1: < is set as the escaping character. That means any characters type after the\r\n\
- ;                                             character < will not be consider as snippet trigger text.\r\n\
+ ; escape_char_level          --  This entry is not in use anymore. Please use the 'escape_char' instead.\r\n\
  ; import_overwrite_confirm   --  (default) 0: A pop up confirmation message box everytime you overwrite a snippet.\r\n\
  ;                                          1: No confirmation message box when you overwrite a snippet.\r\n\
- ; import_overwrite_option    --  (default) 0: When there is a conflicting snippet during snippet importing, Fingertext will keep both copies.\r\n\
- ;                                          1: When there is a conflicting snippet during snippet importing, you may choose to overwrite existing snippet.\r\n\
- ; inclusive_triggertext_completion --            0: Tiggertext completion will only include triggertext which starts with the characters you are typing.\r\n\
- ;                                      (default) 1: Tiggertext completion will only include triggertext which includes the characters you are typing.\r\n\
- ; custom_scope               --  A user defined custom scope. For example if you put .rb here, you can use all the .rb snippets in any files.\r\n\
+ ; import_overwrite_option    --  (default) 0: When there is a conflicting snippet during snippet importing, Fingertext \r\n\
+                                               will keep both copies.\r\n\
+ ;                                          1: When there is a conflicting snippet during snippet importing, you may\r\n\
+                                               choose to overwrite existing snippet.\r\n\
+ ; inclusive_triggertext_completion --            0: Tiggertext completion will only include triggertext which starts with \r\n\
+                                                     the characters you are typing.\r\n\
+ ;                                      (default) 1: Tiggertext completion will only include triggertext which includes the\r\n\
+                                                     characters you are typing.\r\n\
+ ; custom_scope               --  A user defined custom scope. For example if you put .rb here, you can use all the .rb \r\n\
+                                  snippets in any files.\r\n\
+ ; escape_char                --  Any text entered after this character will not be view as snippet. For example if put <> here\r\n\
+                                  then you cannot trigger the snippet 'npp' by typing either '<npp' or '>npp' and hit tab\r\n\
         ");
         ::SendMessage(curScintilla, SCI_ANNOTATIONSETSTYLE, lineCount, STYLE_INDENTGUIDE);
         ::SendMessage(curScintilla, SCI_ANNOTATIONSETVISIBLE, lineCount, 0);
@@ -2695,7 +2732,7 @@ void refreshAnnotation()
                     # put \"npp\" (without quotes) in this line, the snippet will\r\n\
                     # be triggered when you type npp and hit tab.\r\n\
                     # Trigger text with more than 30 characters is NOT recommended\r\n\
-                    # Only alphanumerics, underscore and period are allowed.\r\n\r\n");
+                    # Only alphanumerics, underscores and periods are allowed.\r\n\r\n");
             ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 2, (LPARAM)"\
                     # The third part is the scope of the snippet. \r\n\
                     # e.g. \"GLOBAL\" (without quotes) for globally available\r\n\
@@ -2737,7 +2774,6 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
     int position = 0;
     //bool groupChecked = false;
 
-    int curLang = 0;
     //int curLang = 0;
     //::SendMessage(nppData._nppHandle,NPPM_GETCURRENTLANGTYPE ,0,(LPARAM)&curLang);
     //wchar_t curLangNumber[10];
@@ -2746,7 +2782,6 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
     //::_itow_s(curLang, curLangNumber, 10, 10);
     //::wcscat(curLangText, curLangNumber);
 
-    
     if (tagLength != 0)
 	{
         char *expanded = NULL;
@@ -2759,7 +2794,6 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
         convertToUTF8(g_customScope, &tagType);
         expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
         
-
         // Check for snippets which matches ext part
         if (!expanded)
         {
@@ -2767,54 +2801,49 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
             convertToUTF8(fileType, &tagType);
             expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
             
+            // Check for snippets which matches name part
+            if (!expanded)
+            {
+                ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
+                convertToUTF8(fileType, &tagType);
+                expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
+                // Check for language specific snippets
+                if (!expanded)
+                {
+                    expanded = findTagSQLite(tag,getLangTagType(),triggerTextComplete); 
+                
+                    // Check for snippets which matches the current language group
+                    //if (!expanded)
+                    //{
+                    //    groupChecked = true;
+                    //    position = 0;
+                    //    do
+                    //    {   
+                    //        tagType = getGroupScope(curLangText,position);
+                    //        if (tagType)
+                    //        {
+                    //            expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
+                    //            
+                    //        } else
+                    //        {
+                    //            break;
+                    //        }
+                    //        position++;
+                    //    } while (!expanded);
+                    //}
+
+                    // Check for GLOBAL snippets
+                    if (!expanded)
+                    {
+                        //groupChecked = false;
+                        expanded = findTagSQLite(tag,"GLOBAL",triggerTextComplete); 
+
+                    }
+                }
+            }
         }
-
-        // Check for snippets which matches name part
-        if (!expanded)
-        {
-            ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-            convertToUTF8(fileType, &tagType);
-            expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
-            
-        }
-
-        // Check for language specific snippets
-        if (!expanded)
-        {
-            expanded = findTagSQLite(tag,getLangTagType(),triggerTextComplete); 
-        }
-
-
-
-
-        // Check for snippets which matches the current language group
-        //if (!expanded)
-        //{
-        //    groupChecked = true;
-        //    position = 0;
-        //    do
-        //    {   
-        //        tagType = getGroupScope(curLangText,position);
-        //        if (tagType)
-        //        {
-        //            expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
-        //            
-        //        } else
-        //        {
-        //            break;
-        //        }
-        //        position++;
-        //    } while (!expanded);
-        //}
-
         
-        // Check for GLOBAL snippets
-        if (!expanded)
-        {
-            //groupChecked = false;
-            expanded = findTagSQLite(tag,"GLOBAL",triggerTextComplete); 
 
-        }
 
         // Only if a tag is found in the above process, a replace tag or trigger text completion action will be done.
         if (expanded)
@@ -2919,79 +2948,15 @@ char* getLangTagType()
 
     if (curLang>54) return "";
 
-    char *s[] = {"LANG|TXT","LANG|PHP ","LANG|C","LANG|CPP","LANG|CS","LANG|OBJC","LANG|JAVA","LANG|RC","\
-			  LANG|HTML","LANG|XML","LANG|MAKEFILE","LANG|PASCAL","LANG|BATCH","LANG|INI","LANG|NFO","LANG|USER","\
-			  LANG|ASP","LANG|SQL","LANG|VB","LANG|JS","LANG|CSS","LANG|PERL","LANG|PYTHON","LANG|LUA","\
-			  LANG|TEX","LANG|FORTRAN","LANG|BASH","LANG|FLASH","LANG|NSIS","LANG|TCL","LANG|LISP","LANG|SCHEME","\
-			  LANG|ASM","LANG|DIFF","LANG|PROPS","LANG|PS","LANG|RUBY","LANG|SMALLTALK","LANG|VHDL","LANG|KIX","LANG|AU3","\
-			  LANG|CAML","LANG|ADA","LANG|VERILOG","LANG|MATLAB","LANG|HASKELL","LANG|INNO","LANG|SEARCHRESULT","\
-              LANG|CMAKE","LANG|YAML","LANG|COBOL","LANG|GUI4CLI","LANG|D","LANG|POWERSHELL","LANG|R"};
+    char *s[] = {"LANG|TXT","LANG|PHP ","LANG|C","LANG|CPP","LANG|CS","LANG|OBJC","LANG|JAVA","LANG|RC",
+                 "LANG|HTML","LANG|XML","LANG|MAKEFILE","LANG|PASCAL","LANG|BATCH","LANG|INI","LANG|NFO","LANG|USER",
+                 "LANG|ASP","LANG|SQL","LANG|VB","LANG|JS","LANG|CSS","LANG|PERL","LANG|PYTHON","LANG|LUA",
+                 "LANG|TEX","LANG|FORTRAN","LANG|BASH","LANG|FLASH","LANG|NSIS","LANG|TCL","LANG|LISP","LANG|SCHEME",
+                 "LANG|ASM","LANG|DIFF","LANG|PROPS","LANG|PS","LANG|RUBY","LANG|SMALLTALK","LANG|VHDL","LANG|KIX",
+                 "LANG|AU3","LANG|CAML","LANG|ADA","LANG|VERILOG","LANG|MATLAB","LANG|HASKELL","LANG|INNO","LANG|SEARCHRESULT",
+                 "LANG|CMAKE","LANG|YAML","LANG|COBOL","LANG|GUI4CLI","LANG|D","LANG|POWERSHELL","LANG|R"};
 
     return s[curLang];
-
-;
-    //    case 14:
-    //        return "LANG|NFO";
-    //    case 15:
-    //        return "LANG|USER";
-    //    case 16:
-    //        return "LANG|ASP";
-    //    case 17:
-    //        return "LANG|SQL";
-    //    case 18:
-    //        return "LANG|VB";
-    //    case 19:
-    //        return "LANG|JS";
-    //    case 20:
-    //        return "LANG|CSS";
-    //    case 21:
-    //        return "LANG|PHP";
-    //    case 22:
-    //        return "LANG|C";
-    //    case 23:
-    //        return "LANG|CPP";
-    //    case 24:
-    //        return "LANG|CS";
-    //    case 25:
-    //        return "LANG|OBJC";
-    //    case 26:
-    //        return "LANG|JAVA";
-    //    case 27:
-    //        return "LANG|RC";
-    //    case 28:
-    //        return "LANG|HTML";
-    //    case 29:
-    //        return "LANG|XML";
-    //    case 30:
-    //        return "LANG|MAKE";
-    //    case 31:
-    //        return "LANG|PHP";
-    //    case 32:
-    //        return "LANG|C";
-    //    case 33:
-    //        return "LANG|CPP";
-    //    case 34:
-    //        return "LANG|CS";
-    //    case 35:
-    //        return "LANG|OBJC";
-    //    case 36:
-    //        return "LANG|JAVA";
-    //    case 37:
-    //        return "LANG|RC";
-    //    case 38:
-    //        return "LANG|HTML";
-    //    case 39:
-    //        return "LANG|XML";
-    //    case 40:
-    //        return "LANG|MAKE";
-    //
-    //    default:
-    //        return "";
-    //        break;
-    //}
-
-    
-
 }
 
 
@@ -3001,7 +2966,7 @@ void fingerText()
     
     if ((g_enable==false) || (::SendMessage(curScintilla,SCI_SELECTIONISRECTANGLE,0,0)==1))
     {
-        ::SendMessage(curScintilla,SCI_TAB,0,0);	
+        ::SendMessage(curScintilla,SCI_TAB,0,0);
     } else
     {
         g_liveHintUpdate--;
@@ -3029,6 +2994,7 @@ void fingerText()
         {
             int specialSpot = searchNext(curScintilla, "$[![");
 
+            //TODO: try to make all dynamic hotspots works together in the sequence of inside out
             if (specialSpot>=0)
             {
                 ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
@@ -3124,8 +3090,8 @@ void testing()
     
     HWND curScintilla = getCurrentScintilla();
 
-    
-    alertCharArray(getLangTagType());
+    //alertNumber(g_snippetListLength);
+    //alertCharArray(getLangTagType());
 
     //char* testScope = NULL;
     //testScope = getGroupScope(TEXT("LANG_4"),0);

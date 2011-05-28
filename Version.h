@@ -46,6 +46,7 @@ Usage Guide and Source code:\r\n\
 (Snippets created using FingerText version earlier than 0.3.5 are not compatible with this version)\
 ")
 
+// TODO: rewrite help text. More "how to" base instead of just explaining the commands
 #define HELP_TEXT_FULL TEXT("\
 FingerText Quick Guide:\r\n\r\n\
 Insert Snippet --- Type in TriggerText and Hit the tab key\r\n\
