@@ -113,6 +113,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
         //    updateDockItems();
         //    updateMode();
         //    break;
+        case NPPN_LANGCHANGED:
         case NPPN_BUFFERACTIVATED:
             // TODO: there may be some problem using updateMode here, as the buffere activate is not fired when the focus is switch to the ftb file when a use try to close npp and cancel afterwards.
             updateMode();

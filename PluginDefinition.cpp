@@ -86,7 +86,7 @@ struct SnipIndex {
 TCHAR g_iniPath[MAX_PATH];
 TCHAR g_ftbPath[MAX_PATH];
 TCHAR g_fttempPath[MAX_PATH];
-TCHAR g_groupPath[MAX_PATH];
+//TCHAR g_groupPath[MAX_PATH];
 
 SnipIndex* g_snippetCache;
 int g_snippetCacheSize;
@@ -468,10 +468,11 @@ void selectionToSnippet()
     int selectionStart = ::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0);
     bool withSelection = false;
 
-    char* selection = new char [selectionEnd - selectionStart +1];
+    char* selection;
     
     if (selectionEnd>selectionStart)
     {
+        selection = new char [selectionEnd - selectionStart +1];
         ::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
         withSelection = true;
     } else
@@ -492,11 +493,10 @@ void selectionToSnippet()
     //TODO: consider using YES NO CANCEL dialog in promptsavesnippet
     promptSaveSnippet(TEXT("Do you wish to save the current snippet before creating a new one?"));
     
-
     ::SendMessage(curScintilla,SCI_CLEARALL,0,0);
     //TODO: there is a bug here. if you create snippet from selection by selecting some text at line 0 1 2 3. The annaotation will not only go into the snippet editor, but also to the original document.
 
-    ::SendMessage(curScintilla, SCI_INSERTTEXT, ::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)SNIPPET_EDIT_TEMPLATE);
+    ::SendMessage(curScintilla,SCI_INSERTTEXT,::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)SNIPPET_EDIT_TEMPLATE);
     ::SendMessage(curScintilla,SCI_INSERTTEXT,::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"triggertext\r\nGLOBAL\r\n");
     ::SendMessage(curScintilla,SCI_INSERTTEXT,::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)selection);
     ::SendMessage(curScintilla,SCI_INSERTTEXT,::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"[>END<]");
@@ -620,7 +620,7 @@ bool getLineChecked(char **buffer, HWND &curScintilla, int lineNumber, TCHAR* er
         char* wordChar;
         if (lineNumber==2)
         {
-            wordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.";
+            wordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.|";
             
         } else //if (lineNumber==1)
         {
@@ -1541,6 +1541,7 @@ void convertToUTF8(TCHAR *orig, char **utf8)
 	WideCharToMultiByte(CP_UTF8, 0, orig, -1, *utf8, multibyteLength, 0, 0);
 }
 
+
 void showSnippetDock()
 {
 	snippetDock.setParent(nppData._nppHandle);
@@ -1632,7 +1633,7 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
             sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets ORDER BY tagType DESC,tag DESC LIMIT ? ", -1, &stmt, NULL);
         } else 
         {
-            sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets WHERE (tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ?) AND tag LIKE ? ORDER BY tagType DESC,tag DESC LIMIT ? ", -1, &stmt, NULL);
+            sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets WHERE (tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ?) AND tag LIKE ? ORDER BY tagType DESC,tag DESC LIMIT ? ", -1, &stmt, NULL);
         }
 
     } else
@@ -1642,7 +1643,7 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
             sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets ORDER BY tag DESC,tagType DESC LIMIT ? ", -1, &stmt, NULL);
         } else 
         {
-            sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets WHERE (tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ?) AND tag LIKE ? ORDER BY tag DESC,tagType DESC LIMIT ? ", -1, &stmt, NULL);
+            sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets WHERE (tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ?) AND tag LIKE ? ORDER BY tag DESC,tagType DESC LIMIT ? ", -1, &stmt, NULL);
         }
     }
     
@@ -1681,10 +1682,12 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
             ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType2);
             convertToUTF8(fileType2, &tagType2);
             sqlite3_bind_text(stmt, 3, tagType2, -1, SQLITE_STATIC);
-        
-            sqlite3_bind_text(stmt, 4, "GLOBAL", -1, SQLITE_STATIC);
 
-            sqlite3_bind_text(stmt, 5, tag, -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 4, getLangTagType(), -1, SQLITE_STATIC);
+        
+            sqlite3_bind_text(stmt, 5, "GLOBAL", -1, SQLITE_STATIC);
+
+            sqlite3_bind_text(stmt, 6, tag, -1, SQLITE_STATIC);
 
             //int cols = sqlite3_column_count(stmt);
             //tagType = itoa(snippetCacheSize,tagType,10);
@@ -1692,7 +1695,7 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
             char snippetCacheSizeText[10];
             ::_itoa(g_snippetCacheSize, snippetCacheSizeText, 10); 
 
-            sqlite3_bind_text(stmt, 6, snippetCacheSizeText, -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 7, snippetCacheSizeText, -1, SQLITE_STATIC);
         }
     
         int row = 0;
@@ -1764,10 +1767,20 @@ void populateDockItems()
             
             //TODO: option to show trigger text first
 
+            //if (strcmp(g_snippetCache[j].scope,"GLOBAL")==0)
+            //{
+            //    strcat(newText,"<<");
+            //    strcat(newText,g_snippetCache[j].scope);
+            //    strcat(newText,">>");
+            //} else
+            //{
+
             strcat(newText,"<");
             strcat(newText,g_snippetCache[j].scope);
             strcat(newText,">");
-            int scopeLength = 12 - strlen(g_snippetCache[j].scope);
+            //}
+            
+            int scopeLength = 14 - strlen(newText);
             if (scopeLength < 3) scopeLength =3;
             for (int i=0;i<scopeLength;i++)
             {
@@ -2722,15 +2735,16 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
 	int tagLength = getCurrentTag(curScintilla, posCurrent, &tag, triggerLength);
     int posBeforeTag=posCurrent-tagLength;
     int position = 0;
-    bool groupChecked = false;
+    //bool groupChecked = false;
 
     int curLang = 0;
-    ::SendMessage(nppData._nppHandle,NPPM_GETCURRENTLANGTYPE ,0,(LPARAM)&curLang);
-    wchar_t curLangNumber[10];
-    wchar_t curLangText[20];
-    ::wcscpy(curLangText, TEXT("LANG_"));
-    ::_itow_s(curLang, curLangNumber, 10, 10);
-    ::wcscat(curLangText, curLangNumber);
+    //int curLang = 0;
+    //::SendMessage(nppData._nppHandle,NPPM_GETCURRENTLANGTYPE ,0,(LPARAM)&curLang);
+    //wchar_t curLangNumber[10];
+    //wchar_t curLangText[20];
+    //::wcscpy(curLangText, TEXT("LANG_"));
+    //::_itow_s(curLang, curLangNumber, 10, 10);
+    //::wcscat(curLangText, curLangNumber);
 
     
     if (tagLength != 0)
@@ -2744,6 +2758,7 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
         // Check for custom scope
         convertToUTF8(g_customScope, &tagType);
         expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
+        
 
         // Check for snippets which matches ext part
         if (!expanded)
@@ -2751,6 +2766,7 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
             ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
             convertToUTF8(fileType, &tagType);
             expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
+            
         }
 
         // Check for snippets which matches name part
@@ -2759,7 +2775,17 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
             ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
             convertToUTF8(fileType, &tagType);
             expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
+            
         }
+
+        // Check for language specific snippets
+        if (!expanded)
+        {
+            expanded = findTagSQLite(tag,getLangTagType(),triggerTextComplete); 
+        }
+
+
+
 
         // Check for snippets which matches the current language group
         //if (!expanded)
@@ -2782,11 +2808,12 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
         //}
 
         
-        // Check for snippets which matches GLOBAL
+        // Check for GLOBAL snippets
         if (!expanded)
         {
-            groupChecked = false;
+            //groupChecked = false;
             expanded = findTagSQLite(tag,"GLOBAL",triggerTextComplete); 
+
         }
 
         // Only if a tag is found in the above process, a replace tag or trigger text completion action will be done.
@@ -2829,7 +2856,8 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
         //    level++;
         //} while (level<=3);
         delete [] fileType;
-        if (!groupChecked) delete [] tagType;
+        //if (!groupChecked) delete [] tagType;
+        delete [] tagType;
         delete [] expanded;
 		delete [] tag;
         // return to the original path 
@@ -2882,6 +2910,89 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
 //}
 
 
+char* getLangTagType()
+{
+
+    int curLang = 0;
+    ::SendMessage(nppData._nppHandle,NPPM_GETCURRENTLANGTYPE ,0,(LPARAM)&curLang);
+    //alertNumber(curLang);
+
+    if (curLang>54) return "";
+
+    char *s[] = {"LANG|TXT","LANG|PHP ","LANG|C","LANG|CPP","LANG|CS","LANG|OBJC","LANG|JAVA","LANG|RC","\
+			  LANG|HTML","LANG|XML","LANG|MAKEFILE","LANG|PASCAL","LANG|BATCH","LANG|INI","LANG|NFO","LANG|USER","\
+			  LANG|ASP","LANG|SQL","LANG|VB","LANG|JS","LANG|CSS","LANG|PERL","LANG|PYTHON","LANG|LUA","\
+			  LANG|TEX","LANG|FORTRAN","LANG|BASH","LANG|FLASH","LANG|NSIS","LANG|TCL","LANG|LISP","LANG|SCHEME","\
+			  LANG|ASM","LANG|DIFF","LANG|PROPS","LANG|PS","LANG|RUBY","LANG|SMALLTALK","LANG|VHDL","LANG|KIX","LANG|AU3","\
+			  LANG|CAML","LANG|ADA","LANG|VERILOG","LANG|MATLAB","LANG|HASKELL","LANG|INNO","LANG|SEARCHRESULT","\
+              LANG|CMAKE","LANG|YAML","LANG|COBOL","LANG|GUI4CLI","LANG|D","LANG|POWERSHELL","LANG|R"};
+
+    return s[curLang];
+
+;
+    //    case 14:
+    //        return "LANG|NFO";
+    //    case 15:
+    //        return "LANG|USER";
+    //    case 16:
+    //        return "LANG|ASP";
+    //    case 17:
+    //        return "LANG|SQL";
+    //    case 18:
+    //        return "LANG|VB";
+    //    case 19:
+    //        return "LANG|JS";
+    //    case 20:
+    //        return "LANG|CSS";
+    //    case 21:
+    //        return "LANG|PHP";
+    //    case 22:
+    //        return "LANG|C";
+    //    case 23:
+    //        return "LANG|CPP";
+    //    case 24:
+    //        return "LANG|CS";
+    //    case 25:
+    //        return "LANG|OBJC";
+    //    case 26:
+    //        return "LANG|JAVA";
+    //    case 27:
+    //        return "LANG|RC";
+    //    case 28:
+    //        return "LANG|HTML";
+    //    case 29:
+    //        return "LANG|XML";
+    //    case 30:
+    //        return "LANG|MAKE";
+    //    case 31:
+    //        return "LANG|PHP";
+    //    case 32:
+    //        return "LANG|C";
+    //    case 33:
+    //        return "LANG|CPP";
+    //    case 34:
+    //        return "LANG|CS";
+    //    case 35:
+    //        return "LANG|OBJC";
+    //    case 36:
+    //        return "LANG|JAVA";
+    //    case 37:
+    //        return "LANG|RC";
+    //    case 38:
+    //        return "LANG|HTML";
+    //    case 39:
+    //        return "LANG|XML";
+    //    case 40:
+    //        return "LANG|MAKE";
+    //
+    //    default:
+    //        return "";
+    //        break;
+    //}
+
+    
+
+}
 
 
 void fingerText()
@@ -3012,6 +3123,9 @@ void testing()
     ::MessageBox(nppData._nppHandle, TEXT("Testing!"), TEXT("Trace"), MB_OK);
     
     HWND curScintilla = getCurrentScintilla();
+
+    
+    alertCharArray(getLangTagType());
 
     //char* testScope = NULL;
     //testScope = getGroupScope(TEXT("LANG_4"),0);

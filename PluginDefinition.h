@@ -153,6 +153,7 @@ void initialize();
 void upgradeMessage();
 void saveSnippet();
 //void createSnippet();
+char* getLangTagType();
 char* cleanupString( char *str );
 void clearCache();
 void editSnippet();
