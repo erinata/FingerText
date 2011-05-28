@@ -1,14 +1,16 @@
 changelog (for developers only, include unreleased versions)
 
 
+
 0.5.11
 Added: User customizable escape character
 Performance improvement in snippet triggering
 Fixed: Snippet export limited by list length
 Added: snippet preview box live update
+Fixed: critical bug when live update is on and a long chain of chinese characters are typed
 
 0.5.10
-Added: Language based snippets
+Added: Language based snippets (cannot be triggered yet. basic code in the background)
 Added: Custom Scope, a user defined Global scope
 rewriting the triggerTag, snippetComplete and findTagSQLite functions
 edit mode detect full file name before changing mode

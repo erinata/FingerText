@@ -1514,7 +1514,7 @@ void writeConfigText(int configInt, TCHAR* section)
 
 int getCurrentTag(HWND curScintilla, int posCurrent, char **buffer, int triggerLength)
 {
-	int length = 0;
+	int length = -1;
 
     int posBeforeTag;
     if (triggerLength<=0)
@@ -1596,6 +1596,7 @@ void snippetHintUpdate()
 {     
     if ((!g_editorView) && (g_liveHintUpdate==1))
     {
+        
         g_liveHintUpdate=0;
         HWND curScintilla = getCurrentScintilla();
         if ((::SendMessage(curScintilla,SCI_GETMODIFY,0,0)!=0) && (::SendMessage(curScintilla,SCI_SELECTIONISRECTANGLE,0,0)==0))
@@ -1606,7 +1607,7 @@ void snippetHintUpdate()
             //wchar_t countText[10];
             //::_itow_s(tagLength, countText, 10, 10); 
             //::MessageBox(nppData._nppHandle, countText, TEXT("Trace"), MB_OK);
-
+        
             if ((tagLength>0) && (tagLength<30))
             {
                 char similarTag[MAX_PATH]="";
@@ -1615,11 +1616,12 @@ void snippetHintUpdate()
                 strcat(similarTag,"%");
         
                 updateDockItems(false,false,similarTag);
+                delete [] partialTag;   
             } else
             {
                 updateDockItems(false,false);
             }
-            delete [] partialTag;   
+            
         }
         
         g_liveHintUpdate=1;
@@ -2810,8 +2812,9 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
                 // Check for language specific snippets
                 if (!expanded)
                 {
-                    expanded = findTagSQLite(tag,getLangTagType(),triggerTextComplete); 
+                    //expanded = findTagSQLite(tag,getLangTagType(),triggerTextComplete); 
                 
+                    
                     // Check for snippets which matches the current language group
                     //if (!expanded)
                     //{
@@ -2942,21 +2945,22 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
 char* getLangTagType()
 {
 
-    int curLang = 0;
-    ::SendMessage(nppData._nppHandle,NPPM_GETCURRENTLANGTYPE ,0,(LPARAM)&curLang);
-    //alertNumber(curLang);
-
-    if (curLang>54) return "";
-
-    char *s[] = {"LANG|TXT","LANG|PHP ","LANG|C","LANG|CPP","LANG|CS","LANG|OBJC","LANG|JAVA","LANG|RC",
-                 "LANG|HTML","LANG|XML","LANG|MAKEFILE","LANG|PASCAL","LANG|BATCH","LANG|INI","LANG|NFO","LANG|USER",
-                 "LANG|ASP","LANG|SQL","LANG|VB","LANG|JS","LANG|CSS","LANG|PERL","LANG|PYTHON","LANG|LUA",
-                 "LANG|TEX","LANG|FORTRAN","LANG|BASH","LANG|FLASH","LANG|NSIS","LANG|TCL","LANG|LISP","LANG|SCHEME",
-                 "LANG|ASM","LANG|DIFF","LANG|PROPS","LANG|PS","LANG|RUBY","LANG|SMALLTALK","LANG|VHDL","LANG|KIX",
-                 "LANG|AU3","LANG|CAML","LANG|ADA","LANG|VERILOG","LANG|MATLAB","LANG|HASKELL","LANG|INNO","LANG|SEARCHRESULT",
-                 "LANG|CMAKE","LANG|YAML","LANG|COBOL","LANG|GUI4CLI","LANG|D","LANG|POWERSHELL","LANG|R"};
-
-    return s[curLang];
+    //int curLang = 0;
+    //::SendMessage(nppData._nppHandle,NPPM_GETCURRENTLANGTYPE ,0,(LPARAM)&curLang);
+    ////alertNumber(curLang);
+    //
+    //if (curLang>54) return "";
+    //
+    //char *s[] = {"LANG|TXT","LANG|PHP ","LANG|C","LANG|CPP","LANG|CS","LANG|OBJC","LANG|JAVA","LANG|RC",
+    //             "LANG|HTML","LANG|XML","LANG|MAKEFILE","LANG|PASCAL","LANG|BATCH","LANG|INI","LANG|NFO","LANG|USER",
+    //             "LANG|ASP","LANG|SQL","LANG|VB","LANG|JS","LANG|CSS","LANG|PERL","LANG|PYTHON","LANG|LUA",
+    //             "LANG|TEX","LANG|FORTRAN","LANG|BASH","LANG|FLASH","LANG|NSIS","LANG|TCL","LANG|LISP","LANG|SCHEME",
+    //             "LANG|ASM","LANG|DIFF","LANG|PROPS","LANG|PS","LANG|RUBY","LANG|SMALLTALK","LANG|VHDL","LANG|KIX",
+    //             "LANG|AU3","LANG|CAML","LANG|ADA","LANG|VERILOG","LANG|MATLAB","LANG|HASKELL","LANG|INNO","LANG|SEARCHRESULT",
+    //             "LANG|CMAKE","LANG|YAML","LANG|COBOL","LANG|GUI4CLI","LANG|D","LANG|POWERSHELL","LANG|R"};
+    //
+    //return s[curLang];
+    return "";
 }
 
 
