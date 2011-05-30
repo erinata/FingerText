@@ -51,6 +51,7 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 #include <tchar.h>
+#include <fstream>
 
 #include "PluginDefinition.h"
 #include "menuCmdID.h"
@@ -791,52 +792,85 @@ void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int
 }
 
 
+// Possible dynamic hotspot algorithm
+// 1. search the tail of the snippet first, and search back to the sign
+// 2. grab the content including the hotspot type identifier, and determine which type the hotspot is
+// 3. if it's normal hotspot, set the checkpoint location to the end of the hotspot
+// 4. it it's a dynamic hotspot, activate the dynamic hotspot. Set the checkpoint location to the beginning of the hotspot
+// 5. After the dynamic hotspot resolve, go back to the checkpoint without moving the checkpoint
+// 6. in case of get or cut, move the startingpost and checkpoint backward in the same magnitude
 
 // TODO: refactor the dynamic hotspot functions
-void dynamicHotspot(HWND &curScintilla, int &startingPos, int hotSpotType)
+void dynamicHotspot(HWND &curScintilla, int &startingPos)
 {
-    char* tagSign;
-    if (hotSpotType == 1)
-    {
-        tagSign = "$[![(cha)";
-    } else if (hotSpotType == 2)
-    {
-        tagSign = "$[![(key)";
-    } else
-    {
-        tagSign = "$[![(cmd)";
-    }
+    //char* tagSign;
+    //if (hotSpotType == 1)
+    //{
+    //    tagSign = "$[![(cha)";
+    //} else if (hotSpotType == 2)
+    //{
+    //    tagSign = "$[![(key)";
+    //} else
+    //{
+    //    tagSign = "$[![(cmd)";
+    //}
 
-    
+
+
+        // Find the tail first so that nested snippets are triggered correctly
+
+
+    int checkPoint = startingPos;    
+
+    char tagSign[] = "$[![";
     int tagSignLength = strlen(tagSign);
+    char tagTail[] = "]!]";
+    int tagTailLength = strlen(tagTail);
+    
+    //int tagSignLength = strlen(tagSign);
+    //int tagSignLength = 4;
     char* hotSpotText;
     char* hotSpot;
     int spot = -1;
+    int spotType = 0;
 
     int limitCounter = 0;
     do 
     {
-        ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos,0);
-        spot = searchNext(curScintilla, tagSign);
+        ::SendMessage(curScintilla,SCI_GOTOPOS,checkPoint,0);
+        spot = searchNext(curScintilla, tagTail);
+
+        //spot = searchNext(curScintilla, tagSign);
         if (spot>=0)
 	    {
-            int firstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-            int secondPos = grabHotSpotContent(curScintilla, &hotSpotText, &hotSpot, firstPos,tagSignLength);
-   
+            searchPrev(curScintilla, tagSign); 
 
+            int firstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+            int secondPos = 0;
+            spotType = grabHotSpotContent(curScintilla, &hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength,true);
+   
             ///////////////////
-            if (hotSpotType == 1)
+            if (spotType == 1)
             {
-                chainSnippet(curScintilla, firstPos, hotSpotText);
-            } else  if (hotSpotType == 2)
+                chainSnippet(curScintilla, firstPos, hotSpotText+5);
+                
+                limitCounter++;
+            } else if (spotType == 2)
             {
-                keyWordSpot(curScintilla, firstPos,hotSpotText, startingPos);
+                keyWordSpot(curScintilla, firstPos,hotSpotText+5, startingPos, checkPoint);
+                
+                limitCounter++;
+            } else if (spotType == 3)
+            {
+                executeCommand(curScintilla, firstPos, hotSpotText+5);
+                
+                limitCounter++;
             } else
             {
-                executeCommand(curScintilla, firstPos, hotSpotText);
+                checkPoint = secondPos+1;
             }
             //////////////////////
-            limitCounter++;
+            
         }
         
     } while ((spot>=0) && (limitCounter<g_chainLimit));
@@ -897,7 +931,7 @@ void executeCommand(HWND &curScintilla, int &firstPos, char* hotSpotText)
 
 }
 
-void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &startingPos)
+void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint)
 {
     int triggerPos = strlen(hotSpotText)+firstPos;
     //::SendMessage(curScintilla,SCI_GOTOPOS,triggerPos,0);
@@ -916,6 +950,7 @@ void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &star
         ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos-1,0);
         ::SendMessage(curScintilla,SCI_WORDLEFTEXTEND,0,0);
         startingPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+        checkPoint = startingPos;
         ::SendMessage(curScintilla,SCI_CUT,0,0);
     } else if (strcmp(hotSpotText,"DATESHORT")==0) //TODO: more flexible date and time
     {
@@ -974,6 +1009,7 @@ void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &star
             ::SendMessage(curScintilla,SCI_SETSEL,scriptStart,selectionEnd);
             ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
             startingPos = startingPos - (selectionEnd - scriptStart);
+            checkPoint = checkPoint - (selectionEnd - scriptStart);
             std::ofstream myfile(g_fttempPath);
             if (myfile.is_open())
             {
@@ -1041,11 +1077,6 @@ void insertDateTime(bool date,int type, HWND &curScintilla)
 
 bool hotSpotNavigation(HWND &curScintilla)
 {
-
-    //TODO: a bug in calculating simultaneous hotspot, when 2 hotspots are next to each others the hotspot cannot trigger simultaneously
-
-    //::SendMessage(curScintilla,SCI_GOTOPOS,startingPos,0);
-
     // TODO: consolidate this part with dynamic hotspots?
     char tagSign[] = "$[![";
     int tagSignLength = strlen(tagSign);
@@ -1062,8 +1093,9 @@ bool hotSpotNavigation(HWND &curScintilla)
 
         searchPrev(curScintilla, tagSign); 
         int firstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-        int secondPos = grabHotSpotContent(curScintilla, &hotSpotText, &hotSpot, firstPos,tagSignLength);
-                
+        int secondPos = 0;
+        grabHotSpotContent(curScintilla, &hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength,false);
+        
         int hotSpotFound=-1;
         int tempPos[100];
         ::SendMessage(curScintilla,SCI_GOTOPOS,firstPos,0);
@@ -1121,28 +1153,84 @@ bool hotSpotNavigation(HWND &curScintilla)
 }
 
 
-int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, int firstPos, int signLength)
+int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, bool dynamic)
 {
-    int posLine = ::SendMessage(curScintilla,SCI_LINEFROMPOSITION,0,0);
+    //int posLine = ::SendMessage(curScintilla,SCI_LINEFROMPOSITION,0,0);
         
+
+    int spotType = 0;
+
     searchNext(curScintilla, "]!]");
-	int secondPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+	secondPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
 
     ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos+signLength,secondPos);
 
     *hotSpotText = new char[secondPos - (firstPos + signLength) + 1];
     ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(*hotSpotText));
 
+    if (strncmp(*hotSpotText,"(cha)",5)==0)
+    {
+
+        spotType = 1;
+        //alertCharArray("key");
+    } else if (strncmp(*hotSpotText,"(key)",5)==0)
+    {
+  
+        spotType = 2;
+        //alertCharArray("cha");
+    } else if (strncmp(*hotSpotText,"(cmd)",5)==0)
+    {
+
+        spotType = 3;
+        //alertCharArray("cmd");
+    } 
+
+
     ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos+3);
     
     *hotSpot = new char[secondPos+3 - firstPos + 1];
     ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(*hotSpot));
 
-    ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)*hotSpotText);
+    if ((spotType>0) && (dynamic))
+    {
+            ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)*hotSpotText+5);
+    } else if (!dynamic)
+    {
+       ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)*hotSpotText);
+
+    } else
+    {
+
+    }
+
     ::SendMessage(curScintilla,SCI_GOTOPOS,secondPos+3,0);
     
-    return secondPos;  
+    return spotType;
+    //return secondPos;  
 }
+
+//void grabHotSpotContentBackup(HWND &curScintilla, char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength)
+//{
+//    int posLine = ::SendMessage(curScintilla,SCI_LINEFROMPOSITION,0,0);
+//        
+//    searchNext(curScintilla, "]!]");
+//	secondPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+//
+//    ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos+signLength,secondPos);
+//
+//    *hotSpotText = new char[secondPos - (firstPos + signLength) + 1];
+//    ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(*hotSpotText));
+//
+//    ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos+3);
+//    
+//    *hotSpot = new char[secondPos+3 - firstPos + 1];
+//    ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(*hotSpot));
+//
+//    ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)*hotSpotText);
+//    ::SendMessage(curScintilla,SCI_GOTOPOS,secondPos+3,0);
+//    
+//    //return secondPos;  
+//}
 
 void showPreview(bool top)
 {
@@ -1465,6 +1553,7 @@ void loadConfig()
 
 void setupConfigFile()
 {
+    //TODO: lazy loading of config.....
     g_version = ::GetPrivateProfileInt(TEXT("FingerText"), TEXT("version"), 0, g_iniPath);
     
     if (g_version == VERSION_LINEAR)  // current version
@@ -1479,7 +1568,7 @@ void setupConfigFile()
         writeConfigText(g_version,TEXT("version"));
                 
         loadConfig(); 
-        writeConfig();
+        writeConfig(); // TODO: think about method to get rid of the need to write config every time we load npp
         g_newUpdate = true;
     } else // for version that need database reset
     {
@@ -2996,18 +3085,20 @@ void fingerText()
             
                 ////dynamic hotspot (chain snippet)
                 //chainSnippet(curScintilla, posCurrent);
-                dynamicHotspot(curScintilla, posCurrent, 1);
+                //dynamicHotspot(curScintilla, posCurrent, 1);
                 ////dynamic hotspot (keyword spot)
                 //keyWordSpot(curScintilla, posCurrent);
-                dynamicHotspot(curScintilla, posCurrent, 2);
+                //dynamicHotspot(curScintilla, posCurrent, 2);
                 ////dynamic hotspot (Command Line)
                 //executeCommand(curScintilla, posCurrent);
-                dynamicHotspot(curScintilla, posCurrent, 3);
+                //dynamicHotspot(curScintilla, posCurrent, 3);
 
+                dynamicHotspot(curScintilla, posCurrent);
             }
                 
             if (g_preserveSteps==0) ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
 	        
+            //TODO: make sure that this check of specialhotspot is necessary or not
             if (specialSpot>=0)
             {
                 ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
@@ -3080,6 +3171,7 @@ void testing()
     ::MessageBox(nppData._nppHandle, TEXT("Testing!"), TEXT("Trace"), MB_OK);
     
     HWND curScintilla = getCurrentScintilla();
+
 
     //alertNumber(g_snippetListLength);
     //alertCharArray(getLangTagType());

@@ -55,10 +55,7 @@
 //
 // All difinitions of plugin interface
 //
-
-
 #include "PluginInterface.h"
-#include <fstream>
 
 //-------------------------------------//
 //-- STEP 1. DEFINE YOUR PLUGIN NAME --//
@@ -116,12 +113,12 @@ void writeConfigTextChar(TCHAR* configChar, TCHAR* section);
 void resetDefaultSettings();
 void writeConfigText(int configInt, TCHAR* section);
 void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
-void dynamicHotspot(HWND &curScintilla, int &startingPos, int hotSpotType);
-void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &startingPos);
+void dynamicHotspot(HWND &curScintilla, int &startingPos);
+void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint);
 void executeCommand(HWND &curScintilla, int &firstPos, char* hotSpotText);
 void chainSnippet(HWND &curScintilla, int &firstPos, char* hotSpotText);
 bool hotSpotNavigation(HWND &curScintilla);
-int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, int firstPos, int signLength);
+int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, bool dynamic);
 void showPreview(bool top = false);
 void emptyFile(TCHAR* fileName);
 void writeDefaultGroupFile();
