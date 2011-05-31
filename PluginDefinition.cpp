@@ -1158,21 +1158,17 @@ int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, in
 
     if (strncmp(*hotSpotText,"(cha)",5)==0)
     {
-
         spotType = 1;
         //alertCharArray("key");
     } else if (strncmp(*hotSpotText,"(key)",5)==0)
     {
-  
         spotType = 2;
         //alertCharArray("cha");
     } else if (strncmp(*hotSpotText,"(cmd)",5)==0)
     {
-
         spotType = 3;
         //alertCharArray("cmd");
     } 
-
 
     ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos+3);
     
@@ -1395,6 +1391,7 @@ void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
 {   
     g_liveHintUpdate = 0;
     delete [] g_snippetCache;
+    delete [] g_customScope;
     //if (g_newUpdate) writeConfig();
     if (g_dbOpen)
     {
@@ -1414,11 +1411,11 @@ void setConfigAndDatabase()
     updateMode();
     
     TCHAR path[MAX_PATH];
-    char *cpath;
+    char cpath[MAX_PATH*2];
     ::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH, reinterpret_cast<LPARAM>(path));
     ::_tcscat(path,TEXT("\\FingerText"));
     int multibyteLength = WideCharToMultiByte(CP_UTF8, 0, path, -1, NULL, 0, 0, 0);
-    cpath = new char[multibyteLength + 50];
+    //cpath = new char[multibyteLength + 50];
     WideCharToMultiByte(CP_UTF8, 0, path, -1, cpath, multibyteLength, 0, 0);
     strcat(cpath, "\\FingerText.db3");
     
