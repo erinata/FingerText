@@ -1,9 +1,16 @@
 changelog (for developers only, include unreleased versions)
 
+0.5.13
+Changed: Pop up option of whether to overwrite or keep copies in conflicting snippets
+restructure the importsnippet function
+Fixed: less memory leakage on liveupdate and snippet import
+Changed: update the setting hints
+
 0.5.12
-Added: Language based snippets
+Added: Primitive implementation of Language based snippets
 Update scintilla.h so that it's compatibile with notepad++ 5.9
 Change the way dynamic snippet work. Now they nested corrected with the rule from left to right and inside to outside.
+
 
 0.5.11
 Added: User customizable escape character

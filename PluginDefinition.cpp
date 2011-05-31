@@ -59,20 +59,12 @@
 #include "SnippetDock.h"
 #include "Version.h"
 
-
-//#include <fstream>
 //#include <process.h>
-
 //#include <string.h>
 
-//
 // The plugin data that Notepad++ needs
-//
 FuncItem funcItem[nbFunc];
-
-//
 // The data of Notepad++ that you can use in your plugin commands
-//
 NppData nppData;
 
 sqlite3 *g_db;
@@ -124,7 +116,7 @@ int g_indentReference;
 int g_chainLimit;
 int g_preserveSteps;
 //int g_escapeChar;
-int g_importOverWriteOption;
+//int g_importOverWriteOption;
 int g_importOverWriteConfirm;
 int g_inclusiveTriggerTextCompletion;
 int g_livePreviewBox;
@@ -240,7 +232,6 @@ void commandMenuCleanUp()
 //
 bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk, bool check0nInit) 
 {
-    //TODO: investigate how to check the items
     if (index >= nbFunc)
         return false;
 
@@ -314,7 +305,7 @@ char *findTagSQLite(char *tag, char *tagCompare, bool similar=false)
 	{
         sqlite3_bind_text(stmt, 1, tagCompare, -1, SQLITE_STATIC);
 
-        if (similar==1)
+        if (similar)
         {
             char similarTag[MAX_PATH]="";
             if (g_inclusiveTriggerTextCompletion==1) strcat(similarTag,"%");
@@ -516,7 +507,6 @@ void selectionToSnippet()
 
 void editSnippet()
 {
-    
     int index = snippetDock.getCount() - snippetDock.getSelection()-1;
     char* tempTriggerText;
     char* tempScope;
@@ -825,7 +815,7 @@ void dynamicHotspot(HWND &curScintilla, int &startingPos)
     char tagSign[] = "$[![";
     int tagSignLength = strlen(tagSign);
     char tagTail[] = "]!]";
-    int tagTailLength = strlen(tagTail);
+    //int tagTailLength = strlen(tagTail);
     
     //int tagSignLength = strlen(tagSign);
     //int tagSignLength = 4;
@@ -910,14 +900,6 @@ void executeCommand(HWND &curScintilla, int &firstPos, char* hotSpotText)
     {    
         return;
     }
-    
-    //::memset(psBuffer,0,sizeof(psBuffer));
-    //
-    //while(fgets(psBuffer, 999, pPipe))
-    //{
-    //    ::SendMessage(curScintilla, SCI_REPLACESEL, 128, (LPARAM)psBuffer);
-    //    ::memset (psBuffer,0,sizeof(psBuffer));
-    //}
 
     ::memset(psBuffer,0,sizeof(psBuffer));
 
@@ -1021,6 +1003,7 @@ void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &star
     }
 }
 
+//TODO: insertpath and insertnpppath (and/or other insert function) need refactoring
 void insertPath(TCHAR* path, HWND &curScintilla)
 {
     char pathText[MAX_PATH];
@@ -1030,7 +1013,6 @@ void insertPath(TCHAR* path, HWND &curScintilla)
 
 void insertNppPath(int msg, HWND &curScintilla)
 {
-
 	TCHAR path[MAX_PATH];
 	::SendMessage(nppData._nppHandle, msg, 0, (LPARAM)path);
 
@@ -1081,7 +1063,7 @@ bool hotSpotNavigation(HWND &curScintilla)
     char tagSign[] = "$[![";
     int tagSignLength = strlen(tagSign);
     char tagTail[] = "]!]";
-    int tagTailLength = strlen(tagTail);
+    //int tagTailLength = strlen(tagTail);
 
     char *hotSpotText;
     char *hotSpot;
@@ -1157,7 +1139,6 @@ int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, in
 {
     //int posLine = ::SendMessage(curScintilla,SCI_LINEFROMPOSITION,0,0);
         
-
     int spotType = 0;
 
     searchNext(curScintilla, "]!]");
@@ -1417,7 +1398,6 @@ void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
 
 void setConfigAndDatabase()
 {
-    
     g_modifyResponse = true;
     g_enable = true;
     g_customScope = new TCHAR[MAX_PATH];
@@ -1499,7 +1479,7 @@ void resetDefaultSettings()
     g_chainLimit = DEFAULT_CHAIN_LIMIT;
     g_preserveSteps = DEFAULT_PRESERVE_STEPS;
     //g_escapeChar = DEFAULT_ESCAPE_CHAR;
-    g_importOverWriteOption = DEFAULT_IMPORT_OVERWRITE_OPTION;
+    //g_importOverWriteOption = DEFAULT_IMPORT_OVERWRITE_OPTION;
     g_importOverWriteConfirm = DEFAULT_IMPORT_OVERWRITE_CONFIRM;
     g_inclusiveTriggerTextCompletion = DEFAULT_INCLUSIVE_TRIGGERTEXT_COMPLETION;
     g_livePreviewBox = DEFAULT_LIVE_PREVIEW_BOX;
@@ -1523,7 +1503,7 @@ void writeConfig()
     writeConfigText(g_chainLimit,TEXT("chain_limit"));
     writeConfigText(g_preserveSteps,TEXT("preserve_steps"));
     //writeConfigText(g_escapeChar,TEXT("escape_char_level"));
-    writeConfigText(g_importOverWriteOption,TEXT("import_overwrite_option"));
+    //writeConfigText(g_importOverWriteOption,TEXT("import_overwrite_option"));
     writeConfigText(g_importOverWriteConfirm,TEXT("import_overwrite_confirm"));
     writeConfigText(g_inclusiveTriggerTextCompletion,TEXT("inclusive_triggertext_completion"));
     writeConfigText(g_livePreviewBox,TEXT("live_preview_box"));
@@ -1542,7 +1522,7 @@ void loadConfig()
     g_chainLimit = GetPrivateProfileInt(TEXT("FingerText"), TEXT("chain_limit"), DEFAULT_CHAIN_LIMIT, g_iniPath);
     g_preserveSteps = GetPrivateProfileInt(TEXT("FingerText"), TEXT("preserve_steps"), DEFAULT_PRESERVE_STEPS, g_iniPath);
     //g_escapeChar = GetPrivateProfileInt(TEXT("FingerText"), TEXT("escape_char_level"), DEFAULT_ESCAPE_CHAR, g_iniPath);
-    g_importOverWriteOption = GetPrivateProfileInt(TEXT("FingerText"), TEXT("import_overwrite_option"), DEFAULT_IMPORT_OVERWRITE_OPTION, g_iniPath);
+    //g_importOverWriteOption = GetPrivateProfileInt(TEXT("FingerText"), TEXT("import_overwrite_option"), DEFAULT_IMPORT_OVERWRITE_OPTION, g_iniPath);
     g_importOverWriteConfirm = GetPrivateProfileInt(TEXT("FingerText"), TEXT("import_overwrite_confirm"), DEFAULT_IMPORT_OVERWRITE_CONFIRM, g_iniPath);
     g_inclusiveTriggerTextCompletion = GetPrivateProfileInt(TEXT("FingerText"), TEXT("inclusive_triggertext_completion"), DEFAULT_INCLUSIVE_TRIGGERTEXT_COMPLETION, g_iniPath);
     g_livePreviewBox = GetPrivateProfileInt(TEXT("FingerText"), TEXT("live_preview_box"), DEFAULT_LIVE_PREVIEW_BOX, g_iniPath);
@@ -2042,19 +2022,29 @@ void importSnippets()
     
     if (::GetOpenFileName(&ofn))
     {
+        //int conflictOverwrite = IDNO;
+        //if (g_importOverWriteOption==1)
+        //{
+        //   conflictOverwrite = ::MessageBox(nppData._nppHandle, TEXT("Do you want to overwrite the database when the imported snippets has conflicts with existing snippets? Press Yes if you want to overwrite, No if you want to keep both versions."), TEXT("FingerText"), MB_YESNO);
+        //}
+        int conflictKeepCopy = IDNO;
+        conflictKeepCopy = ::MessageBox(nppData._nppHandle, TEXT("Do you want to keep both versions if the imported snippets is conflicting with existing one?\r\n\r\nYes - Keep both versions\r\nNo - Overwrite existing version\r\nCancel - Stop importing"), TEXT("FingerText"), MB_YESNOCANCEL);
+
+        if (conflictKeepCopy == IDCANCEL) return;
+
         //::MessageBox(nppData._nppHandle, (LPCWSTR)fileName, TEXT("Trace"), MB_OK);
         std::ifstream file;
-
-        file.open((LPCWSTR)fileName);   // This part may cause problem in chinese file names
+        file.open((LPCWSTR)fileName);   // TODO: This part may cause problem in chinese file names
 
         file.seekg(0, std::ios::end);
         int fileLength = file.tellg();
         file.seekg(0, std::ios::beg);
 
-        char* fileText = new char[fileLength+1];
-        ZeroMemory(fileText,fileLength);
         if (file.is_open())
         {
+            char* fileText = new char[fileLength+1];
+            ZeroMemory(fileText,fileLength);
+
             file.read(fileText,fileLength);
             file.close();
         
@@ -2063,16 +2053,12 @@ void importSnippets()
             ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
         
             HWND curScintilla = getCurrentScintilla();
-        
-            int conflictOverwrite = IDNO;
-            if (g_importOverWriteOption==1)
-            {
-               conflictOverwrite = ::MessageBox(nppData._nppHandle, TEXT("Do you want to overwrite the database when the imported snippets has conflicts with existing snippets? Press Yes if you want to overwrite, No if you want to keep both versions."), TEXT("FingerText"), MB_YESNO);
-            }
             //::SendMessage(curScintilla, SCI_SETCODEPAGE,65001,0);
             ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)fileText);
             ::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
             ::SendMessage(curScintilla, SCI_NEWLINE, 0, 0);
+
+            delete [] fileText;
         
             int importCount=0;
             int conflictCount=0;
@@ -2137,7 +2123,7 @@ void importSnippets()
                         } else
                         {
                         //    sqlite3_finalize(stmt);
-                            if (conflictOverwrite==IDYES)
+                            if (conflictKeepCopy==IDNO)
                             {
                                 if (g_importOverWriteConfirm == 1)
                                 {
@@ -2731,7 +2717,8 @@ void settings()
  ; version                    --  Don't change this\r\n\
  ; snippet_list_order_tagtype --            0: The SnippetDock will order the snippets by trigger text\r\n\
  ;                                (default) 1: The SnippetDock will order the snippets by scope\r\n\
- ; indent_reference           --            0: The snippnet content will be inserted without any change in indentation\r\n\
+ ; indent_reference           --            0: The snippnet content will be inserted without any change in\r\n\
+ ;                                             indentation\r\n\
  ;                                (default) 1: The snippnet content will be inserted at the same indentation\r\n\
  ;                                             level as the trigger text\r\n\
  ; chain_limit                --  This is the maximum number dynamic hotspots that can be triggered in one \r\n\
@@ -2740,31 +2727,30 @@ void settings()
  ;                                is 100 \r\n\
  ; tab_tag_completion         --  (default) 0: When a snippet is not found when the user hit [tab] key, FingerText\r\n\
  ;                                             will just send a tab\r\n\
- ;                                          1: When a snippet is not found when the user hit [tab] key, FingerText will try\r\n\
- ;                                             to find the closest match snippet name\r\n\
+ ;                                          1: When a snippet is not found when the user hit [tab] key, FingerText\r\n\
+ ;                                             will try to find the closest match snippet name\r\n\
  ; live_hint_update           --            0: Turn off SnippetDock live update\r\n\
  ;                                (default) 1: Turn on SnippetDock live update\r\n\
  ; preserve_steps             --  Default is 0 and don't change it. It's for debugging purpose\r\n\
  ; escape_char_level          --  This entry is not in use anymore. Please use the 'escape_char' instead.\r\n\
  ; import_overwrite_confirm   --  (default) 0: A pop up confirmation message box everytime you overwrite a snippet.\r\n\
  ;                                          1: No confirmation message box when you overwrite a snippet.\r\n\
- ; import_overwrite_option    --  (default) 0: When there is a conflicting snippet during snippet importing, Fingertext \r\n\
-                                               will keep both copies.\r\n\
- ;                                          1: When there is a conflicting snippet during snippet importing, you may\r\n\
-                                               choose to overwrite existing snippet.\r\n\
- ; inclusive_triggertext_completion --            0: Tiggertext completion will only include triggertext which starts with \r\n\
-                                                     the characters you are typing.\r\n\
- ;                                      (default) 1: Tiggertext completion will only include triggertext which includes the\r\n\
-                                                     characters you are typing.\r\n\
- ; custom_scope               --  A user defined custom scope. For example if you put .rb here, you can use all the .rb \r\n\
-                                  snippets in any files.\r\n\
- ; escape_char                --  Any text entered after this character will not be view as snippet. For example if put <> here\r\n\
-                                  then you cannot trigger the snippet 'npp' by typing either '<npp' or '>npp' and hit tab\r\n\
+ ; import_overwrite_option    --  This entry is not in use anymore. \r\n\
+ ; inclusive_triggertext_completion --            0: Tiggertext completion will only include triggertext which starts\r\n\
+ ;                                                   with the characters you are typing.\r\n\
+ ;                                      (default) 1: Tiggertext completion will only include triggertext which\r\n\
+ ;                                                   includes the characters you are typing.\r\n\
+ ; custom_scope               --  A user defined custom scope. For example if you put .rb here, you can use all the\r\n\
+ ;                                .rb snippets in any files.\r\n\
+ ; escape_char                --  Any text entered after this character will not be view as snippet. For example\r\n\
+ ;                                if put <> here then you cannot trigger the snippet 'npp' by typing either '<npp'\r\n\
+ ;                                or '>npp' and hit tab\r\n\
         ");
         ::SendMessage(curScintilla, SCI_ANNOTATIONSETSTYLE, lineCount, STYLE_INDENTGUIDE);
         ::SendMessage(curScintilla, SCI_ANNOTATIONSETVISIBLE, lineCount, 0);
     }
 }
+
 void showHelp()
 {
     ::MessageBox(nppData._nppHandle, HELP_TEXT_FULL, TEXT("FingerText"), MB_OK);
@@ -3077,6 +3063,7 @@ void fingerText()
         if (g_editorView == false)
         {
             int specialSpot = searchNext(curScintilla, "$[![");
+            //TODO: check for "$[![(" for special spot to improve performance?
 
             //TODO: try to make all dynamic hotspots works together in the sequence of inside out
             if (specialSpot>=0)
