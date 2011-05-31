@@ -148,7 +148,6 @@ DockingDlg snippetDock;
 //#define SEPARATOR_FOUR_INDEX 16
 #define TESTING_INDEX 17
 
-//
 // Initialize your plugin data here
 // It will be called while plugin loading   
 void pluginInit(HANDLE hModule)
@@ -293,12 +292,12 @@ char *findTagSQLite(char *tag, char *tagCompare, bool similar=false)
 
     // First create the SQLite SQL statement ("prepare" it for running)
     char *sqlitePrepareStatement;
-    if (similar == false)
-    {
-        sqlitePrepareStatement = "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY tag";
-    } else
+    if (similar)
     {
         sqlitePrepareStatement = "SELECT tag FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY tag";
+    } else
+    {
+        sqlitePrepareStatement = "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY tag";
     }
     
     if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, sqlitePrepareStatement, -1, &stmt, NULL))
@@ -793,6 +792,7 @@ void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int
 // TODO: refactor the dynamic hotspot functions
 void dynamicHotspot(HWND &curScintilla, int &startingPos)
 {
+
     //char* tagSign;
     //if (hotSpotType == 1)
     //{
@@ -813,7 +813,8 @@ void dynamicHotspot(HWND &curScintilla, int &startingPos)
     int checkPoint = startingPos;    
 
     char tagSign[] = "$[![";
-    int tagSignLength = strlen(tagSign);
+    //int tagSignLength = strlen(tagSign);
+    int tagSignLength = 4;
     char tagTail[] = "]!]";
     //int tagTailLength = strlen(tagTail);
     
@@ -833,31 +834,35 @@ void dynamicHotspot(HWND &curScintilla, int &startingPos)
         //spot = searchNext(curScintilla, tagSign);
         if (spot>=0)
 	    {
+            checkPoint = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0)+1;
             searchPrev(curScintilla, tagSign); 
 
             int firstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
             int secondPos = 0;
             spotType = grabHotSpotContent(curScintilla, &hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength,true);
-   
+            
             ///////////////////
             if (spotType == 1)
             {
+                checkPoint = firstPos;
                 chainSnippet(curScintilla, firstPos, hotSpotText+5);
                 
                 limitCounter++;
             } else if (spotType == 2)
             {
+                checkPoint = firstPos;
                 keyWordSpot(curScintilla, firstPos,hotSpotText+5, startingPos, checkPoint);
                 
                 limitCounter++;
             } else if (spotType == 3)
             {
+                checkPoint = firstPos;
                 executeCommand(curScintilla, firstPos, hotSpotText+5);
                 
                 limitCounter++;
             } else
             {
-                checkPoint = secondPos+1;
+
             }
             //////////////////////
             
@@ -982,10 +987,11 @@ void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &star
         if (scriptFound>=0)
         {
             int scriptStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+            
             int selectionEnd = startingPos;
-            int selectionStart = scriptStart+strlen(hotSpotText)-3;
+            int selectionStart = scriptStart+strlen(hotSpotText)-4+2; // +2 is for \r\n, it means that only the code starting from a new line after the $<!<SCRIPT>!> is copied to the temp file.
             ::SendMessage(curScintilla,SCI_SETSEL,selectionStart,selectionEnd);
-
+            alertNumber(selectionStart);
             char* selection = new char [selectionEnd - selectionStart +1];
             ::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
             ::SendMessage(curScintilla,SCI_SETSEL,scriptStart,selectionEnd);
@@ -1061,7 +1067,8 @@ bool hotSpotNavigation(HWND &curScintilla)
 {
     // TODO: consolidate this part with dynamic hotspots?
     char tagSign[] = "$[![";
-    int tagSignLength = strlen(tagSign);
+    //int tagSignLength = strlen(tagSign);
+    int tagSignLength = 4;
     char tagTail[] = "]!]";
     //int tagTailLength = strlen(tagTail);
 

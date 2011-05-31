@@ -4,6 +4,7 @@ changelog (for developers only, include unreleased versions)
 Changed: Pop up option of whether to overwrite or keep copies in conflicting snippets
 restructure the importsnippet function
 Fixed: less memory leakage on liveupdate and snippet import
+Fixed: nested normal hotspots not triggering correctly
 Changed: update the setting hints
 
 0.5.12
