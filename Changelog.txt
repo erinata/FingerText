@@ -1,5 +1,10 @@
 changelog (for developers only, include unreleased versions)
 
+0.5.14
+
+0.5.13.1
+Try to fix selectiontosnippet AGAIN
+
 0.5.13
 Changed: Pop up option of whether to overwrite or keep copies in conflicting snippets
 restructure the importsnippet function

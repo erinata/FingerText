@@ -441,7 +441,7 @@ void selectionToSnippet()
         selection = "New snippet is here.\r\nNew snippet is here.\r\nNew snippet is here.\r\n";
     }
 
-    ::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
+    //::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
     
     if (!::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
     {
@@ -3186,14 +3186,13 @@ void testing()
     
     HWND curScintilla = getCurrentScintilla();
 
-
     // testing to upper and to lower
-    char* str = new char[200];
-    strcpy(str,"aBcDe");
-    alertCharArray(str);
-    alertCharArray(::strupr(str));
-    alertCharArray(::strlwr(str));
-    delete [] str;
+    //char* str = new char[200];
+    //strcpy(str,"aBcDe");
+    //alertCharArray(str);
+    //alertCharArray(::strupr(str));
+    //alertCharArray(::strlwr(str));
+    //delete [] str;
 
 
     //alertNumber(g_snippetListLength);
