@@ -880,8 +880,6 @@ void executeCommand(HWND &curScintilla, int &firstPos, char* hotSpotText)
         ::memset (psBuffer,0,sizeof(psBuffer));
     }
     _pclose( pPipe );
-
-
 }
 
 void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint)
@@ -897,6 +895,7 @@ void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &star
 	    
     } else if (strcmp(hotSpotText,"CUT")==0)
     {
+        //TODO: make CUT work like GET:
         ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
         ::SendMessage(curScintilla,SCI_SETSEL,startingPos-1,startingPos);
         ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
@@ -972,6 +971,20 @@ void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &star
             }
             delete [] selection;
         }
+    } else if (strncmp(hotSpotText,"CAP:",4)==0)
+    {
+        char* getTerm;
+        getTerm = new char[strlen(hotSpotText)];
+        strcpy(getTerm,hotSpotText+4);
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)::strupr(getTerm));
+        delete [] getTerm;
+    } else if (strncmp(hotSpotText,"LOW:",4)==0)
+    {
+        char* getTerm;
+        getTerm = new char[strlen(hotSpotText)];
+        strcpy(getTerm,hotSpotText+4);
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)::strlwr(getTerm));
+        delete [] getTerm;
     }
 }
 
@@ -3173,8 +3186,15 @@ void testing()
     
     HWND curScintilla = getCurrentScintilla();
 
-    exportAndClearSnippets();
-    //clearAllSnippets();
+
+    // testing to upper and to lower
+    char* str = new char[200];
+    strcpy(str,"aBcDe");
+    alertCharArray(str);
+    alertCharArray(::strupr(str));
+    alertCharArray(::strlwr(str));
+    delete [] str;
+
 
     //alertNumber(g_snippetListLength);
     //alertCharArray(getLangTagType());
