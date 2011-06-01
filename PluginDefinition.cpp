@@ -133,10 +133,11 @@ DockingDlg snippetDock;
 #define SELECTION_TO_SNIPPETS_INDEX 4
 #define IMPORT_SNIPPETS_INDEX 5
 #define EXPORT_SNIPPETS_INDEX 6
-//#define SEPARATOR_ONE_INDEX 7
-#define TAG_COMPLETE_INDEX 8
-//#define SEPARATOR_TWO_INDEX 9
-#define INSERT_HOTSPOT_SIGN_INDEX 10
+#define EXPORT_AND_CLEAR_INDEX 7
+//#define SEPARATOR_ONE_INDEX 8
+#define TAG_COMPLETE_INDEX 9
+//#define SEPARATOR_TWO_INDEX 10
+#define INSERT_HOTSPOT_SIGN_INDEX 11
 //#define INSERT_WARMSPOT_SIGN_INDEX 11
 //#define INSERT_CHAIN_SIGN_INDEX 10
 //#define INSERT_KEY_SIGN_INDEX 11
@@ -200,7 +201,8 @@ void commandMenuInit()
     setCommand(TOGGLE_ENABLE_INDEX, TEXT("Toggle On/Off FingerText"), toggleDisable, NULL, false);
     setCommand(SELECTION_TO_SNIPPETS_INDEX, TEXT("Create Snippet from Selection"),  selectionToSnippet, NULL, false);
     setCommand(IMPORT_SNIPPETS_INDEX, TEXT("Import Snippets"), importSnippets, NULL, false);
-    setCommand(EXPORT_SNIPPETS_INDEX, TEXT("Export Snippets"), exportSnippets, NULL, false);
+    setCommand(EXPORT_SNIPPETS_INDEX, TEXT("Export Snippets"), exportSnippetsOnly, NULL, false);
+    setCommand(EXPORT_AND_CLEAR_INDEX, TEXT("Export and Delete All Snippets"), exportAndClearSnippets, NULL, false);
     //setCommand(SEPARATOR_ONE_INDEX, TEXT("---"), NULL, NULL, false);
     setCommand(TAG_COMPLETE_INDEX, TEXT("TriggerText Completion"), tagComplete, NULL, false);
     //setCommand(SEPARATOR_TWO_INDEX, TEXT("---"), NULL, NULL, false);
@@ -215,20 +217,17 @@ void commandMenuInit()
     setCommand(ABOUT_INDEX, TEXT("About"), showAbout, NULL, false);
     //setCommand(SEPARATOR_FOUR_INDEX, TEXT("---"), NULL, NULL, false);
     setCommand(TESTING_INDEX, TEXT("Testing"), testing, NULL, false);
-    //testing();
 }
-//
+
 // Here you can do the clean up (especially for the shortcut)
-//
 void commandMenuCleanUp()
 {
     //delete [] snippetEditTemplate;
     delete funcItem[0]._pShKey;
 	// Don't forget to deallocate your shortcut here
 }
-//
+
 // This function help you to initialize your plugin commands
-//
 bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk, bool check0nInit) 
 {
     if (index >= nbFunc)
@@ -422,38 +421,6 @@ int searchPrev(HWND &curScintilla, char* searchText)
     ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
     return ::SendMessage(curScintilla, SCI_SEARCHPREV, 0,(LPARAM)searchText);
 }
-//void insertSnippet()
-//{
-//    sqlite3_stmt *stmt;
-//
-//    HWND curScintilla = getCurrentScintilla();
-//    int posCurrent = ::SendMessage(curScintilla, SCI_GETCURRENTPOS,0,0);
-//
-//    int index = snippetDock.getCount() - snippetDock.getSelection()-1;
-//    
-//    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType=? AND tag=?", -1, &stmt, NULL))
-//	{
-//		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
-//		sqlite3_bind_text(stmt, 1, g_snippetCache[index].scope , -1, SQLITE_STATIC);
-//		sqlite3_bind_text(stmt, 2, g_snippetCache[index].triggerText, -1, SQLITE_STATIC);
-//
-//		// Run the query with sqlite3_step
-//		if(SQLITE_ROW == sqlite3_step(stmt))  // SQLITE_ROW 100 sqlite3_step() has another row ready
-//		{
-//			const char* snippetText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
-//            char * tempSnippetText;
-//            tempSnippetText = new char [strlen(snippetText)+1];
-//            strcpy(tempSnippetText, snippetText);
-//            replaceTag(curScintilla, tempSnippetText, posCurrent, posCurrent);
-//            
-//            delete [] tempSnippetText;
-//            //::SendMessage(curScintilla, SCI_INSERTTEXT, posCurrent, (LPARAM)snippetText);
-//		}	
-//	}
-//	sqlite3_finalize(stmt);
-//    ::SendMessage(curScintilla,SCI_GRABFOCUS,0,0); 
-//
-//}
 
 void selectionToSnippet()
 {
@@ -487,7 +454,6 @@ void selectionToSnippet()
     promptSaveSnippet(TEXT("Do you wish to save the current snippet before creating a new one?"));
     
     ::SendMessage(curScintilla,SCI_CLEARALL,0,0);
-    //TODO: there is a bug here. if you create snippet from selection by selecting some text at line 0 1 2 3. The annaotation will not only go into the snippet editor, but also to the original document.
 
     ::SendMessage(curScintilla,SCI_INSERTTEXT,::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)SNIPPET_EDIT_TEMPLATE);
     ::SendMessage(curScintilla,SCI_INSERTTEXT,::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"triggertext\r\nGLOBAL\r\n");
@@ -970,7 +936,7 @@ void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &star
     {
         insertPath(g_fttempPath,curScintilla);
 
-    }else if (strncmp(hotSpotText,"GET:",4)==0) 
+    } else if (strncmp(hotSpotText,"GET:",4)==0) 
     {
         //TODO: write a function to get the command and parameter sepearately. or turn this whole thing into a new type of hotspot
         //TODO: putting this chunk into a separate function
@@ -1673,7 +1639,6 @@ void snippetHintUpdate()
 {     
     if ((!g_editorView) && (g_liveHintUpdate==1))
     {
-        
         g_liveHintUpdate=0;
         HWND curScintilla = getCurrentScintilla();
         if ((::SendMessage(curScintilla,SCI_GETMODIFY,0,0)!=0) && (::SendMessage(curScintilla,SCI_SELECTIONISRECTANGLE,0,0)==0))
@@ -1833,7 +1798,6 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
             }
             else
             {
-                
                 break;  
             }
         }
@@ -1910,11 +1874,53 @@ void clearCache()
 }
 
 
-void exportSnippets()
+void exportAndClearSnippets()
+{
+    if (exportSnippets())
+    {
+        int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Are you sure that you want to clear the whole snippet database?"), TEXT("FingerText"), MB_YESNO);
+        if (messageReturn == IDYES)
+        {
+            clearAllSnippets();
+            ::MessageBox(nppData._nppHandle, TEXT("All snippets are deleted."), TEXT("FingerText"), MB_OK);
+        } else 
+        {
+            ::MessageBox(nppData._nppHandle, TEXT("Snippet clearing aborted."), TEXT("FingerText"), MB_OK);
+        }
+    }
+}
+
+void exportSnippetsOnly()
+{
+    exportSnippets();
+}
+
+void clearAllSnippets()
+{
+    sqlite3_stmt *stmt;
+                
+    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets", -1, &stmt, NULL))
+    {
+        sqlite3_step(stmt);
+        sqlite3_finalize(stmt);
+    }
+
+    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "VACUUM", -1, &stmt, NULL))
+    {
+        sqlite3_step(stmt);
+        sqlite3_finalize(stmt);
+    }
+
+    updateDockItems(false,false);
+}
+
+bool exportSnippets()
 {
     //TODO: Can actually add some informtiaon at the end of the exported snippets......can be useful information like version number or just describing the package
 
     g_liveHintUpdate--;  // Temporary turn off live update as it disturb exporting
+
+    bool success = false;
 
     HWND curScintilla = getCurrentScintilla();
 
@@ -1937,7 +1943,6 @@ void exportSnippets()
         ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
 
         g_snippetListLength = 100000;
-
         updateDockItems(true,true,"%");
 
         int exportCount = 0;
@@ -1955,6 +1960,7 @@ void exportSnippets()
             }
         }
         ::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, 0, (LPARAM)fileName);
+        success = true;
 
         wchar_t exportCountText[35] = TEXT("");
 
@@ -1978,6 +1984,7 @@ void exportSnippets()
     g_snippetListLength = GetPrivateProfileInt(TEXT("FingerText"), TEXT("snippet_list_length"), DEFAULT_SNIPPET_LIST_LENGTH, g_iniPath);
     g_liveHintUpdate++;
 
+    return success;
     
 }
 
@@ -2034,7 +2041,11 @@ void importSnippets()
         int conflictKeepCopy = IDNO;
         conflictKeepCopy = ::MessageBox(nppData._nppHandle, TEXT("Do you want to keep both versions if the imported snippets is conflicting with existing one?\r\n\r\nYes - Keep both versions\r\nNo - Overwrite existing version\r\nCancel - Stop importing"), TEXT("FingerText"), MB_YESNOCANCEL);
 
-        if (conflictKeepCopy == IDCANCEL) return;
+        if (conflictKeepCopy == IDCANCEL)
+        {
+            ::MessageBox(nppData._nppHandle, TEXT("Snippet importing aborted."), TEXT("FingerText"), MB_OK);
+            return;
+        }
 
         //::MessageBox(nppData._nppHandle, (LPCWSTR)fileName, TEXT("Trace"), MB_OK);
         std::ifstream file;
@@ -2661,7 +2672,6 @@ int promptSaveSnippet(TCHAR* message)
             saveSnippet();
         } else if (::SendMessage(curScintilla,SCI_GETMODIFY,0,0)!=0)
         {
-        
             messageReturn=::MessageBox(nppData._nppHandle, message, TEXT("FingerText"), MB_YESNO);
             if (messageReturn==IDYES)
             {
@@ -3163,6 +3173,8 @@ void testing()
     
     HWND curScintilla = getCurrentScintilla();
 
+    exportAndClearSnippets();
+    //clearAllSnippets();
 
     //alertNumber(g_snippetListLength);
     //alertCharArray(getLangTagType());

@@ -6,6 +6,7 @@ restructure the importsnippet function
 Fixed: less memory leakage on liveupdate and snippet import
 Fixed: nested normal hotspots not triggering correctly
 Changed: update the setting hints
+Added: export and delete all snippets
 
 0.5.12
 Added: Primitive implementation of Language based snippets
