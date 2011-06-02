@@ -168,6 +168,8 @@ void refreshAnnotation();
 void settings();
 void showHelp();
 void showAbout();
+char* getDateTime(char *format, bool getDate = true);
+void convertToWideChar(char* orig, wchar_t **wideChar);
 void insertDateTime(bool date,int type, HWND &curScintilla);
 void insertPath(TCHAR* path, HWND &curScintilla);
 void insertNppPath(int msg, HWND &curScintilla);

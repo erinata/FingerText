@@ -1733,14 +1733,14 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
 	if (g_dbOpen && SQLITE_OK == sqlitePrepare)
 	{
         char *customScope = NULL;
-        customScope = new char[MAX_PATH];
+        //customScope = new char[MAX_PATH];
         
         char *tagType1 = NULL;
         TCHAR *fileType1 = NULL;
-		fileType1 = new TCHAR[MAX_PATH];
+		//fileType1 = new TCHAR[MAX_PATH];
         char *tagType2 = NULL;
         TCHAR *fileType2 = NULL;
-		fileType2 = new TCHAR[MAX_PATH];
+		//fileType2 = new TCHAR[MAX_PATH];
 
         if (withAll)
         {
@@ -1865,11 +1865,14 @@ void populateDockItems()
             }
             strcat(newText,g_snippetCache[j].triggerText);
 
-            size_t origsize = strlen(newText) + 1;
-            const size_t newsize = 400;
-            size_t convertedChars = 0;
-            wchar_t convertedTagText[newsize];
-            mbstowcs_s(&convertedChars, convertedTagText, origsize, newText, _TRUNCATE);
+            //size_t origsize = strlen(newText) + 1;
+            //const size_t newsize = 400;
+            //size_t convertedChars = 0;
+            //wchar_t convertedTagText[newsize];
+            //mbstowcs_s(&convertedChars, convertedTagText, origsize, newText, _TRUNCATE);
+
+            wchar_t* convertedTagText;
+            convertToWideChar(newText,&convertedTagText);
 
             snippetDock.addDockItem(convertedTagText);
         }
@@ -2012,6 +2015,44 @@ char* cleanupString( char *str )
     return str;
 }  
 
+char* getDateTime(char *format, bool getDate)
+{
+    HWND curScintilla = getCurrentScintilla();
+
+    TCHAR result[128];
+    SYSTEMTIME formatTime;
+	::GetLocalTime(&formatTime);
+
+    //TODO: make a function for wide char transformation
+    wchar_t* formatWide;
+    convertToWideChar(format, &formatWide);
+
+    if (getDate)
+    {
+        ::GetDateFormat(LOCALE_USER_DEFAULT, 0, &formatTime, formatWide, result, 128);
+    } else
+    {
+        ::GetTimeFormat(LOCALE_USER_DEFAULT, 0, &formatTime, formatWide, result, 128);
+    }
+    
+    delete [] formatWide;
+    
+    char* resultText;// = new char[MAX_PATH];
+    convertToUTF8(result,&resultText);
+	//WideCharToMultiByte((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, result, -1, resultText, MAX_PATH, NULL, NULL);
+    return resultText;
+}
+
+void convertToWideChar(char* orig, wchar_t **wideChar)
+{
+    size_t origsize = strlen(orig) + 1;
+    size_t convertedChars = 0;
+    *wideChar = new wchar_t[origsize*4+1];
+    mbstowcs_s(&convertedChars, *wideChar, origsize, orig, _TRUNCATE);
+}
+                                        
+                                
+
 //TODO: importsnippet and savesnippets need refactoring sooooo badly
 //TODO: Or it should be rewrite, import snippet should open the snippetediting.ftb, turn or annotation, and cut and paste the snippet on to that file and use the saveSnippet function
 void importSnippets()
@@ -2052,7 +2093,7 @@ void importSnippets()
         //   conflictOverwrite = ::MessageBox(nppData._nppHandle, TEXT("Do you want to overwrite the database when the imported snippets has conflicts with existing snippets? Press Yes if you want to overwrite, No if you want to keep both versions."), TEXT("FingerText"), MB_YESNO);
         //}
         int conflictKeepCopy = IDNO;
-        conflictKeepCopy = ::MessageBox(nppData._nppHandle, TEXT("Do you want to keep both versions if the imported snippets is conflicting with existing one?\r\n\r\nYes - Keep both versions\r\nNo - Overwrite existing version\r\nCancel - Stop importing"), TEXT("FingerText"), MB_YESNOCANCEL);
+        conflictKeepCopy = ::MessageBox(nppData._nppHandle, TEXT("Do you want to keep both versions if the imported snippets are conflicting with existing one?\r\n\r\nYes - Keep both versions\r\nNo - Overwrite existing version\r\nCancel - Stop importing"), TEXT("FingerText"), MB_YESNOCANCEL);
 
         if (conflictKeepCopy == IDCANCEL)
         {
@@ -2159,7 +2200,7 @@ void importSnippets()
                                     // TODO: try showing the conflict message on the editor
                         
                                     ::SendMessage(curScintilla,SCI_GOTOLINE,0,0);
-                        
+                                    //TODO: refactor this repeated replacesel action
                                     ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"\r\nConflicting Snippet: \r\n\r\n     ");
                                     ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)tagText);
                                     ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"  <");
@@ -2217,23 +2258,26 @@ void importSnippets()
                                 {
                                     importCount++;
                                     
+                                    
+                                    //TODO: add file name to the stamp
+                                    char* dateText = getDateTime("yyyyMMdd");
+                                    char* timeText = getDateTime("HHmmss",false);
+                                    /////////////
+                                        //TCHAR time[128];
+                                        //TCHAR date[128];
+                                        //SYSTEMTIME formatTime;
+	                                    //::GetLocalTime(&formatTime);
+                                        ////::GetTimeFormat(LOCALE_USER_DEFAULT, TIME_FORCE24HOURFORMAT + TIME_NOTIMEMARKER, &formatTime, NULL, time, 128);
+                                        //::GetTimeFormat(LOCALE_USER_DEFAULT, 0, &formatTime, TEXT("HHmmss"), time, 128);
+                                        //::GetDateFormat(LOCALE_USER_DEFAULT, 0, &formatTime, TEXT("yyyyMMdd"), date, 128);
+                                        //
+                                        //char timeText[MAX_PATH];
+	                                    //WideCharToMultiByte((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, time, -1, timeText, MAX_PATH, NULL, NULL);
+                                        //char dateText[MAX_PATH];
+	                                    //WideCharToMultiByte((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, date, -1, dateText, MAX_PATH, NULL, NULL);
+                                    //////////////
                                     char* tagTextsuffixed;
-                                    tagTextsuffixed = new char [strlen(tagText)+255];
-                                
-                                
-                                    //TODO: refactor the timestamp generation to a new function
-                                        TCHAR time[128];
-                                        TCHAR date[128];
-                                        SYSTEMTIME formatTime;
-	                                    ::GetLocalTime(&formatTime);
-                                        //::GetTimeFormat(LOCALE_USER_DEFAULT, TIME_FORCE24HOURFORMAT + TIME_NOTIMEMARKER, &formatTime, NULL, time, 128);
-                                        ::GetTimeFormat(LOCALE_USER_DEFAULT, 0, &formatTime, TEXT("HHmmss"), time, 128);
-                                        ::GetDateFormat(LOCALE_USER_DEFAULT, 0, &formatTime, TEXT("yyyyMMdd"), date, 128);
-                                
-                                        char timeText[MAX_PATH];
-	                                    WideCharToMultiByte((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, time, -1, timeText, MAX_PATH, NULL, NULL);
-                                        char dateText[MAX_PATH];
-	                                    WideCharToMultiByte((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, date, -1, dateText, MAX_PATH, NULL, NULL);
+                                    tagTextsuffixed = new char [strlen(tagText)+256];
                                 
                                     strcpy(tagTextsuffixed,tagText);
                                     strcat(tagTextsuffixed,".Conflict");
@@ -2248,6 +2292,8 @@ void importSnippets()
                                     //sqlite3_finalize(stmt);
                                     conflictCount++;
                                     delete [] tagTextsuffixed;
+                                    delete [] dateText;
+                                    delete [] timeText;
                                 }
                             }
                         }
@@ -3186,6 +3232,11 @@ void testing()
     
     HWND curScintilla = getCurrentScintilla();
 
+    //test using the getDateTime function
+    char* date = getDateTime("yyyyMMdd");
+    alertCharArray(date);
+    delete [] date;
+
     // testing to upper and to lower
     //char* str = new char[200];
     //strcpy(str,"aBcDe");
@@ -3410,11 +3461,14 @@ void alertNumber(int input)
 }
 void alertCharArray(char* input)
 {
-    size_t origsize = strlen(input) + 1;
-    const size_t newsize = 1000;
-    size_t convertedChars = 0;
-    wchar_t wcstring[newsize];
-    mbstowcs_s(&convertedChars, wcstring, origsize, input, _TRUNCATE);
+    wchar_t* wcstring;
+    convertToWideChar(input, &wcstring);
+    
+    //size_t origsize = strlen(input) + 1;
+    //const size_t newsize = 1000;
+    //size_t convertedChars = 0;
+    //wchar_t wcstring[newsize];
+    //mbstowcs_s(&convertedChars, wcstring, origsize, input, _TRUNCATE);
     ::MessageBox(nppData._nppHandle, wcstring, TEXT("Trace"), MB_OK);
 }
 

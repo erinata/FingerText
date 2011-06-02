@@ -285,6 +285,7 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 
 == Tested with
 
+- Notepad++ 3.9.1(Unicode), Windows 7 Ultimate 64bit 
 - Notepad++ 3.8.7(Unicode), Windows 7 Ultimate 64bit 
 - Notepad++ 3.8.6(Unicode), Windows 7 Ultimate 64bit 
 
