@@ -90,7 +90,6 @@ bool g_newUpdate;
 bool g_modifyResponse;
 bool g_enable;
 bool g_editorView;
-
 // Config file content
 #define DEFAULT_SNIPPET_LIST_LENGTH 100
 #define DEFAULT_SNIPPET_LIST_ORDER_TAG_TYPE 1
@@ -247,6 +246,12 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //----------------------------------------------//
 //-- STEP 4. DEFINE YOUR ASSOCIATED FUNCTIONS --//
 //----------------------------------------------//
+
+void initialize()
+{
+    HWND curScintilla = getCurrentScintilla();
+    ::SendMessage(curScintilla,SCI_SETMULTIPASTE,1,0); 
+}
 
 void toggleDisable()
 {
@@ -405,12 +410,6 @@ void upgradeMessage()
     }
 }
 
-void initialize()
-{
-    HWND curScintilla = getCurrentScintilla();
-    ::SendMessage(curScintilla,SCI_SETMULTIPASTE,1,0); 
-}
-
 int searchNext(HWND &curScintilla, char* searchText)
 {
     ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
@@ -520,9 +519,7 @@ void editSnippet()
 
             g_editorView = true;
             refreshAnnotation();
-
 		}
-
 	}
     
 	sqlite3_finalize(stmt);
@@ -556,7 +553,6 @@ void deleteSnippet()
     
     updateDockItems(false,false);    
 }
-
 
 bool getLineChecked(char **buffer, HWND &curScintilla, int lineNumber, TCHAR* errorText)
 {
@@ -836,6 +832,7 @@ void dynamicHotspot(HWND &curScintilla, int &startingPos)
         
     } while ((spot>=0) && (limitCounter<g_chainLimit));
 
+    //TODO: loosen the limit to the limit of special spot, and ++limit for every search so that less frezze will happen
     if (limitCounter>=g_chainLimit)
     {
         ::MessageBox(nppData._nppHandle, TEXT("Dynamic hotspots triggering limit exceeded."), TEXT("FingerText"), MB_OK);
@@ -893,32 +890,19 @@ void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &star
     {
         ::SendMessage(curScintilla,SCI_PASTE,0,0);
 	    
-    } else if (strcmp(hotSpotText,"CUT")==0)
+    } else if (strcmp(hotSpotText,"DATE")==0)
     {
-        //TODO: make CUT work like GET:
-        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
-        ::SendMessage(curScintilla,SCI_SETSEL,startingPos-1,startingPos);
-        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
-        ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos-1,0);
-        ::SendMessage(curScintilla,SCI_WORDLEFTEXTEND,0,0);
-        startingPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-        checkPoint = startingPos;
-        ::SendMessage(curScintilla,SCI_CUT,0,0);
-    } else if (strcmp(hotSpotText,"DATESHORT")==0) //TODO: more flexible date and time
-    {
-        insertDateTime(true,DATE_SHORTDATE,curScintilla);
-	    
-    } else if (strcmp(hotSpotText,"DATELONG")==0)
-    {
-        insertDateTime(true,DATE_LONGDATE,curScintilla);
+        char* dateText = getDateTime(NULL,true,DATE_LONGDATE);
+        ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)dateText);
+        delete [] dateText;
+        //insertDateTime(true,DATE_LONGDATE,curScintilla);
         
-    } else if (strcmp(hotSpotText,"TIMESHORT")==0)
+    } else if (strcmp(hotSpotText,"TIME")==0)
     {
-        insertDateTime(false,TIME_NOSECONDS,curScintilla);
-        
-    } else if (strcmp(hotSpotText,"TIMELONG")==0)
-    {
-        insertDateTime(false,0,curScintilla);
+        char* timeText = getDateTime(NULL,false,0);
+        ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)timeText);
+        delete [] timeText;
+        //insertDateTime(false,0,curScintilla);
     } else if (strcmp(hotSpotText,"FILENAME")==0)
     {
         insertNppPath(NPPM_GETNAMEPART,curScintilla);
@@ -938,54 +922,223 @@ void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &star
     } else if (strncmp(hotSpotText,"GET:",4)==0) 
     {
         //TODO: write a function to get the command and parameter sepearately. or turn this whole thing into a new type of hotspot
-        //TODO: putting this chunk into a separate function
         //TODO: cater the cse where hotspottext length is 4 (there is no argument passed)
-
+        //TODO: refactor GET, GET:, GETALL, GETLINE, CUT, CUT:,CUTALL, CUTLINE
+        
         emptyFile(g_fttempPath);
         char* getTerm;
         getTerm = new char[strlen(hotSpotText)];
         strcpy(getTerm,hotSpotText+4);
         ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
         int scriptFound = -1;
-        if (strlen(getTerm)>0) scriptFound = searchPrev(curScintilla,getTerm);
+        if (strlen(getTerm)>0)
+        {
+            ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos-1,0);
+            scriptFound = searchPrev(curScintilla,getTerm);
+        }
         delete [] getTerm;
         if (scriptFound>=0)
         {
             int scriptStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
             
-            int selectionEnd = startingPos;
-            int selectionStart = scriptStart+strlen(hotSpotText)-4+2; // +2 is for \r\n, it means that only the code starting from a new line after the $<!<SCRIPT>!> is copied to the temp file.
-            ::SendMessage(curScintilla,SCI_SETSEL,selectionStart,selectionEnd);
-            alertNumber(selectionStart);
-            char* selection = new char [selectionEnd - selectionStart +1];
-            ::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
-            ::SendMessage(curScintilla,SCI_SETSEL,scriptStart,selectionEnd);
-            ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
-            startingPos = startingPos - (selectionEnd - scriptStart);
-            checkPoint = checkPoint - (selectionEnd - scriptStart);
-            std::ofstream myfile(g_fttempPath);
-            if (myfile.is_open())
+            int selectionEnd = startingPos-1; // -1 because the space before the snippet tag should not be included
+            int selectionStart = scriptStart+strlen(hotSpotText)-4;
+            if (selectionEnd>=selectionStart)
             {
-                myfile << selection;
-                myfile.close();
+                ::SendMessage(curScintilla,SCI_SETSEL,selectionStart,selectionEnd);
+                char* selection = new char [selectionEnd - selectionStart +1];
+                ::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
+                ::SendMessage(curScintilla,SCI_SETSEL,scriptStart,selectionEnd+1); //+1 to make up the -1 in setting the selection End
+                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+                startingPos = startingPos - (selectionEnd - scriptStart + 1); //+1 to make up the -1 in setting the selection End
+                checkPoint = checkPoint - (selectionEnd - scriptStart + 1); //+1 to make up the -1 in setting the selection End
+                std::ofstream myfile(g_fttempPath, std::ios::binary); // need to open in binary so that there will not be extra spaces written to the document
+                if (myfile.is_open())
+                {
+                    myfile << selection;
+                    myfile.close();
+                }
+                delete [] selection;
+            } else
+            {
+                alertCharArray("keyword GET: caused an error.");
             }
-            delete [] selection;
+            
         }
-    } else if (strncmp(hotSpotText,"CAP:",4)==0)
+    } else if (strcmp(hotSpotText,"GET")==0)
     {
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+        ::SendMessage(curScintilla,SCI_SETSEL,startingPos-1,startingPos);
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+        ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos-1,0);
+        ::SendMessage(curScintilla,SCI_WORDLEFTEXTEND,0,0);
+        char* selection = new char [startingPos -1 - ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0) +1];
+        ::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+        startingPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+        checkPoint = startingPos;
+        std::ofstream myfile(g_fttempPath, std::ios::binary);
+        if (myfile.is_open())
+        {
+            myfile << selection;
+            myfile.close();
+        }
+        delete [] selection;
+
+    } else if (strcmp(hotSpotText,"GETLINE")==0)
+    {
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+        ::SendMessage(curScintilla,SCI_SETSEL,startingPos-1,startingPos);
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+        ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos-1,0);
+        ::SendMessage(curScintilla,SCI_HOMEEXTEND,0,0);
+        char* selection = new char [startingPos -1 - ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0) +1];
+        ::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+        startingPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+        checkPoint = startingPos;
+        std::ofstream myfile(g_fttempPath, std::ios::binary);
+        if (myfile.is_open())
+        {
+            myfile << selection;
+            myfile.close();
+        }
+        delete [] selection;
+
+    } else if (strcmp(hotSpotText,"GETALL")==0)
+    {
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+        ::SendMessage(curScintilla,SCI_SETSEL,startingPos-1,startingPos);
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+        ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos-1,0);
+        ::SendMessage(curScintilla,SCI_DOCUMENTSTARTEXTEND,0,0);
+        char* selection = new char [startingPos -1 - ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0) +1];
+        ::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+        startingPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+        checkPoint = startingPos;
+        std::ofstream myfile(g_fttempPath, std::ios::binary);
+        if (myfile.is_open())
+        {
+            myfile << selection;
+            myfile.close();
+        }
+        delete [] selection;
+
+    } else if (strncmp(hotSpotText,"CUT:",4)==0) 
+    {
+        emptyFile(g_fttempPath);
         char* getTerm;
         getTerm = new char[strlen(hotSpotText)];
         strcpy(getTerm,hotSpotText+4);
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+        int scriptFound = -1;
+        if (strlen(getTerm)>0)
+        {
+            ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos-1,0);
+            scriptFound = searchPrev(curScintilla,getTerm);
+        }
+        delete [] getTerm;
+        if (scriptFound>=0)
+        {
+            int scriptStart = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+            
+            int selectionEnd = startingPos-1; // -1 because the space before the snippet tag should not be included
+            int selectionStart = scriptStart+strlen(hotSpotText)-4;
+            if (selectionEnd>=selectionStart)
+            {
+                ::SendMessage(curScintilla,SCI_SETSEL,selectionStart,selectionEnd);
+                ::SendMessage(curScintilla,SCI_COPY,0,0);
+                ::SendMessage(curScintilla,SCI_SETSEL,scriptStart,selectionEnd+1); //+1 to make up the -1 in setting the selection End
+                ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+                startingPos = startingPos - (selectionEnd - scriptStart + 1); //+1 to make up the -1 in setting the selection End
+                checkPoint = checkPoint - (selectionEnd - scriptStart + 1); //+1 to make up the -1 in setting the selection End
+            } else
+            {
+                alertCharArray("keyword CUT: caused an error.");
+            }
+            
+        }
+    } else if (strcmp(hotSpotText,"CUT")==0)
+    {
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+        ::SendMessage(curScintilla,SCI_SETSEL,startingPos-1,startingPos);
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+        ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos-1,0);
+        ::SendMessage(curScintilla,SCI_WORDLEFTEXTEND,0,0);
+        startingPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+        checkPoint = startingPos;
+        ::SendMessage(curScintilla,SCI_CUT,0,0);
+    }  else if (strcmp(hotSpotText,"CUTALL")==0)
+    {
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+        ::SendMessage(curScintilla,SCI_SETSEL,startingPos-1,startingPos);
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+        ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos-1,0);
+        ::SendMessage(curScintilla,SCI_DOCUMENTSTARTEXTEND,0,0);
+        startingPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+        checkPoint = startingPos;
+        ::SendMessage(curScintilla,SCI_CUT,0,0);
+    }  else if (strcmp(hotSpotText,"CUTLINE")==0)
+    {
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+        ::SendMessage(curScintilla,SCI_SETSEL,startingPos-1,startingPos);
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+        ::SendMessage(curScintilla,SCI_GOTOPOS,startingPos-1,0);
+        ::SendMessage(curScintilla,SCI_HOMEEXTEND,0,0);
+        startingPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+        checkPoint = startingPos;
+        ::SendMessage(curScintilla,SCI_CUT,0,0);
+    } else if (strncmp(hotSpotText,"UPPER:",6)==0)
+    {
+        char* getTerm;
+        getTerm = new char[strlen(hotSpotText)];
+        strcpy(getTerm,hotSpotText+6);
         ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)::strupr(getTerm));
         delete [] getTerm;
-    } else if (strncmp(hotSpotText,"LOW:",4)==0)
+    } else if (strncmp(hotSpotText,"LOWER:",6)==0)
     {
         char* getTerm;
         getTerm = new char[strlen(hotSpotText)];
-        strcpy(getTerm,hotSpotText+4);
+        strcpy(getTerm,hotSpotText+6);
         ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)::strlwr(getTerm));
         delete [] getTerm;
+    } else if (strncmp(hotSpotText,"TIME:",5)==0)
+    {
+        char* getTerm;
+        getTerm = new char[strlen(hotSpotText)];
+        strcpy(getTerm,hotSpotText+5);
+        char* timeReturn = getDateTime(getTerm,false);
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)timeReturn);
+        delete [] timeReturn;
+        delete [] getTerm;
+    } else if (strncmp(hotSpotText,"DATE:",5)==0)
+    {
+        char* getTerm;
+        getTerm = new char[strlen(hotSpotText)];
+        strcpy(getTerm,hotSpotText+5);
+        char* dateReturn = getDateTime(getTerm);
+        ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)dateReturn);
+        delete [] dateReturn;
+        delete [] getTerm;
     }
+
+    //else if (strcmp(hotSpotText,"DATESHORT")==0)
+    //{
+    //    char* dateText = getDateTime(NULL,true,DATE_SHORTDATE);
+    //    ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)dateText);
+    //    delete [] dateText;
+    //    //insertDateTime(true,DATE_SHORTDATE,curScintilla);
+	//    
+    //} 
+    //else if (strcmp(hotSpotText,"TIMESHORT")==0)
+    //{
+    //    char* timeText = getDateTime(NULL,false,TIME_NOSECONDS);
+    //    ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)timeText);
+    //    delete [] timeText;
+    //    //insertDateTime(false,TIME_NOSECONDS,curScintilla);
+    //    
+    //} 
 }
 
 //TODO: insertpath and insertnpppath (and/or other insert function) need refactoring
@@ -1006,22 +1159,50 @@ void insertNppPath(int msg, HWND &curScintilla)
 	::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)pathText);
 }
 
-void insertDateTime(bool date,int type, HWND &curScintilla)
+//void insertDateTime(bool date,int type, HWND &curScintilla)
+//{
+//    TCHAR time[128];
+//    SYSTEMTIME formatTime;
+//	::GetLocalTime(&formatTime);
+//    if (date)
+//    {
+//        ::GetDateFormat(LOCALE_USER_DEFAULT, type, &formatTime, NULL, time, 128);
+//    } else
+//    {
+//        ::GetTimeFormat(LOCALE_USER_DEFAULT, type, &formatTime, NULL, time, 128);
+//    }
+//	
+//	char timeText[MAX_PATH];
+//	WideCharToMultiByte((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, time, -1, timeText, MAX_PATH, NULL, NULL);
+//	::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)timeText);
+//}
+
+char* getDateTime(char *format, bool getDate, int flags)
 {
-    TCHAR time[128];
+    HWND curScintilla = getCurrentScintilla();
+
+    TCHAR result[128];
     SYSTEMTIME formatTime;
 	::GetLocalTime(&formatTime);
-    if (date)
+
+    //TODO: make a function for wide char transformation
+    wchar_t* formatWide;
+    convertToWideChar(format, &formatWide);
+
+    if (getDate)
     {
-        ::GetDateFormat(LOCALE_USER_DEFAULT, type, &formatTime, NULL, time, 128);
+        ::GetDateFormat(LOCALE_USER_DEFAULT, flags, &formatTime, formatWide, result, 128);
     } else
     {
-        ::GetTimeFormat(LOCALE_USER_DEFAULT, type, &formatTime, NULL, time, 128);
+        ::GetTimeFormat(LOCALE_USER_DEFAULT, flags, &formatTime, formatWide, result, 128);
     }
-	
-	char timeText[MAX_PATH];
-	WideCharToMultiByte((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, time, -1, timeText, MAX_PATH, NULL, NULL);
-	::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)timeText);
+    
+    if (format) delete [] formatWide;
+    
+    char* resultText;// = new char[MAX_PATH];
+    convertToUTF8(result,&resultText);
+	//WideCharToMultiByte((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, result, -1, resultText, MAX_PATH, NULL, NULL);
+    return resultText;
 }
 
 //void goToWarmSpot()
@@ -1068,7 +1249,7 @@ bool hotSpotNavigation(HWND &curScintilla)
         int tempPos[100];
         ::SendMessage(curScintilla,SCI_GOTOPOS,firstPos,0);
         int i=1;
-        //TODO: still a bug.....hotspot with the same name cannot be next to each others (can be a bug in npp?)
+        //TODO: still a bug.....hotspot with the same name cannot be next to each others. Its a bug in scintilla and the author say it will not be fixed. So need some customized fix for Fingertext.
 
         for (i=1;i<=98;i++)
         {
@@ -1077,15 +1258,12 @@ bool hotSpotNavigation(HWND &curScintilla)
             hotSpotFound = searchNext(curScintilla, hotSpot);
             if ((hotSpotFound>=0) && strlen(hotSpotText)>0)
             {
-                //::MessageBox(nppData._nppHandle, TEXT(">=0"), TEXT("Trace"), MB_OK);
-                
                 tempPos[i] = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
                 ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)hotSpotText);
                 ::SendMessage(curScintilla,SCI_GOTOPOS,tempPos[i],0);
             } else
             {
                 break;
-                //::MessageBox(nppData._nppHandle, TEXT("<0"), TEXT("Trace"), MB_OK);
                 //tempPos[i]=-1;
             }
         }
@@ -1617,9 +1795,15 @@ int getCurrentTag(HWND curScintilla, int posCurrent, char **buffer, int triggerL
 
 void convertToUTF8(TCHAR *orig, char **utf8)
 {
-	int multibyteLength = WideCharToMultiByte(CP_UTF8, 0, orig, -1, NULL, 0, 0, 0);
-	*utf8 = new char[multibyteLength + 1];
-	WideCharToMultiByte(CP_UTF8, 0, orig, -1, *utf8, multibyteLength, 0, 0);
+    if (orig == NULL)
+    {
+        *utf8 = NULL;
+    } else
+    {
+	    int multibyteLength = WideCharToMultiByte(CP_UTF8, 0, orig, -1, NULL, 0, 0, 0);
+	    *utf8 = new char[multibyteLength + 1];
+	    WideCharToMultiByte(CP_UTF8, 0, orig, -1, *utf8, multibyteLength, 0, 0);
+    }
 }
 
 
@@ -2015,40 +2199,18 @@ char* cleanupString( char *str )
     return str;
 }  
 
-char* getDateTime(char *format, bool getDate)
-{
-    HWND curScintilla = getCurrentScintilla();
-
-    TCHAR result[128];
-    SYSTEMTIME formatTime;
-	::GetLocalTime(&formatTime);
-
-    //TODO: make a function for wide char transformation
-    wchar_t* formatWide;
-    convertToWideChar(format, &formatWide);
-
-    if (getDate)
-    {
-        ::GetDateFormat(LOCALE_USER_DEFAULT, 0, &formatTime, formatWide, result, 128);
-    } else
-    {
-        ::GetTimeFormat(LOCALE_USER_DEFAULT, 0, &formatTime, formatWide, result, 128);
-    }
-    
-    delete [] formatWide;
-    
-    char* resultText;// = new char[MAX_PATH];
-    convertToUTF8(result,&resultText);
-	//WideCharToMultiByte((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, result, -1, resultText, MAX_PATH, NULL, NULL);
-    return resultText;
-}
-
 void convertToWideChar(char* orig, wchar_t **wideChar)
 {
-    size_t origsize = strlen(orig) + 1;
-    size_t convertedChars = 0;
-    *wideChar = new wchar_t[origsize*4+1];
-    mbstowcs_s(&convertedChars, *wideChar, origsize, orig, _TRUNCATE);
+    if (orig == NULL)
+    {
+        *wideChar = NULL;
+    } else
+    {
+        size_t origsize = strlen(orig) + 1;
+        size_t convertedChars = 0;
+        *wideChar = new wchar_t[origsize*4+1];
+        mbstowcs_s(&convertedChars, *wideChar, origsize, orig, _TRUNCATE);
+    }
 }
                                         
                                 
@@ -3038,8 +3200,6 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
     return tagFound;
 }
 
-
-
 //bool snippetComplete()
 //{
 //    HWND curScintilla = getCurrentScintilla();
@@ -3079,7 +3239,6 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
 //    return tagFound;
 //}
 
-
 char* getLangTagType()
 {
 
@@ -3102,7 +3261,6 @@ char* getLangTagType()
     return "";
 }
 
-
 void fingerText()
 {
     HWND curScintilla = getCurrentScintilla();
@@ -3114,10 +3272,7 @@ void fingerText()
     {
         g_liveHintUpdate--;
 
-        if (g_preserveSteps==0) 
-        {
-            ::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
-        }
+        if (g_preserveSteps==0) ::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
         
         int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
         int posSelectionStart = ::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0);
@@ -3233,9 +3388,9 @@ void testing()
     HWND curScintilla = getCurrentScintilla();
 
     //test using the getDateTime function
-    char* date = getDateTime("yyyyMMdd");
-    alertCharArray(date);
-    delete [] date;
+    //char* date = getDateTime("yyyyMMdd");
+    //alertCharArray(date);
+    //delete [] date;
 
     // testing to upper and to lower
     //char* str = new char[200];

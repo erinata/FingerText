@@ -1,4 +1,4 @@
-= FingerText (current version 0.5.11)
+= FingerText (current version 0.5.15)
 
 Tab triggered snippet plugin for Notepad++.
 
@@ -16,12 +16,12 @@ This plugin is still in Alpha stage so do expect that it can be buggy. However, 
 
 I guess most notepad++ users are using plugin manager. You can just go to Plugins>Plugin Manager>Show Plugin Manager and look for Fingertext to install this plugin.
 
-However if you would like to install it manually, download the file "FingerText - 0.5.11.zip" at
-http://sourceforge.net/projects/fingertext/files/Alpha%20Releases/FingerText%20-%200.5.11.zip/download
+However if you would like to install it manually, download the file "FingerText - 0.5.15.zip" at
+http://sourceforge.net/projects/fingertext/files/Alpha%20Releases/FingerText%20-%200.5.15.zip/download
 
 Unzip the package and copy the FingerText.dll to the plugins folder of Notepad++. This is the only file you need to run FingerText in notepad++.
 
-The readme.rdoc file is for your reference. And the FingerText0.5.11SampleSnippets.ftd is a file containing some sample snippets. (You need this if you want to follow the usage guide in this document)
+The readme.rdoc file is for your reference. And the FingerText0.5.15SampleSnippets.ftd is a file containing some sample snippets. (You need this if you want to follow the usage guide in this document)
 
 == Screenshots
 
@@ -37,9 +37,9 @@ https://github.com/downloads/erinata/FingerText/FingerText0.5.4_ScreenClip_4.png
 
 You should have FingerText installed. If you are in doubt, go to the notepad++ menu, there should be "FingerText" under "Plugins".
 
-To import the sample snippets, go to notepad++ menu > plugin > FingerText > Import Snippets. Choose the file FingerText0.5.11SampleSnippets.ftd (which is the file you downloaded with the FingerText.dll) and all the sample snippets will be installed.
+To import the sample snippets, go to notepad++ menu > plugin > FingerText > Import Snippets. Choose the file FingerText0.5.15SampleSnippets.ftd (which is the file you downloaded with the FingerText.dll) and all the sample snippets will be installed.
 
-If you are using plugin Manager to download FingerText or you just cannot locate the sample snippet file, you can download it from https://github.com/downloads/erinata/FingerText/FingerText0.5.11SampleSnippets.ftd
+If you are using plugin Manager to download FingerText or you just cannot locate the sample snippet file, you can download it from https://github.com/downloads/erinata/FingerText/FingerText0.5.15SampleSnippets.ftd
 
 To verify you have imported the snippets correctly, go to notepad++ menu > Plugins > FingerText > Show SnippetDock. A Dialog with a list of available snippets should show up.
 
@@ -124,7 +124,7 @@ FingerText support dynamic hotspots. Currently, there are three kinds of dynamic
 
 - Chain - This is indicated by $[![(cha)somesnippet]!]. When the snippet is triggered, this hotspot is replaced by the text generated from activating another snippet "somesnippet". You can trigger the snippet "chain" to see how it works
 
-- Keyword - This is indicated by $[![(key)XXXXX]!]. And XXXXX is some predefined keyword. Currently the supported keywords are DATESHORT, DATELONG, TIMESHORT, TIMELONG, FILENAME, EXTNAME, DIRECTORY and PASTE. All of them are self-explaining (like DATESHORT will insert the current date in short format). And among them the most important one is PASTE. If your snippet contain $[![(key)PASTE]!], it will be replaced by whatever text in the clipboard. This is very useful in tag languages or snippets that turn a bunch of code into a function. To see this in action, copy a line of code and trigger the snippet "method". The code that you copied will be turned into a ruby method.
+- Keyword - This is indicated by $[![(key)XXXXX]!]. And XXXXX is some predefined keyword. Currently the supported keywords are DATE, TIME, FILENAME, EXTNAME, DIRECTORY and PASTE. All of them are self-explaining (like DATE will insert the current date). And among them the most important one is PASTE. If your snippet contain $[![(key)PASTE]!], it will be replaced by whatever text in the clipboard. This is very useful in tag languages or snippets that turn a bunch of code into a function. To see this in action, copy a line of code and trigger the snippet "method". The code that you copied will be turned into a ruby method.
 
 - Command - This is indicated by $[![(cmd)XXXXX]!]. And XXXXX is some command that you can run in the console. For example $[![(cmd)dir]!] will fill your hotspot with the output that you would see when you run dir in console. Of course you can run a batch file if you want. Try snippet "cmddir" and "cmdbat" to see it in action.
 
@@ -168,6 +168,20 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 
 == Change log 
 (for the detail change log (including the development log) please refer to the CHANGELOG file in the repository)
+
+0.5.15
+- Added: New keyword DATE and TIME. Which makes the format of datetime output customizable, for example you can use $[![(key)DATE:yyyyMMdd]!] to get 20110601 on 1st of June 2011
+- Added: export and delete all snippets
+- Added: new keyword UPPER and LOWER. For example: $[![(key)UPPER:aBcDe]!] will become ABCDE
+- Fixed: Typo in upgrade message
+- Fixed: (hopefully) a real fix to selectiontosnippet
+- Changed: Pop up option of whether to overwrite or keep copies in conflicting snippets
+- Fixed: less memory leakage on liveupdate and snippet import
+- Fixed: nested normal hotspots not triggering correctly
+- Changed: update the setting hints
+- Fixed: extra newline in tempfile generation
+- Update scintilla.h so that it's compatibile with notepad++ 5.9
+- Experimental: Language based snippets, for example if you have snippets with scope Lang:HTML, the snippet is available for all HTML files. You can use Lang:C or Lang:PYTHON. A complete list of language supported will be in a list when this feature is finalized.
 
 0.5.11
 - Added: Custom Scope, a user defined Global scope
@@ -294,9 +308,9 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 Many thanks to..........
 - Don Ho for making Notepad++ and providing a flexible and well documented api for plugin programming. 
 - Dave Brotherstone for his helpful comments and programmming help (especially for the sqlite support fork). 
-- Tsz Kin Chan for his suggestions on the UI and testing.   
+- Tsz Kin Chan for his suggestions on the UI and testing those buggy nightly versions.   
 - bbluemel for testing and suggesting solution for the indent reference function.
-- Also thanks for all the other comments from sourceforge forum.
+- Also thanks for all the other comments and bug report from SourceForge forum and Github.
 
 == License
 
