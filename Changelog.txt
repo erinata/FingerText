@@ -1,5 +1,8 @@
 changelog (for developers only, include unreleased versions)
 
+0.5.16
+****** Primitive implementation of Option Dynamic Hotspot
+
 0.5.15
 ****** Added GETALL , GETLINE, CUTALL, CUTLINE
 - Fixed: extra newline in tempfile. just open tempfile in binary so that it writes correctly

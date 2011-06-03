@@ -120,6 +120,9 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             //keyUpdate();
             refreshAnnotation();
             updateDockItems();
+            //cleanOptionItem(); //This is not necessary........but the memory will keep a list of options used in last option dynamic hotspor call
+            turnOffOptionMode();
+            
             break;
         
             //TODO: Try to deal with repeated triggering of snippetHintUpdate and keyUpdate
@@ -137,6 +140,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             //refreshAnnotation();
             //break;   // should also do snippetHintUpdate() when SCN_CHARADDED
             snippetHintUpdate();
+            turnOffOptionMode();
             //showPreview();
             break;
         case SCN_MODIFIED:
@@ -151,6 +155,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             {
                 
                 snippetHintUpdate();
+                turnOffOptionMode();
                 refreshAnnotation();
             }
             break;

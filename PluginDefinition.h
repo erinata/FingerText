@@ -179,6 +179,11 @@ void tagComplete();
 //bool snippetComplete();
 void fingerText();
 
+void updateOptionCurrent();
+void addOptionItem(char* item);
+void cleanOptionItem();
+void turnOffOptionMode();
+
 void testing();
 void alert();
 void alertNumber(int input);
