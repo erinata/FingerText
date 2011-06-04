@@ -73,7 +73,7 @@ bool     g_dbOpen;
 struct SnipIndex {
     char* triggerText;
     char* scope;
-    char* content;
+    char* content;    
 };
 
 TCHAR g_iniPath[MAX_PATH];
@@ -82,7 +82,8 @@ TCHAR g_fttempPath[MAX_PATH];
 //TCHAR g_groupPath[MAX_PATH];
 
 SnipIndex* g_snippetCache;
-int g_snippetCacheSize;
+//int g_snippetCacheSize;
+
 
 int g_version;
 
@@ -1582,6 +1583,7 @@ void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
     g_liveHintUpdate = 0;
     delete [] g_snippetCache;
     delete [] g_customScope;
+    delete [] g_customEscapeChar;
     //if (g_newUpdate) writeConfig();
     if (g_dbOpen)
     {
@@ -1914,6 +1916,7 @@ void snippetHintUpdate()
 
 void updateDockItems(bool withContent, bool withAll, char* tag)
 {
+    
     g_liveHintUpdate--;
 
     int scopeLength=0;
@@ -1924,8 +1927,7 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
     int tempContentLength=0;
 
     //g_snippetCacheSize=snippetDock.getLength();
-    g_snippetCacheSize=g_snippetListLength;
-    g_snippetCache = new SnipIndex [g_snippetCacheSize];
+    
     clearCache();
 
     snippetDock.clearDock();
@@ -1944,7 +1946,6 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
         {
             sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets WHERE (tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ?) AND tag LIKE ? ORDER BY tagType DESC,tag DESC LIMIT ? ", -1, &stmt, NULL);
         }
-
     } else
     {
         if (withAll)
@@ -1964,15 +1965,15 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
         
         char *tagType1 = NULL;
         TCHAR *fileType1 = NULL;
-		//fileType1 = new TCHAR[MAX_PATH];
+		fileType1 = new TCHAR[MAX_PATH];
         char *tagType2 = NULL;
         TCHAR *fileType2 = NULL;
-		//fileType2 = new TCHAR[MAX_PATH];
+		fileType2 = new TCHAR[MAX_PATH];
 
         if (withAll)
         {
             char snippetCacheSizeText[10];
-            ::_itoa(g_snippetCacheSize, snippetCacheSizeText, 10); 
+            ::_itoa(g_snippetListLength, snippetCacheSizeText, 10); 
             sqlite3_bind_text(stmt, 1, snippetCacheSizeText, -1, SQLITE_STATIC);
         } else
         {   
@@ -1982,7 +1983,7 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
             ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType1);
             convertToUTF8(fileType1, &tagType1);
             sqlite3_bind_text(stmt, 2, tagType1, -1, SQLITE_STATIC);
-        		
+
             ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType2);
             convertToUTF8(fileType2, &tagType2);
             sqlite3_bind_text(stmt, 3, tagType2, -1, SQLITE_STATIC);
@@ -1995,9 +1996,10 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
 
             //TODO: potential performance improvement by just setting 100
             char snippetCacheSizeText[10];
-            ::_itoa(g_snippetCacheSize, snippetCacheSizeText, 10); 
+            ::_itoa(g_snippetListLength, snippetCacheSizeText, 10); 
             sqlite3_bind_text(stmt, 7, snippetCacheSizeText, -1, SQLITE_STATIC);
         }
+        
     
         int row = 0;
 
@@ -2034,6 +2036,8 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
                     g_snippetCache[row].content = new char[strlen(tempContent)*4 + 1];
                     strcpy(g_snippetCache[row].content, tempContent);
                 }
+
+
                 row++;
             }
             else
@@ -2060,7 +2064,7 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
 
 void populateDockItems()
 {
-    for (int j=0;j<g_snippetCacheSize;j++)
+    for (int j=0;j<g_snippetListLength;j++)
     {
         if (g_snippetCache[j].scope !=NULL)
         {
@@ -2085,7 +2089,7 @@ void populateDockItems()
             
             //TODO: make this 14 customizable in settings
             int scopeLength = 14 - strlen(newText);
-            if (scopeLength < 3) scopeLength =3;
+            if (scopeLength < 3) scopeLength = 3;
             for (int i=0;i<scopeLength;i++)
             {
                 strcat(newText," ");
@@ -2102,13 +2106,20 @@ void populateDockItems()
             convertToWideChar(newText,&convertedTagText);
 
             snippetDock.addDockItem(convertedTagText);
+            delete [] convertedTagText;
         }
     }
 }
 
 void clearCache()
 {
-    for (int i=0;i<g_snippetCacheSize;i++)
+
+    
+    //TODO: fix update dockitems memoryleak
+    //g_snippetCacheSize=g_snippetListLength;
+    g_snippetCache = new SnipIndex [g_snippetListLength];
+    
+    for (int i=0;i<g_snippetListLength;i++)
     {
         g_snippetCache[i].triggerText=NULL;
         g_snippetCache[i].scope=NULL;
@@ -2187,9 +2198,9 @@ bool exportSnippets()
 
         g_snippetListLength = 100000;
         updateDockItems(true,true,"%");
-
+        
         int exportCount = 0;
-        for (int j=0;j<g_snippetCacheSize;j++)
+        for (int j=0;j<g_snippetListLength;j++)
         {
             if (g_snippetCache[j].scope !=NULL)
             {
@@ -3504,8 +3515,7 @@ void testing()
     ::MessageBox(nppData._nppHandle, TEXT("Testing!"), TEXT("Trace"), MB_OK);
     
     HWND curScintilla = getCurrentScintilla();
-    cleanOptionItem();
-    
+    //cleanOptionItem();
             
     //testing add and get optionitem, testing for memory leak
     //char* optionText;
@@ -3775,6 +3785,7 @@ void alertNumber(int input)
     wchar_t countText[10];
     ::_itow_s(input, countText, 10, 10);
     ::MessageBox(nppData._nppHandle, countText, TEXT("Trace"), MB_OK);
+
 }
 void alertCharArray(char* input)
 {
@@ -3787,6 +3798,7 @@ void alertCharArray(char* input)
     //wchar_t wcstring[newsize];
     //mbstowcs_s(&convertedChars, wcstring, origsize, input, _TRUNCATE);
     ::MessageBox(nppData._nppHandle, wcstring, TEXT("Trace"), MB_OK);
+    delete [] wcstring;
 }
 
 void alertTCharArray(TCHAR* input)
