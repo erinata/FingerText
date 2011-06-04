@@ -2,6 +2,9 @@ changelog (for developers only, include unreleased versions)
 
 0.5.16
 ****** Primitive implementation of Option Dynamic Hotspot
+****** Added: keyword SCOPE:
+****** CUT: and GET: will get all when no parameter is passed or search fail
+****** CUTALL and GETALL is deleted
 
 0.5.15
 ****** Added GETALL , GETLINE, CUTALL, CUTLINE
