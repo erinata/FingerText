@@ -183,6 +183,7 @@ void updateOptionCurrent();
 void addOptionItem(char* item);
 void cleanOptionItem();
 void turnOffOptionMode();
+void optionNavigate(HWND &curScintilla);
 
 void testing();
 void alert();

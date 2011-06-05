@@ -3,5 +3,5 @@
 /Unicode Release/*
 /package/*
 test.bat
-testdebug.bat
+testrelease.bat
 *.aps

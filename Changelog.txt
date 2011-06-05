@@ -6,6 +6,9 @@ changelog (for developers only, include unreleased versions)
 ****** CUT: and GET: will get all when no parameter is passed or search fail
 ****** CUTALL and GETALL is deleted
 ****** fixed a critical bug of snippetdock not showing snippets with ext and filename scope
+****** fixed bug of not endundoaction in snippet editor mode
+****** improve performance of hotspot checking
+****** snippethint not updating if the dock is not shown
 
 0.5.15
 ****** Added GETALL , GETLINE, CUTALL, CUTLINE
