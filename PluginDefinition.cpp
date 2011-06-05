@@ -1006,7 +1006,8 @@ void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &star
             scriptFound = searchPrev(curScintilla,getTerm);
         }
         delete [] getTerm;
-        
+        // TODO: still a bug when triggered from the beginning of the document with a searching term. For example: $[![(key)CUT: ]!]$[![(key)SCOPE:$[![(key)PASTE]!]]!][>END<] (testscope) will get 1 missing character when triggering from start of the document
+        // TODO: same problem for GET:
         int scriptStart = 0;
         if (scriptFound>=0)
         {
@@ -1024,8 +1025,8 @@ void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &star
             checkPoint = checkPoint - (selectionEnd - scriptStart + 1); //+1 to make up the -1 in setting the selection End
         } else
         {
-            alertNumber(selectionStart);
-            alertNumber(selectionEnd);
+            //alertNumber(selectionStart);
+            //alertNumber(selectionEnd);
             alertCharArray("keyword CUT: caused an error.");
         }
             
@@ -1903,13 +1904,8 @@ void snippetHintUpdate()
             
                     updateDockItems(false,false,similarTag);
                 }
-                //else if (tagLength<0)
-                //{
-                //    //alertNumber(tagLength);
-                //    //updateDockItems(false,false);
-                //}
-
-                if (tagLength>0) delete [] partialTag;   
+                
+                if (tagLength>=0) delete [] partialTag;   
             }
             g_liveHintUpdate=1;
         }
@@ -1964,7 +1960,7 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
 	if (g_dbOpen && SQLITE_OK == sqlitePrepare)
 	{
         char *customScope = NULL;
-        //customScope = new char[MAX_PATH];
+        customScope = new char[MAX_PATH];
         
         char *tagType1 = NULL;
         TCHAR *fileType1 = NULL;
