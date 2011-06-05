@@ -1,7 +1,7 @@
 changelog (for developers only, include unreleased versions)
 
 0.5.17
-****** improve performance in snippet live update
+****** slight performance increase in snippet live update
 
 0.5.16
 ****** Primitive implementation of Option Dynamic Hotspot

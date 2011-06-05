@@ -1655,6 +1655,7 @@ void setConfigAndDatabase()
 
     setupConfigFile();
 
+    g_snippetCache = new SnipIndex [g_snippetListLength];
     if (PathFileExists(g_ftbPath) == FALSE) emptyFile(g_ftbPath);
     if (PathFileExists(g_fttempPath) == FALSE) emptyFile(g_fttempPath);
 
@@ -1999,7 +2000,6 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
             sqlite3_bind_text(stmt, 7, snippetCacheSizeText, -1, SQLITE_STATIC);
         }
         
-    
         int row = 0;
 
         while(true)
@@ -2112,8 +2112,7 @@ void clearCache()
 {   
     //TODO: fix update dockitems memoryleak
     //g_snippetCacheSize=g_snippetListLength;
-    g_snippetCache = new SnipIndex [g_snippetListLength];
-    
+        
     for (int i=0;i<g_snippetListLength;i++)
     {
         g_snippetCache[i].triggerText=NULL;
@@ -2191,6 +2190,7 @@ bool exportSnippets()
         ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
 
         g_snippetListLength = 100000;
+        g_snippetCache = new SnipIndex [g_snippetListLength];
         updateDockItems(true,true,"%");
         
         int exportCount = 0;
@@ -2230,6 +2230,8 @@ bool exportSnippets()
     }
 
     g_snippetListLength = GetPrivateProfileInt(TEXT("FingerText"), TEXT("snippet_list_length"), DEFAULT_SNIPPET_LIST_LENGTH, g_iniPath);
+    g_snippetCache = new SnipIndex [g_snippetListLength];
+    updateDockItems(true,true,"%");
     g_liveHintUpdate++;
 
     return success;
@@ -3068,7 +3070,6 @@ void refreshAnnotation()
         
         if (::_tcscmp(fileType,TEXT("SnippetEditor.ftb"))==0)
         {
-            
             HWND curScintilla = getCurrentScintilla();
             //::SendMessage(getCurrentScintilla(), SCI_ANNOTATIONCLEARALL, 0, 0);
             ::SendMessage(curScintilla, SCI_ANNOTATIONCLEARALL, 0, 0);
