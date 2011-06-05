@@ -1,5 +1,8 @@
 changelog (for developers only, include unreleased versions)
 
+0.5.17
+****** improve performance in snippet live update
+
 0.5.16
 ****** Primitive implementation of Option Dynamic Hotspot
 ****** Added: keyword SCOPE:
@@ -7,8 +10,9 @@ changelog (for developers only, include unreleased versions)
 ****** CUTALL and GETALL is deleted
 ****** fixed a critical bug of snippetdock not showing snippets with ext and filename scope
 ****** fixed bug of not endundoaction in snippet editor mode
-****** improve performance of hotspot checking
-****** snippethint not updating if the dock is not shown
+****** improve performance of hotspot checking, and snippet live update with long tag
+****** snippethint not updating if the dock is invisible, and update everytime it's shown.
+****** A little bit improvement in snippet live update memory leakage, but still a problem
 
 0.5.15
 ****** Added GETALL , GETLINE, CUTALL, CUTLINE

@@ -1669,12 +1669,6 @@ void emptyFile(TCHAR* fileName)
     File.close();
 }
 
-void writeConfigTextChar(TCHAR* configChar, TCHAR* section)
-{
-    ::WritePrivateProfileString(TEXT("FingerText"), section, configChar, g_iniPath);
-}
-
-
 void resetDefaultSettings()
 {   
     g_snippetListLength = DEFAULT_SNIPPET_LIST_LENGTH;
@@ -1776,6 +1770,11 @@ void writeConfigText(int configInt, TCHAR* section)
     ::WritePrivateProfileString(TEXT("FingerText"), section, configText, g_iniPath);
 }
 
+void writeConfigTextChar(TCHAR* configChar, TCHAR* section)
+{
+    ::WritePrivateProfileString(TEXT("FingerText"), section, configChar, g_iniPath);
+}
+
 
 //void writeDefaultGroupFile()
 //{
@@ -1866,22 +1865,19 @@ void showSnippetDock()
 		data.pszModuleName = snippetDock.getPluginFileName();
 
 		// the dlgDlg should be the index of funcItem where the current function pointer is
-		// in this case is DOCKABLE_DEMO_INDEX
 		data.dlgID = SNIPPET_DOCK_INDEX;
 		::SendMessage(nppData._nppHandle, NPPM_DMMREGASDCKDLG, 0, (LPARAM)&data);
         snippetDock.display();
-        //snippetHintUpdate(); // TODO: conside update snippet hint when displaying dock
 	} else
     {
         snippetDock.display(!snippetDock.isVisible());
-        //snippetHintUpdate(); 
     }
+    snippetHintUpdate();
 }
 
 
 void snippetHintUpdate()
 {     
-    
     if ((!g_editorView) && (g_liveHintUpdate==1))
     {
         if (snippetDock.isVisible())
@@ -1893,30 +1889,31 @@ void snippetHintUpdate()
                 int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
                 char *partialTag;
 	            int tagLength = getCurrentTag(curScintilla, posCurrent, &partialTag);
-                //wchar_t countText[10];
-                //::_itow_s(tagLength, countText, 10, 10); 
-                //::MessageBox(nppData._nppHandle, countText, TEXT("Trace"), MB_OK);
-            
-                if ((tagLength>0) && (tagLength<30))
+                
+                if (tagLength==0)
                 {
+                    updateDockItems(false,false);
+                } else if ((tagLength>0) && (tagLength<20))
+                {
+                    //alertNumber(tagLength);
                     char similarTag[MAX_PATH]="";
                     if (g_inclusiveTriggerTextCompletion==1) strcat(similarTag,"%");
                     strcat(similarTag,partialTag);
                     strcat(similarTag,"%");
             
                     updateDockItems(false,false,similarTag);
-                    delete [] partialTag;   
-                } else
-                {
-                    updateDockItems(false,false);
                 }
-                
+                //else if (tagLength<0)
+                //{
+                //    //alertNumber(tagLength);
+                //    //updateDockItems(false,false);
+                //}
+
+                if (tagLength>0) delete [] partialTag;   
             }
             g_liveHintUpdate=1;
         }
-        
     }
-
     if (g_modifyResponse) refreshAnnotation();
 }
 
@@ -3189,8 +3186,8 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
     bool tagFound = false;
     char *tag;
 	int tagLength = getCurrentTag(curScintilla, posCurrent, &tag, triggerLength);
-    int posBeforeTag=posCurrent-tagLength;
-    int position = 0;
+
+    //int position = 0;
     //bool groupChecked = false;
 
     //int curLang = 0;
@@ -3201,8 +3198,10 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
     //::_itow_s(curLang, curLangNumber, 10, 10);
     //::wcscat(curLangText, curLangNumber);
 
-    if (tagLength != 0)
+    if (tagLength >= 0)
 	{
+        int posBeforeTag = posCurrent-tagLength;
+
         char *expanded = NULL;
         char *tagType = NULL;
         
@@ -3309,9 +3308,11 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
 		delete [] tag;
         // return to the original path 
         // ::SetCurrentDirectory(curPath);
+
+        // return to the original position 
+        if (tagFound) ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
     }
-    // return to the original position 
-    if (tagFound) ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
+    
     return tagFound;
 }
 
