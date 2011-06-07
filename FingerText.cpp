@@ -50,7 +50,6 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 #include "PluginDefinition.h"
-
 #include "SnippetDock.h"
 
 extern FuncItem funcItem[nbFunc];
@@ -105,44 +104,38 @@ extern "C" __declspec(dllexport) FuncItem * getFuncsArray(int *nbF)
 
 extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 {
-    
     switch(notifyCode->nmhdr.code)
     {
-
         //case NPPN_FILEOPENED:
         //    updateDockItems();
         //    updateMode();
         //    break;
-        case NPPN_LANGCHANGED:
         case NPPN_BUFFERACTIVATED:
+            turnOffOptionMode();
             // TODO: there may be some problem using updateMode here, as the buffere activate is not fired when the focus is switch to the ftb file when a use try to close npp and cancel afterwards.
             updateMode();
-            //keyUpdate();
             refreshAnnotation();
+        case NPPN_LANGCHANGED:
+            //keyUpdate();
             updateDockItems();
             //cleanOptionItem(); //This is not necessary........but the memory will keep a list of options used in last option dynamic hotspor call
-            turnOffOptionMode();
-            
             break;
-        
             //TODO: Try to deal with repeated triggering of snippetHintUpdate and keyUpdate
-        case SCN_KEY:
-            //alert();
-            break;
+        //case SCN_KEY:
+        //    //alert();
+        //    break;
         case SCN_CHARADDED:
-
             //switch(notifyCode->ch)
             //{
-            
             //}
-            
             //keyUpdate();
             //refreshAnnotation();
-            //break;   // should also do snippetHintUpdate() when SCN_CHARADDED
+            //break;   
             snippetHintUpdate();
             turnOffOptionMode();
             //showPreview();
             break;
+
         case SCN_MODIFIED:
             //if (notifyCode->modificationType & SC_MOD_BEFOREINSERT)
             //{
@@ -151,18 +144,19 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             //    
             //}
             //if (notifyCode->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT))
-            if (notifyCode->modificationType & (SC_MOD_DELETETEXT | SC_LASTSTEPINUNDOREDO))
+            
+            //TODO: investigate better way to write this
+            //TODO: may be use SC_MULTISTEPUNDOREDO
+            if ((notifyCode->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT | SC_LASTSTEPINUNDOREDO)) && (!(notifyCode->modificationType & (SC_PERFORMED_UNDO | SC_PERFORMED_REDO))))
             {
-                
-                snippetHintUpdate();
                 turnOffOptionMode();
+                snippetHintUpdate();
                 refreshAnnotation();
             }
             break;
         
         case NPPN_FILESAVED:
             //keyUpdate();
-            
             //refreshAnnotation();
             promptSaveSnippet();
             //snippetHintUpdate();
@@ -173,10 +167,10 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             upgradeMessage();
             initialize();
             break;
+
         case NPPN_SHUTDOWN:
             pluginShutdown();
             break;
-        
     }
 }
 
@@ -189,10 +183,9 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam, LPARAM lParam)
 {
 
-
-	//if (Message == WM_MOVE)
+    //if (Message == WM_DESTROY)
 	//{
-	//	::MessageBox(NULL, TEXT("move"), TEXT(""), MB_OK);
+	//	::MessageBox(NULL, TEXT("Quit"), TEXT(""), MB_OK);
 	//}
 
 	return TRUE;

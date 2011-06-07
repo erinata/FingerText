@@ -2,6 +2,9 @@ changelog (for developers only, include unreleased versions)
 
 0.5.17
 ****** slight performance increase in snippet live update
+****** undo process will not cause snippet hint to update
+****** do not turn off option when language change
+
 
 0.5.16
 ****** Primitive implementation of Option Dynamic Hotspot
