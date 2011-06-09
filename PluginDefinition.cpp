@@ -840,6 +840,7 @@ void chainSnippet(HWND &curScintilla, int &firstPos, char* hotSpotText)
     ::SendMessage(curScintilla,SCI_GOTOPOS,triggerPos,0);
     triggerTag(triggerPos,false, strlen(hotSpotText));
 }
+
 void executeCommand(HWND &curScintilla, int &firstPos, char* hotSpotText)
 {
     int triggerPos = strlen(hotSpotText)+firstPos;
@@ -1095,6 +1096,13 @@ void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &star
         updateDockItems(false,false);
         //snippetHintUpdate();
         delete [] getTerm;
+    } else if ((strncmp(hotSpotText,"CLEAN_",6)==0) && (strncmp(hotSpotText+7,":",1)==0))
+    {
+        // TODO: fill in content for this CLEAN keyword
+        
+    } else if ((strncmp(hotSpotText,"COUNT_",6)==0) && (strncmp(hotSpotText+7,":",1)==0))
+    {
+        // TODO: fill in content for this COUNT keyword
     }
 
     //else if (strcmp(hotSpotText,"DATESHORT")==0)
@@ -1158,8 +1166,7 @@ char* getDateTime(char *format, bool getDate, int flags)
     TCHAR result[128];
     SYSTEMTIME formatTime;
 	::GetLocalTime(&formatTime);
-
-    //TODO: make a function for wide char transformation
+    
     wchar_t* formatWide;
     convertToWideChar(format, &formatWide);
 
@@ -1288,7 +1295,7 @@ bool hotSpotNavigation(HWND &curScintilla)
             int hotSpotFound=-1;
             int tempPos[100];
             int i=1;
-            //TODO: still a bug.....hotspot with the same name cannot be next to each others. Its a bug in scintilla and the author say it will not be fixed. So need some customized fix for Fingertext.
+            //TODO: The hotspot with the same name cannot be next to each others. This will be fixed when scintilla updates and notepad++ adopt the changes.
             //TODO: consider refactor this part to another function
             for (i=1;i<=98;i++)
             {
@@ -1780,7 +1787,6 @@ void writeConfigTextChar(TCHAR* configChar, TCHAR* section)
 
 //void writeDefaultGroupFile()
 //{
-//    //TODO: use writeConfigTextChar 
 //    ::WritePrivateProfileString(TEXT("Snippet Group"), TEXT("LANG_0"), TEXT(".txt|.ini|.log"), g_groupPath);
 //    ::WritePrivateProfileString(TEXT("Snippet Group"), TEXT("LANG_1"), TEXT(".php"), g_groupPath);
 //    ::WritePrivateProfileString(TEXT("Snippet Group"), TEXT("LANG_2"), TEXT(".c|.h"), g_groupPath);
@@ -1851,7 +1857,6 @@ void convertToUTF8(TCHAR *orig, char **utf8)
 	    WideCharToMultiByte(CP_UTF8, 0, orig, -1, *utf8, multibyteLength, 0, 0);
     }
 }
-
 
 void showSnippetDock()
 {
@@ -2238,17 +2243,27 @@ bool exportSnippets()
     
 }
 
-char* cleanupString( char *str )
+char* cleanupString(char *str, char key)
 {
-    //TODO: generalize it so we can input key char and can be used in dynamic hotspot
-    if ( NULL == str ) return NULL;
+    if (str==NULL) return NULL;
 
     char *from, *to;
     from=to=str;
 
-    while ((*from != '\r') && (*to++=*from),*from++);
+    while ((*from != key) && (*to++=*from),*from++);
     return str;
-}  
+}
+//char* cleanupString(char *str)
+//{
+//    //TODO: generalize it so we can input key char and can be used in dynamic hotspot
+//    if (str==NULL) return NULL;
+//
+//    char *from, *to;
+//    from=to=str;
+//
+//    while ((*from != '\r') && (*to++=*from),*from++);
+//    return str;
+//}  
 
 void convertToWideChar(char* orig, wchar_t **wideChar)
 {
@@ -2393,7 +2408,7 @@ void importSnippets()
                         snippetTextOldCleaned = new char[strlen(snippetTextOld)];
                         ZeroMemory(snippetTextOldCleaned,sizeof(snippetTextOldCleaned));
                         
-                        snippetTextOldCleaned = cleanupString(snippetTextOld);
+                        snippetTextOldCleaned = cleanupString(snippetTextOld,'\r');
                         
                         //if (strlen(snippetTextNew) == strlen(snippetText)) alert();
                         if (strcmp(snippetText,snippetTextOldCleaned) == 0)
@@ -2468,25 +2483,9 @@ void importSnippets()
                                 if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "INSERT INTO snippets VALUES(?,?,?)", -1, &stmt, NULL))
                                 {
                                     importCount++;
-                                    
-                                    
                                     //TODO: add file name to the stamp
                                     char* dateText = getDateTime("yyyyMMdd");
                                     char* timeText = getDateTime("HHmmss",false);
-                                    /////////////
-                                        //TCHAR time[128];
-                                        //TCHAR date[128];
-                                        //SYSTEMTIME formatTime;
-	                                    //::GetLocalTime(&formatTime);
-                                        ////::GetTimeFormat(LOCALE_USER_DEFAULT, TIME_FORCE24HOURFORMAT + TIME_NOTIMEMARKER, &formatTime, NULL, time, 128);
-                                        //::GetTimeFormat(LOCALE_USER_DEFAULT, 0, &formatTime, TEXT("HHmmss"), time, 128);
-                                        //::GetDateFormat(LOCALE_USER_DEFAULT, 0, &formatTime, TEXT("yyyyMMdd"), date, 128);
-                                        //
-                                        //char timeText[MAX_PATH];
-	                                    //WideCharToMultiByte((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, time, -1, timeText, MAX_PATH, NULL, NULL);
-                                        //char dateText[MAX_PATH];
-	                                    //WideCharToMultiByte((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, date, -1, dateText, MAX_PATH, NULL, NULL);
-                                    //////////////
                                     char* tagTextsuffixed;
                                     tagTextsuffixed = new char [strlen(tagText)+256];
                                 
@@ -2954,7 +2953,6 @@ int promptSaveSnippet(TCHAR* message)
 
 void updateMode()
 {
-
     //TODO: should change to edit mode and normal mode by a button, and dynamically adjust the dock content
     //HWND curScintilla = getCurrentScintilla();
     TCHAR fileType[MAX_PATH];
@@ -3354,7 +3352,6 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
 
 char* getLangTagType()
 {
-
     int curLang = 0;
     ::SendMessage(nppData._nppHandle,NPPM_GETCURRENTLANGTYPE ,0,(LPARAM)&curLang);
     //alertNumber(curLang);

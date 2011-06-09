@@ -1,9 +1,12 @@
 changelog (for developers only, include unreleased versions)
 
+0.5.18
+- generalize cleanupstring for future use
+
 0.5.17
-****** slight performance increase in snippet live update
-****** undo process will not cause snippet hint to update
-****** do not turn off option when language change
+- slight performance increase in snippet live update
+- undo process will not cause snippet hint to update
+- do not turn off option when language change
 
 
 0.5.16
@@ -11,11 +14,11 @@ changelog (for developers only, include unreleased versions)
 ****** Added: keyword SCOPE:
 ****** CUT: and GET: will get all when no parameter is passed or search fail
 ****** CUTALL and GETALL is deleted
-****** fixed a critical bug of snippetdock not showing snippets with ext and filename scope
-****** fixed bug of not endundoaction in snippet editor mode
-****** improve performance of hotspot checking, and snippet live update with long tag
-****** snippethint not updating if the dock is invisible, and update everytime it's shown.
-****** A little bit improvement in snippet live update memory leakage, but still a problem
+- fixed a critical bug of snippetdock not showing snippets with ext and filename scope
+- fixed bug of not endundoaction in snippet editor mode
+- improve performance of hotspot checking, and snippet live update with long tag
+- snippethint not updating if the dock is invisible, and update everytime it's shown.
+- A little bit improvement in snippet live update memory leakage, but still a problem
 
 0.5.15
 ****** Added GETALL , GETLINE, CUTALL, CUTLINE
@@ -43,9 +46,9 @@ changelog (for developers only, include unreleased versions)
 - Added: new keyword CAP and LOW
 
 0.5.12
-****** Added: Primitive implementation of Language based snippets
+- Added: Primitive implementation of Language based snippets
 - Update scintilla.h so that it's compatibile with notepad++ 5.9
-****** Change the way dynamic snippet work. Now they nested corrected with the rule from left to right and inside to outside.
+- Change the way dynamic snippet work. Now they nested corrected with the rule from left to right and inside to outside.
 
 
 0.5.11
