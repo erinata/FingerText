@@ -113,7 +113,7 @@ void writeConfigTextChar(TCHAR* configChar, TCHAR* section);
 void resetDefaultSettings();
 void writeConfigText(int configInt, TCHAR* section);
 void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
-void dynamicHotspot(HWND &curScintilla, int &startingPos);
+bool dynamicHotspot(HWND &curScintilla, int &startingPos);
 void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint);
 void executeCommand(HWND &curScintilla, int &firstPos, char* hotSpotText);
 void chainSnippet(HWND &curScintilla, int &firstPos, char* hotSpotText);

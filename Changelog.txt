@@ -1,5 +1,8 @@
 changelog (for developers only, include unreleased versions)
 
+0.5.19
+****** Changed: All hotspots, normal or dynamic are triggered under the same rule, from inside to outside and from left to right.
+
 0.5.18
 - generalize cleanupstring for future use
 

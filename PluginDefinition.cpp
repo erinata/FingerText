@@ -753,7 +753,7 @@ void restoreTab(HWND &curScintilla, int &posCurrent, int &posSelectionStart, int
 }
 
 // TODO: refactor the dynamic hotspot functions
-void dynamicHotspot(HWND &curScintilla, int &startingPos)
+bool dynamicHotspot(HWND &curScintilla, int &startingPos)
 {
     //char* tagSign;
     //if (hotSpotType == 1)
@@ -817,12 +817,12 @@ void dynamicHotspot(HWND &curScintilla, int &startingPos)
                 limitCounter++;
             } else
             {
-
+                limitCounter++;
             }
             //////////////////////
         }
         
-    } while ((spot>=0) && (limitCounter<g_chainLimit));
+    } while ((spot>0) && (limitCounter<g_chainLimit));
 
     //TODO: loosen the limit to the limit of special spot, and ++limit for every search so that less frezze will happen
     if (limitCounter>=g_chainLimit) ::MessageBox(nppData._nppHandle, TEXT("Dynamic hotspots triggering limit exceeded."), TEXT("FingerText"), MB_OK);
@@ -831,7 +831,10 @@ void dynamicHotspot(HWND &curScintilla, int &startingPos)
     {
         delete [] hotSpot;
         delete [] hotSpotText;
+
+        return true;
     }
+    return false;
 }
 
 void chainSnippet(HWND &curScintilla, int &firstPos, char* hotSpotText)
@@ -1206,7 +1209,8 @@ char* getDateTime(char *format, bool getDate, int flags)
 
 bool hotSpotNavigation(HWND &curScintilla)
 {
-    // TODO: consolidate this part with dynamic hotspots?
+    // TODO: consolidate this part with dynamic hotspots? 
+
     char tagSign[] = "$[![";
     //int tagSignLength = strlen(tagSign);
     int tagSignLength = 4;
@@ -1348,8 +1352,8 @@ bool hotSpotNavigation(HWND &curScintilla)
 
 int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, bool dynamic)
 {
-    //int posLine = ::SendMessage(curScintilla,SCI_LINEFROMPOSITION,0,0);
-        
+    //TODO: examine whether the bool dynamic is still needed, or we just use the (cha) (key) (cmd) and (opt) to determine what should happen
+    
     int spotType = 0;
 
     searchNext(curScintilla, "]!]");
@@ -1372,7 +1376,7 @@ int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, in
     {
         spotType = 3;
         //alertCharArray("cmd");
-    } 
+    }
 
     ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos+3);
     
@@ -1381,10 +1385,10 @@ int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, in
 
     if ((spotType>0) && (dynamic))
     {
-            ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)*hotSpotText+5);
+        ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)*hotSpotText+5);
     } else if (!dynamic)
     {
-       ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)*hotSpotText);
+        ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)*hotSpotText);
 
     }
 
@@ -2128,6 +2132,7 @@ void clearCache()
 
 void exportAndClearSnippets()
 {
+    //TODO: move the snippet export counting message out of the export snippets function so that it can be shown together with the clear snippet message
     if (exportSnippets())
     {
         int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Are you sure that you want to clear the whole snippet database?"), TEXT("FingerText"), MB_YESNO);
@@ -2137,7 +2142,7 @@ void exportAndClearSnippets()
             ::MessageBox(nppData._nppHandle, TEXT("All snippets are deleted."), TEXT("FingerText"), MB_OK);
         } else 
         {
-            ::MessageBox(nppData._nppHandle, TEXT("Snippet clearing aborted."), TEXT("FingerText"), MB_OK);
+            ::MessageBox(nppData._nppHandle, TEXT("Snippet clearing is aborted."), TEXT("FingerText"), MB_OK);
         }
     }
 }
@@ -3368,11 +3373,13 @@ char* getLangTagType()
                  "Lang:CMAKE","Lang:YAML","Lang:COBOL","Lang:GUI4CLI","Lang:D","Lang:POWERSHELL","Lang:R"};
     
     return s[curLang];
-    return "";
+    //return "";
 }
 
 void fingerText()
 {
+
+    //TODO: in general I should add logo to all the messages
     HWND curScintilla = getCurrentScintilla();
 
     if ((g_enable==false) || (::SendMessage(curScintilla,SCI_SELECTIONISRECTANGLE,0,0)==1))
@@ -3415,6 +3422,7 @@ void fingerText()
             posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
 
             bool navSpot = false;
+            bool dynamicSpot = false;
             if (g_editorView == false)
             {
                 //int specialSpot = searchNext(curScintilla, "$[![");
@@ -3435,15 +3443,17 @@ void fingerText()
                     //dynamicHotspot(curScintilla, posCurrent);
                 //}
 
-                if (searchNext(curScintilla, "$[![(")>=0) dynamicHotspot(curScintilla, posCurrent);
+                //if (searchNext(curScintilla, "$[![(")>=0)  
+                dynamicSpot = dynamicHotspot(curScintilla, posCurrent); //TODO: May still consider do some checking before going into dynamic hotspot for performance improvement
                     
                 if (g_preserveSteps==0) ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
 	            
                 //if (specialSpot>=0)
                 //{
-                    ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
-                    navSpot = hotSpotNavigation(curScintilla);
-                    if (navSpot) ::SendMessage(curScintilla,SCI_AUTOCCANCEL,0,0);
+                ::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
+                navSpot = hotSpotNavigation(curScintilla);
+
+                if ((navSpot) || (dynamicSpot)) ::SendMessage(curScintilla,SCI_AUTOCCANCEL,0,0);
                 //}
             } else
             {
@@ -3453,7 +3463,7 @@ void fingerText()
             bool completeFound = false;
             if (g_tabTagCompletion == 1)
             {
-                if ((navSpot == false) && (tagFound == false)) 
+                if ((navSpot == false) && (tagFound == false) && (dynamicSpot==false)) 
 	    	    {
                     ::SendMessage(curScintilla, SCI_GOTOPOS, posCurrent, 0);
                     //completeFound = snippetComplete();
@@ -3465,7 +3475,7 @@ void fingerText()
                     }
 	    	    }
             }
-            if ((navSpot == false) && (tagFound == false) && (completeFound==false)) 
+            if ((navSpot == false) && (tagFound == false) && (completeFound==false) && (dynamicSpot==false)) 
             {
                 restoreTab(curScintilla, posCurrent, posSelectionStart, posSelectionEnd);
             }

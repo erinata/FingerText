@@ -115,6 +115,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             // TODO: there may be some problem using updateMode here, as the buffere activate is not fired when the focus is switch to the ftb file when a use try to close npp and cancel afterwards.
             updateMode();
             refreshAnnotation();
+            // No break here because NPPN_BUFFERACTIVATED also trigger updateDockItems();
         case NPPN_LANGCHANGED:
             //keyUpdate();
             updateDockItems();
@@ -145,8 +146,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             //}
             //if (notifyCode->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT))
             
-            //TODO: investigate better way to write this
-            //TODO: may be use SC_MULTISTEPUNDOREDO
+            //TODO: investigate better way to write this (may be use SC_MULTISTEPUNDOREDO and SC_LASTSTEPINUNDOREDO)
             if ((notifyCode->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT | SC_LASTSTEPINUNDOREDO)) && (!(notifyCode->modificationType & (SC_PERFORMED_UNDO | SC_PERFORMED_REDO))))
             {
                 turnOffOptionMode();
