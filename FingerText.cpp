@@ -55,6 +55,7 @@
 extern FuncItem funcItem[nbFunc];
 extern NppData nppData;
 extern DockingDlg snippetDock;
+WNDPROC	wndProcNpp = NULL;
 
 BOOL APIENTRY DllMain( HANDLE hModule, 
                        DWORD  reasonForCall, 
@@ -81,12 +82,29 @@ BOOL APIENTRY DllMain( HANDLE hModule,
     return TRUE;
 }
 
+LRESULT CALLBACK SubWndProcNpp(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    LRESULT	retVal = 0;
+
+    switch (message)
+    {
+        case WM_CLOSE:
+            //alert();
+            retVal = ::CallWindowProc(wndProcNpp, hWnd, message, wParam, lParam);
+            break;
+    	default:
+			retVal = ::CallWindowProc(wndProcNpp, hWnd, message, wParam, lParam);
+			break;
+    }
+    return retVal;
+}
 
 extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData)
 {
 	nppData = notpadPlusData;
 	commandMenuInit();
     setConfigAndDatabase();
+    wndProcNpp = (WNDPROC)::SetWindowLongPtr(nppData._nppHandle, GWL_WNDPROC, (LPARAM)SubWndProcNpp);
     
 }
 
@@ -190,6 +208,9 @@ extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam
 
 	return TRUE;
 }
+
+
+
 
 #ifdef UNICODE
 extern "C" __declspec(dllexport) BOOL isUnicode()

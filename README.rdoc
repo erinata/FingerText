@@ -177,7 +177,7 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 - Added: New keyword DATE and TIME. Which makes the format of datetime output customizable, for example you can use $[![(key)DATE:yyyyMMdd]!] to get 20110601 on 1st of June 2011
 - Added: export and delete all snippets
 - Added: new keyword UPPER and LOWER. For example: $[![(key)UPPER:aBcDe]!] will become ABCDE
-- Changed: Nested Dynamic hotspots are allowed. They are triggered from inside to outside just like normal dynamic hotspots
+- Changed: Nested Dynamic hotspots are allowed. They are triggered from inside to outside just like normal hotspots
 - Fixed: Typo in upgrade message
 - Fixed: (hopefully) a real fix to selectiontosnippet
 - Changed: Pop up option of whether to overwrite or keep copies in conflicting snippets

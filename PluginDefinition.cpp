@@ -1356,7 +1356,6 @@ bool hotSpotNavigation(HWND &curScintilla)
     return false;
 }
 
-
 int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, bool dynamic)
 {
     //TODO: examine whether the bool dynamic is still needed, or we just use the (cha) (key) (cmd) and (opt) to determine what should happen
