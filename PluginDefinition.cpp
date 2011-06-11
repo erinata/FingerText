@@ -1254,7 +1254,7 @@ bool hotSpotNavigation(HWND &curScintilla)
                     tempOptionStart = tempOptionEnd + 3;
                     ::SendMessage(curScintilla,SCI_GOTOPOS,tempOptionStart,0);
                     optionFound = searchNext(curScintilla, "|~|");
-                    if (optionFound>=0)
+                    if ((optionFound>=0) && (::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0)<secondPos))
                     {
                         tempOptionEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
                         ::SendMessage(curScintilla,SCI_SETSELECTION,tempOptionStart,tempOptionEnd);
@@ -2412,7 +2412,7 @@ void importSnippets()
                     if(SQLITE_ROW == sqlite3_step(stmt))
                     {
                         const char* extracted = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
-                        
+                        //TODO: need to fix memory leak here but import is not something repeatedly done for a lot of times so it's fine for now
                         snippetTextOld = new char[strlen(extracted)+1];
                         ZeroMemory(snippetTextOld,sizeof(snippetTextOld));
                         strcpy(snippetTextOld, extracted);
