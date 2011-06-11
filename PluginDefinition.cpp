@@ -1846,6 +1846,7 @@ int getCurrentTag(HWND curScintilla, int posCurrent, char **buffer, int triggerL
 	    ::SendMessage(curScintilla, SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&tagRange));
 		length = (posCurrent - posBeforeTag);
 	}
+    
 	return length;
 }
 
@@ -3175,7 +3176,7 @@ void tagComplete()
 {
     HWND curScintilla = getCurrentScintilla();
     int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-    if (triggerTag(posCurrent,true)) snippetHintUpdate();
+    if (triggerTag(posCurrent,true) > 0) snippetHintUpdate();
     //if (snippetComplete()) snippetHintUpdate();
 }
 
@@ -3198,7 +3199,7 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
     //::_itow_s(curLang, curLangNumber, 10, 10);
     //::wcscat(curLangText, curLangNumber);
 
-    if (tagLength >= 0)
+    if (tagLength > 0)
 	{
         int posBeforeTag = posCurrent-tagLength;
 
@@ -3215,21 +3216,21 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
         // Check for snippets which matches ext part
         if (!expanded)
         {
-            ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
+            ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
             convertToUTF8(fileType, &tagType);
             expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
             
             // Check for snippets which matches name part
             if (!expanded)
             {
-                ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
+                ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
                 convertToUTF8(fileType, &tagType);
                 expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
                 // Check for language specific snippets
                 if (!expanded)
                 {
                     expanded = findTagSQLite(tag,getLangTagType(),triggerTextComplete); 
-                
+                    // TODO: Hardcode the extension associated with each language type, check whether the extension are the same as the current extenstion, if not, use findtagSQLite to search for snippets using those scopes
                     
                     // Check for snippets which matches the current language group
                     //if (!expanded)
