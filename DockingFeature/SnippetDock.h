@@ -59,7 +59,7 @@
 
 class DockingDlg : public DockingDlgInterface
 {
-
+//TODO: should move the functions to snippetdock.cpp?
 public :
 	DockingDlg() : DockingDlgInterface(IDD_SNIPPET_DOCK){};
 

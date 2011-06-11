@@ -1,5 +1,9 @@
 changelog (for developers only, include unreleased versions)
 
+0.5.21
+****** Fixed: potential memory leakage problem cause by the quick fix in 0.5.20
+****** Fixed: Fingertext freeze if there are incomplete closing hotspot brankets
+
 0.5.20
 - Changed: All hotspots, normal or dynamic are triggered under the same rule, from inside to outside and from left to right.
 - Fixed: tab_tag_completion is not working

@@ -779,6 +779,7 @@ bool dynamicHotspot(HWND &curScintilla, int &startingPos)
     char* hotSpotText;
     char* hotSpot;
     int spot = -1;
+    int spotComplete = -1;
     int spotType = 0;
 
     int limitCounter = 0;
@@ -790,39 +791,43 @@ bool dynamicHotspot(HWND &curScintilla, int &startingPos)
         if (spot>=0)
 	    {
             checkPoint = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0)+1;
-            searchPrev(curScintilla, tagSign); 
+            spotComplete = -1;
+            spotComplete = searchPrev(curScintilla, tagSign);
+            if (spotComplete>=0)
+            {
 
-            int firstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-            int secondPos = 0;
-            spotType = grabHotSpotContent(curScintilla, &hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength,true);
-            
-            ///////////////////
-            if (spotType == 1)
-            {
-                checkPoint = firstPos;
-                chainSnippet(curScintilla, firstPos, hotSpotText+5);
+                int firstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+                int secondPos = 0;
+                spotType = grabHotSpotContent(curScintilla, &hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength,true);
                 
-                limitCounter++;
-            } else if (spotType == 2)
-            {
-                checkPoint = firstPos;
-                keyWordSpot(curScintilla, firstPos,hotSpotText+5, startingPos, checkPoint);
-                
-                limitCounter++;
-            } else if (spotType == 3)
-            {
-                checkPoint = firstPos;
-                executeCommand(curScintilla, firstPos, hotSpotText+5);
-                
-                limitCounter++;
-            } else
-            {
-                limitCounter++;
+                ///////////////////
+                if (spotType == 1)
+                {
+                    checkPoint = firstPos;
+                    chainSnippet(curScintilla, firstPos, hotSpotText+5);
+                    
+                    limitCounter++;
+                } else if (spotType == 2)
+                {
+                    checkPoint = firstPos;
+                    keyWordSpot(curScintilla, firstPos,hotSpotText+5, startingPos, checkPoint);
+                    
+                    limitCounter++;
+                } else if (spotType == 3)
+                {
+                    checkPoint = firstPos;
+                    executeCommand(curScintilla, firstPos, hotSpotText+5);
+                    
+                    limitCounter++;
+                } else
+                {
+                    limitCounter++;
+                }
             }
             //////////////////////
         }
         
-    } while ((spot>0) && (limitCounter<g_chainLimit));
+    } while ((spotComplete>=0) && (spot>0) && (limitCounter<g_chainLimit));
 
     //TODO: loosen the limit to the limit of special spot, and ++limit for every search so that less frezze will happen
     if (limitCounter>=g_chainLimit) ::MessageBox(nppData._nppHandle, TEXT("Dynamic hotspots triggering limit exceeded."), TEXT("FingerText"), MB_OK);
@@ -1225,121 +1230,123 @@ bool hotSpotNavigation(HWND &curScintilla)
 	{
         if (g_preserveSteps==0) ::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
 
-        searchPrev(curScintilla, tagSign); 
-        int firstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-        int secondPos = 0;
-        grabHotSpotContent(curScintilla, &hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength,false);
-        
-        ::SendMessage(curScintilla,SCI_GOTOPOS,firstPos,0);
-
-        int tempOptionStart = 0;
-        int tempOptionEnd = 0;
-
-        if (strncmp(hotSpotText,"(opt)",5)==0)
+        if (searchPrev(curScintilla, tagSign)>=0)
         {
-            //TODO: refactor the option hotspot part to a function
+            int firstPos = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+            int secondPos = 0;
+            grabHotSpotContent(curScintilla, &hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength,false);
             
-            cleanOptionItem();
-            tempOptionEnd = firstPos + 5 - 3;
-            int i =0;
-            int optionFound = -1;
-            while (i<20)
-            {
-                tempOptionStart = tempOptionEnd + 3;
-                ::SendMessage(curScintilla,SCI_GOTOPOS,tempOptionStart,0);
-                optionFound = searchNext(curScintilla, "|~|");
-                if (optionFound>=0)
-                {
-                    tempOptionEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-                    ::SendMessage(curScintilla,SCI_SETSELECTION,tempOptionStart,tempOptionEnd);
-                    char* optionText;
-                    optionText = new char[tempOptionEnd - tempOptionStart + 1];
-                    ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(optionText));
-                    addOptionItem(optionText);
-                    i++;
-                } else
-                {
-                    tempOptionEnd = secondPos-4;
-                    ::SendMessage(curScintilla,SCI_SETSELECTION,tempOptionStart,tempOptionEnd);
-                    char* optionText;
-                    optionText = new char[tempOptionEnd - tempOptionStart + 1];
-                    ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(optionText));
-                    addOptionItem(optionText);
-                    i++;
-                    
-                    break;
-                }
-            };
-
-            //g_optionOperating = true; 
-
-            ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,tempOptionEnd);
-            ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)g_optionArray[g_optionCurrent]);
-            //g_optionOperating = false; 
-
             ::SendMessage(curScintilla,SCI_GOTOPOS,firstPos,0);
-            g_optionStartPosition = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-            g_optionEndPosition = g_optionStartPosition + strlen(g_optionArray[g_optionCurrent]);
-            ::SendMessage(curScintilla,SCI_SETSELECTION,g_optionStartPosition,g_optionEndPosition);
-            if (i>1) g_optionMode = true;
-            //alertNumber(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
-            
+
+            int tempOptionStart = 0;
+            int tempOptionEnd = 0;
+
+            if (strncmp(hotSpotText,"(opt)",5)==0)
+            {
+                //TODO: refactor the option hotspot part to a function
                 
-            //char* tempText;
-            //tempText = new char[secondPos - firstPos + 1];
-            //::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(tempText));
-            //alertCharArray(tempText);
+                cleanOptionItem();
+                tempOptionEnd = firstPos + 5 - 3;
+                int i =0;
+                int optionFound = -1;
+                while (i<20)
+                {
+                    tempOptionStart = tempOptionEnd + 3;
+                    ::SendMessage(curScintilla,SCI_GOTOPOS,tempOptionStart,0);
+                    optionFound = searchNext(curScintilla, "|~|");
+                    if (optionFound>=0)
+                    {
+                        tempOptionEnd = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+                        ::SendMessage(curScintilla,SCI_SETSELECTION,tempOptionStart,tempOptionEnd);
+                        char* optionText;
+                        optionText = new char[tempOptionEnd - tempOptionStart + 1];
+                        ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(optionText));
+                        addOptionItem(optionText);
+                        i++;
+                    } else
+                    {
+                        tempOptionEnd = secondPos-4;
+                        ::SendMessage(curScintilla,SCI_SETSELECTION,tempOptionStart,tempOptionEnd);
+                        char* optionText;
+                        optionText = new char[tempOptionEnd - tempOptionStart + 1];
+                        ::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(optionText));
+                        addOptionItem(optionText);
+                        i++;
+                        
+                        break;
+                    }
+                };
 
-            //::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos);
-            //::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)g_optionArray[g_optionCurrent]);
+                //g_optionOperating = true; 
 
-        } else
-        {
+                ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,tempOptionEnd);
+                ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)g_optionArray[g_optionCurrent]);
+                //g_optionOperating = false; 
 
-            int hotSpotFound=-1;
-            int tempPos[100];
-            int i=1;
-            //TODO: The hotspot with the same name cannot be next to each others. This will be fixed when scintilla updates and notepad++ adopt the changes.
-            //TODO: consider refactor this part to another function
-            for (i=1;i<=98;i++)
+                ::SendMessage(curScintilla,SCI_GOTOPOS,firstPos,0);
+                g_optionStartPosition = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+                g_optionEndPosition = g_optionStartPosition + strlen(g_optionArray[g_optionCurrent]);
+                ::SendMessage(curScintilla,SCI_SETSELECTION,g_optionStartPosition,g_optionEndPosition);
+                if (i>1) g_optionMode = true;
+                //alertNumber(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
+                
+                    
+                //char* tempText;
+                //tempText = new char[secondPos - firstPos + 1];
+                //::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(tempText));
+                //alertCharArray(tempText);
+
+                //::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos);
+                //::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)g_optionArray[g_optionCurrent]);
+
+            } else
             {
-                tempPos[i]=-1;
-            
-                hotSpotFound = searchNext(curScintilla, hotSpot);
-                if ((hotSpotFound>=0) && strlen(hotSpotText)>0)
-                {
-                    tempPos[i] = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-                    ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)hotSpotText);
-                    ::SendMessage(curScintilla,SCI_GOTOPOS,tempPos[i],0);
-                } else
-                {
-                    break;
-                    //tempPos[i]=-1;
-                }
-            }
-            //::SendMessage(curScintilla,SCI_GOTOPOS,::SendMessage(curScintilla,SCI_POSITIONFROMLINE,posLine,0),0);
-            //::SendMessage(curScintilla,SCI_GOTOLINE,posLine,0);
 
-            ::SendMessage(curScintilla,SCI_GOTOPOS,firstPos,0);
-            ::SendMessage(curScintilla,SCI_SCROLLCARET,0,0);
-            
-            ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos-tagSignLength);
-            for (int j=1;j<i;j++)
-            {
-                if (tempPos[j]!=-1)
+                int hotSpotFound=-1;
+                int tempPos[100];
+                int i=1;
+                //TODO: The hotspot with the same name cannot be next to each others. This will be fixed when scintilla updates and notepad++ adopt the changes.
+                //TODO: consider refactor this part to another function
+                for (i=1;i<=98;i++)
                 {
-                    ::SendMessage(curScintilla,SCI_ADDSELECTION,tempPos[j],tempPos[j]+(secondPos-tagSignLength-firstPos));
+                    tempPos[i]=-1;
+                
+                    hotSpotFound = searchNext(curScintilla, hotSpot);
+                    if ((hotSpotFound>=0) && strlen(hotSpotText)>0)
+                    {
+                        tempPos[i] = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+                        ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)hotSpotText);
+                        ::SendMessage(curScintilla,SCI_GOTOPOS,tempPos[i],0);
+                    } else
+                    {
+                        break;
+                        //tempPos[i]=-1;
+                    }
                 }
+                //::SendMessage(curScintilla,SCI_GOTOPOS,::SendMessage(curScintilla,SCI_POSITIONFROMLINE,posLine,0),0);
+                //::SendMessage(curScintilla,SCI_GOTOLINE,posLine,0);
+
+                ::SendMessage(curScintilla,SCI_GOTOPOS,firstPos,0);
+                ::SendMessage(curScintilla,SCI_SCROLLCARET,0,0);
+                
+                ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos-tagSignLength);
+                for (int j=1;j<i;j++)
+                {
+                    if (tempPos[j]!=-1)
+                    {
+                        ::SendMessage(curScintilla,SCI_ADDSELECTION,tempPos[j],tempPos[j]+(secondPos-tagSignLength-firstPos));
+                    }
+                }
+                ::SendMessage(curScintilla,SCI_SETMAINSELECTION,0,0);
+                ::SendMessage(curScintilla,SCI_LINESCROLL,0,0);
             }
-            ::SendMessage(curScintilla,SCI_SETMAINSELECTION,0,0);
-            ::SendMessage(curScintilla,SCI_LINESCROLL,0,0);
+
+            delete [] hotSpot;
+            delete [] hotSpotText;
+
+            if (g_preserveSteps==0) ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
+            return true;
         }
-
-        delete [] hotSpot;
-        delete [] hotSpotText;
-
-        if (g_preserveSteps==0) ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
-        return true;
 	} else
     {
         //delete [] hotSpot;  // Don't try to delete if it has not been initialized
@@ -3199,7 +3206,7 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
     //::_itow_s(curLang, curLangNumber, 10, 10);
     //::wcscat(curLangText, curLangNumber);
 
-    if (tagLength > 0)
+    if (tagLength > 0) //TODO: changing this to >0 fixed the problem of tag_tab_completion, but need to investigate more about the side effect
 	{
         int posBeforeTag = posCurrent-tagLength;
 
@@ -3312,6 +3319,9 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
 
         // return to the original position 
         if (tagFound) ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
+    } else if (tagLength == 0)
+    {
+        delete [] tag;
     }
     
     return tagFound;
