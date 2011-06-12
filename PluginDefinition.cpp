@@ -2265,17 +2265,16 @@ char* cleanupString(char *str, char key)
     while ((*from != key) && (*to++=*from),*from++);
     return str;
 }
-//char* cleanupString(char *str)
-//{
-//    //TODO: generalize it so we can input key char and can be used in dynamic hotspot
-//    if (str==NULL) return NULL;
-//
-//    char *from, *to;
-//    from=to=str;
-//
-//    while ((*from != '\r') && (*to++=*from),*from++);
-//    return str;
-//}  
+
+void cleanupString2(char* str, char key)
+{
+    char *from, *to;
+    from=to=str;
+
+    while ((*from != key) && (*to++=*from),*from++);
+    //return str;
+}
+
 
 void convertToWideChar(char* orig, wchar_t **wideChar)
 {
@@ -2377,7 +2376,7 @@ void importSnippets()
             int snippetPosEnd;
             bool notOverWrite;
             char* snippetTextOld;
-            char* snippetTextOldCleaned;
+            //char* snippetTextOldCleaned;
             do
             {
                 //import snippet do not have the problem of " " in save snippet because of the space in  "!$[FingerTextData FingerTextData]@#"
@@ -2412,23 +2411,27 @@ void importSnippets()
                     if(SQLITE_ROW == sqlite3_step(stmt))
                     {
                         const char* extracted = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
-                        //TODO: need to fix memory leak here but import is not something repeatedly done for a lot of times so it's fine for now
+                        
                         snippetTextOld = new char[strlen(extracted)+1];
                         ZeroMemory(snippetTextOld,sizeof(snippetTextOld));
                         strcpy(snippetTextOld, extracted);
                         //
-                        snippetTextOldCleaned = new char[strlen(snippetTextOld)];
-                        ZeroMemory(snippetTextOldCleaned,sizeof(snippetTextOldCleaned));
+                        //snippetTextOldCleaned = new char[strlen(snippetTextOld)];
+                        //ZeroMemory(snippetTextOldCleaned,sizeof(snippetTextOldCleaned));
                         
-                        snippetTextOldCleaned = cleanupString(snippetTextOld,'\r');
-                        
+                        //snippetTextOldCleaned = cleanupString(snippetTextOld,'\r');
+                        snippetTextOld = cleanupString(snippetTextOld,'\r');
+
                         //if (strlen(snippetTextNew) == strlen(snippetText)) alert();
-                        if (strcmp(snippetText,snippetTextOldCleaned) == 0)
+                        //if (strcmp(snippetText,snippetTextOldCleaned) == 0)
+                        if (strcmp(snippetText,snippetTextOld) == 0)
                         {
+                            delete [] snippetTextOld;
                             notOverWrite = true;
                             //sqlite3_finalize(stmt);
                         } else
                         {
+                            delete [] snippetTextOld;
                         //    sqlite3_finalize(stmt);
                             if (conflictKeepCopy==IDNO)
                             {
@@ -3532,6 +3535,17 @@ void testing()
     ::MessageBox(nppData._nppHandle, TEXT("Testing!"), TEXT("Trace"), MB_OK);
     
     HWND curScintilla = getCurrentScintilla();
+
+
+    //Testing usage of cleanupstring()
+    //char* test = new char[MAX_PATH];
+    //strcpy(test,"To test the cleanupstring.");
+    //alertCharArray(test);
+    //test = cleanupString(test,'t');
+    //alertCharArray(test);
+    //delete [] test;
+    //alertCharArray(test);
+
     //cleanOptionItem();
             
     //testing add and get optionitem, testing for memory leak

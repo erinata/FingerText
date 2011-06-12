@@ -185,7 +185,7 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 - Fixed: extra newline in tempfile generation
 - Update scintilla.h so that it's compatibile with notepad++ 5.9
 - Fixed: great improvement in undo action as live update is turn off temporarily int he middle of an undo action
-- Experimental: Language based snippets, for example if you have snippets with scope Lang:HTML, the snippet is available for all HTML files. You can use the scope Lang:C or Lang:PYTHON. A complete list of language supported will be in a list when this feature is finalized.
+- Experimental: Language based snippets, for example if you have snippets with scope Lang:HTML, the snippet is available for all HTML files. You can use the scope Lang:C or Lang:PYTHON. Basically all the languages in Notepad++ are supported, such as Lang:HTML, Lang:D ......etc. A complete list of language supported will be in a list when this feature is finalized.
 - Experimental: Option Hotspot, just try making a snippet containing $[![(opt)Snippet1|~|Snippet2|~|Snippet3|~|Snippet4]!] and try to trigger it. The text "Snippet1" will be inserted to the editor and everytime you hit [tab], it will cycle though the options provided in the hotspot
 
 0.5.11
