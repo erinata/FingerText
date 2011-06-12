@@ -69,7 +69,7 @@ const TCHAR NPP_PLUGIN_NAME[] = TEXT("FingerText");
 //
 // Here define the number of your plugin commands
 //
-const int nbFunc = 18;
+const int nbFunc = 19;
 
 
 //
@@ -186,8 +186,10 @@ void turnOffOptionMode();
 void optionNavigate(HWND &curScintilla);
 
 void testing();
+void testing2();
 void alert();
 void alertNumber(int input);
 void alertCharArray(char* input);
 void alertTCharArray(TCHAR* input);
+void alertString(std::string input);
 #endif //PLUGINDEFINITION_H

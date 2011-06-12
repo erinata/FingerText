@@ -59,8 +59,9 @@
 #include "SnippetDock.h"
 #include "Version.h"
 
+#include <winhttp.h>   // Add winhttp.lib to additional dependencies if there is external error
 //#include <process.h>
-//#include <string.h>
+
 
 // The plugin data that Notepad++ needs
 FuncItem funcItem[nbFunc];
@@ -83,7 +84,6 @@ TCHAR g_fttempPath[MAX_PATH];
 
 SnipIndex* g_snippetCache;
 //int g_snippetCacheSize;
-
 
 int g_version;
 
@@ -158,6 +158,7 @@ DockingDlg snippetDock;
 #define ABOUT_INDEX 14
 //#define SEPARATOR_FOUR_INDEX 16
 #define TESTING_INDEX 17
+#define TESTING2_INDEX 18
 
 // Initialize your plugin data here
 // It will be called while plugin loading   
@@ -174,6 +175,7 @@ void pluginCleanUp()
     g_liveHintUpdate = 0;
     //saveCustomScope();
     //writeConfig();
+    
 }
 
 //
@@ -227,6 +229,7 @@ void commandMenuInit()
     setCommand(ABOUT_INDEX, TEXT("About"), showAbout, NULL, false);
     //setCommand(SEPARATOR_FOUR_INDEX, TEXT("---"), NULL, NULL, false);
     setCommand(TESTING_INDEX, TEXT("Testing"), testing, NULL, false);
+    setCommand(TESTING2_INDEX, TEXT("Testing2"), testing2, NULL, false);
 }
 
 // Here you can do the clean up (especially for the shortcut)
@@ -3528,15 +3531,122 @@ void fingerText()
 //    return;
 //}
 
+void testing2()
+{
+    ::MessageBox(nppData._nppHandle, TEXT("Testing2!"), TEXT("Trace"), MB_OK);
+    
+    HWND curScintilla = getCurrentScintilla();
+}
 
 void testing()
 {
-
+    
     ::MessageBox(nppData._nppHandle, TEXT("Testing!"), TEXT("Trace"), MB_OK);
     
     HWND curScintilla = getCurrentScintilla();
 
 
+
+    //Testing using winhttp to send request
+    //Variables 
+    //DWORD dwSize = 0;
+    //DWORD dwDownloaded = 0;
+    //LPSTR pszOutBuffer;
+    //std::vector <std::string>  vFileContent;
+    //BOOL  bResults = FALSE;
+    //HINTERNET  hSession = NULL, 
+    //           hConnect = NULL,
+    //           hRequest = NULL;
+    //
+    //// Use WinHttpOpen to obtain a session handle.
+    //hSession = WinHttpOpen( L"WinHTTP Example/1.0",  
+    //                        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+    //                        WINHTTP_NO_PROXY_NAME, 
+    //                        WINHTTP_NO_PROXY_BYPASS, 0);
+    //
+    //// Specify an HTTP server.
+    //if (hSession)
+    //    hConnect = WinHttpConnect( hSession, L"dl.dropbox.com",
+    //                               INTERNET_DEFAULT_HTTP_PORT, 0);
+    //
+    //// Create an HTTP request handle.
+    //if (hConnect)
+    //    hRequest = WinHttpOpenRequest( hConnect, L"GET", L"/u/7429931/test.txt",
+    //                                   NULL, WINHTTP_NO_REFERER, 
+    //                                                           NULL, 
+    //                                   NULL);
+    //
+    //// Send a request.
+    //if (hRequest)
+    //    bResults = WinHttpSendRequest( hRequest,
+    //                                   WINHTTP_NO_ADDITIONAL_HEADERS,
+    //                                   0, WINHTTP_NO_REQUEST_DATA, 0, 
+    //                                   0, 0);
+    //
+    //
+    //// End the request.
+    //if (bResults)
+    //    bResults = WinHttpReceiveResponse( hRequest, NULL);
+    //
+    //// Keep checking for data until there is nothing left.
+    //if (bResults)
+    //    do 
+    //    {
+    //
+    //        // Check for available data.
+    //        dwSize = 0;
+    //        if (!WinHttpQueryDataAvailable( hRequest, &dwSize))
+    //            printf( "Error %u in WinHttpQueryDataAvailable.\n",
+    //                    GetLastError());
+    //
+    //        // Allocate space for the buffer.
+    //        pszOutBuffer = new char[dwSize+1];
+    //        if (!pszOutBuffer)
+    //        {
+    //            printf("Out of memory\n");
+    //            dwSize=0;
+    //        }
+    //        else
+    //        {
+    //            // Read the Data.
+    //            ZeroMemory(pszOutBuffer, dwSize+1);
+    //
+    //            if (!WinHttpReadData( hRequest, (LPVOID)pszOutBuffer, 
+    //                                  dwSize, &dwDownloaded))
+    //                {
+    //                printf( "Error %u in WinHttpReadData.\n", 
+    //                        GetLastError());
+    //                }
+    //            else
+    //                {
+    //                        printf("%s", pszOutBuffer);
+    //                            // Data in vFileContent
+    //                        vFileContent.push_back(pszOutBuffer);
+    //                }
+    //
+    //            // Free the memory allocated to the buffer.
+    //            delete [] pszOutBuffer;
+    //        }
+    //
+    //    } while (dwSize>0);
+    //
+    //
+    //// Report any errors.
+    //if (!bResults)
+    //    printf("Error %d has occurred.\n",GetLastError());
+    //
+    //// Close any open handles.
+    //if (hRequest) WinHttpCloseHandle(hRequest);
+    //if (hConnect) WinHttpCloseHandle(hConnect);
+    //if (hSession) WinHttpCloseHandle(hSession);
+    //
+    //// Write vFileContent to file
+    //std::ofstream out("d:\\test.txt",std::ios::binary);
+    //for (int i = 0; i < (int) vFileContent.size();i++)
+    //out << vFileContent[i];
+    //out.close();
+
+    
     //Testing usage of cleanupstring()
     //char* test = new char[MAX_PATH];
     //strcpy(test,"To test the cleanupstring.");
@@ -3835,4 +3945,12 @@ void alertCharArray(char* input)
 void alertTCharArray(TCHAR* input)
 {
     ::MessageBox(nppData._nppHandle, input, TEXT("Trace"), MB_OK);
+}
+
+void alertString(std::string input)
+{
+    char* temp = new char [input.size()+1];
+    strcpy(temp, input.c_str());
+    alertCharArray(temp);
+    delete [] temp;
 }

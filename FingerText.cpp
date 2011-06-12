@@ -172,7 +172,16 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
                 refreshAnnotation();
             }
             break;
-        
+        ////TODO: Use this to change how option hotspot works
+        ////TODO: Also consider using this to prevent selection from going through 1st 3 lines in snippet editing mode. It can also prevent selection in 1st line
+        //case SCN_UPDATEUI:
+        //    if (notifyCode->updated & (SC_UPDATE_SELECTION))
+        //    {
+        //        alert();
+        //    }
+        //    break;
+
+
         case NPPN_FILESAVED:
             //keyUpdate();
             //refreshAnnotation();
@@ -189,6 +198,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
         case NPPN_SHUTDOWN:
             pluginShutdown();
             break;
+        // TODO: consider using SC_MOD_CHANGEANNOTATION to shutdown use of annotation in snippet editing mode
+
     }
 }
 

@@ -56,6 +56,9 @@
 #include <windows.h>
 #include "Scintilla.h"
 #include "Notepad_plus_msgs.h"
+//#include <vector>
+#include <string>
+//#include <stack>
 
 const int nbChar = 64;
 
