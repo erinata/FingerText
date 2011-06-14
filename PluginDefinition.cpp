@@ -1482,19 +1482,39 @@ void showPreview(bool top)
 	    	// Run the query with sqlite3_step
 	    	if(SQLITE_ROW == sqlite3_step(stmt))  // SQLITE_ROW 100 sqlite3_step() has another row ready
 	    	{
-	    		const char* snippetText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
+                const char* snippetText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
+                
+                char* previewText = new char[500];
+                strcpy(previewText,"[");
+                strcat(previewText, g_snippetCache[index].triggerText);//TODO: showing the triggertext on the title "snippet preview" instead
+                strcat(previewText,"]:\r\n");
+                char* contentTruncated = new char[155];
+                strncpy(contentTruncated, snippetText, 154);
+                contentTruncated[154]='\0';
+                //strcat(contentTruncated,"\0");
+                strcat(previewText,contentTruncated);
+                if (strlen(contentTruncated)>=153) strcat(previewText, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . "); 
+                
+                TCHAR* previewTextWide;
+                convertToWideChar(previewText,&previewTextWide);
+                //TODO: investigate why all eol are messed up in preview box
+
                 //size_t origsize = strlen(snippetText) + 1; 
-                size_t convertedChars = 0; 
-                wchar_t previewText[270]; 
-                mbstowcs_s(&convertedChars, previewText, 190, snippetText, _TRUNCATE);
+                //size_t convertedChars = 0; 
+                //wchar_t previewText[270]; 
+                //mbstowcs_s(&convertedChars, previewText, 190, snippetText, _TRUNCATE);
+                //
+                //if (convertedChars>=184)
+                //{
+                //    const TCHAR etcText[] = TEXT(" . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .");
+                //    ::_tcscat(previewText,etcText);
+                //}
                 
-                if (convertedChars>=184)
-                {
-                    const TCHAR etcText[] = TEXT(" . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .");
-                    ::_tcscat(previewText,etcText);
-                }
-                
-                snippetDock.setDlgText(ID_SNIPSHOW_EDIT,previewText);
+                snippetDock.setDlgText(ID_SNIPSHOW_EDIT,previewTextWide);
+
+                delete [] previewText;
+                delete [] contentTruncated;
+                delete [] previewTextWide;
 
                 //wchar_t countText[10];
                 //::_itow_s(convertedChars, countText, 10, 10); 
@@ -2214,7 +2234,7 @@ bool exportSnippets()
 
     bool success = false;
 
-    HWND curScintilla = getCurrentScintilla();
+    
 
     OPENFILENAME ofn;
     char fileName[MAX_PATH] = "";
@@ -2234,6 +2254,8 @@ bool exportSnippets()
         int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
         ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
 
+        HWND curScintilla = getCurrentScintilla();
+        ::SendMessage(curScintilla, SCI_SETCURSOR, SC_CURSORWAIT, 0);
         g_snippetListLength = 100000;
         g_snippetCache = new SnipIndex [g_snippetListLength];
         updateDockItems(true,true,"%");
@@ -2255,6 +2277,7 @@ bool exportSnippets()
         ::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, 0, (LPARAM)fileName);
         success = true;
 
+        ::SendMessage(curScintilla, SCI_SETCURSOR, SC_CURSORNORMAL, 0);
         wchar_t exportCountText[35] = TEXT("");
 
         if (exportCount>1)
@@ -2352,6 +2375,7 @@ void importSnippets()
     
     if (::GetOpenFileName(&ofn))
     {
+
         //int conflictOverwrite = IDNO;
         //if (g_importOverWriteOption==1)
         //{
@@ -2365,6 +2389,7 @@ void importSnippets()
             ::MessageBox(nppData._nppHandle, TEXT("Snippet importing aborted."), TEXT("FingerText"), MB_OK);
             return;
         }
+
 
         //::MessageBox(nppData._nppHandle, (LPCWSTR)fileName, TEXT("Trace"), MB_OK);
         std::ifstream file;
@@ -2387,6 +2412,8 @@ void importSnippets()
             ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
         
             HWND curScintilla = getCurrentScintilla();
+            ::SendMessage(curScintilla, SCI_SETCURSOR, SC_CURSORWAIT, 0);
+
             //::SendMessage(curScintilla, SCI_SETCODEPAGE,65001,0);
             ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)fileText);
             ::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
@@ -2581,6 +2608,8 @@ void importSnippets()
                 next = searchNext(curScintilla, "!$[FingerTextData FingerTextData]@#");
             } while (next>=0);
             
+            ::SendMessage(curScintilla, SCI_SETCURSOR, SC_CURSORNORMAL, 0);
+
             wchar_t importCountText[200] = TEXT("");
             
             if (importCount>1)
