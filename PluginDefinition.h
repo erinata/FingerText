@@ -69,7 +69,7 @@ const TCHAR NPP_PLUGIN_NAME[] = TEXT("FingerText");
 //
 // Here define the number of your plugin commands
 //
-const int nbFunc = 19;
+const int nbFunc = 15;
 
 
 //
@@ -174,12 +174,13 @@ void convertToWideChar(char* orig, wchar_t **wideChar);
 void insertDateTime(bool date,int type, HWND &curScintilla);
 void insertPath(TCHAR* path, HWND &curScintilla);
 void insertNppPath(int msg, HWND &curScintilla);
-void executeCommand();
+void executeCommand(HWND &curScintilla, int &firstPos, char* hotSpotText);
+void launchMessageBox(HWND &curScintilla, int &firstPos, char* hotSpotText);
 void selectionMonitor(bool contentChange = false);
 bool triggerTag(int &posCurrent,bool triggerTextComplete = false,int triggerLength=  0);
 void tagComplete();
 //bool snippetComplete();
-void fingerText();
+void tabKeyResponse();
 
 void updateOptionCurrent(bool toNext);
 void addOptionItem(char* item);

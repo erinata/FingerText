@@ -1,12 +1,22 @@
 changelog (for developers only, include unreleased versions)
 
+0.5.24
+****** restructure the version text and about text
+
+0.5.23
+- bump version to fix the problem that I leave testing option open in 0.5.22
+
+0.5.22
+****** Added: Messagebox hotspot (msg)
+- Changed: default chain limit to 40
+
 0.5.21
-****** Changed: New snippet editor
-****** Added: Can go forward (right arrow) or backward(left arrow) when cycling through option hotspot, tab to choose option
-****** Added: Import and export action will show waiting cursor
-****** Fixed: potential memory leakage problem cause by the quick fix in 0.5.20
-****** Fixed: Fingertext freeze if there are incomplete closing hotspot brankets
-****** Fixed: better checking for the end of option hotspot
+- Changed: New snippet editor
+- Added: Can go forward (right arrow) or backward(left arrow) when cycling through option hotspot, tab to choose option
+- Added: Import and export action will show waiting cursor
+- Fixed: potential memory leakage problem cause by the quick fix in 0.5.20
+- Fixed: Fingertext freeze if there are incomplete closing hotspot brankets
+- Fixed: better checking for the end of option hotspot
 
 
 0.5.20

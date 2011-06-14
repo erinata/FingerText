@@ -110,7 +110,7 @@ char *g_optionArray[] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
 #define DEFAULT_TAB_TAG_COMPLETION 0
 #define DEFAULT_LIVE_HINT_UPDATE 1
 #define DEFAULT_INDENT_REFERENCE 1
-#define DEFAULT_CHAIN_LIMIT 20
+#define DEFAULT_CHAIN_LIMIT 40
 #define DEFAULT_PRESERVE_STEPS 0
 #define DEFAULT_ESCAPE_CHAR 0
 #define DEFAULT_IMPORT_OVERWRITE_OPTION 0
@@ -211,7 +211,7 @@ void commandMenuInit()
 	//shKey2->_isShift = false;
 	//shKey2->_key = VK_F4;
 
-    setCommand(TRIGGER_SNIPPET_INDEX, TEXT("Trigger Snippet/Navigate to Hotspot"), fingerText, shKey, false);
+    setCommand(TRIGGER_SNIPPET_INDEX, TEXT("Trigger Snippet/Navigate to Hotspot"), tabKeyResponse, shKey, false);
     
     //setCommand(WARMSPOT_NAVIGATION_INDEX, TEXT("Navigate to Warmspot"), goToWarmSpot, shKey2, false);
     setCommand(SNIPPET_DOCK_INDEX, TEXT("Toggle On/off SnippetDock"), showSnippetDock, NULL, false);
@@ -420,12 +420,52 @@ char *findTagSQLite(char *tag, char *tagCompare, bool similar=false)
 
 void upgradeMessage()
 {
+    //TODO: make better structure for welcometext. like one piece of string per version.
     //TODO: dynamic upgrade message
     HWND curScintilla = getCurrentScintilla();
     if (g_newUpdate)
     {
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
-        ::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)WELCOME_TEXT);
+
+        char* welcomeText = new char[5000];
+        strcpy(welcomeText,"");
+        strcat(welcomeText, "Thanks for Upgrading to ");
+        strcat(welcomeText, VERSION_TEXT_LONG);
+        strcat(welcomeText, "\r\n\
+Please read this document if you are upgrading from previous versions.\r\n\r\n\
+Upgrading from 0.5.21 or above\r\n\
+Everything is compatible.\r\n\r\n\
+Upgrading from 0.5.20\r\n\
+In version ");
+        strcat(welcomeText, VERSION_TEXT);
+        strcat(welcomeText, " after you triggered a option hotspot, you can use right/down arrow to move to next option, left/up arrow to move to previous option. Hit tab to exit option mode.\r\n\
+\r\n\
+Upgrading from any version between 0.5.0 and 0.5.18\r\n\
+All hotspots are now triggered from inside to outside, left to right. Therefore dynamic snippets that is created before 0.5.20 can behave differently in this version.\r\n\
+\r\n\
+Upgrading from 0.4.15 or 0.4.16\r\n\
+If you want to use your snippets after you upgrade to ");
+        strcat(welcomeText, VERSION_TEXT);
+        strcat(welcomeText, ", you can go to the config folder and move the FingerText.db3 file to the config\\FingerText folder after update.\r\n\
+chain snippet is indicated by $[![(cha)]!] instead of $[![(chain)]!]\r\n\
+\r\n\
+Upgrading from 0.4.4 or 0.4.11\r\n\
+If you want to use your snippets after you upgrade to ");
+        strcat(welcomeText, VERSION_TEXT);
+        strcat(welcomeText, ", you can go to the config folder and move the FingerText.db3 file to the config\\FingerText folder after update.\r\n\
+\r\n\
+Upgrading from 0.4.1\r\n\
+If you want to use your snippets after you upgrade to ");
+        strcat(welcomeText, VERSION_TEXT);
+        strcat(welcomeText, ", you can go to the %Notepad++ folder%\\plugins\\FingerText and get the old database file Snippets.db3. Rename is to FingerText.db3 and move it to the config\\FingerText folder after update.\r\n\
+\r\n\
+Upgrading from 0.3.5 or below\r\n\
+FingerText 0.3.5 or below use a 'one snippet per file' system to store snippets, which is not compatibile with current version. If you really have a lot of snippets created using these early version, please send your snippets to erinata@gmail.com. I will try my best to import them into the database in the current version.\r\n\
+");
+
+        ::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)welcomeText);
+
+        delete [] welcomeText;
     }
 }
 
@@ -821,6 +861,7 @@ bool dynamicHotspot(HWND &curScintilla, int &startingPos)
                 spotType = grabHotSpotContent(curScintilla, &hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength,true);
                 
                 ///////////////////
+                //TODO: checkPoint = firstPos; not needed?
                 if (spotType == 1)
                 {
                     checkPoint = firstPos;
@@ -839,7 +880,14 @@ bool dynamicHotspot(HWND &curScintilla, int &startingPos)
                     executeCommand(curScintilla, firstPos, hotSpotText+5);
                     
                     limitCounter++;
-                } else
+                } else if (spotType == 4)
+                {
+                    checkPoint = firstPos;
+                    launchMessageBox(curScintilla, firstPos,hotSpotText+5);
+
+                    limitCounter++;
+                }
+                else
                 {
                     limitCounter++;
                 }
@@ -895,6 +943,58 @@ void executeCommand(HWND &curScintilla, int &firstPos, char* hotSpotText)
         ::memset (psBuffer,0,sizeof(psBuffer));
     }
     _pclose( pPipe );
+}
+
+void launchMessageBox(HWND &curScintilla, int &firstPos, char* hotSpotText)
+{
+    int triggerPos = strlen(hotSpotText)+firstPos;
+    ::SendMessage(curScintilla,SCI_SETSEL,firstPos,triggerPos);
+
+    char* getTerm;
+    getTerm = new char[strlen(hotSpotText)];
+    strcpy(getTerm,"");
+    
+    int messageType = MB_OK;
+    if (strncmp(hotSpotText,"OK:",3)==0) 
+    {
+        messageType = MB_OK;
+        strcpy(getTerm,hotSpotText+3);
+    } else if (strncmp(hotSpotText,"YESNO:",6)==0) 
+    {
+        messageType = MB_YESNO;
+        strcpy(getTerm,hotSpotText+6);
+    } else if (strncmp(hotSpotText,"OKCANCEL:",9)==0) 
+    {
+        messageType = MB_OKCANCEL;
+        strcpy(getTerm,hotSpotText+9);
+    } else if (strncmp(hotSpotText,"ABORTRETRYIGNORE:",17)==0) 
+    {
+        messageType = MB_ABORTRETRYIGNORE;
+        strcpy(getTerm,hotSpotText+17);
+    } else if (strncmp(hotSpotText,"CANCELTRYCONTINUE:",18)==0) 
+    {
+        messageType = MB_CANCELTRYCONTINUE;
+        strcpy(getTerm,hotSpotText+18);
+    } else if (strncmp(hotSpotText,"RETRYCANCEL:",12)==0) 
+    {
+        messageType = MB_RETRYCANCEL;
+        strcpy(getTerm,hotSpotText+12);
+    } else if (strncmp(hotSpotText,"YESNOCANCEL:",12)==0) 
+    {
+        messageType = MB_YESNOCANCEL;
+        strcpy(getTerm,hotSpotText+12);
+    }
+
+    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
+    TCHAR* getTermWide;
+    convertToWideChar(getTerm,&getTermWide);
+    int retVal = 0;
+    retVal = ::MessageBox(nppData._nppHandle, getTermWide, TEXT("FingerText"), messageType);
+    char countText[10];
+    ::_itoa(retVal, countText, 10);
+    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)countText);
+    delete [] getTerm;
+    delete [] getTermWide;
 }
 
 void keyWordSpot(HWND &curScintilla, int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint)
@@ -1406,6 +1506,9 @@ int grabHotSpotContent(HWND &curScintilla, char **hotSpotText,char **hotSpot, in
     {
         spotType = 3;
         //alertCharArray("cmd");
+    } else if (strncmp(*hotSpotText,"(msg)",5)==0)
+    {
+        spotType = 4;
     }
 
     ::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos+3);
@@ -1703,8 +1806,6 @@ void setConfigAndDatabase()
     sqlite3_step(stmt);
     sqlite3_finalize(stmt);
 
-    // Loading config file
-
     ::_tcscpy(g_iniPath,path);
     ::_tcscpy(g_ftbPath,path);
     ::_tcscpy(g_fttempPath,path);
@@ -1714,7 +1815,6 @@ void setConfigAndDatabase()
     ::_tcscat(g_fttempPath,TEXT("\\FingerText.fttemp"));
     //::_tcscat(g_groupPath,TEXT("\\SnippetGroup.ini"));
     
-
     setupConfigFile();
 
     g_snippetCache = new SnipIndex [g_snippetListLength];
@@ -1979,8 +2079,7 @@ void snippetHintUpdate()
 }
 
 void updateDockItems(bool withContent, bool withAll, char* tag)
-{
-    
+{   
     g_liveHintUpdate--;
 
     int scopeLength=0;
@@ -3126,26 +3225,46 @@ void settings()
 
 void showHelp()
 {
-    ::MessageBox(nppData._nppHandle, HELP_TEXT_FULL, TEXT("FingerText"), MB_OK);
+  TCHAR* helpText = TEXT("\
+FingerText Quick Guide:\r\n\r\n\
+Insert Snippet --- Type in TriggerText and Hit the tab key\r\n\
+Navigate to next Hotspot --- Hit the tab key\r\n\
+Show SnippetDock --- Menu>Plugins>FingerText>Toggle On/Off SnippetDock\r\n\
+AutoComplete TriggerText --- Menu>Plugins>FingerText>TriggerText Completion\r\n\
+Goto Snippet Editor --- Double click a snippet in the SnippetDock\r\n\
+Create New Snippet --- Click Create button on the SnippetDock\r\n\
+Create snippet from selection -- Select some text and click create button\r\n\
+Save Snippet --- In the Snippet Editor View, Click Save Button or Ctrl+S\r\n\
+Delete Snippet --- Select a snippet on SnippetDock and Click Delete Button\r\n\
+Export Snippets --- Menu>Plugins>FingerText>Export Snippets\r\n\
+Delete All Snippets --- Menu>Plugins>FingerText>Export and Delete All Snippets\r\n\
+Import Snippets --- Menu>Plugins>FingerText>Import Snippets\r\n\
+About FingerText --- Menu>Plugins>FingerText>About\r\n\r\n\
+For step by step usage guide, please visit http://github.com/erinata/FingerText \
+");
+
+    ::MessageBox(nppData._nppHandle, helpText, TEXT("FingerText"), MB_OK);
      //ShellExecute(NULL, TEXT("open"), TEXT("https://github.com/erinata/FingerText"), NULL, NULL, SW_SHOWNORMAL);
 }
 
 void showAbout()
 {
-    ::MessageBox(nppData._nppHandle, VERSION_TEXT_FULL, TEXT("FingerText"), MB_OK);
+    TCHAR versionText[1000];
+    _tcscpy(versionText,TEXT(""));
+    _tcscat(versionText,TEXT(VERSION_TEXT_LONG));
+    _tcscat(versionText,TEXT("\
+\r\n\
+June 2011\r\n\r\n\
+Author: Tom Lam\r\n\
+Email: erinata@gmail.com\r\n\r\n\
+Update to the lastest version:\r\n\
+     http://sourceforge.net/projects/fingertext/ \r\n\
+Usage Guide and Source code:\r\n\
+     http://github.com/erinata/FingerText \r\n\r\n\
+(Snippets created using FingerText version earlier than 0.3.5 are not compatible with this version)\
+"));
+    ::MessageBox(nppData._nppHandle, versionText, TEXT("FingerText"), MB_OK);
 }
-
-//void keyUpdate()
-//{
-//    if (g_editorView)
-//    {
-//        refreshAnnotation();
-//    }
-//    //else
-//    //{
-//    //    snippetHintUpdate();
-//    //}
-//}
 
 void refreshAnnotation()
 {
@@ -3169,48 +3288,39 @@ void refreshAnnotation()
             if (lineCurrent == 1)
             {
                 ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"\
-_______________________________________________________________________________\r\n\
+__________________________________________________________________________\r\n\
  Snippet Editor Hint: \r\n\r\n\
  Triggertext is the text you type to trigger the snippets.\r\n\
  e.g. \"npp\"(without quotes) means the snippet is triggered \r\n\
  when you type npp and hit tab)\r\n\
-_______________________________________________________________________________\r\n\r\n\r\n\r\n\
-       =============   TriggerText   =============                             ");
+__________________________________________________________________________\r\n\r\n\r\n\r\n\
+       =============   TriggerText   =============                        ");
             } else if (lineCurrent == 2)
             {
                 ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"\
-_______________________________________________________________________________\r\n\
+__________________________________________________________________________\r\n\
  Snippet Editor Hint: \r\n\r\n\
  Scope determines where the snippet is available.\r\n\
  e.g. \"GLOBAL\"(without quotes) for globally available snippets.\r\n\
  \".cpp\"(without quotes) means available in .cpp documents and\r\n\
  \"Lang:HTML\"(without quotes) for all html documents.\r\n\
-_______________________________________________________________________________\r\n\r\n\r\n\
-       =============   TriggerText   =============                             ");
+__________________________________________________________________________\r\n\r\n\r\n\
+       =============   TriggerText   =============                        ");
             } else
             {
                 ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"\
-_______________________________________________________________________________\r\n\
+__________________________________________________________________________\r\n\
  Snippet Editor Hint: \r\n\r\n\
  Snippet Content is the text that is inserted to the editor when \r\n\
  a snippet is triggered.\r\n\
  It can be as long as many paragraphs or just several words.\r\n\
  Remember to place an [>END<] at the end of the snippet.\r\n\
-_______________________________________________________________________________\r\n\r\n\r\n\
-       =============   TriggerText   =============                             ");
+__________________________________________________________________________\r\n\r\n\r\n\
+       =============   TriggerText   =============                        ");
             }
 
- //           if (lineCurrent == 2)
- //           {
- //               ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 1, (LPARAM)"\
- //=== Scope === \r\n\
- //e.g. \"GLOBAL\"(without quotes) for globally available snippets.\r\n\
- //\".cpp\"(without quotes) means available in .cpp documents.\r\n\
- //\"Lang:HTML\"(without quotes) means available in all html documents.");
-             
-
-            ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 1, (LPARAM)"       =============      Scope      =============                             ");
-            ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 2, (LPARAM)"       ============= Snippet Content =============                             ");
+            ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 1, (LPARAM)"\r\n       =============      Scope      =============                        ");
+            ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 2, (LPARAM)"\r\n       ============= Snippet Content =============                        ");
             //::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"\
             //        # The first line in this document should always be this    \r\n\
             //        # ------ FingerText Snippet Editor View ------ \r\n\
@@ -3247,11 +3357,7 @@ _______________________________________________________________________________\
 //For option dynamic hotspot
 void cleanOptionItem()
 {
-    //g_optionArray[0] = "";
-    //g_optionArray[1] = "";
-    //g_optionArray[2] = "";
-    //g_optionArray[3] = "";
-    //g_optionArray[4] = "";
+   
     int i = 0;
     while (i<g_optionNumber)
     {
@@ -3266,6 +3372,7 @@ void cleanOptionItem()
 
 void addOptionItem(char* item)
 {
+    // TODO: should use stack?
     if (g_optionNumber<20)
     {
         g_optionArray[g_optionNumber] = item;
@@ -3645,7 +3752,7 @@ char* getLangTagType()
     //return "";
 }
 
-void fingerText()
+void tabKeyResponse()
 {
 
     //TODO: in general I should add logo to all the messages
@@ -3777,6 +3884,7 @@ void fingerText()
                     snippetHintUpdate();
                 } else
                 {
+                    alert();
                     restoreTab(curScintilla, posCurrent, posSelectionStart, posSelectionEnd);
                 }
             }
