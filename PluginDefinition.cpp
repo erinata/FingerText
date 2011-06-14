@@ -91,7 +91,9 @@ bool g_newUpdate;
 bool g_modifyResponse;
 bool g_enable;
 bool g_editorView;
-bool g_selectionMonitor;
+int g_selectionMonitor;
+
+int g_editorLineCount;
 
 // For option hotspot
 bool g_optionMode;
@@ -115,6 +117,7 @@ char *g_optionArray[] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
 #define DEFAULT_IMPORT_OVERWRITE_CONFIRM 0
 #define DEFAULT_INCLUSIVE_TRIGGERTEXT_COMPLETION 1
 #define DEFAULT_LIVE_PREVIEW_BOX 1
+#define DEFAULT_EDITOR_CARET_BOUND 1
 
 #define DEFAULT_CUSTOM_SCOPE TEXT("")
 #define DEFAULT_CUSTOM_ESCAPE_CHAR TEXT("")
@@ -131,6 +134,7 @@ int g_preserveSteps;
 int g_importOverWriteConfirm;
 int g_inclusiveTriggerTextCompletion;
 int g_livePreviewBox;
+int g_editorCaretBound;
 
 TCHAR* g_customEscapeChar;
 TCHAR* g_customScope;
@@ -432,12 +436,16 @@ int searchNext(HWND &curScintilla, char* searchText)
 }
 int searchPrev(HWND &curScintilla, char* searchText)
 {
-    ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0);
+    ::SendMessage(curScintilla, SCI_SEARCHANCHOR, 0,0); 
     return ::SendMessage(curScintilla, SCI_SEARCHPREV, 0,(LPARAM)searchText);
 }
 
 void selectionToSnippet()
 {
+    g_selectionMonitor--;
+    
+    //g_editorCaretBound--;
+    
     HWND curScintilla = getCurrentScintilla();
     int selectionEnd = ::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0);
     int selectionStart = ::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0);
@@ -454,34 +462,41 @@ void selectionToSnippet()
     {
         selection = "New snippet is here.\r\nNew snippet is here.\r\nNew snippet is here.\r\n";
     }
-
+    
     //::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
     
     if (!::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
     {
         ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_ftbPath);
     } 
-
+    
+    
     curScintilla = getCurrentScintilla();
-
+    
     //TODO: consider using YES NO CANCEL dialog in promptsavesnippet
     promptSaveSnippet(TEXT("Do you wish to save the current snippet before creating a new one?"));
     
+    
     ::SendMessage(curScintilla,SCI_CLEARALL,0,0);
-
+    
     ::SendMessage(curScintilla,SCI_INSERTTEXT,::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)SNIPPET_EDIT_TEMPLATE);
     ::SendMessage(curScintilla,SCI_INSERTTEXT,::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"triggertext\r\nGLOBAL\r\n");
     ::SendMessage(curScintilla,SCI_INSERTTEXT,::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)selection);
     ::SendMessage(curScintilla,SCI_INSERTTEXT,::SendMessage(curScintilla, SCI_GETLENGTH,0,0), (LPARAM)"[>END<]");
 
-    g_editorView = 1;    
-    updateDockItems(false,false);
+    g_editorView = 1;
+    
+    //updateDockItems(false,false);
     //updateMode();
-    refreshAnnotation();
+    //refreshAnnotation();
     ::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
     ::SendMessage(curScintilla,SCI_WORDRIGHTEXTEND,1,0);
 
     if (withSelection) delete [] selection;
+    ::SendMessage(curScintilla,SCI_EMPTYUNDOBUFFER,0,0);
+    
+    //g_editorCaretBound++;
+    g_selectionMonitor++;
 }
 
 void editSnippet()
@@ -642,7 +657,7 @@ bool getLineChecked(char **buffer, HWND &curScintilla, int lineNumber, TCHAR* er
 void saveSnippet()
 {
     HWND curScintilla = getCurrentScintilla();
-
+    g_selectionMonitor--;
     int docLength = ::SendMessage(curScintilla, SCI_GETLENGTH,0,0);
     // insert a space at the end of the doc so the ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)" "); will not get into error
     // TODO: Make sure that it is not necessary to keep this line
@@ -730,6 +745,7 @@ void saveSnippet()
     delete [] snippetText;
     
     updateDockItems(false,false);
+    g_selectionMonitor++;
 }
 
 HWND getCurrentScintilla()
@@ -1625,7 +1641,7 @@ void setConfigAndDatabase()
     g_enable = true;
     g_customScope = new TCHAR[MAX_PATH];
     g_customEscapeChar = new TCHAR[MAX_PATH];
-    g_selectionMonitor = true;
+    g_selectionMonitor = 1;
 
     // For option hotspot
     g_optionMode = false;
@@ -1711,6 +1727,7 @@ void resetDefaultSettings()
     g_importOverWriteConfirm = DEFAULT_IMPORT_OVERWRITE_CONFIRM;
     g_inclusiveTriggerTextCompletion = DEFAULT_INCLUSIVE_TRIGGERTEXT_COMPLETION;
     g_livePreviewBox = DEFAULT_LIVE_PREVIEW_BOX;
+    g_editorCaretBound = DEFAULT_EDITOR_CARET_BOUND;
 
     g_customScope = DEFAULT_CUSTOM_SCOPE;
     g_customEscapeChar = DEFAULT_CUSTOM_ESCAPE_CHAR;
@@ -1735,6 +1752,7 @@ void writeConfig()
     writeConfigText(g_importOverWriteConfirm,TEXT("import_overwrite_confirm"));
     writeConfigText(g_inclusiveTriggerTextCompletion,TEXT("inclusive_triggertext_completion"));
     writeConfigText(g_livePreviewBox,TEXT("live_preview_box"));
+    writeConfigText(g_editorCaretBound,TEXT("editor_caret_bound"));
     
     writeConfigTextChar(g_customEscapeChar,TEXT("escape_char"));
     writeConfigTextChar(g_customScope,TEXT("custom_scope"));
@@ -1754,6 +1772,7 @@ void loadConfig()
     g_importOverWriteConfirm = GetPrivateProfileInt(TEXT("FingerText"), TEXT("import_overwrite_confirm"), DEFAULT_IMPORT_OVERWRITE_CONFIRM, g_iniPath);
     g_inclusiveTriggerTextCompletion = GetPrivateProfileInt(TEXT("FingerText"), TEXT("inclusive_triggertext_completion"), DEFAULT_INCLUSIVE_TRIGGERTEXT_COMPLETION, g_iniPath);
     g_livePreviewBox = GetPrivateProfileInt(TEXT("FingerText"), TEXT("live_preview_box"), DEFAULT_LIVE_PREVIEW_BOX, g_iniPath);
+    g_editorCaretBound = GetPrivateProfileInt(TEXT("FingerText"), TEXT("editor_caret_bound"), DEFAULT_EDITOR_CARET_BOUND, g_iniPath);
 
     GetPrivateProfileString(TEXT("FingerText"), TEXT("escape_char"),DEFAULT_CUSTOM_ESCAPE_CHAR,g_customEscapeChar,MAX_PATH,g_iniPath);
     GetPrivateProfileString(TEXT("FingerText"), TEXT("custom_scope"),DEFAULT_CUSTOM_SCOPE,g_customScope,MAX_PATH,g_iniPath);
@@ -1936,7 +1955,7 @@ void snippetHintUpdate()
             g_liveHintUpdate=1;
         }
     }
-    if (g_modifyResponse) refreshAnnotation();
+    //if (g_modifyResponse) refreshAnnotation();
 }
 
 void updateDockItems(bool withContent, bool withAll, char* tag)
@@ -2975,6 +2994,17 @@ int promptSaveSnippet(TCHAR* message)
     return messageReturn;
 }
 
+void updateLineCount(int count)
+{
+    if (count>=0)
+    {
+        g_editorLineCount = count;
+    } else
+    {
+        g_editorLineCount = ::SendMessage(::getCurrentScintilla(),SCI_GETLINECOUNT,0,0);
+    }
+}
+
 void updateMode()
 {
     //TODO: should change to edit mode and normal mode by a button, and dynamically adjust the dock content
@@ -2987,6 +3017,7 @@ void updateMode()
         snippetDock.toggleSave(true);
         g_editorView = true;
         snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("EDIT MODE\r\n(Double click item in list to edit another snippet, Ctrl+S to save)"));
+        updateLineCount();
     } else if (g_enable)
     {
         snippetDock.toggleSave(false);
@@ -3052,6 +3083,12 @@ void settings()
  ; escape_char                --  Any text entered after this character will not be view as snippet. For example\r\n\
  ;                                if put <> here then you cannot trigger the snippet 'npp' by typing either '<npp'\r\n\
  ;                                or '>npp' and hit tab\r\n\
+ ; live_preview_box           --            0: Turn off preview box live update\r\n\
+ ;                                (default) 1: Turn on preview box live update\r\n\
+ ; editor_caret_bound         --            0: Fingertext will not restrict caret movement in snippet editing mode.\r\n\
+ ;                                             Do not set this to 0 unless you are very sure that you won't mess up\r\n\
+ ;                                             the snippet editor format.\r\n\
+ ;                            --  (default) 1: Fingertext will restrict caret movement in snippet editing mode.\r\n\
         ");
         ::SendMessage(curScintilla, SCI_ANNOTATIONSETSTYLE, lineCount, STYLE_INDENTGUIDE);
         ::SendMessage(curScintilla, SCI_ANNOTATIONSETVISIBLE, lineCount, 0);
@@ -3085,6 +3122,7 @@ void refreshAnnotation()
 {
     if (g_editorView)
     {
+        g_selectionMonitor--;
         g_modifyResponse = false;
         TCHAR fileType[MAX_PATH];
         //::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
@@ -3093,28 +3131,76 @@ void refreshAnnotation()
         if (::_tcscmp(fileType,TEXT("SnippetEditor.ftb"))==0)
         {
             HWND curScintilla = getCurrentScintilla();
+
+            int lineCurrent = ::SendMessage(curScintilla,SCI_LINEFROMPOSITION,::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0),0);
+
             //::SendMessage(getCurrentScintilla(), SCI_ANNOTATIONCLEARALL, 0, 0);
             ::SendMessage(curScintilla, SCI_ANNOTATIONCLEARALL, 0, 0);
 
-            ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"\
-                    # The first line in this document should always be this    \r\n\
-                    # ------ FingerText Snippet Editor View ------ \r\n\
-                    # line. Don't mess it up! \r\n\r\n");
-            ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 1, (LPARAM)"\
-                    # The second part is the trigger text. For example if you \r\n\
-                    # put \"npp\" (without quotes) in this line, the snippet will\r\n\
-                    # be triggered when you type npp and hit tab.\r\n\
-                    # Trigger text with more than 30 characters is NOT recommended\r\n\
-                    # Only alphanumerics, underscores and periods are allowed.\r\n\r\n");
-            ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 2, (LPARAM)"\
-                    # The third part is the scope of the snippet. \r\n\
-                    # e.g. \"GLOBAL\" (without quotes) for globally available\r\n\
-                    # snippets, and \".cpp\" (without quotes) for snippets that  \r\n\
-                    # is only available in .cpp documents.\r\n\r\n\r\n\r\n\
-                    # Anywhere below here is the snippet content. It can be\r\n\
-                    # as long as many paragraphs or just several words.\r\n\
-                    # Remember to place an [>END<] at the end of the snippet\r\n\
-                    # content.\r\n");
+            if (lineCurrent == 1)
+            {
+                ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"\
+_______________________________________________________________________________\r\n\
+ Snippet Editor Hint: \r\n\r\n\
+ Triggertext is the text you type to trigger the snippets.\r\n\
+ e.g. \"npp\"(without quotes) means the snippet is triggered \r\n\
+ when you type npp and hit tab)\r\n\
+_______________________________________________________________________________\r\n\r\n\r\n\r\n\
+       =============   TriggerText   =============                             ");
+            } else if (lineCurrent == 2)
+            {
+                ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"\
+_______________________________________________________________________________\r\n\
+ Snippet Editor Hint: \r\n\r\n\
+ Scope determines where the snippet is available.\r\n\
+ e.g. \"GLOBAL\"(without quotes) for globally available snippets.\r\n\
+ \".cpp\"(without quotes) means available in .cpp documents and\r\n\
+ \"Lang:HTML\"(without quotes) for all html documents.\r\n\
+_______________________________________________________________________________\r\n\r\n\r\n\
+       =============   TriggerText   =============                             ");
+            } else
+            {
+                ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"\
+_______________________________________________________________________________\r\n\
+ Snippet Editor Hint: \r\n\r\n\
+ Snippet Content is the text that is inserted to the editor when \r\n\
+ a snippet is triggered.\r\n\
+ It can be as long as many paragraphs or just several words.\r\n\
+ Remember to place an [>END<] at the end of the snippet.\r\n\
+_______________________________________________________________________________\r\n\r\n\r\n\
+       =============   TriggerText   =============                             ");
+            }
+
+ //           if (lineCurrent == 2)
+ //           {
+ //               ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 1, (LPARAM)"\
+ //=== Scope === \r\n\
+ //e.g. \"GLOBAL\"(without quotes) for globally available snippets.\r\n\
+ //\".cpp\"(without quotes) means available in .cpp documents.\r\n\
+ //\"Lang:HTML\"(without quotes) means available in all html documents.");
+             
+
+            ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 1, (LPARAM)"       =============      Scope      =============                             ");
+            ::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 2, (LPARAM)"       ============= Snippet Content =============                             ");
+            //::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"\
+            //        # The first line in this document should always be this    \r\n\
+            //        # ------ FingerText Snippet Editor View ------ \r\n\
+            //        # line. Don't mess it up! \r\n\r\n");
+            //::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 1, (LPARAM)"\
+            //        # The second part is the trigger text. For example if you \r\n\
+            //        # put \"npp\" (without quotes) in this line, the snippet will\r\n\
+            //        # be triggered when you type npp and hit tab.\r\n\
+            //        # Trigger text with more than 30 characters is NOT recommended\r\n\
+            //        # Only alphanumerics, underscores and periods are allowed.\r\n\r\n");
+            //::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 2, (LPARAM)"\
+            //        # The third part is the scope of the snippet. \r\n\
+            //        # e.g. \"GLOBAL\" (without quotes) for globally available\r\n\
+            //        # snippets, and \".cpp\" (without quotes) for snippets that  \r\n\
+            //        # is only available in .cpp documents.\r\n\r\n\r\n\r\n\
+            //        # Anywhere below here is the snippet content. It can be\r\n\
+            //        # as long as many paragraphs or just several words.\r\n\
+            //        # Remember to place an [>END<] at the end of the snippet\r\n\
+            //        # content.\r\n");
     
     
             ::SendMessage(curScintilla, SCI_ANNOTATIONSETSTYLE, 0, STYLE_INDENTGUIDE);
@@ -3124,6 +3210,7 @@ void refreshAnnotation()
             ::SendMessage(curScintilla, SCI_ANNOTATIONSETVISIBLE, 2, 0);
             
         }
+        g_selectionMonitor++;
         g_modifyResponse = true;
     }
 }
@@ -3199,40 +3286,126 @@ void optionNavigate(HWND &curScintilla, bool toNext)
     ::SendMessage(curScintilla,SCI_GOTOPOS,g_optionStartPosition,0);
     g_optionEndPosition = g_optionStartPosition + strlen(g_optionArray[g_optionCurrent]);
     ::SendMessage(curScintilla,SCI_SETSELECTION,g_optionStartPosition,g_optionEndPosition);
-    
 }
 
-void selectionMonitor()
+void selectionMonitor(bool contentChange)
 {
-    
-    //TODO: reexamine possible performance improvement
-    if ((g_optionMode == true) && (g_selectionMonitor == true))
+    //TODO: lots of optimization needed
+
+    //In normal view, this code is going to cater the option navigation. In editor view, it restrict selection in first 3 lines
+    if (g_selectionMonitor == 1)
     {
-        g_selectionMonitor = false;
-        
-        HWND curScintilla = getCurrentScintilla();
-        int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-        //alertNumber(g_optionStartPosition);
-        //alertNumber(posCurrent);
-        if (posCurrent > g_optionStartPosition)
+        g_modifyResponse = false;
+        g_selectionMonitor--;
+        if (g_editorView == false)
         {
-            optionNavigate(curScintilla,true);
-            //optionTriggered = true;
-            g_optionMode = true; // TODO: investigate why this line is necessary
-        } else
+            
+            //TODO: reexamine possible performance improvement
+            if (g_optionMode == true)
+            {
+                
+                
+                
+                HWND curScintilla = getCurrentScintilla();
+                int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+                //alertNumber(g_optionStartPosition);
+                //alertNumber(posCurrent);
+                if (posCurrent > g_optionStartPosition)
+                {
+                    optionNavigate(curScintilla,true);
+                    //optionTriggered = true;
+                    g_optionMode = true; // TODO: investigate why this line is necessary
+                } else
+                {
+                    optionNavigate(curScintilla,false);
+                    g_optionMode = true;
+                }
+                //else
+                //{
+                //    cleanOptionItem();
+                //    g_optionMode = false;
+                //}
+                
+            }
+        } else if (g_editorCaretBound == 1)
         {
-            optionNavigate(curScintilla,false);
-            g_optionMode = true;
+            HWND curScintilla = getCurrentScintilla();
+            int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+            int lineCurrent = ::SendMessage(curScintilla,SCI_LINEFROMPOSITION,posCurrent,0);
+            int firstlineEnd = ::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,0,0);
+            int currentLineCount = ::SendMessage(curScintilla,SCI_GETLINECOUNT,0,0);
+            int selectionStart = ::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0);
+            int selectionEnd = ::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0);
+            int selectionStartLine = ::SendMessage(curScintilla,SCI_LINEFROMPOSITION,selectionStart,0);
+            int selectionEndLine = ::SendMessage(curScintilla,SCI_LINEFROMPOSITION,selectionEnd,0);
+
+            //alertNumber(lineCurrent);
+            if (contentChange)
+            {
+                if ((g_editorLineCount < currentLineCount) && (lineCurrent <= 3))
+                {
+                    //::SendMessage(curScintilla,SCI_UNDO,0,0);
+                    ::SendMessage(curScintilla,SCI_UNDO,0,0);
+                    updateLineCount();
+                    //updateLineCount(currentLineCount);
+                } else if ((g_editorLineCount > currentLineCount) && (lineCurrent <= 2))
+                {
+                    ::SendMessage(curScintilla,SCI_UNDO,0,0);
+                    updateLineCount();
+                    
+                } else if (::SendMessage(curScintilla,SCI_LINELENGTH,1,0)>=41)
+                {
+                    ::MessageBox(nppData._nppHandle, TEXT("The TriggerText length limit is 40 characters."), TEXT("FingerText"), MB_OK);
+                    ::SendMessage(curScintilla,SCI_UNDO,0,0);
+                    updateLineCount();
+                
+                } else if (::SendMessage(curScintilla,SCI_LINELENGTH,2,0)>=251)
+                {
+                    ::MessageBox(nppData._nppHandle, TEXT("The Scope length limit is  250 characters."), TEXT("FingerText"), MB_OK);
+                    ::SendMessage(curScintilla,SCI_UNDO,0,0);
+                    updateLineCount();
+                } 
+            }
+
+            if (lineCurrent <= 0) ::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
+
+            
+
+            if ((selectionStartLine != selectionEndLine) && ((selectionStartLine <= 2) || (selectionEndLine <=2)))
+            {
+                if (selectionEndLine>0)
+                {
+                    ::SendMessage(curScintilla,SCI_GOTOLINE,selectionEndLine,0);
+                } else
+                {
+                    ::SendMessage(curScintilla,SCI_GOTOLINE,1,0);
+                }
+            }            
+            // TODO: a more refine method to adjust the selection when for selection across 2 fields (one method is to adjust the start of selection no matter what)
+            //
+            //if (selectionStartLine != selectionEndLine)
+            //{
+            //    if ((selectionStartLine <= 2) && (selectionEndLine > 2))
+            //    {   
+            //        ::SendMessage(curScintilla,SCI_SETSELECTIONSTART,::SendMessage(curScintilla,SCI_POSITIONFROMLINE,selectionEndLine,0),0);
+            //    } else if ((selectionStartLine > 2) && (selectionEndLine <= 2))
+            //    {
+            //        ::SendMessage(curScintilla,SCI_SETSELECTIONEND,::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,selectionStartLine,0),0);
+            //    } else if ((selectionStartLine <= 2) && (selectionEndLine <= 2))
+            //    {
+            //        
+            //    }
+            //}
+
+            
+            refreshAnnotation();
+            
+            
         }
-        //else
-        //{
-        //    cleanOptionItem();
-        //    g_optionMode = false;
-        //}
-        g_selectionMonitor = true;
+        g_modifyResponse = true;
+        g_selectionMonitor++;
     }
-
-
+    
 }
 
 void tagComplete()
@@ -3455,6 +3628,21 @@ void fingerText()
     } else
     {
         int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+        int lineCurrent = ::SendMessage(curScintilla,SCI_LINEFROMPOSITION,posCurrent,0);
+
+        if ((g_editorView == true) && (lineCurrent <=2))
+        {
+            if (lineCurrent == 1)
+            {
+                //::SendMessage(curScintilla,SCI_SETSEL,::SendMessage(curScintilla,SCI_POSITIONFROMLINE,2,0),::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,2,0));
+                ::SendMessage(curScintilla,SCI_GOTOLINE,2,0);
+            } else if (lineCurrent == 2)
+            {
+                ::SendMessage(curScintilla,SCI_GOTOLINE,3,0);
+            }
+
+        } else
+        {
 
         //bool optionTriggered = false;
         //if (g_optionMode == true)
@@ -3481,7 +3669,7 @@ void fingerText()
         //} else
         //{
             g_liveHintUpdate--;
-            g_selectionMonitor = false;
+            g_selectionMonitor--;
             int posSelectionStart = ::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0);
             int posSelectionEnd = ::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0);
             if (g_preserveSteps==0) ::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
@@ -3531,6 +3719,7 @@ void fingerText()
             } else
             {
                 if (g_preserveSteps==0) ::SendMessage(curScintilla, SCI_ENDUNDOACTION, 0, 0);
+
             }
 
             bool completeFound = false;
@@ -3548,9 +3737,8 @@ void fingerText()
                     }
 	    	    }
             }
-                        
+            
             g_liveHintUpdate++;
-
             if ((navSpot == false) && (tagFound == false) && (completeFound==false) && (dynamicSpot==false)) 
             {
                 if (g_optionMode == true)
@@ -3563,9 +3751,10 @@ void fingerText()
                     restoreTab(curScintilla, posCurrent, posSelectionStart, posSelectionEnd);
                 }
             }
-            g_selectionMonitor = true;
+            
+            g_selectionMonitor++;
         //}
-        
+        }
     }
 }
 

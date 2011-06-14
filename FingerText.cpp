@@ -132,7 +132,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             turnOffOptionMode();
             // TODO: there may be some problem using updateMode here, as the buffere activate is not fired when the focus is switch to the ftb file when a use try to close npp and cancel afterwards.
             updateMode();
-            refreshAnnotation();
+            //refreshAnnotation();
             // No break here because NPPN_BUFFERACTIVATED also trigger updateDockItems();
         case NPPN_LANGCHANGED:
             //keyUpdate();
@@ -175,9 +175,20 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
         ////TODO: Use this to change how option hotspot works
         ////TODO: Also consider using this to prevent selection from going through 1st 3 lines in snippet editing mode. It can also prevent selection in 1st line
         case SCN_UPDATEUI:
-            if (notifyCode->updated & (SC_UPDATE_SELECTION))
+            
+            
+            
+            //if (notifyCode->updated & (SC_UPDATE_SELECTION))
+            //{
+            //    selectionMonitor();   
+            //    
+            //} else            
+            if (notifyCode->updated & (SC_UPDATE_CONTENT))
             {
-                
+              selectionMonitor(true);
+                   
+            } else
+            {
                 selectionMonitor();
             }
             break;

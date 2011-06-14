@@ -1,9 +1,12 @@
 changelog (for developers only, include unreleased versions)
 
 0.5.21
+****** Changed: New snippet editor
+****** Added: Can go forward (right arrow) or backward(left arrow) when cycling through option hotspot, tab to choose option
 ****** Fixed: potential memory leakage problem cause by the quick fix in 0.5.20
 ****** Fixed: Fingertext freeze if there are incomplete closing hotspot brankets
 ****** Fixed: better checking for the end of option hotspot
+
 
 0.5.20
 - Changed: All hotspots, normal or dynamic are triggered under the same rule, from inside to outside and from left to right.
