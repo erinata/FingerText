@@ -91,6 +91,7 @@ bool g_newUpdate;
 bool g_modifyResponse;
 bool g_enable;
 bool g_editorView;
+bool g_selectionMonitor;
 
 // For option hotspot
 bool g_optionMode;
@@ -1290,7 +1291,11 @@ bool hotSpotNavigation(HWND &curScintilla)
                 g_optionStartPosition = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
                 g_optionEndPosition = g_optionStartPosition + strlen(g_optionArray[g_optionCurrent]);
                 ::SendMessage(curScintilla,SCI_SETSELECTION,g_optionStartPosition,g_optionEndPosition);
-                if (i>1) g_optionMode = true;
+                if (i>1)
+                {
+                    g_optionMode = true;
+                    updateOptionCurrent(true);
+                }
                 //alertNumber(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
                 
                     
@@ -1620,6 +1625,7 @@ void setConfigAndDatabase()
     g_enable = true;
     g_customScope = new TCHAR[MAX_PATH];
     g_customEscapeChar = new TCHAR[MAX_PATH];
+    g_selectionMonitor = true;
 
     // For option hotspot
     g_optionMode = false;
@@ -3152,19 +3158,30 @@ void addOptionItem(char* item)
 }
 
 //char* getOptionItem()
-void updateOptionCurrent()
+void updateOptionCurrent(bool toNext)
 {
     //char* item;
     //int length = strlen(g_optionArray[g_optionCurrent]);
     //item = new char [length+1];
     //strcpy(item, g_optionArray[g_optionCurrent]);
-
-    if (g_optionCurrent >= g_optionNumber-1) 
+    if (toNext)
     {
-        g_optionCurrent = 0;
+        if (g_optionCurrent >= g_optionNumber-1) 
+        {
+            g_optionCurrent = 0;
+        } else
+        {
+            g_optionCurrent++;
+        }
     } else
     {
-        g_optionCurrent++;
+        if (g_optionCurrent <= 0) 
+        {
+            g_optionCurrent = g_optionNumber-1;
+        } else
+        {
+            g_optionCurrent--;
+        }
     }
     //return item;
     //return g_optionArray[g_optionCurrent];
@@ -3174,14 +3191,48 @@ void turnOffOptionMode()
     g_optionMode = false;
 }
 
-void optionNavigate(HWND &curScintilla)
+void optionNavigate(HWND &curScintilla, bool toNext)
 {
     ::SendMessage(curScintilla,SCI_SETSELECTION,g_optionStartPosition,g_optionEndPosition);
-    updateOptionCurrent();
+    updateOptionCurrent(toNext);
     ::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)g_optionArray[g_optionCurrent]);
     ::SendMessage(curScintilla,SCI_GOTOPOS,g_optionStartPosition,0);
     g_optionEndPosition = g_optionStartPosition + strlen(g_optionArray[g_optionCurrent]);
     ::SendMessage(curScintilla,SCI_SETSELECTION,g_optionStartPosition,g_optionEndPosition);
+    
+}
+
+void selectionMonitor()
+{
+    
+    //TODO: reexamine possible performance improvement
+    if ((g_optionMode == true) && (g_selectionMonitor == true))
+    {
+        g_selectionMonitor = false;
+        
+        HWND curScintilla = getCurrentScintilla();
+        int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
+        //alertNumber(g_optionStartPosition);
+        //alertNumber(posCurrent);
+        if (posCurrent > g_optionStartPosition)
+        {
+            optionNavigate(curScintilla,true);
+            //optionTriggered = true;
+            g_optionMode = true; // TODO: investigate why this line is necessary
+        } else
+        {
+            optionNavigate(curScintilla,false);
+            g_optionMode = true;
+        }
+        //else
+        //{
+        //    cleanOptionItem();
+        //    g_optionMode = false;
+        //}
+        g_selectionMonitor = true;
+    }
+
+
 }
 
 void tagComplete()
@@ -3403,28 +3454,34 @@ void fingerText()
         ::SendMessage(curScintilla,SCI_TAB,0,0);
     } else
     {
-        g_liveHintUpdate--;
-
         int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-        
-        //TODO: reexamine possible performance improvement
-        bool optionTriggered = false;
-        if (g_optionMode == true)
-        {
-            if (posCurrent == g_optionStartPosition)
-            {
-                optionNavigate(curScintilla);
-                optionTriggered = true;
-                g_optionMode = true; // TODO: investigate why this line is necessary
-            } else
-            {
-                cleanOptionItem();
-                g_optionMode = false;
-            }
-        }
 
-        if (optionTriggered == false)
-        {
+        //bool optionTriggered = false;
+        //if (g_optionMode == true)
+        //{
+        //    if (posCurrent == g_optionStartPosition)
+        //    {
+        //        optionNavigate(curScintilla);
+        //        optionTriggered = true;
+        //        g_optionMode = true; // TODO: investigate why this line is necessary
+        //    } else
+        //    {
+        //        cleanOptionItem();
+        //        g_optionMode = false;
+        //    }
+        //}
+        //
+        //if (optionTriggered == false)
+
+        //if (g_optionMode == true)
+        //{
+        //    g_optionMode = false;
+        //    ::SendMessage(curScintilla,SCI_GOTOPOS,g_optionEndPosition,0);
+        //    snippetHintUpdate();
+        //} else
+        //{
+            g_liveHintUpdate--;
+            g_selectionMonitor = false;
             int posSelectionStart = ::SendMessage(curScintilla,SCI_GETSELECTIONSTART,0,0);
             int posSelectionEnd = ::SendMessage(curScintilla,SCI_GETSELECTIONEND,0,0);
             if (g_preserveSteps==0) ::SendMessage(curScintilla, SCI_BEGINUNDOACTION, 0, 0);
@@ -3491,12 +3548,24 @@ void fingerText()
                     }
 	    	    }
             }
+                        
+            g_liveHintUpdate++;
+
             if ((navSpot == false) && (tagFound == false) && (completeFound==false) && (dynamicSpot==false)) 
             {
-                restoreTab(curScintilla, posCurrent, posSelectionStart, posSelectionEnd);
+                if (g_optionMode == true)
+                {
+                    g_optionMode = false;
+                    ::SendMessage(curScintilla,SCI_GOTOPOS,g_optionEndPosition,0);
+                    snippetHintUpdate();
+                } else
+                {
+                    restoreTab(curScintilla, posCurrent, posSelectionStart, posSelectionEnd);
+                }
             }
-        } 
-        g_liveHintUpdate++;
+            g_selectionMonitor = true;
+        //}
+        
     }
 }
 

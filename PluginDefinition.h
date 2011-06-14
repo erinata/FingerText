@@ -174,16 +174,17 @@ void insertDateTime(bool date,int type, HWND &curScintilla);
 void insertPath(TCHAR* path, HWND &curScintilla);
 void insertNppPath(int msg, HWND &curScintilla);
 void executeCommand();
+void selectionMonitor();
 bool triggerTag(int &posCurrent,bool triggerTextComplete = false,int triggerLength=  0);
 void tagComplete();
 //bool snippetComplete();
 void fingerText();
 
-void updateOptionCurrent();
+void updateOptionCurrent(bool toNext);
 void addOptionItem(char* item);
 void cleanOptionItem();
 void turnOffOptionMode();
-void optionNavigate(HWND &curScintilla);
+void optionNavigate(HWND &curScintilla, bool toNext);
 
 void testing();
 void testing2();
