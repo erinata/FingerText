@@ -59,7 +59,8 @@
 #include "SnippetDock.h"
 #include "Version.h"
 
-#include <winhttp.h>   // Add winhttp.lib to additional dependencies if there is external error
+#include <winhttp.h>   // Add winhttp.lib to additional dependencies if there is external definition error
+
 //#include <process.h>
 
 
@@ -418,7 +419,7 @@ void upgradeMessage()
 {
     //TODO: make better structure for welcometext. like one piece of string per version.
     //TODO: dynamic upgrade message
-    HWND curScintilla = getCurrentScintilla();
+
     if (g_newUpdate)
     {
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
@@ -459,7 +460,7 @@ Upgrading from 0.3.5 or below\r\n\
 FingerText 0.3.5 or below use a 'one snippet per file' system to store snippets, which is not compatibile with current version. If you really have a lot of snippets created using these early version, please send your snippets to erinata@gmail.com. I will try my best to import them into the database in the current version.\r\n\
 ");
 
-        ::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)welcomeText);
+        ::SendMessage(getCurrentScintilla(), SCI_INSERTTEXT, 0, (LPARAM)welcomeText);
 
         delete [] welcomeText;
     }
@@ -1905,7 +1906,7 @@ void setupConfigFile()
     if (g_version == VERSION_LINEAR)  // current version
     {
         loadConfig();
-        //writeConfig();// TODO: think about method to get rid of the need to write config every time we load npp
+        //writeConfig();// TODO: Confirm that this line is not needed
         g_newUpdate = false;
         
     } else if ((g_version >= VERSION_KEEP_CONFIG_START) && (g_version <= VERSION_KEEP_CONFIG_END))// for version changes that do not want to reset database
@@ -1926,7 +1927,10 @@ void setupConfigFile()
         //saveCustomScope();
         g_newUpdate = true;
     }
+
+   
 }
+
 
 
 void writeConfigText(int configInt, TCHAR* section)
@@ -2168,36 +2172,41 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
         {
             if(SQLITE_ROW == sqlite3_step(stmt))
             {
-                const char* tempScope = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
-                tempScopeLength = strlen(tempScope)*4 + 1;
-                if (tempScopeLength> scopeLength)
-                {
-                    scopeLength = tempScopeLength;
-                }
-                g_snippetCache[row].scope = new char[strlen(tempScope)*4 + 1];
-                strcpy(g_snippetCache[row].scope, tempScope);
-
                 const char* tempTrigger = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
-                tempTriggerLength = strlen(tempTrigger)*4 + 1;
-                if (tempTriggerLength> triggerLength)
+                if ((withAll) || (tempTrigger[0]!='_'))
                 {
-                    triggerLength = tempTriggerLength;
-                }
-                g_snippetCache[row].triggerText = new char[strlen(tempTrigger)*4 + 1];
-                strcpy(g_snippetCache[row].triggerText, tempTrigger);
-
-                if (withContent)
-                {
-                    const char* tempContent = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
-                    tempContentLength = strlen(tempContent)*4 + 1;
-                    if (tempContentLength> contentLength)
+                    tempTriggerLength = strlen(tempTrigger)*4 + 1;
+                    if (tempTriggerLength> triggerLength)
                     {
-                        contentLength = tempContentLength;
+                        triggerLength = tempTriggerLength;
                     }
-                    g_snippetCache[row].content = new char[strlen(tempContent)*4 + 1];
-                    strcpy(g_snippetCache[row].content, tempContent);
+                    g_snippetCache[row].triggerText = new char[strlen(tempTrigger)*4 + 1];
+                    strcpy(g_snippetCache[row].triggerText, tempTrigger);
+
+                    const char* tempScope = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
+                    tempScopeLength = strlen(tempScope)*4 + 1;
+                    if (tempScopeLength> scopeLength)
+                    {
+                        scopeLength = tempScopeLength;
+                    }
+                    g_snippetCache[row].scope = new char[strlen(tempScope)*4 + 1];
+                    strcpy(g_snippetCache[row].scope, tempScope);
+
+
+
+                    if (withContent)
+                    {
+                        const char* tempContent = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
+                        tempContentLength = strlen(tempContent)*4 + 1;
+                        if (tempContentLength> contentLength)
+                        {
+                            contentLength = tempContentLength;
+                        }
+                        g_snippetCache[row].content = new char[strlen(tempContent)*4 + 1];
+                        strcpy(g_snippetCache[row].content, tempContent);
+                    }
+                    row++;
                 }
-                row++;
             }
             else
             {
@@ -2223,6 +2232,7 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
 
 void populateDockItems()
 {
+    //TODO: Use 2 columns of list box, or list control
     for (int j=0;j<g_snippetListLength;j++)
     {
         if (g_snippetCache[j].scope !=NULL)
@@ -3560,7 +3570,7 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
     bool tagFound = false;
     char *tag;
 	int tagLength = getCurrentTag(curScintilla, posCurrent, &tag, triggerLength);
-
+    
     //int position = 0;
     //bool groupChecked = false;
 
@@ -3572,8 +3582,12 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
     //::_itow_s(curLang, curLangNumber, 10, 10);
     //::wcscat(curLangText, curLangNumber);
 
-    if (tagLength > 0) //TODO: changing this to >0 fixed the problem of tag_tab_completion, but need to investigate more about the side effect
+    if (((triggerLength==0) && (tag[0] == '_')) || (tagLength == 0))
+    {
+        delete [] tag;
+    } else if (tagLength > 0) //TODO: changing this to >0 fixed the problem of tag_tab_completion, but need to investigate more about the side effect
 	{
+        
         int posBeforeTag = posCurrent-tagLength;
 
         char *expanded = NULL;
@@ -3685,11 +3699,7 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
 
         // return to the original position 
         if (tagFound) ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
-    } else if (tagLength == 0)
-    {
-        delete [] tag;
-    }
-    
+    } 
     return tagFound;
 }
 
@@ -3941,8 +3951,59 @@ void testing()
     HWND curScintilla = getCurrentScintilla();
 
 
-
-    //Testing using winhttp to send request
+    ////Testing creating window using createwindowex
+    //WNDCLASSEX wc;
+    //HWND hwnd;
+    //MSG Msg;
+    //
+    ////Step 1: Registering the Window Class
+    //wc.cbSize        = sizeof(WNDCLASSEX);
+    //wc.style         = 0;
+    //wc.lpfnWndProc   = WndProc;
+    //wc.cbClsExtra    = 0;
+    //wc.cbWndExtra    = 0;
+    //wc.hInstance     = NULL;
+    //wc.hIcon         = LoadIcon(NULL, (LPCWSTR)IDI_APPLICATION);
+    //wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
+    //wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+    //wc.lpszMenuName  = NULL;
+    //wc.lpszClassName = TEXT("CLASS");
+    //wc.hIconSm       = LoadIcon(NULL, (LPCWSTR)IDI_APPLICATION);
+    //
+    //if(!RegisterClassEx(&wc))
+    //{
+    //    MessageBox(NULL, TEXT("Window Registration Failed!"), TEXT("Error!"),
+    //        MB_ICONEXCLAMATION | MB_OK);
+    //    return;
+    //}
+    //
+    //// Step 2: Creating the Window
+    //hwnd = CreateWindowEx(
+    //    WS_EX_CLIENTEDGE,
+    //    TEXT("CLASS"),
+    //    TEXT("The title of my window"),
+    //    WS_OVERLAPPEDWINDOW,
+    //    CW_USEDEFAULT, CW_USEDEFAULT, 240, 120,
+    //    NULL, NULL, NULL, NULL);
+    //
+    //if(hwnd == NULL)
+    //{
+    //    MessageBox(NULL, TEXT("Window Creation Failed!"), TEXT("Error!"),
+    //        MB_ICONEXCLAMATION | MB_OK);
+    //    return;
+    //}
+    //
+    //ShowWindow(hwnd, 5);
+    //UpdateWindow(hwnd);
+    //
+    //// Step 3: The Message Loop
+    //while(GetMessage(&Msg, NULL, 0, 0) > 0)
+    //{
+    //    TranslateMessage(&Msg);
+    //    DispatchMessage(&Msg);
+    //}
+  
+    ////Testing using winhttp to send request
     //Variables 
     //DWORD dwSize = 0;
     //DWORD dwDownloaded = 0;

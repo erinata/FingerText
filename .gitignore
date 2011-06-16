@@ -1,4 +1,5 @@
 /bin/*
+/reference/*
 /Unicode Debug/*
 /Unicode Release/*
 /package/*

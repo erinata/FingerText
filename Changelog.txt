@@ -1,9 +1,12 @@
 changelog (for developers only, include unreleased versions)
 
+0.5.25
+****** Added: private snippet available, any snippet with triggertext beginning with _ cannot be triggered and will not be shown in liveupdate. But you can still see them in editMode and they can be triggered by chain snippets
+
 0.5.24
-****** restructure the version text and about text
-****** restructure initialization of plugin. Include not rewriting the whole settings file everytime fingertext is initialized for faster notepad++ loading
-****** Fixed: Alert message show up when a tab key is restored
+- restructure the version text and about text
+- restructure initialization of plugin. Include not rewriting the whole settings file everytime fingertext is initialized for faster notepad++ loading
+- Fixed: Alert message show up when a tab key is restored
 
 0.5.23
 - bump version to fix the problem that I leave testing option open in 0.5.22
