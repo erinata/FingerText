@@ -988,12 +988,12 @@ void launchMessageBox(int &firstPos, char* hotSpotText)
     {
         messageType = MB_YESNOCANCEL;
         strcpy(getTerm,hotSpotText+12);
-    } 
+    } else
+    {
+        delete [] getTerm;
     //TODO: Confirm to use return here, it stops the msg box launching when the msgbox type is unknown
-    //else
-    //{
-    //    return;
-    //}
+        return;
+    }
 
     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
     TCHAR* getTermWide;
@@ -1771,7 +1771,7 @@ void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
 
 void initialize()
 {
-    updateScintilla();
+    
     g_modifyResponse = true;
     g_enable = true;
     g_customScope = new TCHAR[MAX_PATH];
@@ -3154,8 +3154,17 @@ void updateLineCount(int count)
     }
 }
 
+void updateScintilla()
+{
+    HWND curScintilla = getCurrentScintilla();
+    pSciMsg = (SciFnDirect)SendMessage(curScintilla,SCI_GETDIRECTFUNCTION, 0, 0);
+    pSciWndData = (sptr_t)SendMessage(curScintilla,SCI_GETDIRECTPOINTER, 0, 0);
+}
+
+
 void updateMode()
 {
+    updateScintilla();
     //TODO: should change to edit mode and normal mode by a button, and dynamically adjust the dock content
     //HWND curScintilla = getCurrentScintilla();
     TCHAR fileType[MAX_PATH];
@@ -3448,7 +3457,7 @@ void optionNavigate(bool toNext)
     ::SendScintilla(SCI_SETSELECTION,g_optionStartPosition,g_optionEndPosition);
 }
 
-void selectionMonitor(bool contentChange)
+void selectionMonitor(int contentChange)
 {
     //TODO: lots of optimization needed
 
@@ -3497,7 +3506,8 @@ void selectionMonitor(bool contentChange)
             int selectionEndLine = ::SendScintilla(SCI_LINEFROMPOSITION,selectionEnd,0);
 
             //alertNumber(lineCurrent);
-            if (contentChange)
+            //if (contentChange)
+            if (contentChange & (SC_UPDATE_CONTENT))
             {
                 if ((g_editorLineCount < currentLineCount) && (lineCurrent <= 3))
                 {
@@ -3526,8 +3536,6 @@ void selectionMonitor(bool contentChange)
 
             if (lineCurrent <= 0) ::SendScintilla(SCI_GOTOLINE,1,0);
 
-            
-
             if ((selectionStartLine != selectionEndLine) && ((selectionStartLine <= 2) || (selectionEndLine <=2)))
             {
                 if (selectionEndLine>0)
@@ -3538,7 +3546,7 @@ void selectionMonitor(bool contentChange)
                     ::SendScintilla(SCI_GOTOLINE,1,0);
                 }
             }            
-            // TODO: a more refine method to adjust the selection when for selection across 2 fields (one method is to adjust the start of selection no matter what)
+            // TODO: a more refine method to adjust the selection when for selection across 2 fields (one method is to adjust the start of selection no matter what, another approach is to look at the distance between the start/end point to the field boundary)
             //
             //if (selectionStartLine != selectionEndLine)
             //{
@@ -3553,25 +3561,13 @@ void selectionMonitor(bool contentChange)
             //        
             //    }
             //}
-
-            
-            refreshAnnotation();
-            
-            
+            //refreshAnnotation();
         }
         g_modifyResponse = true;
         g_selectionMonitor++;
     }
     
 }
-
-void updateScintilla()
-{
-    HWND curScintilla = getCurrentScintilla();
-    pSciMsg = (SciFnDirect)SendMessage(curScintilla,SCI_GETDIRECTFUNCTION, 0, 0);
-    pSciWndData = (sptr_t)SendMessage(curScintilla,SCI_GETDIRECTPOINTER, 0, 0);
-}
-
 
 void tagComplete()
 {

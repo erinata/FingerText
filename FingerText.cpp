@@ -91,6 +91,8 @@ LRESULT CALLBACK SubWndProcNpp(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
         case WM_CLOSE:
             //alert();
             retVal = ::CallWindowProc(wndProcNpp, hWnd, message, wParam, lParam);
+            updateMode();  //Need to Do this because then a user attempt to close npp and the buffer shift to a file that's not saved, The bufferactivated message is not activated.
+
             break;
     	default:
 			retVal = ::CallWindowProc(wndProcNpp, hWnd, message, wParam, lParam);
@@ -128,10 +130,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
         //    updateMode();
         //    break;
         case NPPN_BUFFERACTIVATED:
-            updateScintilla();
-            turnOffOptionMode();
-            // TODO: there may be some problem using updateMode here, as the buffere activate is not fired when the focus is switch to the ftb file when a use try to close npp and cancel afterwards.
             updateMode();
+            turnOffOptionMode();
             //refreshAnnotation();
             // No break here because NPPN_BUFFERACTIVATED also trigger updateDockItems();
         case NPPN_LANGCHANGED:
@@ -172,26 +172,17 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
                 refreshAnnotation();
             }
             break;
-        ////TODO: Use this to change how option hotspot works
-        ////TODO: Also consider using this to prevent selection from going through 1st 3 lines in snippet editing mode. It can also prevent selection in 1st line
-        case SCN_UPDATEUI:
-            
-            //if (notifyCode->updated & (SC_UPDATE_SELECTION))
+        case SCN_UPDATEUI:        
+            selectionMonitor(notifyCode->updated);
+            //if (notifyCode->updated & (SC_UPDATE_CONTENT))
             //{
-            //    selectionMonitor();   
-            //    
-            //} else            
-            if (notifyCode->updated & (SC_UPDATE_CONTENT))
-            {
-              selectionMonitor(true);
-                   
-            } else
-            {
-                selectionMonitor();
-            }
+            //    selectionMonitor(true);
+            //       
+            //} else
+            //{
+            //    selectionMonitor();
+            //}
             break;
-
-
         case NPPN_FILESAVED:
             //keyUpdate();
             //refreshAnnotation();

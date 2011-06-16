@@ -141,7 +141,7 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag);
 void openDatabase();
 int getCurrentTag(int posCurrent, char **buffer, int triggerLength = 0);
 void pluginShutdown();
-void updateScintilla();
+
 void setupConfigFile();
 void convertToUTF8(TCHAR *orig, char **utf8);
 void showSnippetDock();
@@ -164,6 +164,8 @@ bool exportSnippets();
 void importSnippets();
 void snippetHintUpdate();
 int promptSaveSnippet(TCHAR* message = NULL);
+
+void updateScintilla();
 void updateMode();
 void refreshAnnotation();
 void settings();
@@ -176,7 +178,7 @@ void convertToWideChar(char* orig, wchar_t **wideChar);
 void insertPath(TCHAR* path);
 void insertNppPath(int msg);
 
-void selectionMonitor(bool contentChange = false);
+void selectionMonitor(int contentChange);
 bool triggerTag(int &posCurrent,bool triggerTextComplete = false,int triggerLength=  0);
 void tagComplete();
 //bool snippetComplete();

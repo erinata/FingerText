@@ -4,6 +4,7 @@ changelog (for developers only, include unreleased versions)
 ****** Added: private snippet available, any snippet with triggertext beginning with _ cannot be triggered and will not be shown in liveupdate. But you can still see them in editMode and they can be triggered by chain snippets
 ****** snippet triggertext completion are default to be non-inclusive
 ****** Big performance improvement by using direct scintilla method
+****** Fixed: Buffer changed triggered events (like updateMode) not triggering when use attempt to close npp and cancel afterwards
 
 0.5.24
 - restructure the version text and about text
