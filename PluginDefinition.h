@@ -140,7 +140,7 @@ bool replaceTag(HWND &curScintilla, char *expanded, int &posCurrent, int &posBef
 void openDatabase();
 int getCurrentTag(HWND curScintilla, int posCurrent, char **buffer, int triggerLength = 0);
 void pluginShutdown();
-void setConfigAndDatabase();
+
 void setupConfigFile();
 void convertToUTF8(TCHAR *orig, char **utf8);
 void showSnippetDock();

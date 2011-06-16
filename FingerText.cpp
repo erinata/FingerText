@@ -102,10 +102,9 @@ LRESULT CALLBACK SubWndProcNpp(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData)
 {
 	nppData = notpadPlusData;
-	commandMenuInit();
-    setConfigAndDatabase();
     wndProcNpp = (WNDPROC)::SetWindowLongPtr(nppData._nppHandle, GWL_WNDPROC, (LPARAM)SubWndProcNpp);
-    
+	commandMenuInit();
+    initialize();
 }
 
 extern "C" __declspec(dllexport) const TCHAR * getName()
@@ -176,8 +175,6 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
         ////TODO: Also consider using this to prevent selection from going through 1st 3 lines in snippet editing mode. It can also prevent selection in 1st line
         case SCN_UPDATEUI:
             
-            
-            
             //if (notifyCode->updated & (SC_UPDATE_SELECTION))
             //{
             //    selectionMonitor();   
@@ -203,8 +200,9 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             break;
 
         case NPPN_READY:
+            //initialize();
             upgradeMessage();
-            initialize();
+            
             break;
 
         case NPPN_SHUTDOWN:
@@ -214,8 +212,6 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 
     }
 }
-
-
 // Here you can process the Npp Messages 
 // I will make the messages accessible little by little, according to the need of plugin development.
 // Please let me know if you need to access to some messages :
@@ -231,9 +227,6 @@ extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam
 
 	return TRUE;
 }
-
-
-
 
 #ifdef UNICODE
 extern "C" __declspec(dllexport) BOOL isUnicode()

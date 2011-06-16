@@ -4,4 +4,5 @@
 /package/*
 test.bat
 testrelease.bat
+release.bat
 *.aps

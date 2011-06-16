@@ -266,11 +266,6 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //-- STEP 4. DEFINE YOUR ASSOCIATED FUNCTIONS --//
 //----------------------------------------------//
 
-void initialize()
-{
-    HWND curScintilla = getCurrentScintilla();
-    ::SendMessage(curScintilla,SCI_SETMULTIPASTE,1,0); 
-}
 
 void toggleDisable()
 {
@@ -319,6 +314,7 @@ char *findTagSQLite(char *tag, char *tagCompare, bool similar=false)
     {
         sqlitePrepareStatement = "SELECT tag FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY tag";
     } else
+ 
     {
         sqlitePrepareStatement = "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY tag";
     }
@@ -1758,7 +1754,7 @@ void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
     }
 }
 
-void setConfigAndDatabase()
+void initialize()
 {
     g_modifyResponse = true;
     g_enable = true;
@@ -1821,6 +1817,9 @@ void setConfigAndDatabase()
     if (PathFileExists(g_ftbPath) == FALSE) emptyFile(g_ftbPath);
     if (PathFileExists(g_fttempPath) == FALSE) emptyFile(g_fttempPath);
 
+    //TODO: better arrangement for this multipaste setting
+    ::SendMessage(getCurrentScintilla(),SCI_SETMULTIPASTE,1,0); 
+    updateDockItems(false,false);
     //if (PathFileExists(g_groupPath) == FALSE) writeDefaultGroupFile(); 
 }
 
@@ -1906,7 +1905,7 @@ void setupConfigFile()
     if (g_version == VERSION_LINEAR)  // current version
     {
         loadConfig();
-        writeConfig();
+        //writeConfig();// TODO: think about method to get rid of the need to write config every time we load npp
         g_newUpdate = false;
         
     } else if ((g_version >= VERSION_KEEP_CONFIG_START) && (g_version <= VERSION_KEEP_CONFIG_END))// for version changes that do not want to reset database
@@ -1915,7 +1914,7 @@ void setupConfigFile()
         writeConfigText(g_version,TEXT("version"));
                 
         loadConfig(); 
-        writeConfig(); // TODO: think about method to get rid of the need to write config every time we load npp
+        writeConfig(); 
         g_newUpdate = true;
     } else // for version that need database reset
     {
@@ -3165,6 +3164,8 @@ void settings()
     int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Change the settings only when you know what you are doing. Messing up the ini can cause FingerText to stop working.\r\n\r\n Do you wish to continue?"), TEXT("FingerText"), MB_YESNO);
     if (messageReturn == IDYES)
     {
+        writeConfig();
+
         if (!::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_iniPath))
         {
             ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_iniPath);
@@ -3884,7 +3885,6 @@ void tabKeyResponse()
                     snippetHintUpdate();
                 } else
                 {
-                    alert();
                     restoreTab(curScintilla, posCurrent, posSelectionStart, posSelectionEnd);
                 }
             }

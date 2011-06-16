@@ -2,6 +2,8 @@ changelog (for developers only, include unreleased versions)
 
 0.5.24
 ****** restructure the version text and about text
+****** restructure initialization of plugin. Include not rewriting the whole settings file everytime fingertext is initialized for faster notepad++ loading
+****** Fixed: Alert message show up when a tab key is restored
 
 0.5.23
 - bump version to fix the problem that I leave testing option open in 0.5.22
