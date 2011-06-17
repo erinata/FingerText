@@ -109,7 +109,7 @@ int g_optionNumber;
 //char *g_optionArray[] = {"","","","","","","","","","","","","","","","","","","",""};
 char *g_optionArray[] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 // Config file content
-#define DEFAULT_SNIPPET_LIST_LENGTH 100
+#define DEFAULT_SNIPPET_LIST_LENGTH 300
 #define DEFAULT_SNIPPET_LIST_ORDER_TAG_TYPE 1
 #define DEFAULT_TAB_TAG_COMPLETION 0
 #define DEFAULT_LIVE_HINT_UPDATE 1
@@ -2116,7 +2116,9 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
     snippetDock.clearDock();
     sqlite3_stmt *stmt;
     
+
     if (g_editorView) withAll = true;
+    //TODO: there is a bug in the withAll option. The list is limited by the g_snippetlistlength, which is not a desirable effect
 
     // TODO: Use strcat instead of just nested if 
     int sqlitePrepare;
@@ -2418,14 +2420,12 @@ bool exportSnippets()
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
         ::MessageBox(nppData._nppHandle, exportCountText, TEXT("FingerText"), MB_OK);
     }
-
     g_snippetListLength = GetPrivateProfileInt(TEXT("FingerText"), TEXT("snippet_list_length"), DEFAULT_SNIPPET_LIST_LENGTH, g_iniPath);
     g_snippetCache = new SnipIndex [g_snippetListLength];
     updateDockItems(true,true,"%");
     g_liveHintUpdate++;
 
     return success;
-    
 }
 
 char* cleanupString(char *str, char key)
@@ -2587,6 +2587,7 @@ void importSnippets()
                     sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
                     if(SQLITE_ROW == sqlite3_step(stmt))
                     {
+                        //TODO: conflict should be added to old snippet instead of new, need to extract the old snippet content here to make it work
                         const char* extracted = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
                         
                         snippetTextOld = new char[strlen(extracted)+1];
@@ -2603,12 +2604,12 @@ void importSnippets()
                         //if (strcmp(snippetText,snippetTextOldCleaned) == 0)
                         if (strcmp(snippetText,snippetTextOld) == 0)
                         {
-                            delete [] snippetTextOld;
+                            //delete [] snippetTextOld;
                             notOverWrite = true;
                             //sqlite3_finalize(stmt);
                         } else
                         {
-                            delete [] snippetTextOld;
+                            //delete [] snippetTextOld;
                         //    sqlite3_finalize(stmt);
                             if (conflictKeepCopy==IDNO)
                             {
@@ -2672,6 +2673,27 @@ void importSnippets()
                             } else
                             {
                                 notOverWrite = true;
+                                //Delete the old entry
+                                if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
+                                {
+                                    sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
+                                    sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
+                                    sqlite3_step(stmt);
+                                    sqlite3_finalize(stmt);
+
+                                }
+                                //write the new entry
+                                if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "INSERT INTO snippets VALUES(?,?,?)", -1, &stmt, NULL))
+                                {
+                                    sqlite3_bind_text(stmt, 1, tagText, -1, SQLITE_STATIC);
+                                    sqlite3_bind_text(stmt, 2, tagTypeText, -1, SQLITE_STATIC);
+                                    sqlite3_bind_text(stmt, 3, snippetText, -1, SQLITE_STATIC);
+                                
+                                    sqlite3_step(stmt);
+                                    sqlite3_finalize(stmt);
+                                }
+
+                                //write the old entry back with conflict suffix
                                 if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "INSERT INTO snippets VALUES(?,?,?)", -1, &stmt, NULL))
                                 {
                                     importCount++;
@@ -2682,15 +2704,17 @@ void importSnippets()
                                     tagTextsuffixed = new char [strlen(tagText)+256];
                                 
                                     strcpy(tagTextsuffixed,tagText);
-                                    strcat(tagTextsuffixed,".Conflict");
+                                    strcat(tagTextsuffixed,".OldCopy");
                                     strcat(tagTextsuffixed,dateText);
                                     strcat(tagTextsuffixed,timeText);
                                     
                                     sqlite3_bind_text(stmt, 1, tagTextsuffixed, -1, SQLITE_STATIC);
                                     sqlite3_bind_text(stmt, 2, tagTypeText, -1, SQLITE_STATIC);
-                                    sqlite3_bind_text(stmt, 3, snippetText, -1, SQLITE_STATIC);
+                                    sqlite3_bind_text(stmt, 3, snippetTextOld, -1, SQLITE_STATIC);
                                 
                                     sqlite3_step(stmt);
+
+
                                     //sqlite3_finalize(stmt);
                                     conflictCount++;
                                     delete [] tagTextsuffixed;
@@ -2699,6 +2723,7 @@ void importSnippets()
                                 }
                             }
                         }
+                        delete [] snippetTextOld;
                     } else
                     {
                         sqlite3_finalize(stmt);
@@ -3462,7 +3487,6 @@ void optionNavigate(bool toNext)
 void selectionMonitor(int contentChange)
 {
     //TODO: lots of optimization needed
-
     //In normal view, this code is going to cater the option navigation. In editor view, it restrict selection in first 3 lines
     if (g_selectionMonitor == 1)
     {
@@ -3807,6 +3831,7 @@ void tabKeyResponse()
         {
             if (lineCurrent == 1)
             {
+                //TODO: can make the Tab select the whole field instead of just GOTOLINE
                 //::SendMessage(curScintilla,SCI_SETSEL,::SendMessage(curScintilla,SCI_POSITIONFROMLINE,2,0),::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,2,0));
                 ::SendScintilla(SCI_GOTOLINE,2,0);
             } else if (lineCurrent == 2)
@@ -3980,12 +4005,7 @@ void testing()
     
     ::MessageBox(nppData._nppHandle, TEXT("Testing!"), TEXT("Trace"), MB_OK);
     //HWND curScintilla = getCurrentScintilla();
-
-
-    alertNumber(::SendScintilla(SCI_GETSELECTIONMODE,0,0));
-
-
-
+    alertCharArray("laptop");
 
 
     ////Testing creating window using createwindowex
