@@ -5,6 +5,7 @@ changelog (for developers only, include unreleased versions)
 ****** snippet triggertext completion are default to be non-inclusive
 ****** Big performance improvement by using direct scintilla method
 ****** Fixed: Buffer changed triggered events (like updateMode) not triggering when use attempt to close npp and cancel afterwards
+****** turn off live update when selection is rectangle to prevent freeze when selecting multiple line and type
 
 0.5.24
 - restructure the version text and about text

@@ -95,6 +95,7 @@ bool g_modifyResponse;
 bool g_enable;
 bool g_editorView;
 int g_selectionMonitor;
+bool g_rectSelection;
 
 int g_editorLineCount;
 
@@ -1777,6 +1778,7 @@ void initialize()
     g_customScope = new TCHAR[MAX_PATH];
     g_customEscapeChar = new TCHAR[MAX_PATH];
     g_selectionMonitor = 1;
+    g_rectSelection = false;
 
     // For option hotspot
     g_optionMode = false;
@@ -2062,7 +2064,7 @@ void showSnippetDock()
 
 void snippetHintUpdate()
 {     
-    if ((!g_editorView) && (g_liveHintUpdate==1))
+    if ((!g_editorView) && (g_liveHintUpdate==1) && (g_rectSelection==false))
     {
         if (snippetDock.isVisible())
         {
@@ -3464,6 +3466,15 @@ void selectionMonitor(int contentChange)
     //In normal view, this code is going to cater the option navigation. In editor view, it restrict selection in first 3 lines
     if (g_selectionMonitor == 1)
     {
+        //TODO: this "100" is associated with the limit of number of multiple hotspots that can be simultaneously activated, should find a way to make this more customizable
+        if ((::SendScintilla(SCI_GETSELECTIONMODE,0,0)!=SC_SEL_STREAM) || (::SendScintilla(SCI_GETSELECTIONS,0,0)>100))
+        {
+            g_rectSelection = true;
+        } else
+        {
+            g_rectSelection = false;
+        }
+
         g_modifyResponse = false;
         g_selectionMonitor--;
         if (g_editorView == false)
@@ -3783,10 +3794,10 @@ void tabKeyResponse()
     //TODO: in general I should add logo to all the messages
     //HWND curScintilla = getCurrentScintilla();
 
-    //if ((g_enable==false) || (::SendMessage(curScintilla,SCI_SELECTIONISRECTANGLE,0,0)==1))
-    if ((g_enable==false) || (::SendScintilla(SCI_SELECTIONISRECTANGLE,0,0)==1))
-    {
-        ::SendScintilla(SCI_TAB,0,0);
+    //if ((g_enable==false) || (::SendScintilla(SCI_SELECTIONISRECTANGLE,0,0)==1))
+    if ((g_enable==false) || (g_rectSelection==true))
+    {        
+        ::SendScintilla(SCI_TAB,0,0);   
     } else
     {
         int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
@@ -3884,6 +3895,8 @@ void tabKeyResponse()
 
             }
 
+            bool snippetHint = false;
+
             bool completeFound = false;
             if (g_tabTagCompletion == 1)
             {
@@ -3895,25 +3908,28 @@ void tabKeyResponse()
                     if (completeFound)
                     {
                         ::SendScintilla(SCI_AUTOCCANCEL,0,0);
-                        snippetHintUpdate();
+                        snippetHint = true;
                     }
 	    	    }
             }
             
-            g_liveHintUpdate++;
+            
+            
             if ((navSpot == false) && (tagFound == false) && (completeFound==false) && (dynamicSpot==false)) 
             {
                 if (g_optionMode == true)
                 {
                     g_optionMode = false;
                     ::SendScintilla(SCI_GOTOPOS,g_optionEndPosition,0);
-                    snippetHintUpdate();
+                    snippetHint = true;
                 } else
                 {
                     restoreTab(posCurrent, posSelectionStart, posSelectionEnd);
                 }
             }
-            
+
+            g_liveHintUpdate++;
+            if (snippetHint) snippetHintUpdate();
             g_selectionMonitor++;
         //}
         }
@@ -3966,7 +3982,7 @@ void testing()
     //HWND curScintilla = getCurrentScintilla();
 
 
-
+    alertNumber(::SendScintilla(SCI_GETSELECTIONMODE,0,0));
 
 
 
