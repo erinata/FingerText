@@ -1,5 +1,9 @@
 changelog (for developers only, include unreleased versions)
 
+
+0.5.26
+****** upgrade to sqlite3.7.6.3
+
 0.5.25
 ****** Added: private snippet available, any snippet with triggertext beginning with _ cannot be triggered and will not be shown in liveupdate. But you can still see them in editMode and they can be triggered by chain snippets
 ****** snippet triggertext completion are default to be non-inclusive
@@ -30,7 +34,6 @@ changelog (for developers only, include unreleased versions)
 - Fixed: Fingertext freeze if there are incomplete closing hotspot brankets
 - Fixed: better checking for the end of option hotspot
 
-
 0.5.20
 - Changed: All hotspots, normal or dynamic are triggered under the same rule, from inside to outside and from left to right.
 - Fixed: tab_tag_completion is not working
@@ -42,7 +45,6 @@ changelog (for developers only, include unreleased versions)
 - slight performance increase in snippet live update
 - undo process will not cause snippet hint to update
 - do not turn off option when language change
-
 
 0.5.16
 ****** Primitive implementation of Option Dynamic Hotspot

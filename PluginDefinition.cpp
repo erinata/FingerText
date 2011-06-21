@@ -217,7 +217,7 @@ void commandMenuInit()
 	//shKey2->_isShift = false;
 	//shKey2->_key = VK_F4;
 
-    setCommand(TRIGGER_SNIPPET_INDEX, TEXT("Trigger Snippet/Navigate to Hotspot"), tabKeyResponse, shKey, false);
+    setCommand(TRIGGER_SNIPPET_INDEX, TEXT("Trigger Snippet/Navigate to Hotspot"), tabActivate, shKey, false);
     
     //setCommand(WARMSPOT_NAVIGATION_INDEX, TEXT("Navigate to Warmspot"), goToWarmSpot, shKey2, false);
     setCommand(SNIPPET_DOCK_INDEX, TEXT("Toggle On/off SnippetDock"), showSnippetDock, NULL, false);
@@ -3406,7 +3406,6 @@ __________________________________________________________________________\r\n\r
             //        # Remember to place an [>END<] at the end of the snippet\r\n\
             //        # content.\r\n");
     
-    
             ::SendScintilla(SCI_ANNOTATIONSETSTYLE, 0, STYLE_INDENTGUIDE);
             ::SendScintilla(SCI_ANNOTATIONSETSTYLE, 1, STYLE_INDENTGUIDE);
             ::SendScintilla(SCI_ANNOTATIONSETSTYLE, 2, STYLE_INDENTGUIDE);
@@ -3474,6 +3473,7 @@ void updateOptionCurrent(bool toNext)
     //return item;
     //return g_optionArray[g_optionCurrent];
 }
+
 void turnOffOptionMode()
 {
     g_optionMode = false;
@@ -3533,7 +3533,6 @@ void selectionMonitor(int contentChange)
                 //    cleanOptionItem();
                 //    g_optionMode = false;
                 //}
-                
             }
         } else if (g_editorCaretBound == 1)
         {
@@ -3612,10 +3611,9 @@ void selectionMonitor(int contentChange)
 
 void tagComplete()
 {
-    //HWND curScintilla = getCurrentScintilla();
+    //TODO: can just use the snippetdock to do the completion (after rewrite of snippetdock)
     int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
     if (triggerTag(posCurrent,true) > 0) snippetHintUpdate();
-    //if (snippetComplete()) snippetHintUpdate();
 }
 
 //TODO: better triggertag, should allow for a list of scopes
@@ -3643,7 +3641,7 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
     } else if (tagLength > 0) //TODO: changing this to >0 fixed the problem of tag_tab_completion, but need to investigate more about the side effect
 	{
         
-        int posBeforeTag = posCurrent-tagLength;
+        int posBeforeTag = posCurrent - tagLength;
 
         char *expanded = NULL;
         char *tagType = NULL;
@@ -3818,7 +3816,7 @@ char* getLangTagType()
     //return "";
 }
 
-void tabKeyResponse()
+void tabActivate()
 {
 
     //TODO: in general I should add logo to all the messages

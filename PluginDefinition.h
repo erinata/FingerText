@@ -182,7 +182,7 @@ void selectionMonitor(int contentChange);
 bool triggerTag(int &posCurrent,bool triggerTextComplete = false,int triggerLength=  0);
 void tagComplete();
 //bool snippetComplete();
-void tabKeyResponse();
+void tabActivate();
 
 void updateOptionCurrent(bool toNext);
 void addOptionItem(char* item);
