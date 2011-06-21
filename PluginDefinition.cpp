@@ -109,7 +109,7 @@ int g_optionNumber;
 //char *g_optionArray[] = {"","","","","","","","","","","","","","","","","","","",""};
 char *g_optionArray[] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 // Config file content
-#define DEFAULT_SNIPPET_LIST_LENGTH 300
+#define DEFAULT_SNIPPET_LIST_LENGTH 1000
 #define DEFAULT_SNIPPET_LIST_ORDER_TAG_TYPE 1
 #define DEFAULT_TAB_TAG_COMPLETION 0
 #define DEFAULT_LIVE_HINT_UPDATE 1

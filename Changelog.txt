@@ -6,7 +6,7 @@ changelog (for developers only, include unreleased versions)
 ****** Big performance improvement by using direct scintilla method
 ****** Fixed: Buffer changed triggered events (like updateMode) not triggering when use attempt to close npp and cancel afterwards
 ****** turn off live update when selection is rectangle to prevent freeze when selecting multiple line and type
-****** Change default snippet list length to 300 to temporarily deal with the problem caused by snippetlistlength limit
+****** Change default snippet list length to 1000 to temporarily deal with the problem caused by snippetlistlength limit
 ****** Changed: conflict suffix is now added to the old snippet instead of new snippet
 
 
