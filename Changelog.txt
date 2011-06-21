@@ -1,5 +1,6 @@
 changelog (for developers only, include unreleased versions)
 
+0.5.27
 
 0.5.26
 ****** upgrade to sqlite3.7.6.3
