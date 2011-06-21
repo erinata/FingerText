@@ -122,6 +122,7 @@ char *g_optionArray[] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
 #define DEFAULT_INCLUSIVE_TRIGGERTEXT_COMPLETION 0
 #define DEFAULT_LIVE_PREVIEW_BOX 1
 #define DEFAULT_EDITOR_CARET_BOUND 1
+#define DEFAULT_FORCE_MULTI_PASTE 1
 
 #define DEFAULT_CUSTOM_SCOPE TEXT("")
 #define DEFAULT_CUSTOM_ESCAPE_CHAR TEXT("")
@@ -139,6 +140,7 @@ int g_importOverWriteConfirm;
 int g_inclusiveTriggerTextCompletion;
 int g_livePreviewBox;
 int g_editorCaretBound;
+int g_forceMultiPaste;
 
 TCHAR* g_customEscapeChar;
 TCHAR* g_customScope;
@@ -626,8 +628,6 @@ void deleteSnippet()
 bool getLineChecked(char **buffer, int lineNumber, TCHAR* errorText)
 {
     // TODO: and check for more error, say the triggertext has to be one word
-    // TODO: consolidate also the snippet content extraction of savesnippet
-
     bool problemSnippet = false;
 
     ::SendScintilla(SCI_GOTOLINE,lineNumber,0);
@@ -959,7 +959,7 @@ void launchMessageBox(int &firstPos, char* hotSpotText)
     getTerm = new char[strlen(hotSpotText)];
     strcpy(getTerm,"");
     
-    
+    // TODO: probably can just translate the text like "MB_OK" to the corresponding number and send it to the messagebox message directly. In this case people can just follow microsofe documentation.   
     int messageType = MB_OK;
     if (strncmp(hotSpotText,"OK:",3)==0) 
     {
@@ -1529,16 +1529,16 @@ int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &sec
     *hotSpot = new char[secondPos+3 - firstPos + 1];
     ::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(*hotSpot));
 
+    // TODO: consider moving this part to the function calling grabHotSpotContent, this facilitates at least the implementation of (nor) hotspot
     if ((spotType>0) && (dynamic))
     {
         ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)*hotSpotText+5);
     } else if (!dynamic)
     {
         ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)*hotSpotText);
-
     }
-
     ::SendScintilla(SCI_GOTOPOS,secondPos+3,0);
+    
     return spotType;
     //return secondPos;  
 }
@@ -1836,7 +1836,7 @@ void initialize()
     if (PathFileExists(g_fttempPath) == FALSE) emptyFile(g_fttempPath);
 
     //TODO: better arrangement for this multipaste setting
-    ::SendScintilla(SCI_SETMULTIPASTE,1,0); 
+    if (g_forceMultiPaste) ::SendScintilla(SCI_SETMULTIPASTE,1,0); 
     //updateDockItems(false,false);
     //if (PathFileExists(g_groupPath) == FALSE) writeDefaultGroupFile(); 
 }
@@ -1865,6 +1865,7 @@ void resetDefaultSettings()
     g_inclusiveTriggerTextCompletion = DEFAULT_INCLUSIVE_TRIGGERTEXT_COMPLETION;
     g_livePreviewBox = DEFAULT_LIVE_PREVIEW_BOX;
     g_editorCaretBound = DEFAULT_EDITOR_CARET_BOUND;
+    g_forceMultiPaste = DEFAULT_FORCE_MULTI_PASTE;
 
     g_customScope = DEFAULT_CUSTOM_SCOPE;
     g_customEscapeChar = DEFAULT_CUSTOM_ESCAPE_CHAR;
@@ -1890,6 +1891,7 @@ void writeConfig()
     writeConfigText(g_inclusiveTriggerTextCompletion,TEXT("inclusive_triggertext_completion"));
     writeConfigText(g_livePreviewBox,TEXT("live_preview_box"));
     writeConfigText(g_editorCaretBound,TEXT("editor_caret_bound"));
+    writeConfigText(g_forceMultiPaste,TEXT("force_multipaste"));
     
     writeConfigTextChar(g_customEscapeChar,TEXT("escape_char"));
     writeConfigTextChar(g_customScope,TEXT("custom_scope"));
@@ -1910,6 +1912,7 @@ void loadConfig()
     g_inclusiveTriggerTextCompletion = GetPrivateProfileInt(TEXT("FingerText"), TEXT("inclusive_triggertext_completion"), DEFAULT_INCLUSIVE_TRIGGERTEXT_COMPLETION, g_iniPath);
     g_livePreviewBox = GetPrivateProfileInt(TEXT("FingerText"), TEXT("live_preview_box"), DEFAULT_LIVE_PREVIEW_BOX, g_iniPath);
     g_editorCaretBound = GetPrivateProfileInt(TEXT("FingerText"), TEXT("editor_caret_bound"), DEFAULT_EDITOR_CARET_BOUND, g_iniPath);
+    g_forceMultiPaste = GetPrivateProfileInt(TEXT("FingerText"), TEXT("force_multipaste"), DEFAULT_FORCE_MULTI_PASTE, g_iniPath);
 
     GetPrivateProfileString(TEXT("FingerText"), TEXT("escape_char"),DEFAULT_CUSTOM_ESCAPE_CHAR,g_customEscapeChar,MAX_PATH,g_iniPath);
     GetPrivateProfileString(TEXT("FingerText"), TEXT("custom_scope"),DEFAULT_CUSTOM_SCOPE,g_customScope,MAX_PATH,g_iniPath);
@@ -3276,6 +3279,9 @@ void settings()
  ;                                             Do not set this to 0 unless you are very sure that you won't mess up\r\n\
  ;                                             the snippet editor format.\r\n\
  ;                            --  (default) 1: Fingertext will restrict caret movement in snippet editing mode.\r\n\
+ ; force_multipaste           --            0: Use notepad++ settings to determine whether you can paste text into\r\n\
+ ;                                             multiple hotspots simultaneously.\r\n\
+ ;                            --  (default) 1: Force notepad++ to turn on multipasting feature.\r\n\
         ");
         ::SendScintilla(SCI_ANNOTATIONSETSTYLE, lineCount, STYLE_INDENTGUIDE);
         ::SendScintilla(SCI_ANNOTATIONSETVISIBLE, lineCount, 0);
