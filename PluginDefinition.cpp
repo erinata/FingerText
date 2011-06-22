@@ -922,32 +922,129 @@ void chainSnippet(int &firstPos, char* hotSpotText)
     triggerTag(triggerPos,false, strlen(hotSpotText));
 }
 
-void executeCommand(int &firstPos, char* hotSpotText)
+//void executeCommand(int &firstPos, char* hotSpotText)
+//{
+//    int triggerPos = strlen(hotSpotText)+firstPos;
+//    ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
+//    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//    
+//    char  psBuffer[130];
+//    FILE   *pPipe;
+//    int resultLength;
+//    //TODO: try the createprocess instead of _popen?
+//    //http://msdn.microsoft.com/en-us/library/ms682499(v=vs.85).aspx
+//
+//    //pPipe = _popen( "ruby -e 'puts 1+1'", "rt" );
+//    if( (pPipe = _popen( hotSpotText, "rt" )) == NULL )
+//    {    
+//        return;
+
+#define BUFSIZE 10000
+
+void executeCommand(HWND &curScintilla, int &firstPos, char* hotSpotText)
 {
     int triggerPos = strlen(hotSpotText)+firstPos;
-    ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
-    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-    
-    char  psBuffer[130];
-    FILE   *pPipe;
-    int resultLength;
-    //TODO: try the createprocess instead of _popen?
-    //http://msdn.microsoft.com/en-us/library/ms682499(v=vs.85).aspx
+    ::SendMessage(curScintilla,SCI_SETSEL,firstPos,triggerPos);
+    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
 
-    //pPipe = _popen( "ruby -e 'puts 1+1'", "rt" );
-    if( (pPipe = _popen( hotSpotText, "rt" )) == NULL )
-    {    
-        return;
-    }
+    HANDLE process_stdin_read = NULL;
+    HANDLE process_stdin_write = NULL;
 
-    ::memset(psBuffer,0,sizeof(psBuffer));
+    HANDLE process_stdout_read = NULL;
+    HANDLE process_stdout_write = NULL;
 
-    while(fgets(psBuffer, 129, pPipe))
+    SECURITY_ATTRIBUTES SecurityAttr;
+
+    SecurityAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+    SecurityAttr.bInheritHandle = TRUE;
+    SecurityAttr.lpSecurityDescriptor = NULL;
+
+    if ( ! CreatePipe(&process_stdout_read, &process_stdout_write, &SecurityAttr, 0) )
     {
-        ::SendScintilla(SCI_REPLACESEL, 128, (LPARAM)psBuffer);
-        ::memset (psBuffer,0,sizeof(psBuffer));
+        //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->StdoutRd CreatePipe\n");
     }
-    _pclose( pPipe );
+
+    if ( ! SetHandleInformation(process_stdout_read, HANDLE_FLAG_INHERIT, 0) )
+    {
+        //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->Stdout SetHandleInformation\n");
+    }
+
+    if ( ! CreatePipe(&process_stdin_read, &process_stdin_write, &SecurityAttr, 0))
+    {
+        //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->Stdin CreatePipe\n");
+    }
+
+   if ( ! SetHandleInformation(process_stdin_write, HANDLE_FLAG_INHERIT, 0) )
+   {
+       //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->Stdin SetHandleInformation\n");
+   }
+
+    TCHAR CMD_LINE[BUFSIZE];
+
+    int len = MultiByteToWideChar ((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, hotSpotText, -1, NULL, 0);
+    MultiByteToWideChar ((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, hotSpotText, -1, CMD_LINE, len);
+
+    PROCESS_INFORMATION pi;
+    STARTUPINFO si;
+    BOOL ProcessSuccess = FALSE;
+
+    ZeroMemory( &pi, sizeof(PROCESS_INFORMATION) );
+    ZeroMemory( &si, sizeof(STARTUPINFO) );
+
+    si.cb = sizeof(STARTUPINFO);
+    si.hStdError = process_stdout_write;
+    si.hStdOutput = process_stdout_write;
+    si.hStdInput = process_stdin_read;
+
+    // Hide window
+    si.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
+    si.wShowWindow = SW_HIDE;
+
+    // Create process.
+    ProcessSuccess = CreateProcess(NULL,
+        CMD_LINE, // command line
+        NULL,     // process security attributes
+        NULL,     // primary thread security attributes
+        TRUE,     // handles are inherited
+        0,        // creation flags
+        NULL,     // use parent's environment
+        NULL,     // use parent's current directory
+        &si,      // STARTUPINFO pointer
+        &pi);     // receives PROCESS_INFORMATION
+
+    if ( ! ProcessSuccess )
+    {
+        //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->Error in CreateProcess\n");
+    }
+    else
+    {
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+    }
+
+    DWORD Read;
+    char Buffer[BUFSIZE];
+    bool read_success = FALSE;
+
+    if ( ! CloseHandle(process_stdout_write))
+    {
+        //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->StdOutWr CloseHandle\n");
+    }
+
+    while (1)
+    {
+        read_success = ReadFile( process_stdout_read, Buffer, BUFSIZE, &Read, NULL);
+      
+        if ( ! read_success || Read == 0 ) break;
+
+        Buffer[Read] = '\0';
+
+        ::SendMessage(curScintilla, SCI_INSERTTEXT, firstPos, (LPARAM)Buffer);
+
+        if ( ! read_success ) break;
+    }
+
+   //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->End of process execution.\n");
 }
 
 void launchMessageBox(int &firstPos, char* hotSpotText)
