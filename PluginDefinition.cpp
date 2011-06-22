@@ -941,12 +941,12 @@ void chainSnippet(int &firstPos, char* hotSpotText)
 
 #define BUFSIZE 10000
 
-void executeCommand(HWND &curScintilla, int &firstPos, char* hotSpotText)
+void executeCommand(int &firstPos, char* hotSpotText)
 {
     int triggerPos = strlen(hotSpotText)+firstPos;
-    ::SendMessage(curScintilla,SCI_SETSEL,firstPos,triggerPos);
-    ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)"");
-
+    ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
+    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+     
     HANDLE process_stdin_read = NULL;
     HANDLE process_stdin_write = NULL;
 
@@ -981,8 +981,9 @@ void executeCommand(HWND &curScintilla, int &firstPos, char* hotSpotText)
 
     TCHAR CMD_LINE[BUFSIZE];
 
-    int len = MultiByteToWideChar ((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, hotSpotText, -1, NULL, 0);
-    MultiByteToWideChar ((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, hotSpotText, -1, CMD_LINE, len);
+    int len = MultiByteToWideChar ((int)::SendScintilla(SCI_GETCODEPAGE, 0, 0), 0, hotSpotText, -1, NULL, 0);
+    MultiByteToWideChar ((int)::SendScintilla(SCI_GETCODEPAGE, 0, 0), 0, hotSpotText, -1, CMD_LINE, len);
+
 
     PROCESS_INFORMATION pi;
     STARTUPINFO si;
@@ -1014,6 +1015,7 @@ void executeCommand(HWND &curScintilla, int &firstPos, char* hotSpotText)
 
     if ( ! ProcessSuccess )
     {
+        
         //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->Error in CreateProcess\n");
     }
     else
@@ -1031,20 +1033,22 @@ void executeCommand(HWND &curScintilla, int &firstPos, char* hotSpotText)
         //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->StdOutWr CloseHandle\n");
     }
 
+    
     while (1)
     {
+        
         read_success = ReadFile( process_stdout_read, Buffer, BUFSIZE, &Read, NULL);
-      
+        
         if ( ! read_success || Read == 0 ) break;
 
         Buffer[Read] = '\0';
-
-        ::SendMessage(curScintilla, SCI_INSERTTEXT, firstPos, (LPARAM)Buffer);
+       
+        ::SendScintilla(SCI_INSERTTEXT, firstPos, (LPARAM)Buffer);
 
         if ( ! read_success ) break;
     }
 
-   //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->End of process execution.\n");
+   //::SendScintilla(SCI_INSERTTEXT, 0, (LPARAM)"->End of process execution.\n");
 }
 
 void launchMessageBox(int &firstPos, char* hotSpotText)
