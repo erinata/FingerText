@@ -953,7 +953,6 @@ void chainSnippet(int &firstPos, char* hotSpotText)
 
 void executeCommand(int &firstPos, char* hotSpotText)
 {
-    const int bufSize = 100;
 
     //HWND curScintilla = getCurrentScintilla();
 
@@ -963,36 +962,34 @@ void executeCommand(int &firstPos, char* hotSpotText)
     //::SendMessage(curScintilla, SCI_SETSEL,firstPos,triggerPos);
     //::SendMessage(curScintilla, SCI_REPLACESEL,0,(LPARAM)"");
     
+    HANDLE processStdinRead = NULL;
+    HANDLE processStdinWrite = NULL;
 
+    HANDLE processStdoutRead = NULL;
+    HANDLE processStdoutWrite = NULL;
 
-    HANDLE process_stdin_read = NULL;
-    HANDLE process_stdin_write = NULL;
+    SECURITY_ATTRIBUTES securityAttributes;
 
-    HANDLE process_stdout_read = NULL;
-    HANDLE process_stdout_write = NULL;
+    securityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
+    securityAttributes.bInheritHandle = true;
+    securityAttributes.lpSecurityDescriptor = NULL;
 
-    SECURITY_ATTRIBUTES SecurityAttr;
-
-    SecurityAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
-    SecurityAttr.bInheritHandle = TRUE;
-    SecurityAttr.lpSecurityDescriptor = NULL;
-
-    if ( ! CreatePipe(&process_stdout_read, &process_stdout_write, &SecurityAttr, 0) )
+    if (!CreatePipe(&processStdoutRead, &processStdoutWrite, &securityAttributes, 0) )
     {
         //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->StdoutRd CreatePipe\n");
     }
 
-    if ( ! SetHandleInformation(process_stdout_read, HANDLE_FLAG_INHERIT, 0) )
+    if (!SetHandleInformation(processStdoutRead, HANDLE_FLAG_INHERIT, 0) )
     {
         //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->Stdout SetHandleInformation\n");
     }
 
-    if ( ! CreatePipe(&process_stdin_read, &process_stdin_write, &SecurityAttr, 0))
+    if (!CreatePipe(&processStdinRead, &processStdinWrite, &securityAttributes, 0))
     {
         //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->Stdin CreatePipe\n");
     }
 
-   if ( ! SetHandleInformation(process_stdin_write, HANDLE_FLAG_INHERIT, 0) )
+   if (!SetHandleInformation(processStdinWrite, HANDLE_FLAG_INHERIT, 0) )
    {
        //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->Stdin SetHandleInformation\n");
    }
@@ -1001,8 +998,12 @@ void executeCommand(int &firstPos, char* hotSpotText)
     //
     //int len = MultiByteToWideChar ((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, hotSpotText, -1, NULL, 0);
     //MultiByteToWideChar ((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, hotSpotText, -1, CMD_LINE, len);
+    
+    char* hotSpotTextCmd = new char[strlen(hotSpotText)+8];
+    strcpy(hotSpotTextCmd, "cmd /c ");
+    strcat(hotSpotTextCmd,hotSpotText);
     TCHAR* cmdLine;
-    convertToWideChar(hotSpotText,&cmdLine);
+    convertToWideChar(hotSpotTextCmd,&cmdLine);
 
     PROCESS_INFORMATION pi;
     STARTUPINFO si;
@@ -1012,17 +1013,18 @@ void executeCommand(int &firstPos, char* hotSpotText)
     ZeroMemory( &si, sizeof(STARTUPINFO) );
 
     si.cb = sizeof(STARTUPINFO);
-    si.hStdError = process_stdout_write;
-    si.hStdOutput = process_stdout_write;
-    si.hStdInput = process_stdin_read;
+    si.hStdError = processStdoutWrite;
+    si.hStdOutput = processStdoutWrite;
+    si.hStdInput = processStdinRead;
 
     // Hide window
     si.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
     si.wShowWindow = SW_HIDE;
 
     // Create process.
-    ProcessSuccess = CreateProcess(NULL,
-        cmdLine, // command line
+    ProcessSuccess = CreateProcess(
+        NULL,
+        cmdLine,  // command line
         NULL,     // process security attributes
         NULL,     // primary thread security attributes
         true,     // handles are inherited
@@ -1030,11 +1032,11 @@ void executeCommand(int &firstPos, char* hotSpotText)
         NULL,     // use parent's environment
         NULL,     // use parent's current directory
         &si,      // STARTUPINFO pointer
-        &pi);     // receives PROCESS_INFORMATION
+        &pi       // receives PROCESS_INFORMATION
+        );     
 
     if ( ! ProcessSuccess )
     {
-        
         //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->Error in CreateProcess\n");
     }
     else
@@ -1042,12 +1044,16 @@ void executeCommand(int &firstPos, char* hotSpotText)
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
     }
+    
+    //TODO: option to skip the output part (so that we can run a program that didn't return immediately but still not freezing up npp)
 
-    DWORD Read;
+    const int bufSize = 100;
+
+    DWORD read;
     char Buffer[bufSize];
-    bool read_success = false;
+    bool readSuccess = false;
 
-    if ( ! CloseHandle(process_stdout_write))
+    if (!CloseHandle(processStdoutWrite))
     {
         //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->StdOutWr CloseHandle\n");
     }
@@ -1057,22 +1063,22 @@ void executeCommand(int &firstPos, char* hotSpotText)
     //HWND curScintilla = getCurrentScintilla();
     while (1)
     {   
-        read_success = ReadFile(process_stdout_read, Buffer, bufSize - 1, &Read, NULL);
+        readSuccess = ReadFile(processStdoutRead, Buffer, bufSize - 1, &read, NULL);
         
-        if ( ! read_success || Read == 0 ) break;
+        if (!readSuccess || read == 0 ) break;
 
-        Buffer[Read] = '\0';
+        Buffer[read] = '\0';
         
         //::SendMessage(curScintilla, SCI_REPLACESEL, bufSize - 1, (LPARAM)Buffer);
         ::SendScintilla(SCI_REPLACESEL, bufSize - 1, (LPARAM)Buffer);
         
         //::SendScintilla(SCI_INSERTTEXT, firstPos, (LPARAM)Buffer);
 
-        if ( ! read_success ) break;
+        if (!readSuccess ) break;
     }
 
     delete [] cmdLine;
-    
+    delete [] hotSpotTextCmd;
    //::SendScintilla(SCI_INSERTTEXT, 0, (LPARAM)"->End of process execution.\n");
 }
 
