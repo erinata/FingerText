@@ -325,18 +325,20 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 
 == Tested with
 
-- Notepad++ 5.9.1(Unicode), Windows 7 Ultimate 64bit 
+- Notepad++ 5.9.2(Unicode), Windows 7 Ultimate 64bit 
+- Notepad++ 5.9.2(Unicode), Windows XP 
 - Notepad++ 5.8.7(Unicode), Windows 7 Ultimate 64bit 
 - Notepad++ 5.8.6(Unicode), Windows 7 Ultimate 64bit 
 
 == Credits
 
 Many thanks to..........
-- Don Ho for making Notepad++ and providing a flexible and well documented api for plugin programming. 
 - Dave Brotherstone for his helpful comments and programmming help (especially for the sqlite support fork). 
-- Tsz Kin Chan for his suggestions on the UI and testing those buggy nightly versions.   
+- jvdanilo for his implementation of executeCommand() using CreateProcess instead of _popen
 - bbluemel for testing and suggesting solution for the indent reference function.
+- Tsz Kin Chan for his suggestions on the UI and testing those super buggy nightly versions.   
 - Also thanks for all the other comments and bug report from SourceForge forum and Github.
+- And last but not least, Don Ho for making Notepad++ and providing a flexible and well documented api for plugin programming. 
 
 == License
 
