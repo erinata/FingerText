@@ -922,6 +922,7 @@ void chainSnippet(int &firstPos, char* hotSpotText)
     triggerTag(triggerPos,false, strlen(hotSpotText));
 }
 
+
 //void executeCommand(int &firstPos, char* hotSpotText)
 //{
 //    int triggerPos = strlen(hotSpotText)+firstPos;
@@ -938,15 +939,32 @@ void chainSnippet(int &firstPos, char* hotSpotText)
 //    if( (pPipe = _popen( hotSpotText, "rt" )) == NULL )
 //    {    
 //        return;
-
-#define BUFSIZE 10000
+//    }
+//
+//    ::memset(psBuffer,0,sizeof(psBuffer));
+//
+//    while(fgets(psBuffer, 129, pPipe))
+//    {
+//        ::SendScintilla(SCI_REPLACESEL, 128, (LPARAM)psBuffer);
+//        ::memset (psBuffer,0,sizeof(psBuffer));
+//    }
+//    _pclose( pPipe );
+//}
 
 void executeCommand(int &firstPos, char* hotSpotText)
 {
+    const int bufSize = 100;
+
+    //HWND curScintilla = getCurrentScintilla();
+
     int triggerPos = strlen(hotSpotText)+firstPos;
     ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-     
+    //::SendMessage(curScintilla, SCI_SETSEL,firstPos,triggerPos);
+    //::SendMessage(curScintilla, SCI_REPLACESEL,0,(LPARAM)"");
+    
+
+
     HANDLE process_stdin_read = NULL;
     HANDLE process_stdin_write = NULL;
 
@@ -979,15 +997,16 @@ void executeCommand(int &firstPos, char* hotSpotText)
        //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->Stdin SetHandleInformation\n");
    }
 
-    TCHAR CMD_LINE[BUFSIZE];
-
-    int len = MultiByteToWideChar ((int)::SendScintilla(SCI_GETCODEPAGE, 0, 0), 0, hotSpotText, -1, NULL, 0);
-    MultiByteToWideChar ((int)::SendScintilla(SCI_GETCODEPAGE, 0, 0), 0, hotSpotText, -1, CMD_LINE, len);
-
+    //TCHAR CMD_LINE[bufSize];
+    //
+    //int len = MultiByteToWideChar ((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, hotSpotText, -1, NULL, 0);
+    //MultiByteToWideChar ((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, hotSpotText, -1, CMD_LINE, len);
+    TCHAR* cmdLine;
+    convertToWideChar(hotSpotText,&cmdLine);
 
     PROCESS_INFORMATION pi;
     STARTUPINFO si;
-    BOOL ProcessSuccess = FALSE;
+    BOOL ProcessSuccess = false;
 
     ZeroMemory( &pi, sizeof(PROCESS_INFORMATION) );
     ZeroMemory( &si, sizeof(STARTUPINFO) );
@@ -1003,10 +1022,10 @@ void executeCommand(int &firstPos, char* hotSpotText)
 
     // Create process.
     ProcessSuccess = CreateProcess(NULL,
-        CMD_LINE, // command line
+        cmdLine, // command line
         NULL,     // process security attributes
         NULL,     // primary thread security attributes
-        TRUE,     // handles are inherited
+        true,     // handles are inherited
         0,        // creation flags
         NULL,     // use parent's environment
         NULL,     // use parent's current directory
@@ -1025,29 +1044,35 @@ void executeCommand(int &firstPos, char* hotSpotText)
     }
 
     DWORD Read;
-    char Buffer[BUFSIZE];
-    bool read_success = FALSE;
+    char Buffer[bufSize];
+    bool read_success = false;
 
     if ( ! CloseHandle(process_stdout_write))
     {
         //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->StdOutWr CloseHandle\n");
     }
 
-    
+    //::Sleep(100);  //this is temporary solution to the incorrectly written output to npp.....
+
+    //HWND curScintilla = getCurrentScintilla();
     while (1)
-    {
-        
-        read_success = ReadFile( process_stdout_read, Buffer, BUFSIZE, &Read, NULL);
+    {   
+        read_success = ReadFile(process_stdout_read, Buffer, bufSize - 1, &Read, NULL);
         
         if ( ! read_success || Read == 0 ) break;
 
         Buffer[Read] = '\0';
-       
-        ::SendScintilla(SCI_INSERTTEXT, firstPos, (LPARAM)Buffer);
+        
+        //::SendMessage(curScintilla, SCI_REPLACESEL, bufSize - 1, (LPARAM)Buffer);
+        ::SendScintilla(SCI_REPLACESEL, bufSize - 1, (LPARAM)Buffer);
+        
+        //::SendScintilla(SCI_INSERTTEXT, firstPos, (LPARAM)Buffer);
 
         if ( ! read_success ) break;
     }
 
+    delete [] cmdLine;
+    
    //::SendScintilla(SCI_INSERTTEXT, 0, (LPARAM)"->End of process execution.\n");
 }
 
