@@ -1,5 +1,8 @@
 changelog (for developers only, include unreleased versions)
 
+0.5.28
+Changed: change hotspot (cmd) to (run)
+
 0.5.27
 ****** Changed: merge in jvdanilo's implementation of executecommand
 

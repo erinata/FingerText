@@ -7,7 +7,6 @@
 //Copyright (C) 2011 by Tom Lam
 //
 //Permission is hereby granted, free of charge, to any person 
-
 //obtaining a copy of this software and associated documentation 
 //files (the "Software"), to deal in the Software without 
 //restriction, including without limitation the rights to use, 
@@ -903,7 +902,7 @@ void executeCommand(int &firstPos, char* hotSpotText)
         NULL,
         cmdLine,  // command line
         NULL,     // process security attributes
-        NULL,     // primary thread security attributes
+        NULL,    // primary thread security attributes
         true,     // handles are inherited
         0,        // creation flags
         NULL,     // use parent's environment
@@ -1205,14 +1204,14 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
         char* getTerm;
         getTerm = new char[strlen(hotSpotText)];
         strcpy(getTerm,hotSpotText+6);
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)::strupr(getTerm));
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)::_strupr(getTerm));
         delete [] getTerm;
     } else if (strncmp(hotSpotText,"LOWER:",6)==0)
     {
         char* getTerm;
         getTerm = new char[strlen(hotSpotText)];
         strcpy(getTerm,hotSpotText+6);
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)::strlwr(getTerm));
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)::_strlwr(getTerm));
         delete [] getTerm;
     } else if (strncmp(hotSpotText,"TIME:",5)==0)
     {
@@ -1522,11 +1521,11 @@ int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &sec
     {
         spotType = 2;
         //alertCharArray("cha");
-    } else if (strncmp(*hotSpotText,"(cmd)",5)==0)
+    } else if ((strncmp(*hotSpotText,"(run)",5)==0) || (strncmp(*hotSpotText,"(cmd)",5)==0))  //TODO: the command hotspot is renamed to (run) this line is for keeping backward compatibility
     {
         spotType = 3;
         //alertCharArray("cmd");
-    } else if (strncmp(*hotSpotText,"(msg)",5)==0)
+    } else if (strncmp(*hotSpotText,"(msg)",5)==0) //TODO: should think more about this hotspot, It can be made into a more general (ask) hotspot....so keep this feature private for the moment
     {
         spotType = 4;
     }
@@ -1607,7 +1606,7 @@ void showPreview(bool top)
                 //if (convertedChars>=184)
                 //{
                 //    const TCHAR etcText[] = TEXT(" . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .");
-                //    ::_tcscat(previewText,etcText);
+                //    ::_tcscat_s(previewText,etcText);
                 //}
                 
                 snippetDock.setDlgText(ID_SNIPSHOW_EDIT,previewTextWide);
@@ -1779,7 +1778,7 @@ void initialize()
     TCHAR path[MAX_PATH];
     char cpath[MAX_PATH*2];
     ::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH, reinterpret_cast<LPARAM>(path));
-    ::_tcscat(path,TEXT("\\FingerText"));
+    ::_tcscat_s(path,TEXT("\\FingerText"));
     int multibyteLength = WideCharToMultiByte(CP_UTF8, 0, path, -1, NULL, 0, 0, 0);
     //cpath = new char[multibyteLength + 50];
     WideCharToMultiByte(CP_UTF8, 0, path, -1, cpath, multibyteLength, 0, 0);
@@ -1804,13 +1803,13 @@ void initialize()
     sqlite3_step(stmt);
     sqlite3_finalize(stmt);
 
-    ::_tcscpy(g_iniPath,path);
-    ::_tcscpy(g_ftbPath,path);
-    ::_tcscpy(g_fttempPath,path);
+    ::_tcscpy_s(g_iniPath,path);
+    ::_tcscpy_s(g_ftbPath,path);
+    ::_tcscpy_s(g_fttempPath,path);
     //::_tcscpy(g_groupPath,path);
-    ::_tcscat(g_iniPath,TEXT("\\FingerText.ini"));
-    ::_tcscat(g_ftbPath,TEXT("\\SnippetEditor.ftb"));
-    ::_tcscat(g_fttempPath,TEXT("\\FingerText.fttemp"));
+    ::_tcscat_s(g_iniPath,TEXT("\\FingerText.ini"));
+    ::_tcscat_s(g_ftbPath,TEXT("\\SnippetEditor.ftb"));
+    ::_tcscat_s(g_fttempPath,TEXT("\\FingerText.fttemp"));
     //::_tcscat(g_groupPath,TEXT("\\SnippetGroup.ini"));
     
     setupConfigFile();
@@ -2132,15 +2131,12 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
     
 	if (g_dbOpen && SQLITE_OK == sqlitePrepare)
 	{
-        char *customScope = NULL;
-        customScope = new char[MAX_PATH];
+        char *customScope = new char[MAX_PATH];
         
         char *tagType1 = NULL;
-        TCHAR *fileType1 = NULL;
-		fileType1 = new TCHAR[MAX_PATH];
+        TCHAR *fileType1 = new TCHAR[MAX_PATH];
         char *tagType2 = NULL;
-        TCHAR *fileType2 = NULL;
-		fileType2 = new TCHAR[MAX_PATH];
+        TCHAR *fileType2 = new TCHAR[MAX_PATH];
 
         if (withAll)
         {
@@ -2394,13 +2390,13 @@ bool exportSnippets()
         if (exportCount>1)
         {
             ::_itow_s(exportCount, exportCountText, 10, 10);
-            wcscat(exportCountText,TEXT(" snippets are exported."));
+            wcscat_s(exportCountText,TEXT(" snippets are exported."));
         } else if (exportCount==1)
         {
-            wcscat(exportCountText,TEXT("1 snippet is exported."));
+            wcscat_s(exportCountText,TEXT("1 snippet is exported."));
         } else
         {
-            wcscat(exportCountText,TEXT("No snippets are exported."));
+            wcscat_s(exportCountText,TEXT("No snippets are exported."));
         }
         
         ::SendScintilla(SCI_SETSAVEPOINT,0,0);
@@ -2749,19 +2745,19 @@ void importSnippets()
             if (importCount>1)
             {
                 ::_itow_s(importCount, importCountText, 10, 10);
-                wcscat(importCountText,TEXT(" snippets are imported."));
+                wcscat_s(importCountText,TEXT(" snippets are imported."));
             } else if (importCount==1)
             {
-                wcscat(importCountText,TEXT("1 snippet is imported."));
+                wcscat_s(importCountText,TEXT("1 snippet is imported."));
             } else
             {
-                wcscat(importCountText,TEXT("No Snippets are imported."));
+                wcscat_s(importCountText,TEXT("No Snippets are imported."));
             }
 
             if (conflictCount>0)
             {
                 //TODO: more detail messages and count the number of conflict or problematic snippets
-                wcscat(importCountText,TEXT("\r\n\r\nThere are some conflicts between the imported and existing snippets. You may go to the snippet editor to clean them up."));
+                wcscat_s(importCountText,TEXT("\r\n\r\nThere are some conflicts between the imported and existing snippets. You may go to the snippet editor to clean them up."));
             }
             //::MessageBox(nppData._nppHandle, TEXT("Complete importing snippets"), TEXT("FingerText"), MB_OK);
             ::MessageBox(nppData._nppHandle, importCountText, TEXT("FingerText"), MB_OK);
@@ -2849,8 +2845,7 @@ void updateMode()
 void settings()
 {
     // TODO: try putting settings into the ini files instead of just using annotation
-    int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Change the settings only when you know what you are doing. Messing up the ini can cause FingerText to stop working.\r\n\r\n Do you wish to continue?"), TEXT("FingerText"), MB_YESNO);
-    if (messageReturn == IDYES)
+    if (::MessageBox(nppData._nppHandle, TEXT("Change the settings only when you know what you are doing. Messing up the ini can cause FingerText to stop working.\r\n\r\n Do you wish to continue?"), TEXT("FingerText"), MB_YESNO) == IDYES)
     {
         writeConfig();
 
@@ -2942,9 +2937,9 @@ For step by step usage guide, please visit http://github.com/erinata/FingerText 
 void showAbout()
 {
     TCHAR versionText[1000];
-    _tcscpy(versionText,TEXT(""));
-    _tcscat(versionText,TEXT(VERSION_TEXT_LONG));
-    _tcscat(versionText,TEXT("\
+    _tcscpy_s(versionText,TEXT(""));
+    _tcscat_s(versionText,TEXT(VERSION_TEXT_LONG));
+    _tcscat_s(versionText,TEXT("\
 \r\n\
 June 2011\r\n\r\n\
 Author: Tom Lam\r\n\
