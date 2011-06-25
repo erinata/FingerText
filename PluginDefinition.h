@@ -31,7 +31,18 @@
 #define PLUGINDEFINITION_H
 
 #include "PluginInterface.h"
-#include <string>
+
+#include <string>       // For alertString()
+#include <tchar.h>      // For TEXT() and _tcscpy, _tcscat 
+#include <fstream>      // For file reading and writing
+#include <winhttp.h>    // For http requests, Add winhttp.lib to additional dependencies if there is external definition error
+#include <process.h>    // For thread
+
+#include "menuCmdID.h"
+#include "sqlite3.h"
+#include "SnippetDock.h"
+#include "Version.h"
+
 
 const TCHAR NPP_PLUGIN_NAME[] = TEXT("FingerText");   // Plugin name
 const int nbFunc = 19;    // Number of your plugin commands
@@ -44,9 +55,12 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 void commandMenuCleanUp();  //Clean up plugin commands allocation
 void pluginShutdown();  // Called when Notepad++ shuts down
 
-// Functions for Fingertext
+// Connecting to Scintilla
 HWND getCurrentScintilla();
 sptr_t SendScintilla(unsigned int iMessage, uptr_t wParam, sptr_t lParam);
+void updateScintilla();
+
+// Functions for Fingertext
 void toggleDisable();
 void writeConfig();
 void saveCustomScope();
@@ -105,7 +119,6 @@ void importSnippets();
 void snippetHintUpdate();
 int promptSaveSnippet(TCHAR* message = NULL);
 
-void updateScintilla();
 void updateMode();
 void refreshAnnotation();
 void settings();
@@ -119,7 +132,7 @@ void insertPath(TCHAR* path);
 void insertNppPath(int msg);
 
 void selectionMonitor(int contentChange);
-bool triggerTag(int &posCurrent,bool triggerTextComplete = false,int triggerLength=  0);
+bool triggerTag(int &posCurrent,bool triggerTextComplete = false,int triggerLength = 0);
 void tagComplete();
 //bool snippetComplete();
 void tabActivate();

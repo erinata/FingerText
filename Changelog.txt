@@ -2,7 +2,9 @@ changelog (for developers only, include unreleased versions)
 
 0.5.28
 ****** Changed: change hotspot (cmd) to (run)
-****** fixing the problem of cmd /c
+****** Fixed: the problem of appending cmd /c will break some commands
+****** Fixed: Lang:PHP not working
+****** upgrade to sqlite3.7.7.1
 
 0.5.27
 ****** Changed: merge in jvdanilo's implementation of executecommand

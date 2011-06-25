@@ -27,18 +27,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-#include <tchar.h>
-#include <fstream>
-
 #include "PluginDefinition.h"
-#include "menuCmdID.h"
-#include "sqlite3.h"
-#include "SnippetDock.h"
-#include "Version.h"
-
-#include <winhttp.h>   // Add winhttp.lib to additional dependencies if there is external definition error
-
-//#include <process.h>
 
 FuncItem funcItem[nbFunc];   // The plugin data that Notepad++ needs
 NppData nppData;  // The data of Notepad++ that you can use in your plugin commands
@@ -48,7 +37,8 @@ sptr_t pSciWndData;   // For direct scintilla call
 sqlite3 *g_db;
 bool     g_dbOpen;
 
-struct SnipIndex {
+struct SnipIndex 
+{
     char* triggerText;
     char* scope;
     char* content;    
@@ -326,7 +316,7 @@ void upgradeMessage()
     {
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
 
-        char* welcomeText = new char[5000];
+        char* welcomeText = new char[7000];
         strcpy(welcomeText,"");
         strcat(welcomeText, "Thanks for Upgrading to ");
         strcat(welcomeText, VERSION_TEXT_LONG);
@@ -908,7 +898,7 @@ void executeCommand(int &firstPos, char* hotSpotText)
         &pi       // receives PROCESS_INFORMATION
         );     
 
-    if (!processSuccess )
+    if (!processSuccess)
     {
         //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->Error in CreateProcess\n");
         char* hotSpotTextCmd = new char[strlen(hotSpotText)+8];
@@ -931,7 +921,7 @@ void executeCommand(int &firstPos, char* hotSpotText)
         &pi       // receives PROCESS_INFORMATION
         );
 
-        if (!processSuccess )
+        if (!processSuccess)
         {
             //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->Error in CreateProcess\n");
         }
@@ -1087,7 +1077,7 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
     {
         //TODO: lots of issues in the GET and CUT keywords, when nothing can be cut
         //TODO: write a function to get the command and parameter sepearately. or turn this whole thing into a new type of hotspot
-        //TODO: refactor GET, GET:, GETALL, GETLINE, CUT, CUT:
+        //TODO: a complete rewrite of GET, GET:, GETALL, GETLINE, CUT, CUT:
         
         emptyFile(g_fttempPath);
         char* getTerm;
@@ -1310,6 +1300,7 @@ void insertPath(TCHAR* path)
 
 void insertNppPath(int msg)
 {
+    //TODO: use converttowidechar() ?
 	TCHAR path[MAX_PATH];
 	::SendMessage(nppData._nppHandle, msg, 0, (LPARAM)path);
 
@@ -2452,14 +2443,14 @@ char* cleanupString(char *str, char key)
     return str;
 }
 
-void cleanupString2(char* str, char key)
-{
-    char *from, *to;
-    from=to=str;
-
-    while ((*from != key) && (*to++=*from),*from++);
-    //return str;
-}
+//void cleanupString2(char* str, char key)
+//{
+//    char *from, *to;
+//    from=to=str;
+//
+//    while ((*from != key) && (*to++=*from),*from++);
+//    //return str;
+//}
 
 
 void convertToWideChar(char* orig, wchar_t **wideChar)
@@ -2600,7 +2591,6 @@ void importSnippets()
                     sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
                     if(SQLITE_ROW == sqlite3_step(stmt))
                     {
-                        //TODO: conflict should be added to old snippet instead of new, need to extract the old snippet content here to make it work
                         const char* extracted = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
                         
                         snippetTextOld = new char[strlen(extracted)+1];
@@ -2971,14 +2961,14 @@ void showAbout()
     _tcscat_s(versionText,TEXT(VERSION_TEXT_LONG));
     _tcscat_s(versionText,TEXT("\
 \r\n\
-June 2011\r\n\r\n\
+July 2011\r\n\r\n\
 Author: Tom Lam\r\n\
 Email: erinata@gmail.com\r\n\r\n\
 Update to the lastest version:\r\n\
      http://sourceforge.net/projects/fingertext/ \r\n\
 Usage Guide and Source code:\r\n\
      http://github.com/erinata/FingerText \r\n\r\n\
-(Snippets created using FingerText version earlier than 0.3.5 are not compatible with this version)\
+(Snippets created using FingerText 0.3.5 or earlier versions are not compatible with this version)\
 "));
     ::MessageBox(nppData._nppHandle, versionText, TEXT("FingerText"), MB_OK);
 }
@@ -3124,6 +3114,8 @@ void optionNavigate(bool toNext)
 
 void selectionMonitor(int contentChange)
 {
+    //TODO: backspace at the beginning of line 4 in editor mode breaks hint annotation 
+    //TODO: pasting text with more then one line in the scope field will break editor restriction
     //TODO: lots of optimization needed
     //In normal view, this code is going to cater the option navigation. In editor view, it restrict selection in first 3 lines
     if (g_selectionMonitor == 1)
