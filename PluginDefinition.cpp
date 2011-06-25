@@ -876,11 +876,8 @@ void executeCommand(int &firstPos, char* hotSpotText)
     //int len = MultiByteToWideChar ((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, hotSpotText, -1, NULL, 0);
     //MultiByteToWideChar ((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, hotSpotText, -1, CMD_LINE, len);
     
-    char* hotSpotTextCmd = new char[strlen(hotSpotText)+8];
-    strcpy(hotSpotTextCmd, "cmd /c ");
-    strcat(hotSpotTextCmd,hotSpotText);
     TCHAR* cmdLine;
-    convertToWideChar(hotSpotTextCmd,&cmdLine);
+    convertToWideChar(hotSpotText,&cmdLine);
 
     PROCESS_INFORMATION pi;
     STARTUPINFO si;
@@ -914,6 +911,40 @@ void executeCommand(int &firstPos, char* hotSpotText)
     if (!processSuccess )
     {
         //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->Error in CreateProcess\n");
+        char* hotSpotTextCmd = new char[strlen(hotSpotText)+8];
+        strcpy(hotSpotTextCmd, "cmd /c ");
+        strcat(hotSpotTextCmd,hotSpotText);
+        //strcpy(hotSpotTextCmd, hotSpotText);
+        TCHAR* cmdLine2;
+        convertToWideChar(hotSpotTextCmd,&cmdLine2);
+
+        processSuccess = CreateProcess(
+        NULL,
+        cmdLine2,  // command line
+        NULL,     // process security attributes
+        NULL,    // primary thread security attributes
+        true,     // handles are inherited
+        0,        // creation flags
+        NULL,     // use parent's environment
+        NULL,     // use parent's current directory
+        &si,      // STARTUPINFO pointer
+        &pi       // receives PROCESS_INFORMATION
+        );
+
+        if (!processSuccess )
+        {
+            //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->Error in CreateProcess\n");
+        }
+        else
+        {
+            CloseHandle(pi.hProcess);
+            CloseHandle(pi.hThread);
+        }
+
+        delete [] cmdLine2;
+        delete [] hotSpotTextCmd;
+    
+
     }
     else
     {
@@ -922,7 +953,6 @@ void executeCommand(int &firstPos, char* hotSpotText)
     }
     
     delete [] cmdLine;
-    delete [] hotSpotTextCmd;
     
     //TODO: option to skip the output part (so that we can run a program that didn't return immediately but still not freezing up npp)
     const int bufSize = 100;
@@ -3396,6 +3426,7 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
 //    if (tagFound) ::SendMessage(curScintilla,SCI_GOTOPOS,posBeforeTag,0);
 //    return tagFound;
 //}
+
 
 char* getLangTagType()
 {
