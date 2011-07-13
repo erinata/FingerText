@@ -1,26 +1,26 @@
 changelog (for developers only, include unreleased versions)
 
 0.5.28
-****** Changed: change hotspot (cmd) to (run)
-****** Fixed: the problem of appending cmd /c will break some commands
-****** Fixed: Lang:PHP not working
-****** upgrade to sqlite3.7.7.1
+- Changed: change hotspot (cmd) to (run)
+- Fixed: the problem of appending cmd /c will break some commands
+- Fixed: Lang:PHP not working
+- upgrade to sqlite3.7.7.1
 
 0.5.27
-****** Changed: merge in jvdanilo's implementation of executecommand
+- Changed: merge in jvdanilo's implementation of executecommand
 
 0.5.26
-****** upgrade to sqlite3.7.6.3
+- upgrade to sqlite3.7.6.3
 
 0.5.25
 ****** Added: private snippet available, any snippet with triggertext beginning with _ cannot be triggered and will not be shown in liveupdate. But you can still see them in editMode and they can be triggered by chain snippets
-****** snippet triggertext completion are default to be non-inclusive
-****** Big performance improvement by using direct scintilla method
-****** Fixed: Buffer changed triggered events (like updateMode) not triggering when use attempt to close npp and cancel afterwards
-****** turn off live update when selection is rectangle to prevent freeze when selecting multiple line and type
-****** Change default snippet list length to 1000 to temporarily deal with the problem caused by snippetlistlength limit
-****** Changed: conflict suffix is now added to the old snippet instead of new snippet
-****** Added: option to force multipasting or not
+- snippet triggertext completion are default to be non-inclusive
+- Big performance improvement by using direct scintilla method
+- Fixed: Buffer changed triggered events (like updateMode) not triggering when use attempt to close npp and cancel afterwards
+- turn off live update when selection is rectangle to prevent freeze when selecting multiple line and type
+- Change default snippet list length to 1000 to temporarily deal with the problem caused by snippetlistlength limit
+- Changed: conflict suffix is now added to the old snippet instead of new snippet
+- Added: option to force multipasting or not
 
 0.5.24
 - restructure the version text and about text

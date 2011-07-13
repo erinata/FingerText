@@ -45,7 +45,7 @@
 
 
 const TCHAR NPP_PLUGIN_NAME[] = TEXT("FingerText");   // Plugin name
-const int nbFunc = 19;    // Number of your plugin commands
+const int nbFunc = 15;    // Number of your plugin commands
 
 // Functions in the plugin template(NppPluginTemplate) provided by Don Ho. 
 void pluginInit(HANDLE hModule);   // Initialization of your plugin data; called while plugin loading
