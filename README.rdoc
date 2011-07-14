@@ -187,7 +187,7 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 - upgrade to sqlite3.7.7.1
 - snippet triggertext completion are default to be non-inclusive
 - Big performance improvement by using direct scintilla method
-- Fixed: Buffer changed triggered events (like updateMode) not triggering when use attempt to close npp and cancel afterwards
+- Fixed: Buffer changed triggered events (like updateMode) not triggering when user attempt to close npp and cancel afterwards
 - turn off live update when selection is rectangle to prevent freeze when selecting multiple line and type
 - Change default snippet list length to 1000 to temporarily deal with the problem caused by snippetlistlength limit
 

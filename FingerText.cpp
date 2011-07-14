@@ -65,7 +65,7 @@ LRESULT CALLBACK SubWndProcNpp(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
         case WM_CLOSE:
             //alert();
             retVal = ::CallWindowProc(wndProcNpp, hWnd, message, wParam, lParam);
-            updateMode();  //Need to Do this because then a user attempt to close npp and the buffer shift to a file that's not saved, The bufferactivated message is not activated.
+            updateMode();  //Need to Do this because when a user attempt to close npp and the buffer shift to a file that's not saved, The bufferactivated message is not activated.
             
             break;
     	default:

@@ -125,15 +125,11 @@
     <ClInclude Include="sqlite3.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="DockingFeature\SnippetDock.rc">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Unicode Release|Win32'">
-      </AdditionalIncludeDirectories>
-    </ResourceCompile>
-    <ResourceCompile Include="version.rc" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Changelog.txt" />
     <None Include="README.rdoc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="fingertext.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

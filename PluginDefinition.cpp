@@ -2256,6 +2256,7 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
 void populateDockItems()
 {
     //TODO: Use 2 columns of list box, or list control
+    
     for (int j=0;j<g_snippetListLength;j++)
     {
         if (g_snippetCache[j].scope !=NULL)
@@ -3192,7 +3193,7 @@ void selectionMonitor(int contentChange)
                 
                 } else if (::SendScintilla(SCI_LINELENGTH,2,0)>=251)
                 {
-                    ::MessageBox(nppData._nppHandle, TEXT("The Scope length limit is  250 characters."), TEXT("FingerText"), MB_OK);
+                    ::MessageBox(nppData._nppHandle, TEXT("The Scope length limit is 250 characters."), TEXT("FingerText"), MB_OK);
                     ::SendScintilla(SCI_UNDO,0,0);
                     updateLineCount();
                 } 
