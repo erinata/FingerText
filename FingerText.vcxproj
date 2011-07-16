@@ -112,7 +112,6 @@
     <ClInclude Include="DockingFeature\Docking.h" />
     <ClInclude Include="DockingFeature\DockingDlgInterface.h" />
     <ClInclude Include="DockingFeature\dockingResource.h" />
-    <ClInclude Include="DockingFeature\resource.h" />
     <ClInclude Include="DockingFeature\SnippetDock.h" />
     <ClInclude Include="DockingFeature\StaticDialog.h" />
     <ClInclude Include="DockingFeature\Window.h" />
@@ -120,6 +119,7 @@
     <ClInclude Include="Notepad_plus_msgs.h" />
     <ClInclude Include="PluginDefinition.h" />
     <ClInclude Include="PluginInterface.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="Version.h" />
     <ClInclude Include="Scintilla.h" />
     <ClInclude Include="sqlite3.h" />
@@ -129,7 +129,8 @@
     <None Include="README.rdoc" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="fingertext.rc" />
+    <ResourceCompile Include="Dialog.rc" />
+    <ResourceCompile Include="Version.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -52,7 +52,6 @@
 #ifndef SNIPPET_DLG_H
 #define SNIPPET_DLG_H
 
-
 #include "DockingDlgInterface.h"
 #include "resource.h"
 #include <WindowsX.h>
@@ -74,10 +73,10 @@ public :
 	};
 
     
-    void messageDialog(HWND nppHandle, LPCWSTR message)
-    {
-        ::MessageBox(nppHandle, message, NPP_PLUGIN_NAME, MB_OK);
-    }
+    //void messageDialog(HWND nppHandle, LPCWSTR message)
+    //{
+    //    ::MessageBox(nppHandle, message, NPP_PLUGIN_NAME, MB_OK);
+    //}
 
     void addDockItem(wchar_t *dockItem)
     {

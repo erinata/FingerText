@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by SnippetDock.rc
+// Used by Dialog.rc
 //
 #define SW_HIDE                         0
 #define HIDE_WINDOW                     0
@@ -1043,6 +1043,7 @@
 #define WM_CTLCOLORSCROLLBAR            0x0137
 #define WM_CTLCOLORSTATIC               0x0138
 #define MN_GETHMENU                     0x01E1
+#define VERSION_KEEP_CONFIG_START       500
 #define _WIN32_IE_IE20                  0x0200
 #define WM_MOUSEFIRST                   0x0200
 #define WM_MOUSEMOVE                    0x0200
@@ -1073,6 +1074,8 @@
 #define WM_MOUSEHWHEEL                  0x020E
 #define WM_MOUSELAST                    0x020E
 #define WM_PARENTNOTIFY                 0x0210
+#define VERSION_LINEAR                  528
+#define VERSION_KEEP_CONFIG_END         528
 #define WM_ENTERMENULOOP                0x0211
 #define WM_EXITMENULOOP                 0x0212
 #define WM_NEXTMENU                     0x0213
@@ -1511,19 +1514,15 @@
 #define SC_CONTEXTHELP                  0xF180
 #define LVS_TYPESTYLEMASK               0xfc00
 #define SPVERSION_MASK                  0x0000FF00
-#define HTERROR                         -2
 #define UNICODE_NOCHAR                  0xFFFF
-#define IDC_STATIC                      -1
-#define PWR_FAIL                        -1
-#define HTTRANSPARENT                   -1
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        103
+#define _APS_NEXT_RESOURCE_VALUE        101
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1016
+#define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
