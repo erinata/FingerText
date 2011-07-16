@@ -38,19 +38,19 @@
 #include <winhttp.h>    // For http requests, Add winhttp.lib to additional dependencies if there is external definition error
 #include <process.h>    // For thread
 
-#include "menuCmdID.h"
 #include "sqlite3.h"
+#include "DummyStaticDialog.h"
 #include "SnippetDock.h"
 #include "Version.h"
-
-
-const TCHAR NPP_PLUGIN_NAME[] = TEXT("FingerText");   // Plugin name
-const int nbFunc = 15;    // Number of your plugin commands
+// 
+const TCHAR NPP_PLUGIN_NAME[] = TEXT(PLUGIN_NAME);   // Plugin name
+const int nbFunc = MENU_LENGTH;    // Number of your plugin commands
 
 // Functions in the plugin template(NppPluginTemplate) provided by Don Ho. 
 void pluginInit(HANDLE hModule);   // Initialization of your plugin data; called while plugin loading
 void pluginCleanUp();    // Cleaning of your plugin; called while plugin unloading
 void commandMenuInit();   //Initialization of your plugin commands, setCommand is a function that helps initialization
+void dialogsInit();
 bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk = NULL, bool check0nInit = false);
 void commandMenuCleanUp();  //Clean up plugin commands allocation
 void pluginShutdown();  // Called when Notepad++ shuts down
@@ -61,6 +61,7 @@ sptr_t SendScintilla(unsigned int iMessage, uptr_t wParam, sptr_t lParam);
 void updateScintilla();
 
 // Functions for Fingertext
+void openDummyStaticDlg(void);
 void toggleDisable();
 void writeConfig();
 void saveCustomScope();

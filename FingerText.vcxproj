@@ -1,10 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="FingerText Debug|Win32">
-      <Configuration>FingerText Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Unicode Debug|Win32">
       <Configuration>Unicode Debug</Configuration>
       <Platform>Win32</Platform>
@@ -52,8 +48,8 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.\DockingFeature;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;NPPPLUGINTEMPLATE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\sqlite3;.\Dialog;.\;.\Version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
@@ -64,20 +60,20 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)FingerText.dll</OutputFile>
+      <OutputFile>$(OutDir)$(ProjectName).dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <ImportLibrary>$(OutDir)FingerText.lib</ImportLibrary>
+      <ImportLibrary>$(OutDir)$(ProjectName).lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>.\DockingFeature;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;NPPPLUGINTEMPLATE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\sqlite3;.\Dialog;.\Version;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -88,11 +84,11 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>winhttp.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)FingerText_Debug.dll</OutputFile>
+      <OutputFile>$(OutDir)$(ProjectName)_Debug.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(OutDir)FingerText.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>$(OutDir)$(ProjectName).pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
-      <ImportLibrary>$(OutDir)FingerText.lib</ImportLibrary>
+      <ImportLibrary>$(OutDir)$(ProjectName).lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
@@ -102,42 +98,44 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DockingFeature\SnippetDock.cpp" />
-    <ClCompile Include="DockingFeature\StaticDialog.cpp" />
-    <ClCompile Include="FingerText.cpp" />
+    <ClCompile Include="Dialog\DummyStaticDialog.cpp" />
+    <ClCompile Include="DllMain.cpp" />
+    <ClCompile Include="Dialog\SnippetDock.cpp" />
+    <ClCompile Include="Dialog\StaticDialog.cpp" />
     <ClCompile Include="PluginDefinition.cpp" />
-    <ClCompile Include="sqlite3.c" />
+    <ClCompile Include="Sqlite3\sqlite3.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DockingFeature\Docking.h" />
-    <ClInclude Include="DockingFeature\DockingDlgInterface.h" />
-    <ClInclude Include="DockingFeature\dockingResource.h" />
-    <ClInclude Include="DockingFeature\SnippetDock.h" />
-    <ClInclude Include="DockingFeature\StaticDialog.h" />
-    <ClInclude Include="DockingFeature\Window.h" />
+    <ClInclude Include="Dialog\Dialog.h" />
+    <ClInclude Include="Dialog\Docking.h" />
+    <ClInclude Include="Dialog\DockingDlgInterface.h" />
+    <ClInclude Include="Dialog\DockingResource.h" />
+    <ClInclude Include="Dialog\DummyStaticDialog.h" />
+    <ClInclude Include="Dialog\SnippetDock.h" />
+    <ClInclude Include="Dialog\StaticDialog.h" />
+    <ClInclude Include="Dialog\Window.h" />
     <ClInclude Include="menuCmdID.h" />
     <ClInclude Include="Notepad_plus_msgs.h" />
     <ClInclude Include="PluginDefinition.h" />
     <ClInclude Include="PluginInterface.h" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="Version.h" />
+    <ClInclude Include="Sqlite3\sqlite3.h" />
     <ClInclude Include="Scintilla.h" />
-    <ClInclude Include="sqlite3.h" />
+    <ClInclude Include="Version\Version.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Changelog.txt" />
     <None Include="README.rdoc" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Dialog.rc" />
-    <ResourceCompile Include="Version.rc" />
+    <ResourceCompile Include="Dialog\Dialog.rc" />
+    <ResourceCompile Include="Version\Version.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties RESOURCE_FILE="DockingFeature\SnippetDock.rc" />
+      <UserProperties RESOURCE_FILE="Dialog\SnippetDock.rc" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>

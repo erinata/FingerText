@@ -27,17 +27,16 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-
 #include "PluginDefinition.h"
-#include "SnippetDock.h"
 
 extern FuncItem funcItem[nbFunc];
 extern NppData nppData;
 extern DockingDlg snippetDock;
 WNDPROC	wndProcNpp = NULL;
 
-BOOL APIENTRY DllMain( HANDLE hModule, DWORD reasonForCall, LPVOID lpReserved )
+BOOL APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID lpReserved)
 {
+
     switch (reasonForCall)
     {
         case DLL_PROCESS_ATTACH:
@@ -76,12 +75,14 @@ LRESULT CALLBACK SubWndProcNpp(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 }
 
 //functions which are called by Notepad++ plugin manager
-extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData)
+extern "C" __declspec(dllexport) void setInfo(NppData nppDataInfo)
 {
-	nppData = notpadPlusData;
+	nppData = nppDataInfo;
     wndProcNpp = (WNDPROC)::SetWindowLongPtr(nppData._nppHandle, GWL_WNDPROC, (LPARAM)SubWndProcNpp);
 	commandMenuInit();
+    dialogsInit();
     initialize();
+    
 }
 
 extern "C" __declspec(dllexport) const TCHAR * getName()

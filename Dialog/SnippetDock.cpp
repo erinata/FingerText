@@ -53,6 +53,80 @@
 
 extern NppData nppData;
 
+// Function for all docking dialogs
+void DockingDlg::display(bool toShow) 
+{
+    DockingDlgInterface::display(toShow);
+    if (toShow) ::SetFocus(::GetDlgItem(_hSelf, IDC_SNIPPET_LIST));
+}
+
+void DockingDlg::setParent(HWND parent2set)
+{
+		_hParent = parent2set;
+}
+
+// Custom functions
+void DockingDlg::addDockItem(wchar_t *dockItem)
+{
+    SendMessage(GetDlgItem(_hSelf, IDC_SNIPPET_LIST), LB_INSERTSTRING, 0, (LPARAM)dockItem); 
+}
+
+void DockingDlg::resizeListBox(int height,int width)
+{
+    //TODO: less hardcoding......make snippet dock size configurable
+    height = height - 255;
+    if (height < 100) height = 100;
+    SetWindowPos(GetDlgItem(_hSelf, IDC_SNIPPET_LIST),NULL,0,250,285,height,SWP_NOMOVE & SWP_NOACTIVATE);
+}
+
+void DockingDlg::clearDock()
+{
+    HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
+    SendMessage(hwndList, LB_RESETCONTENT, 0, 0);
+
+    //::Button_Enable(GetDlgItem(_hSelf, IDC_SAVE), false);
+    ::Button_Enable(GetDlgItem(_hSelf, IDC_EDIT), false);
+    ::Button_Enable(GetDlgItem(_hSelf, IDC_DELETE), false);
+    //::Button_Enable(GetDlgItem(_hSelf, IDC_CREATE), false);
+}
+
+void DockingDlg::setDlgText(int dlg, TCHAR* showText)
+{
+    ::SetDlgItemText(_hSelf, dlg ,showText);
+
+}
+
+void DockingDlg::toggleSave(bool buttonOn)
+{
+    ::Button_Enable(GetDlgItem(_hSelf, IDC_SAVE), buttonOn);
+}
+
+
+int DockingDlg::getSelection()
+{
+    int retVal;
+    HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
+      retVal = SendMessage(hwndList, LB_GETCURSEL, 0, 0);
+    retVal = SendMessage(hwndList, LB_GETANCHORINDEX, 0, 0);
+    
+    return retVal;
+
+}
+
+void DockingDlg::setSelction()
+{
+    HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
+    SendMessage(hwndList, LB_SETANCHORINDEX, 0, 0);
+}
+
+int DockingDlg::getCount()
+{
+    int retVal;
+    HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
+    retVal = SendMessage(hwndList, LB_GETCOUNT, 0, 0);
+    return retVal;
+}
+
 BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message) 

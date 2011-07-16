@@ -30,6 +30,7 @@ void StaticDialog::goToCenter()
 	int y = center.y - (_rc.bottom - _rc.top)/2;
 
 	::SetWindowPos(_hSelf, HWND_TOP, x, y, _rc.right - _rc.left, _rc.bottom - _rc.top, SWP_SHOWWINDOW);
+
 }
 
 HGLOBAL StaticDialog::makeRTLResource(int dialogID, DLGTEMPLATE **ppMyDlgTemplate)
@@ -79,7 +80,7 @@ BOOL CALLBACK StaticDialog::dlgProc(HWND hwnd, UINT message, WPARAM wParam, LPAR
 {
 	switch (message) 
 	{
-		case WM_INITDIALOG :
+		case WM_INITDIALOG:
 		{
 			StaticDialog *pStaticDlg = (StaticDialog *)(lParam);
 			pStaticDlg->_hSelf = hwnd;
@@ -90,7 +91,7 @@ BOOL CALLBACK StaticDialog::dlgProc(HWND hwnd, UINT message, WPARAM wParam, LPAR
 			return TRUE;
 		}
 
-		default :
+		default:
 		{
 			StaticDialog *pStaticDlg = (StaticDialog *)(::GetWindowLongPtr(hwnd, GWL_USERDATA));
 			if (!pStaticDlg)

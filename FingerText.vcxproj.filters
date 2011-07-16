@@ -18,16 +18,19 @@
     <ClCompile Include="PluginDefinition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FingerText.cpp">
+    <ClCompile Include="Dialog\StaticDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sqlite3.c">
+    <ClCompile Include="Dialog\SnippetDock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DockingFeature\StaticDialog.cpp">
+    <ClCompile Include="DllMain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DockingFeature\SnippetDock.cpp">
+    <ClCompile Include="Dialog\DummyStaticDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sqlite3\sqlite3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -47,31 +50,34 @@
     <ClInclude Include="Scintilla.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="sqlite3.h">
+    <ClInclude Include="Dialog\Docking.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DockingFeature\Docking.h">
+    <ClInclude Include="Dialog\DockingDlgInterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DockingFeature\DockingDlgInterface.h">
+    <ClInclude Include="Dialog\StaticDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DockingFeature\dockingResource.h">
+    <ClInclude Include="Dialog\Window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DockingFeature\StaticDialog.h">
+    <ClInclude Include="Dialog\SnippetDock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DockingFeature\Window.h">
+    <ClInclude Include="Dialog\Dialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DockingFeature\SnippetDock.h">
+    <ClInclude Include="Dialog\DockingResource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Version.h">
+    <ClInclude Include="Dialog\DummyStaticDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
+    <ClInclude Include="Sqlite3\sqlite3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Version\Version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -80,10 +86,10 @@
     <None Include="README.rdoc" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Version.rc">
+    <ResourceCompile Include="Dialog\Dialog.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-    <ResourceCompile Include="Dialog.rc">
+    <ResourceCompile Include="Version\Version.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

@@ -1,9 +1,10 @@
 /bin/*
-/reference/*
+/_reference/*
 /Unicode Debug/*
 /Unicode Release/*
-/package/*
+/_package/*
 test.bat
 testrelease.bat
 release.bat
 *.aps
+*.pdb

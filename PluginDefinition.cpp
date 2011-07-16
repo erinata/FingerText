@@ -30,7 +30,9 @@
 #include "PluginDefinition.h"
 
 FuncItem funcItem[nbFunc];   // The plugin data that Notepad++ needs
-NppData nppData;  // The data of Notepad++ that you can use in your plugin commands
+NppData nppData;  // The data for plugin command and sending message to notepad++
+HANDLE g_hModule; // the hModule from pluginInit for initializing dialogs
+
 SciFnDirect pSciMsg;  // For direct scintilla call
 sptr_t pSciWndData;   // For direct scintilla call
 
@@ -111,6 +113,7 @@ TCHAR* g_customEscapeChar;
 TCHAR* g_customScope;
 
 DockingDlg snippetDock;
+DummyStaticDlg	dummyStaticDlg;
 
 #define TRIGGER_SNIPPET_INDEX 0
 #define WARMSPOT_NAVIGATION_INDEX 1
@@ -130,8 +133,8 @@ DockingDlg snippetDock;
 //#define INSERT_COMMAND_SIGN_INDEX 12
 //#define SEPARATOR_THREE_INDEX 12
 #define SETTINGS_INDEX 12
-#define HELP_INDEX 13
-#define ABOUT_INDEX 14
+#define HELP_DIALOG_INDEX 13
+#define ABOUT_DIALOG_INDEX 14
 //#define SEPARATOR_FOUR_INDEX 16
 #define TESTING_INDEX 17
 #define TESTING2_INDEX 18
@@ -139,7 +142,8 @@ DockingDlg snippetDock;
 // Initialize your plugin data here; called while plugin loading   
 void pluginInit(HANDLE hModule)
 {
-    snippetDock.init((HINSTANCE)hModule, NULL);
+    g_hModule = hModule;
+    
 }
 
 void pluginCleanUp()
@@ -151,6 +155,11 @@ void pluginCleanUp()
     
 }
 
+void dialogsInit()
+{
+    snippetDock.init((HINSTANCE)g_hModule, NULL);
+    dummyStaticDlg.init((HINSTANCE)g_hModule, nppData);
+}
 // Initialization of plugin commands
 void commandMenuInit()
 {
@@ -185,8 +194,8 @@ void commandMenuInit()
     //setCommand(INSERT_COMMAND_SIGN_INDEX, TEXT("Insert a dynamic hotspot (Command)"), insertCommandLineSign, NULL, false);
     //setCommand(SEPARATOR_THREE_INDEX, TEXT("---"), NULL, NULL, false);
     setCommand(SETTINGS_INDEX, TEXT("Settings"), settings, NULL, false);
-    setCommand(HELP_INDEX, TEXT("Quick Guide"), showHelp, NULL, false);
-    setCommand(ABOUT_INDEX, TEXT("About"), showAbout, NULL, false);
+    setCommand(HELP_DIALOG_INDEX, TEXT("Quick Guide"), showHelp, NULL, false);
+    setCommand(ABOUT_DIALOG_INDEX, TEXT("About"), showAbout, NULL, false);
     //setCommand(SEPARATOR_FOUR_INDEX, TEXT("---"), NULL, NULL, false);
     setCommand(TESTING_INDEX, TEXT("Testing"), testing, NULL, false);
     setCommand(TESTING2_INDEX, TEXT("Testing2"), testing2, NULL, false);
@@ -236,6 +245,11 @@ void toggleDisable()
         g_enable = true;
     }
     updateMode();
+}
+
+void openDummyStaticDlg(void)
+{
+	dummyStaticDlg.doDialog();
 }
 
 //char *getGroupScope(TCHAR* group, int position)
@@ -320,7 +334,10 @@ void upgradeMessage()
         char* welcomeText = new char[7000];
         strcpy(welcomeText,"");
         strcat(welcomeText, "Thanks for Upgrading to ");
-        strcat(welcomeText, VERSION_TEXT_LONG);
+        strcat(welcomeText, PLUGIN_NAME);
+        strcat(welcomeText, VERSION_TEXT);
+        strcat(welcomeText, " ");
+        strcat(welcomeText, VERSION_TEXT_STAGE);
         strcat(welcomeText, "\r\n\
 Please read this document if you are upgrading from previous versions.\r\n\r\n\
 Upgrading from 0.5.21 or above\r\n\
@@ -408,7 +425,7 @@ void selectionToSnippet()
     
     
     ::SendScintilla(SCI_CLEARALL,0,0);
-    ::SendScintilla(SCI_INSERTTEXT,::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)SNIPPET_EDIT_TEMPLATE);
+    ::SendScintilla(SCI_INSERTTEXT,::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)"------ FingerText Snippet Editor View ------\r\n");
     ::SendScintilla(SCI_INSERTTEXT,::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)"triggertext\r\nGLOBAL\r\n");
     ::SendScintilla(SCI_INSERTTEXT,::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)selection);
     ::SendScintilla(SCI_INSERTTEXT,::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)"[>END<]");
@@ -459,7 +476,7 @@ void editSnippet()
             ::SendScintilla(SCI_CLEARALL,0,0);
                
             //::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
-            ::SendScintilla(SCI_INSERTTEXT, ::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)SNIPPET_EDIT_TEMPLATE);
+            ::SendScintilla(SCI_INSERTTEXT, ::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)"------ FingerText Snippet Editor View ------\r\n");
             ::SendScintilla(SCI_INSERTTEXT, ::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)tempTriggerText);
             ::SendScintilla(SCI_INSERTTEXT, ::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)"\r\n");
             ::SendScintilla(SCI_INSERTTEXT, ::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)tempScope);
@@ -2975,7 +2992,10 @@ void showAbout()
 {
     TCHAR versionText[1000];
     _tcscpy_s(versionText,TEXT(""));
-    _tcscat_s(versionText,TEXT(VERSION_TEXT_LONG));
+    _tcscat_s(versionText, NPP_PLUGIN_NAME);
+    _tcscat_s(versionText, TEXT(" "));
+    _tcscat_s(versionText, TEXT(VERSION_TEXT));
+    _tcscat_s(versionText, TEXT(VERSION_TEXT_STAGE));
     _tcscat_s(versionText,TEXT("\
 \r\n\
 July 2011\r\n\r\n\
@@ -3653,6 +3673,8 @@ void testing()
     //HWND curScintilla = getCurrentScintilla();
     alertCharArray("laptop");
 
+    openDummyStaticDlg();
+
 
     ////Testing creating window using createwindowex
     //WNDCLASSEX wc;
@@ -4077,7 +4099,7 @@ void testing()
 
 void alert()
 {
-     ::MessageBox(nppData._nppHandle, TEXT("Alert!"), NPP_PLUGIN_NAME, MB_OK);
+    alertCharArray("Alert!");
 }
 
 void alertNumber(int input)

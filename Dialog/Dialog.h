@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by Dialog.rc
+// Used by D:\Dropbox\WorkSpaces\VSSpace\Projects\NppPluginProjects\FingerText\Dialog.rc
 //
 #define SW_HIDE                         0
 #define HIDE_WINDOW                     0
@@ -1515,6 +1515,7 @@
 #define LVS_TYPESTYLEMASK               0xfc00
 #define SPVERSION_MASK                  0x0000FF00
 #define UNICODE_NOCHAR                  0xFFFF
+#define IDD_DUMMY_STATIC_DLG            2200
 
 // Next default values for new objects
 // 

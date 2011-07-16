@@ -27,12 +27,38 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-#define VERSION_TEXT "0.5.28.0"
-#define VERSION_NUM 0,5,28,0
-#define VERSION_LINEAR 528
-#define VERSION_KEEP_CONFIG_START 500
-#define VERSION_KEEP_CONFIG_END 528
-#define VERSION_TEXT_LONG "FingerText 0.5.28.0(Alpha)"
+#ifndef DUMMY_STATIC_DLG_H
+#define DUMMY_STATIC_DLG_H
 
-#define SNIPPET_EDIT_TEMPLATE "------ FingerText Snippet Editor View ------\r\n"
+#include "Dialog.h"
+#include "StaticDialog.h"
+#include "PluginInterface.h"
 
+class DummyStaticDlg : public StaticDialog
+{
+
+public:
+	DummyStaticDlg() : StaticDialog() {};
+    
+    void init(HINSTANCE hInst, NppData nppData)
+	{
+		_nppData = nppData;
+		Window::init(hInst, nppData._nppHandle);
+	};
+
+   	void doDialog();
+
+    virtual void destroy() {
+
+    };
+
+
+protected :
+	virtual BOOL CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
+
+private:
+	NppData			_nppData;
+    HWND			_HSource;
+};
+
+#endif // DUMMY_STATIC_DLG_H
