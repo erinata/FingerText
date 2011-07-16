@@ -47,6 +47,7 @@ struct SnipIndex
 TCHAR g_iniPath[MAX_PATH];
 TCHAR g_ftbPath[MAX_PATH];
 TCHAR g_fttempPath[MAX_PATH];
+TCHAR g_dataBasePath[MAX_PATH];
 //TCHAR g_groupPath[MAX_PATH];
 
 SnipIndex* g_snippetCache;
@@ -227,11 +228,11 @@ void toggleDisable()
 {
     if (g_enable)
     {
-        ::MessageBox(nppData._nppHandle, TEXT("FingerText is disabled"), TEXT("FingerText"), MB_OK);
+        ::MessageBox(nppData._nppHandle, TEXT("FingerText is disabled"), NPP_PLUGIN_NAME, MB_OK);
         g_enable = false;
     } else
     {
-        ::MessageBox(nppData._nppHandle, TEXT("FingerText is enabled"), TEXT("FingerText"), MB_OK);
+        ::MessageBox(nppData._nppHandle, TEXT("FingerText is enabled"), NPP_PLUGIN_NAME, MB_OK);
         g_enable = true;
     }
     updateMode();
@@ -540,14 +541,14 @@ bool getLineChecked(char **buffer, int lineNumber, TCHAR* errorText)
         {
             //blank
             ::SendScintilla(SCI_GOTOLINE,lineNumber,0);
-            ::MessageBox(nppData._nppHandle, errorText, TEXT("FingerText"), MB_OK);
+            ::MessageBox(nppData._nppHandle, errorText, NPP_PLUGIN_NAME, MB_OK);
             problemSnippet = true;
             
         } else if (tagPosEnd<tagPosLineEnd)
         {
             // multi
             ::SendScintilla(SCI_GOTOLINE,lineNumber,0);
-            ::MessageBox(nppData._nppHandle, errorText, TEXT("FingerText"), MB_OK);
+            ::MessageBox(nppData._nppHandle, errorText, NPP_PLUGIN_NAME, MB_OK);
             problemSnippet = true;
         }
     }
@@ -558,7 +559,7 @@ bool getLineChecked(char **buffer, int lineNumber, TCHAR* errorText)
         int spot = searchNext("[>END<]");
         if (spot<0)
         {
-            ::MessageBox(nppData._nppHandle, TEXT("You should put an \"[>END<]\" (without quotes) at the end of your snippet content."), TEXT("FingerText"), MB_OK);
+            ::MessageBox(nppData._nppHandle, TEXT("You should put an \"[>END<]\" (without quotes) at the end of your snippet content."), NPP_PLUGIN_NAME, MB_OK);
             problemSnippet = true;
         }
     }
@@ -605,14 +606,14 @@ void saveSnippet()
             if(SQLITE_ROW == sqlite3_step(stmt))
             {
                 sqlite3_finalize(stmt);
-                int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Snippet exists, overwrite?"), TEXT("FingerText"), MB_YESNO);
+                int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Snippet exists, overwrite?"), NPP_PLUGIN_NAME, MB_YESNO);
                 if (messageReturn==IDNO)
                 {
                     delete [] tagText;
                     delete [] tagTypeText;
                     delete [] snippetText;
                     // not overwrite
-                    ::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), TEXT("FingerText"), MB_OK);
+                    ::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), NPP_PLUGIN_NAME, MB_OK);
                     //::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
                     //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)" ");
                     ::SendScintilla(SCI_SETSELECTION, 0, 1);
@@ -632,7 +633,7 @@ void saveSnippet()
                     
                     } else
                     {
-                        ::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT("FingerText"), MB_OK);
+                        ::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), NPP_PLUGIN_NAME, MB_OK);
                     }
                 
                 }
@@ -652,7 +653,7 @@ void saveSnippet()
     
 		    // Run the query with sqlite3_step
 		    sqlite3_step(stmt); // SQLITE_ROW 100 sqlite3_step() has another row ready
-            ::MessageBox(nppData._nppHandle, TEXT("The Snippet is saved."), TEXT("FingerText"), MB_OK);
+            ::MessageBox(nppData._nppHandle, TEXT("The Snippet is saved."), NPP_PLUGIN_NAME, MB_OK);
 	    }
         sqlite3_finalize(stmt);
         ::SendScintilla(SCI_SETSAVEPOINT,0,0);
@@ -770,7 +771,7 @@ bool dynamicHotspot(int &startingPos)
     } while ((spotComplete>=0) && (spot>0) && (limitCounter<g_chainLimit));
 
     //TODO: loosen the limit to the limit of special spot, and ++limit for every search so that less frezze will happen
-    if (limitCounter>=g_chainLimit) ::MessageBox(nppData._nppHandle, TEXT("Dynamic hotspots triggering limit exceeded."), TEXT("FingerText"), MB_OK);
+    if (limitCounter>=g_chainLimit) ::MessageBox(nppData._nppHandle, TEXT("Dynamic hotspots triggering limit exceeded."), NPP_PLUGIN_NAME, MB_OK);
 
     if (limitCounter>0)
     {
@@ -1026,7 +1027,7 @@ void launchMessageBox(int &firstPos, char* hotSpotText)
     TCHAR* getTermWide;
     convertToWideChar(getTerm,&getTermWide);
     int retVal = 0;
-    retVal = ::MessageBox(nppData._nppHandle, getTermWide, TEXT("FingerText"), messageType);
+    retVal = ::MessageBox(nppData._nppHandle, getTermWide, NPP_PLUGIN_NAME, messageType);
     char countText[10];
     ::_itoa(retVal, countText, 10);
     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)countText);
@@ -1638,7 +1639,7 @@ void showPreview(bool top)
 
                 //wchar_t countText[10];
                 //::_itow_s(convertedChars, countText, 10, 10); 
-                //::MessageBox(nppData._nppHandle, countText, TEXT("Trace"), MB_OK);
+                //::MessageBox(nppData._nppHandle, countText, NPP_PLUGIN_NAME, MB_OK);
 	    	}	
 	    }
 	    sqlite3_finalize(stmt);
@@ -1689,7 +1690,7 @@ void insertTagSign(char * tagSign)
         ////::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent+strlen(tagSign)-3,0);
     //} else
     //{
-    //    ::MessageBox(nppData._nppHandle, TEXT("Hotspots can be inserted only when you are editing snippets."), TEXT("FingerText"), MB_OK);
+    //    ::MessageBox(nppData._nppHandle, TEXT("Hotspots can be inserted only when you are editing snippets."), NPP_PLUGIN_NAME, MB_OK);
     //}
 }
 
@@ -1699,7 +1700,7 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
     
     //TODO: can use ::SendMessage(curScintilla, SCI_ENSUREVISIBLE, line-1, 0); to make sure that caret is visible after long snippet substitution.
 
-    //::MessageBox(nppData._nppHandle, TEXT("replace tag"), TEXT("Trace"), MB_OK); 
+    //::MessageBox(nppData._nppHandle, TEXT("replace tag"), NPP_PLUGIN_NAME, MB_OK); 
     //std::streamoff sniplength;
     int lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION, posCurrent, 0);
     int initialIndent = ::SendScintilla(SCI_GETLINEINDENTATION, lineCurrent, 0);
@@ -1709,17 +1710,17 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
         // Failed attempt to cater unicode snippets
         //if (::IsTextUnicode(snip,sniplength,0))
         //{
-        //  ::MessageBox(nppData._nppHandle, TEXT("ANSI"), TEXT("Trace"), MB_OK);
+        //  ::MessageBox(nppData._nppHandle, TEXT("ANSI"), NPP_PLUGIN_NAME, MB_OK);
         //} else
         //{
-        //  ::MessageBox(nppData._nppHandle, TEXT("not ANSI"), TEXT("Trace"), MB_OK);
+        //  ::MessageBox(nppData._nppHandle, TEXT("not ANSI"), NPP_PLUGIN_NAME, MB_OK);
         //}
 
         // Just assume that all snippets are in ANSI, and convert to UTF-8 when needed.
         // This is not needed for sqlite system as sqlite database is in utf-8
         //if (::SendMessage(curScintilla,SCI_GETCODEPAGE,0,0)==65001)
         //{
-        //    //::MessageBox(nppData._nppHandle, TEXT("65001"), TEXT("Trace"), MB_OK);
+        //    //::MessageBox(nppData._nppHandle, TEXT("65001"), NPP_PLUGIN_NAME, MB_OK);
 		//	int snipLength = strlen(expanded);
         //    WCHAR *w=new WCHAR[snipLength*4+1];
         //    MultiByteToWideChar(CP_ACP, 0, expanded, -1, w, snipLength*4+1); // ANSI to UNICODE
@@ -1797,21 +1798,29 @@ void initialize()
     updateMode();
     
     TCHAR path[MAX_PATH];
-    char cpath[MAX_PATH*2];
+    //char dataBasePath[MAX_PATH*2];
+    char* dataBasePath;
     ::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH, reinterpret_cast<LPARAM>(path));
-    ::_tcscat_s(path,TEXT("\\FingerText"));
-    int multibyteLength = WideCharToMultiByte(CP_UTF8, 0, path, -1, NULL, 0, 0, 0);
-    //cpath = new char[multibyteLength + 50];
-    WideCharToMultiByte(CP_UTF8, 0, path, -1, cpath, multibyteLength, 0, 0);
-    strcat(cpath, "\\FingerText.db3");
-    
+    ::_tcscat_s(path,TEXT("\\"));
+    ::_tcscat_s(path,NPP_PLUGIN_NAME);
+
     if (PathFileExists(path) == FALSE) ::CreateDirectory(path, NULL);
     
-    int rc = sqlite3_open(cpath, &g_db);
+    ::_tcscpy_s(g_dataBasePath,path);
+    ::_tcscat_s(g_dataBasePath,TEXT("\\"));
+    ::_tcscat_s(g_dataBasePath,NPP_PLUGIN_NAME);
+    ::_tcscat_s(g_dataBasePath,TEXT(".db3"));
+
+    convertToUTF8(g_dataBasePath, &dataBasePath);
+    
+    int rc = sqlite3_open(dataBasePath, &g_db);
+
+    delete [] dataBasePath; 
+
     if (rc)
     {
         g_dbOpen = false;
-        MessageBox(nppData._nppHandle, TEXT("Cannot find or open FingerText.db3 in config folder"), TEXT("FingerText"), MB_ICONERROR);
+        MessageBox(nppData._nppHandle, TEXT("Cannot find or open database file in config folder"), NPP_PLUGIN_NAME, MB_ICONERROR);
     } else
     {
         g_dbOpen = true;
@@ -1825,12 +1834,19 @@ void initialize()
     sqlite3_finalize(stmt);
 
     ::_tcscpy_s(g_iniPath,path);
-    ::_tcscpy_s(g_ftbPath,path);
+    ::_tcscat_s(g_iniPath,TEXT("\\"));
+    ::_tcscat_s(g_iniPath,NPP_PLUGIN_NAME);
+    ::_tcscat_s(g_iniPath,TEXT(".ini"));
+
     ::_tcscpy_s(g_fttempPath,path);
-    //::_tcscpy(g_groupPath,path);
-    ::_tcscat_s(g_iniPath,TEXT("\\FingerText.ini"));
+    ::_tcscat_s(g_fttempPath,TEXT("\\"));
+    ::_tcscat_s(g_fttempPath,NPP_PLUGIN_NAME);
+    ::_tcscat_s(g_fttempPath,TEXT(".fttemp"));
+    
+    ::_tcscpy_s(g_ftbPath,path);
     ::_tcscat_s(g_ftbPath,TEXT("\\SnippetEditor.ftb"));
-    ::_tcscat_s(g_fttempPath,TEXT("\\FingerText.fttemp"));
+
+    //::_tcscpy(g_groupPath,path);
     //::_tcscat(g_groupPath,TEXT("\\SnippetGroup.ini"));
     
     setupConfigFile();
@@ -1903,29 +1919,29 @@ void writeConfig()
 
 void loadConfig()
 {
-    g_snippetListLength = GetPrivateProfileInt(TEXT("FingerText"), TEXT("snippet_list_length"), DEFAULT_SNIPPET_LIST_LENGTH, g_iniPath);
-    g_snippetListOrderTagType = GetPrivateProfileInt(TEXT("FingerText"), TEXT("snippet_list_order_tagtype"), DEFAULT_SNIPPET_LIST_ORDER_TAG_TYPE, g_iniPath);
-    g_tabTagCompletion = GetPrivateProfileInt(TEXT("FingerText"), TEXT("tab_tag_completion"), DEFAULT_TAB_TAG_COMPLETION, g_iniPath);
-    g_liveHintUpdate = GetPrivateProfileInt(TEXT("FingerText"), TEXT("live_hint_update"), DEFAULT_LIVE_HINT_UPDATE, g_iniPath);
-    g_indentReference = GetPrivateProfileInt(TEXT("FingerText"), TEXT("indent_reference"), DEFAULT_INDENT_REFERENCE, g_iniPath);
-    g_chainLimit = GetPrivateProfileInt(TEXT("FingerText"), TEXT("chain_limit"), DEFAULT_CHAIN_LIMIT, g_iniPath);
-    g_preserveSteps = GetPrivateProfileInt(TEXT("FingerText"), TEXT("preserve_steps"), DEFAULT_PRESERVE_STEPS, g_iniPath);
-    //g_escapeChar = GetPrivateProfileInt(TEXT("FingerText"), TEXT("escape_char_level"), DEFAULT_ESCAPE_CHAR, g_iniPath);
-    //g_importOverWriteOption = GetPrivateProfileInt(TEXT("FingerText"), TEXT("import_overwrite_option"), DEFAULT_IMPORT_OVERWRITE_OPTION, g_iniPath);
-    g_importOverWriteConfirm = GetPrivateProfileInt(TEXT("FingerText"), TEXT("import_overwrite_confirm"), DEFAULT_IMPORT_OVERWRITE_CONFIRM, g_iniPath);
-    g_inclusiveTriggerTextCompletion = GetPrivateProfileInt(TEXT("FingerText"), TEXT("inclusive_triggertext_completion"), DEFAULT_INCLUSIVE_TRIGGERTEXT_COMPLETION, g_iniPath);
-    g_livePreviewBox = GetPrivateProfileInt(TEXT("FingerText"), TEXT("live_preview_box"), DEFAULT_LIVE_PREVIEW_BOX, g_iniPath);
-    g_editorCaretBound = GetPrivateProfileInt(TEXT("FingerText"), TEXT("editor_caret_bound"), DEFAULT_EDITOR_CARET_BOUND, g_iniPath);
-    g_forceMultiPaste = GetPrivateProfileInt(TEXT("FingerText"), TEXT("force_multipaste"), DEFAULT_FORCE_MULTI_PASTE, g_iniPath);
+    g_snippetListLength = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("snippet_list_length"), DEFAULT_SNIPPET_LIST_LENGTH, g_iniPath);
+    g_snippetListOrderTagType = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("snippet_list_order_tagtype"), DEFAULT_SNIPPET_LIST_ORDER_TAG_TYPE, g_iniPath);
+    g_tabTagCompletion = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("tab_tag_completion"), DEFAULT_TAB_TAG_COMPLETION, g_iniPath);
+    g_liveHintUpdate = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("live_hint_update"), DEFAULT_LIVE_HINT_UPDATE, g_iniPath);
+    g_indentReference = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("indent_reference"), DEFAULT_INDENT_REFERENCE, g_iniPath);
+    g_chainLimit = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("chain_limit"), DEFAULT_CHAIN_LIMIT, g_iniPath);
+    g_preserveSteps = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("preserve_steps"), DEFAULT_PRESERVE_STEPS, g_iniPath);
+    //g_escapeChar = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("escape_char_level"), DEFAULT_ESCAPE_CHAR, g_iniPath);
+    //g_importOverWriteOption = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("import_overwrite_option"), DEFAULT_IMPORT_OVERWRITE_OPTION, g_iniPath);
+    g_importOverWriteConfirm = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("import_overwrite_confirm"), DEFAULT_IMPORT_OVERWRITE_CONFIRM, g_iniPath);
+    g_inclusiveTriggerTextCompletion = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("inclusive_triggertext_completion"), DEFAULT_INCLUSIVE_TRIGGERTEXT_COMPLETION, g_iniPath);
+    g_livePreviewBox = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("live_preview_box"), DEFAULT_LIVE_PREVIEW_BOX, g_iniPath);
+    g_editorCaretBound = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("editor_caret_bound"), DEFAULT_EDITOR_CARET_BOUND, g_iniPath);
+    g_forceMultiPaste = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("force_multipaste"), DEFAULT_FORCE_MULTI_PASTE, g_iniPath);
 
-    GetPrivateProfileString(TEXT("FingerText"), TEXT("escape_char"),DEFAULT_CUSTOM_ESCAPE_CHAR,g_customEscapeChar,MAX_PATH,g_iniPath);
-    GetPrivateProfileString(TEXT("FingerText"), TEXT("custom_scope"),DEFAULT_CUSTOM_SCOPE,g_customScope,MAX_PATH,g_iniPath);
+    GetPrivateProfileString(NPP_PLUGIN_NAME, TEXT("escape_char"),DEFAULT_CUSTOM_ESCAPE_CHAR,g_customEscapeChar,MAX_PATH,g_iniPath);
+    GetPrivateProfileString(NPP_PLUGIN_NAME, TEXT("custom_scope"),DEFAULT_CUSTOM_SCOPE,g_customScope,MAX_PATH,g_iniPath);
 }
 
 void setupConfigFile()
 {
     //TODO: lazy loading of config.....
-    g_version = ::GetPrivateProfileInt(TEXT("FingerText"), TEXT("version"), 0, g_iniPath);
+    g_version = ::GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("version"), 0, g_iniPath);
     
     if (g_version == VERSION_LINEAR)  // current version
     {
@@ -1961,12 +1977,12 @@ void writeConfigText(int configInt, TCHAR* section)
 {
     wchar_t configText[32];
     _itow_s(configInt,configText, 10,10);
-    ::WritePrivateProfileString(TEXT("FingerText"), section, configText, g_iniPath);
+    ::WritePrivateProfileString(NPP_PLUGIN_NAME, section, configText, g_iniPath);
 }
 
 void writeConfigTextChar(TCHAR* configChar, TCHAR* section)
 {
-    ::WritePrivateProfileString(TEXT("FingerText"), section, configChar, g_iniPath);
+    ::WritePrivateProfileString(NPP_PLUGIN_NAME, section, configChar, g_iniPath);
 }
 
 
@@ -2322,14 +2338,14 @@ void exportAndClearSnippets()
     //TODO: move the snippet export counting message out of the export snippets function so that it can be shown together with the clear snippet message
     if (exportSnippets())
     {
-        int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Are you sure that you want to clear the whole snippet database?"), TEXT("FingerText"), MB_YESNO);
+        int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Are you sure that you want to clear the whole snippet database?"), NPP_PLUGIN_NAME, MB_YESNO);
         if (messageReturn == IDYES)
         {
             clearAllSnippets();
-            ::MessageBox(nppData._nppHandle, TEXT("All snippets are deleted."), TEXT("FingerText"), MB_OK);
+            ::MessageBox(nppData._nppHandle, TEXT("All snippets are deleted."), NPP_PLUGIN_NAME, MB_OK);
         } else 
         {
-            ::MessageBox(nppData._nppHandle, TEXT("Snippet clearing is aborted."), TEXT("FingerText"), MB_OK);
+            ::MessageBox(nppData._nppHandle, TEXT("Snippet clearing is aborted."), NPP_PLUGIN_NAME, MB_OK);
         }
     }
 }
@@ -2423,9 +2439,9 @@ bool exportSnippets()
         
         ::SendScintilla(SCI_SETSAVEPOINT,0,0);
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
-        ::MessageBox(nppData._nppHandle, exportCountText, TEXT("FingerText"), MB_OK);
+        ::MessageBox(nppData._nppHandle, exportCountText, NPP_PLUGIN_NAME, MB_OK);
     }
-    g_snippetListLength = GetPrivateProfileInt(TEXT("FingerText"), TEXT("snippet_list_length"), DEFAULT_SNIPPET_LIST_LENGTH, g_iniPath);
+    g_snippetListLength = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("snippet_list_length"), DEFAULT_SNIPPET_LIST_LENGTH, g_iniPath);
     g_snippetCache = new SnipIndex [g_snippetListLength];
     updateDockItems(true,true,"%");
     g_liveHintUpdate++;
@@ -2476,7 +2492,7 @@ void importSnippets()
     if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
     {
         //TODO: prompt for closing tab instead of just warning
-        ::MessageBox(nppData._nppHandle, TEXT("Please close all the snippet editing tabs (SnippetEditor.ftb) before importing any snippet pack."), TEXT("FingerText"), MB_OK);
+        ::MessageBox(nppData._nppHandle, TEXT("Please close all the snippet editing tabs (SnippetEditor.ftb) before importing any snippet pack."), NPP_PLUGIN_NAME, MB_OK);
         return;
     }
 
@@ -2506,19 +2522,19 @@ void importSnippets()
         //int conflictOverwrite = IDNO;
         //if (g_importOverWriteOption==1)
         //{
-        //   conflictOverwrite = ::MessageBox(nppData._nppHandle, TEXT("Do you want to overwrite the database when the imported snippets has conflicts with existing snippets? Press Yes if you want to overwrite, No if you want to keep both versions."), TEXT("FingerText"), MB_YESNO);
+        //   conflictOverwrite = ::MessageBox(nppData._nppHandle, TEXT("Do you want to overwrite the database when the imported snippets has conflicts with existing snippets? Press Yes if you want to overwrite, No if you want to keep both versions."), NPP_PLUGIN_NAME, MB_YESNO);
         //}
         int conflictKeepCopy = IDNO;
-        conflictKeepCopy = ::MessageBox(nppData._nppHandle, TEXT("Do you want to keep both versions if the imported snippets are conflicting with existing one?\r\n\r\nYes - Keep both versions\r\nNo - Overwrite existing version\r\nCancel - Stop importing"), TEXT("FingerText"), MB_YESNOCANCEL);
+        conflictKeepCopy = ::MessageBox(nppData._nppHandle, TEXT("Do you want to keep both versions if the imported snippets are conflicting with existing one?\r\n\r\nYes - Keep both versions\r\nNo - Overwrite existing version\r\nCancel - Stop importing"), NPP_PLUGIN_NAME, MB_YESNOCANCEL);
 
         if (conflictKeepCopy == IDCANCEL)
         {
-            ::MessageBox(nppData._nppHandle, TEXT("Snippet importing aborted."), TEXT("FingerText"), MB_OK);
+            ::MessageBox(nppData._nppHandle, TEXT("Snippet importing aborted."), NPP_PLUGIN_NAME, MB_OK);
             return;
         }
 
 
-        //::MessageBox(nppData._nppHandle, (LPCWSTR)fileName, TEXT("Trace"), MB_OK);
+        //::MessageBox(nppData._nppHandle, (LPCWSTR)fileName, NPP_PLUGIN_NAME, MB_OK);
         std::ifstream file;
         file.open((LPCWSTR)fileName);   // TODO: This part may cause problem in chinese file names
 
@@ -2634,14 +2650,14 @@ void importSnippets()
                                     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"---------- [ Pending Imports ] ---------\r\n");
                                     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"----------------------------------------\r\n");
                         
-                                    int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("A snippet already exists, overwrite?"), TEXT("FingerText"), MB_YESNO);
+                                    int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("A snippet already exists, overwrite?"), NPP_PLUGIN_NAME, MB_YESNO);
                                     if (messageReturn==IDNO)
                                     {
                                         //delete [] tagText;
                                         //delete [] tagTypeText;
                                         //delete [] snippetText;
                                         // not overwrite
-                                        //::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), TEXT("FingerText"), MB_OK);
+                                        //::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), NPP_PLUGIN_NAME, MB_OK);
                                         notOverWrite = true;
                                     } else
                                     {
@@ -2653,7 +2669,7 @@ void importSnippets()
                                             sqlite3_step(stmt);
                                         } else
                                         {
-                                            ::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT("FingerText"), MB_OK);
+                                            ::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), NPP_PLUGIN_NAME, MB_OK);
                                         }
                         
                                     }
@@ -2671,7 +2687,7 @@ void importSnippets()
                                         sqlite3_step(stmt);
                                     } else
                                     {
-                                        ::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT("FingerText"), MB_OK);
+                                        ::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), NPP_PLUGIN_NAME, MB_OK);
                                     }
                                 }
                             } else
@@ -2745,7 +2761,7 @@ void importSnippets()
             
                     // Run the query with sqlite3_step
                     sqlite3_step(stmt); // SQLITE_ROW 100 sqlite3_step() has another row ready
-                    //::MessageBox(nppData._nppHandle, TEXT("The Snippet is saved."), TEXT("FingerText"), MB_OK);
+                    //::MessageBox(nppData._nppHandle, TEXT("The Snippet is saved."), NPP_PLUGIN_NAME, MB_OK);
                 }
                 sqlite3_finalize(stmt);
                 //delete [] tagText;
@@ -2780,8 +2796,8 @@ void importSnippets()
                 //TODO: more detail messages and count the number of conflict or problematic snippets
                 wcscat_s(importCountText,TEXT("\r\n\r\nThere are some conflicts between the imported and existing snippets. You may go to the snippet editor to clean them up."));
             }
-            //::MessageBox(nppData._nppHandle, TEXT("Complete importing snippets"), TEXT("FingerText"), MB_OK);
-            ::MessageBox(nppData._nppHandle, importCountText, TEXT("FingerText"), MB_OK);
+            //::MessageBox(nppData._nppHandle, TEXT("Complete importing snippets"), NPP_PLUGIN_NAME, MB_OK);
+            ::MessageBox(nppData._nppHandle, importCountText, NPP_PLUGIN_NAME, MB_OK);
             
             ::SendScintilla(SCI_SETSAVEPOINT,0,0);
             ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
@@ -2807,7 +2823,7 @@ int promptSaveSnippet(TCHAR* message)
             saveSnippet();
         } else if (::SendScintilla(SCI_GETMODIFY,0,0)!=0)
         {
-            messageReturn=::MessageBox(nppData._nppHandle, message, TEXT("FingerText"), MB_YESNO);
+            messageReturn=::MessageBox(nppData._nppHandle, message, NPP_PLUGIN_NAME, MB_YESNO);
             if (messageReturn==IDYES)
             {
                 saveSnippet();
@@ -2866,7 +2882,7 @@ void updateMode()
 void settings()
 {
     // TODO: try putting settings into the ini files instead of just using annotation
-    if (::MessageBox(nppData._nppHandle, TEXT("Change the settings only when you know what you are doing. Messing up the ini can cause FingerText to stop working.\r\n\r\n Do you wish to continue?"), TEXT("FingerText"), MB_YESNO) == IDYES)
+    if (::MessageBox(nppData._nppHandle, TEXT("Change the settings only when you know what you are doing. Messing up the ini can cause FingerText to stop working.\r\n\r\n Do you wish to continue?"), NPP_PLUGIN_NAME, MB_YESNO) == IDYES)
     {
         writeConfig();
 
@@ -2951,7 +2967,7 @@ About FingerText --- Menu>Plugins>FingerText>About\r\n\r\n\
 For step by step usage guide, please visit http://github.com/erinata/FingerText \
 ");
 
-    ::MessageBox(nppData._nppHandle, helpText, TEXT("FingerText"), MB_OK);
+    ::MessageBox(nppData._nppHandle, helpText, NPP_PLUGIN_NAME, MB_OK);
      //ShellExecute(NULL, TEXT("open"), TEXT("https://github.com/erinata/FingerText"), NULL, NULL, SW_SHOWNORMAL);
 }
 
@@ -2971,7 +2987,7 @@ Usage Guide and Source code:\r\n\
      http://github.com/erinata/FingerText \r\n\r\n\
 (Snippets created using FingerText 0.3.5 or earlier versions are not compatible with this version)\
 "));
-    ::MessageBox(nppData._nppHandle, versionText, TEXT("FingerText"), MB_OK);
+    ::MessageBox(nppData._nppHandle, versionText, NPP_PLUGIN_NAME, MB_OK);
 }
 
 void refreshAnnotation()
@@ -3187,13 +3203,13 @@ void selectionMonitor(int contentChange)
                     
                 } else if (::SendScintilla(SCI_LINELENGTH,1,0)>=41)
                 {
-                    ::MessageBox(nppData._nppHandle, TEXT("The TriggerText length limit is 40 characters."), TEXT("FingerText"), MB_OK);
+                    ::MessageBox(nppData._nppHandle, TEXT("The TriggerText length limit is 40 characters."), NPP_PLUGIN_NAME, MB_OK);
                     ::SendScintilla(SCI_UNDO,0,0);
                     updateLineCount();
                 
                 } else if (::SendScintilla(SCI_LINELENGTH,2,0)>=251)
                 {
-                    ::MessageBox(nppData._nppHandle, TEXT("The Scope length limit is 250 characters."), TEXT("FingerText"), MB_OK);
+                    ::MessageBox(nppData._nppHandle, TEXT("The Scope length limit is 250 characters."), NPP_PLUGIN_NAME, MB_OK);
                     ::SendScintilla(SCI_UNDO,0,0);
                     updateLineCount();
                 } 
@@ -3624,7 +3640,7 @@ void tabActivate()
 
 void testing2()
 {
-    ::MessageBox(nppData._nppHandle, TEXT("Testing2!"), TEXT("Trace"), MB_OK);
+    ::MessageBox(nppData._nppHandle, TEXT("Testing2!"), NPP_PLUGIN_NAME, MB_OK);
     //HWND curScintilla = getCurrentScintilla();
 }
 
@@ -3633,7 +3649,7 @@ void testing2()
 void testing()
 {
     
-    ::MessageBox(nppData._nppHandle, TEXT("Testing!"), TEXT("Trace"), MB_OK);
+    ::MessageBox(nppData._nppHandle, TEXT("Testing!"), NPP_PLUGIN_NAME, MB_OK);
     //HWND curScintilla = getCurrentScintilla();
     alertCharArray("laptop");
 
@@ -3965,10 +3981,10 @@ void testing()
     //
     //if (g_newUpdate)
     //{
-    //    ::MessageBox(nppData._nppHandle, TEXT("New!"), TEXT("Trace"), MB_OK);
+    //    ::MessageBox(nppData._nppHandle, TEXT("New!"), NPP_PLUGIN_NAME, MB_OK);
     //} else
     //{
-    //    ::MessageBox(nppData._nppHandle, TEXT("Old!"), TEXT("Trace"), MB_OK);
+    //    ::MessageBox(nppData._nppHandle, TEXT("Old!"), NPP_PLUGIN_NAME, MB_OK);
     //}
     //
     //
@@ -3980,28 +3996,28 @@ void testing()
     //int enc = ::SendMessage(curScintilla, SCI_GETLINEINDENTATION, 0, 0);
     //wchar_t countText[10];
     //::_itow_s(enc, countText, 10, 10); 
-    //::MessageBox(nppData._nppHandle, countText, TEXT("Trace"), MB_OK);
+    //::MessageBox(nppData._nppHandle, countText, NPP_PLUGIN_NAME, MB_OK);
 
     //    
     ////char *tagType1 = NULL;
     //TCHAR fileType1[5];
     //::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType1);
     ////convertToUTF8(fileType1, &tagType1);
-    //::MessageBox(nppData._nppHandle, fileType1, TEXT("Trace"), MB_OK);
+    //::MessageBox(nppData._nppHandle, fileType1, NPP_PLUGIN_NAME, MB_OK);
     //
     //TCHAR key[MAX_PATH];
     //::swprintf(key,fileType1);
-    //::MessageBox(nppData._nppHandle, key, TEXT("Trace"), MB_OK);
+    //::MessageBox(nppData._nppHandle, key, NPP_PLUGIN_NAME, MB_OK);
     //
     //const TCHAR* key2 = (TCHAR*)".txt";
     //
     //if (key==key2)
     //{
-    //    ::MessageBox(nppData._nppHandle, TEXT("txt!"), TEXT("Trace"), MB_OK);
+    //    ::MessageBox(nppData._nppHandle, TEXT("txt!"), NPP_PLUGIN_NAME, MB_OK);
     //
     //} else
     //{
-    //   ::MessageBox(nppData._nppHandle, TEXT("not txt!"), TEXT("Trace"), MB_OK);
+    //   ::MessageBox(nppData._nppHandle, TEXT("not txt!"), NPP_PLUGIN_NAME, MB_OK);
     //}
     //
     //::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"Hello!");
@@ -4015,7 +4031,7 @@ void testing()
     //int enc = g_snippetListLength;
     //wchar_t countText[10];
     //::_itow_s(enc, countText, 10, 10); 
-    //::MessageBox(nppData._nppHandle, countText, TEXT("Trace"), MB_OK);
+    //::MessageBox(nppData._nppHandle, countText, NPP_PLUGIN_NAME, MB_OK);
 
 
     //TCHAR file2switch[]=TEXT("C:\\Users\\tomtom\\Desktop\\FingerTextEditor");
@@ -4036,10 +4052,10 @@ void testing()
     ////if (selText == "------ FingerText Snippet Editor View ------")
     //if (::strcmp(selText,key))
     //{
-    //    ::MessageBox(nppData._nppHandle, TEXT("true"), TEXT("Trace"), MB_OK);
+    //    ::MessageBox(nppData._nppHandle, TEXT("true"), NPP_PLUGIN_NAME, MB_OK);
     //} else
     //{
-    //    ::MessageBox(nppData._nppHandle, TEXT("false"), TEXT("Trace"), MB_OK);
+    //    ::MessageBox(nppData._nppHandle, TEXT("false"), NPP_PLUGIN_NAME, MB_OK);
     //}
     //
 
@@ -4051,24 +4067,24 @@ void testing()
     //    
     //if (::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0) == 7)
     //{
-    //    ::MessageBox(nppData._nppHandle, TEXT("true"), TEXT("Trace"), MB_OK);
+    //    ::MessageBox(nppData._nppHandle, TEXT("true"), NPP_PLUGIN_NAME, MB_OK);
     //} else
     //{
-    //    ::MessageBox(nppData._nppHandle, TEXT("false"), TEXT("Trace"), MB_OK);
+    //    ::MessageBox(nppData._nppHandle, TEXT("false"), NPP_PLUGIN_NAME, MB_OK);
     //}
 
 }
 
 void alert()
 {
-     ::MessageBox(nppData._nppHandle, TEXT("Alert!"), TEXT("Trace"), MB_OK);
+     ::MessageBox(nppData._nppHandle, TEXT("Alert!"), NPP_PLUGIN_NAME, MB_OK);
 }
 
 void alertNumber(int input)
 {
     wchar_t countText[10];
     ::_itow_s(input, countText, 10, 10);
-    ::MessageBox(nppData._nppHandle, countText, TEXT("Trace"), MB_OK);
+    ::MessageBox(nppData._nppHandle, countText, NPP_PLUGIN_NAME, MB_OK);
 
 }
 void alertCharArray(char* input)
@@ -4081,13 +4097,13 @@ void alertCharArray(char* input)
     //size_t convertedChars = 0;
     //wchar_t wcstring[newsize];
     //mbstowcs_s(&convertedChars, wcstring, origsize, input, _TRUNCATE);
-    ::MessageBox(nppData._nppHandle, wcstring, TEXT("Trace"), MB_OK);
+    ::MessageBox(nppData._nppHandle, wcstring, NPP_PLUGIN_NAME, MB_OK);
     delete [] wcstring;
 }
 
 void alertTCharArray(TCHAR* input)
 {
-    ::MessageBox(nppData._nppHandle, input, TEXT("Trace"), MB_OK);
+    ::MessageBox(nppData._nppHandle, input, NPP_PLUGIN_NAME, MB_OK);
 }
 
 void alertString(std::string input)

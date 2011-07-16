@@ -76,7 +76,7 @@ public :
     
     void messageDialog(HWND nppHandle, LPCWSTR message)
     {
-        ::MessageBox(nppHandle, message, TEXT("Trace"), MB_OK);
+        ::MessageBox(nppHandle, message, NPP_PLUGIN_NAME, MB_OK);
     }
 
     void addDockItem(wchar_t *dockItem)
