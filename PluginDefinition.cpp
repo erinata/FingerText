@@ -1773,7 +1773,8 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
         
     ::SendScintilla(SCI_SETSELECTION,posEndOfSnippet,posEndOfInsertedText);
     ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
-	::SendScintilla(SCI_GOTOPOS, posCurrent, 0);
+    
+	//::SendScintilla(SCI_GOTOPOS, posCurrent, 0);
     return true;
 }
 
@@ -3281,6 +3282,18 @@ void tagComplete()
 bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
 {
     //HWND curScintilla = getCurrentScintilla();
+
+    int paramPos = -1;
+    if (triggerTextComplete == false)
+    {
+        paramPos = ::SendScintilla(SCI_BRACEMATCH,posCurrent-1,0);
+        if (paramPos>=0)
+        {
+            posCurrent = paramPos;
+            ::SendScintilla(SCI_GOTOPOS,paramPos,0);
+        }
+    }
+
     bool tagFound = false;
     char *tag;
 	int tagLength = getCurrentTag(posCurrent, &tag, triggerLength);
@@ -3411,6 +3424,15 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
         // return to the original path 
         // ::SetCurrentDirectory(curPath);
 
+        if (paramPos>=0)
+        {
+
+            int paramStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+            int paramEnd = ::SendScintilla(SCI_BRACEMATCH,paramStart,0)+1;
+            ::SendScintilla(SCI_SETSELECTION,paramStart,paramEnd);
+            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        }
+
         // return to the original position 
         if (tagFound) ::SendScintilla(SCI_GOTOPOS,posBeforeTag,0);
     } 
@@ -3534,12 +3556,16 @@ void tabActivate()
         //{
             g_liveHintUpdate--;
             g_selectionMonitor--;
+            
             int posSelectionStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
             int posSelectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
+
             if (g_preserveSteps==0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
             bool tagFound = false;
             if (posSelectionStart==posSelectionEnd)
             {
+
+
                 tagFound = triggerTag(posCurrent);
             }
 
@@ -3669,11 +3695,17 @@ void testing2()
 void testing()
 {
     
-    ::MessageBox(nppData._nppHandle, TEXT("Testing!"), NPP_PLUGIN_NAME, MB_OK);
     //HWND curScintilla = getCurrentScintilla();
-    alertCharArray("laptop");
+    alertCharArray("testing1");
 
-    openDummyStaticDlg();
+
+    ////Testing brace match
+    //int result = ::SendScintilla(SCI_BRACEMATCH,3,0);
+    //alertNumber(result);
+
+
+    //// For opening static dialog
+    //openDummyStaticDlg();
 
 
     ////Testing creating window using createwindowex

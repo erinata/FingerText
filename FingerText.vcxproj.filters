@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx</Extensions>
     </Filter>
+    <Filter Include="Documents">
+      <UniqueIdentifier>{bbe7bf66-df01-46fd-aa15-8f88c93d066f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PluginDefinition.cpp">
@@ -82,15 +85,19 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Changelog.txt" />
-    <None Include="README.rdoc" />
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="Dialog\Dialog.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
     <ResourceCompile Include="Version\Version.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Documents\Changelog.txt">
+      <Filter>Documents</Filter>
+    </None>
+    <None Include="Documents\README.rdoc">
+      <Filter>Documents</Filter>
+    </None>
   </ItemGroup>
 </Project>
