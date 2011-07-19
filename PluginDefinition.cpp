@@ -75,6 +75,7 @@ int g_optionCurrent;
 int g_optionNumber;
 //char *g_optionArray[] = {"","","","","","","","","","","","","","","","","","","",""};
 char *g_optionArray[] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
+
 // Config file content
 #define DEFAULT_SNIPPET_LIST_LENGTH 1000
 #define DEFAULT_SNIPPET_LIST_ORDER_TAG_TYPE 1
@@ -3698,6 +3699,25 @@ void testing()
     //HWND curScintilla = getCurrentScintilla();
     alertCharArray("testing1");
 
+    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"ABC");
+
+    ////Testing vector<string>
+    //int i;
+    //char* teststr = new char[100];
+    //strcpy(teststr, "abc def  ghi");
+    //alertCharArray(teststr);
+    //
+    //std::vector<std::string> v;
+    //    
+    //v = split(teststr,' ');
+    //delete [] teststr;
+    //i = 0;
+    //while (i<v.size())
+    //{
+    //    alertString(v[i]);
+    //    i++;
+    //}
+
 
     ////Testing brace match
     //int result = ::SendScintilla(SCI_BRACEMATCH,3,0);
@@ -4166,4 +4186,47 @@ void alertString(std::string input)
     strcpy(temp, input.c_str());
     alertCharArray(temp);
     delete [] temp;
+}
+
+
+//Super buggy implementation of a word delimiter splitter
+//std::vector<std::string> split2(char* str, char c1, char c2, char c3)
+//{
+//    std::vector<std::string> result;
+//
+//    while(1)
+//    {
+//        char *begin = str;
+//
+//        while(((*str != c1) || (*(str+1) != c2) || (*(str+2) != c3)) && *str) str++;
+//
+//        result.push_back(std::string(begin, str));
+//        str = str + 2;
+//
+//        if(0 == *str++) break;
+//    }
+//
+//    return result;
+//
+//
+//}
+
+std::vector<std::string> split(char* str, char c)
+{
+    std::vector<std::string> result;
+
+    while(1)
+    {
+        char *begin = str;
+
+        while(*str != c && *str) str++;
+
+        result.push_back(std::string(begin, str));
+
+        if(0 == *str++) break;
+    }
+
+    return result;
+
+
 }

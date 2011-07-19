@@ -33,6 +33,7 @@
 #include "PluginInterface.h"
 
 #include <string>       // For alertString()
+#include <vector>
 #include <tchar.h>      // For TEXT() and _tcscpy, _tcscat 
 #include <fstream>      // For file reading and writing
 #include <winhttp.h>    // For http requests, Add winhttp.lib to additional dependencies if there is external definition error
@@ -151,4 +152,8 @@ void alertNumber(int input);
 void alertCharArray(char* input);
 void alertTCharArray(TCHAR* input);
 void alertString(std::string input);
+
+std::vector<std::string> split(char* str, char c = ' ');
+//std::vector<std::string> split2(char* str, char c1, char c2, char c3);
+
 #endif //PLUGINDEFINITION_H
