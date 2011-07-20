@@ -76,6 +76,10 @@ int g_optionNumber;
 //char *g_optionArray[] = {"","","","","","","","","","","","","","","","","","","",""};
 char *g_optionArray[] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 
+//For shorthand
+std::vector<std::string> g_hotspotParams;
+
+
 // Config file content
 #define DEFAULT_SNIPPET_LIST_LENGTH 1000
 #define DEFAULT_SNIPPET_LIST_ORDER_TAG_TYPE 1
@@ -3425,17 +3429,33 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
         // return to the original path 
         // ::SetCurrentDirectory(curPath);
 
-        if (paramPos>=0)
-        {
-
-            int paramStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-            int paramEnd = ::SendScintilla(SCI_BRACEMATCH,paramStart,0)+1;
-            ::SendScintilla(SCI_SETSELECTION,paramStart,paramEnd);
-            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        }
+        
 
         // return to the original position 
-        if (tagFound) ::SendScintilla(SCI_GOTOPOS,posBeforeTag,0);
+        if (tagFound)
+        {
+            
+            if (paramPos>=0)
+            {
+
+                int paramStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+                int paramEnd = ::SendScintilla(SCI_BRACEMATCH,paramStart,0) + 1;
+                ::SendScintilla(SCI_SETSELECTION,paramStart + 1,paramEnd - 1);
+                char* paramsContent = new char[paramEnd - 1 - (paramStart + 1) + 1];
+                ::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(paramsContent));
+                g_hotspotParams = split(paramsContent,';');
+                ::SendScintilla(SCI_SETSELECTION,paramStart,paramEnd);
+                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+                delete [] paramsContent;
+                
+                //alertVector(g_hotspotParams);
+
+                
+            }
+            ::SendScintilla(SCI_GOTOPOS,posBeforeTag,0);
+
+        }
+            
     } 
     return tagFound;
 }
@@ -3555,6 +3575,8 @@ void tabActivate()
         //    snippetHintUpdate();
         //} else
         //{
+            g_hotspotParams.clear();
+
             g_liveHintUpdate--;
             g_selectionMonitor--;
             
@@ -4188,6 +4210,17 @@ void alertString(std::string input)
     delete [] temp;
 }
 
+void alertVector(std::vector<std::string> v)
+{
+    int i;
+    i = 0;
+    while (i<v.size())
+    {
+        alertString(v[i]);
+        i++;
+    }
+
+}
 
 //Super buggy implementation of a word delimiter splitter
 //std::vector<std::string> split2(char* str, char c1, char c2, char c3)
@@ -4198,12 +4231,12 @@ void alertString(std::string input)
 //    {
 //        char *begin = str;
 //
-//        while(((*str != c1) || (*(str+1) != c2) || (*(str+2) != c3)) && *str) str++;
+//        while (((*str != c1) || (*(str+1) != c2) || (*(str+2) != c3)) && *str) str++;
 //
 //        result.push_back(std::string(begin, str));
 //        str = str + 2;
 //
-//        if(0 == *str++) break;
+//        if (0 == *str++) break;
 //    }
 //
 //    return result;
@@ -4219,11 +4252,11 @@ std::vector<std::string> split(char* str, char c)
     {
         char *begin = str;
 
-        while(*str != c && *str) str++;
+        while (*str != c && *str) str++;
 
         result.push_back(std::string(begin, str));
 
-        if(0 == *str++) break;
+        if (0 == *str++) break;
     }
 
     return result;

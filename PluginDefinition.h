@@ -152,6 +152,7 @@ void alertNumber(int input);
 void alertCharArray(char* input);
 void alertTCharArray(TCHAR* input);
 void alertString(std::string input);
+void alertVector(std::vector<std::string> v);
 
 std::vector<std::string> split(char* str, char c = ' ');
 //std::vector<std::string> split2(char* str, char c1, char c2, char c3);
