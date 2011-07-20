@@ -95,6 +95,7 @@ std::vector<std::string> g_hotspotParams;
 #define DEFAULT_LIVE_PREVIEW_BOX 1
 #define DEFAULT_EDITOR_CARET_BOUND 1
 #define DEFAULT_FORCE_MULTI_PASTE 1
+#define DEFAULT_SNIPPET_DOCK_STATE 1
 
 #define DEFAULT_CUSTOM_SCOPE TEXT("")
 #define DEFAULT_CUSTOM_ESCAPE_CHAR TEXT("")
@@ -113,6 +114,7 @@ int g_inclusiveTriggerTextCompletion;
 int g_livePreviewBox;
 int g_editorCaretBound;
 int g_forceMultiPaste;
+int g_snippetDockState;
 
 TCHAR* g_customEscapeChar;
 TCHAR* g_customScope;
@@ -1946,6 +1948,7 @@ void resetDefaultSettings()
     g_livePreviewBox = DEFAULT_LIVE_PREVIEW_BOX;
     g_editorCaretBound = DEFAULT_EDITOR_CARET_BOUND;
     g_forceMultiPaste = DEFAULT_FORCE_MULTI_PASTE;
+    g_snippetDockState = DEFAULT_SNIPPET_DOCK_STATE;
 
     g_customScope = DEFAULT_CUSTOM_SCOPE;
     g_customEscapeChar = DEFAULT_CUSTOM_ESCAPE_CHAR;
@@ -1972,6 +1975,7 @@ void writeConfig()
     writeConfigText(g_livePreviewBox,TEXT("live_preview_box"));
     writeConfigText(g_editorCaretBound,TEXT("editor_caret_bound"));
     writeConfigText(g_forceMultiPaste,TEXT("force_multipaste"));
+    writeConfigText(g_snippetDockState,TEXT("snippetdock_state"));
     
     writeConfigTextChar(g_customEscapeChar,TEXT("escape_char"));
     writeConfigTextChar(g_customScope,TEXT("custom_scope"));
@@ -1993,6 +1997,7 @@ void loadConfig()
     g_livePreviewBox = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("live_preview_box"), DEFAULT_LIVE_PREVIEW_BOX, g_iniPath);
     g_editorCaretBound = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("editor_caret_bound"), DEFAULT_EDITOR_CARET_BOUND, g_iniPath);
     g_forceMultiPaste = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("force_multipaste"), DEFAULT_FORCE_MULTI_PASTE, g_iniPath);
+    g_snippetDockState = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("snippetdock_state"), DEFAULT_SNIPPET_DOCK_STATE, g_iniPath);
 
     GetPrivateProfileString(NPP_PLUGIN_NAME, TEXT("escape_char"),DEFAULT_CUSTOM_ESCAPE_CHAR,g_customEscapeChar,MAX_PATH,g_iniPath);
     GetPrivateProfileString(NPP_PLUGIN_NAME, TEXT("custom_scope"),DEFAULT_CUSTOM_SCOPE,g_customScope,MAX_PATH,g_iniPath);
@@ -2136,11 +2141,24 @@ void showSnippetDock()
 		// the dlgDlg should be the index of funcItem where the current function pointer is
 		data.dlgID = SNIPPET_DOCK_INDEX;
 		::SendMessage(nppData._nppHandle, NPPM_DMMREGASDCKDLG, 0, (LPARAM)&data);
-        snippetDock.display();
+
+        //This determine the initial state of the snippetdock.
+        //snippetDock.display();
+        snippetDock.display(g_snippetDockState);
 	} else
     {
         snippetDock.display(!snippetDock.isVisible());
     }
+
+    if (snippetDock.isVisible())
+    {
+        g_snippetDockState = 1;
+    } else
+    {
+        g_snippetDockState = 0;
+    }
+    writeConfigText(g_snippetDockState,TEXT("snippetdock_state"));
+
     snippetHintUpdate();
 }
 

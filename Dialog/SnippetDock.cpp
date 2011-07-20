@@ -216,6 +216,7 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
             
             //::SetDlgItemInt(_hSelf,IDC_LENGTH,100, false);
             //SendMessage(GetDlgItem(_hSelf, IDC_SNIPPET_LIST), LB_SETSEL , true, 1);
+            
             return TRUE;
          
         } 
