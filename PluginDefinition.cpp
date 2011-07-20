@@ -784,24 +784,8 @@ bool dynamicHotspot(int &startingPos)
                 }
                 else
                 {
-                    // TODO: refactor to a separate function for (nor) hotspots.
-                    if (!g_hotspotParams.empty())
-                    {
-                        //alertString(*g_hotspotParams.begin());
-                        char* hotspotParamsCharArray = new char [(*g_hotspotParams.begin()).size()+1];
-                        strcpy(hotspotParamsCharArray, (*g_hotspotParams.begin()).c_str());
-                        
-                        g_hotspotParams.erase(g_hotspotParams.begin());
-                        
-                        if (strlen(hotspotParamsCharArray)>0)
-                        {
-                            ::SendScintilla(SCI_SETSEL,firstPos,secondPos+3);
-                            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)hotspotParamsCharArray);
-                        }
-
-                        delete [] hotspotParamsCharArray;
-                    }
-
+                    
+                    paramsInsertion(firstPos,hotSpot);
                     limitCounter++;
                 }
             }
@@ -823,6 +807,37 @@ bool dynamicHotspot(int &startingPos)
     return false;
 }
 
+void paramsInsertion(int &firstPos, char* hotSpot)
+{
+    if (!g_hotspotParams.empty())
+    {
+        //alertString(*g_hotspotParams.begin());
+        char* hotspotParamsCharArray = new char [(*g_hotspotParams.begin()).size()+1];
+        strcpy(hotspotParamsCharArray, (*g_hotspotParams.begin()).c_str());
+        
+        g_hotspotParams.erase(g_hotspotParams.begin());
+        
+        if (strlen(hotspotParamsCharArray)>0)
+        {
+            
+            //::SendScintilla(SCI_SETSEL,firstPos,secondPos+3);
+            int found;
+            do
+            {
+                ::SendScintilla(SCI_GOTOPOS,firstPos,0);
+                found = searchNext(hotSpot);
+                //endPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+                //::SendScintilla(SCI_SETSEL,endPos-strlen(hotSpot),endPos);
+                if (found >=0) ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)hotspotParamsCharArray);
+                //alertNumber(found);
+            } while (found >= 0);
+        }
+
+        delete [] hotspotParamsCharArray;
+    }
+}
+
+
 void chainSnippet(int &firstPos, char* hotSpotText)
 {
     int triggerPos = strlen(hotSpotText)+firstPos;
@@ -830,7 +845,7 @@ void chainSnippet(int &firstPos, char* hotSpotText)
     triggerTag(triggerPos,false, strlen(hotSpotText));
 }
 
-
+////Old implementation of executeCommand
 //void executeCommand(int &firstPos, char* hotSpotText)
 //{
 //    int triggerPos = strlen(hotSpotText)+firstPos;

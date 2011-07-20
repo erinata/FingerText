@@ -71,6 +71,7 @@ void resetDefaultSettings();
 void writeConfigText(int configInt, TCHAR* section);
 void restoreTab(int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
 bool dynamicHotspot(int &startingPos);
+void paramsInsertion(int &firstPos, char* hotSpot);
 void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint);
 void executeCommand(int &firstPos, char* hotSpotText);
 void launchMessageBox(int &firstPos, char* hotSpotText);
