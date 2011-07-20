@@ -1,5 +1,13 @@
 changelog (for developers only, include unreleased versions)
 
+0.5.30
+
+
+0.5.29
+****** restructure the project folder structure
+****** add static dialog for debug purpose
+****** hotspots can be instantly replaced by parameters passed to the triggertext
+
 0.5.28
 - Changed: change hotspot (cmd) to (run)
 - Fixed: the problem of appending cmd /c will break some commands

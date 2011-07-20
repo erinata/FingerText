@@ -784,6 +784,24 @@ bool dynamicHotspot(int &startingPos)
                 }
                 else
                 {
+                    // TODO: refactor to a separate function for (nor) hotspots.
+                    if (!g_hotspotParams.empty())
+                    {
+                        //alertString(*g_hotspotParams.begin());
+                        char* hotspotParamsCharArray = new char [(*g_hotspotParams.begin()).size()+1];
+                        strcpy(hotspotParamsCharArray, (*g_hotspotParams.begin()).c_str());
+                        
+                        g_hotspotParams.erase(g_hotspotParams.begin());
+                        
+                        if (strlen(hotspotParamsCharArray)>0)
+                        {
+                            ::SendScintilla(SCI_SETSEL,firstPos,secondPos+3);
+                            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)hotspotParamsCharArray);
+                        }
+
+                        delete [] hotspotParamsCharArray;
+                    }
+
                     limitCounter++;
                 }
             }
@@ -1514,7 +1532,8 @@ bool hotSpotNavigation()
                 //::SendMessage(curScintilla,SCI_GOTOLINE,posLine,0);
 
                 ::SendScintilla(SCI_GOTOPOS,firstPos,0);
-                ::SendScintilla(SCI_SCROLLCARET,0,0);
+                //::SendScintilla(SCI_SCROLLCARET,0,0);
+                
                 
                 ::SendScintilla(SCI_SETSELECTION,firstPos,secondPos-tagSignLength);
                 for (int j=1;j<i;j++)
@@ -1525,7 +1544,10 @@ bool hotSpotNavigation()
                     }
                 }
                 ::SendScintilla(SCI_SETMAINSELECTION,0,0);
-                ::SendScintilla(SCI_LINESCROLL,0,0);
+                ::SendScintilla(SCI_SCROLLCARET,0,0);
+                //::SendScintilla(SCI_LINESCROLL,0,20);
+                //TODO: scrollcaret is not working correctly when thre is a dock visible
+
             }
 
             delete [] hotSpot;
@@ -3599,6 +3621,7 @@ void tabActivate()
             bool dynamicSpot = false;
             if (g_editorView == false)
             {
+ 
                 //int specialSpot = searchNext(curScintilla, "$[![");
                 //if (specialSpot>=0)
                 //{
