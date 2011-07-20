@@ -157,3 +157,4 @@ std::vector<std::string> split(char* str, char c = ' ');
 //std::vector<std::string> split2(char* str, char c1, char c2, char c3);
 
 #endif //PLUGINDEFINITION_H
+
