@@ -127,8 +127,8 @@
     <ResourceCompile Include="Version\Version.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Documents\Changelog.txt" />
-    <None Include="Documents\README.rdoc" />
+    <None Include="Changelog.txt" />
+    <None Include="README.rdoc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

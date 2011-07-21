@@ -14,7 +14,7 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx</Extensions>
     </Filter>
     <Filter Include="Documents">
-      <UniqueIdentifier>{bbe7bf66-df01-46fd-aa15-8f88c93d066f}</UniqueIdentifier>
+      <UniqueIdentifier>{e8edcf11-cad7-40e9-b5bf-04bdec6f47f8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -93,10 +93,10 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Documents\Changelog.txt">
+    <None Include="Changelog.txt">
       <Filter>Documents</Filter>
     </None>
-    <None Include="Documents\README.rdoc">
+    <None Include="README.rdoc">
       <Filter>Documents</Filter>
     </None>
   </ItemGroup>
