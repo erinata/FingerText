@@ -36,6 +36,9 @@
     <ClCompile Include="Sqlite3\sqlite3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="evaluate\Evaluate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PluginDefinition.h">
@@ -81,6 +84,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="NppApi\menuCmdID.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="evaluate\Evaluate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

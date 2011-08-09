@@ -86,7 +86,7 @@ std::vector<std::string> g_hotspotParams;
 #define DEFAULT_TAB_TAG_COMPLETION 0
 #define DEFAULT_LIVE_HINT_UPDATE 1
 #define DEFAULT_INDENT_REFERENCE 1
-#define DEFAULT_CHAIN_LIMIT 40
+#define DEFAULT_CHAIN_LIMIT 100
 #define DEFAULT_PRESERVE_STEPS 0
 #define DEFAULT_ESCAPE_CHAR 0
 #define DEFAULT_IMPORT_OVERWRITE_OPTION 0
@@ -783,6 +783,12 @@ bool dynamicHotspot(int &startingPos)
                     launchMessageBox(firstPos,hotSpotText+5);
 
                     limitCounter++;
+                } else if (spotType == 5)
+                {
+                    checkPoint = firstPos;
+                    evaluateExpression(firstPos,hotSpotText+5);
+
+                    limitCounter++;
                 }
                 else
                 {
@@ -1032,6 +1038,21 @@ void executeCommand(int &firstPos, char* hotSpotText)
     }
 
    //::SendScintilla(SCI_INSERTTEXT, 0, (LPARAM)"->End of process execution.\n");
+}
+
+
+void evaluateExpression(int &firstPos, char* hotSpotText)
+{
+    //TODO: Npp will freeze when the statement cannot be evaluated
+    int triggerPos = strlen(hotSpotText)+firstPos;
+    ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
+
+    Expression y(hotSpotText);
+    char* result;
+    y.evaluateToCharArray(&result);
+
+    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)result);
+    delete [] result;
 }
 
 void launchMessageBox(int &firstPos, char* hotSpotText)
@@ -1611,6 +1632,9 @@ int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &sec
     } else if (strncmp(*hotSpotText,"(msg)",5)==0) //TODO: should think more about this hotspot, It can be made into a more general (ask) hotspot....so keep this feature private for the moment
     {
         spotType = 4;
+    } else if (strncmp(*hotSpotText,"(eva)",5)==0) //TODO: should think more about this hotspot, It can be made into a more general (ask) hotspot....so keep this feature private for the moment
+    {
+        spotType = 5;
     }
 
     ::SendScintilla(SCI_SETSELECTION,firstPos,secondPos+3);
@@ -3777,7 +3801,24 @@ void testing()
     //HWND curScintilla = getCurrentScintilla();
     alertCharArray("testing1");
 
-    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"ABC");
+    ////testing evaluate
+    //Expression x1("1-2+3-4+5-6");
+    //alertString(x1.evaluateToString());
+    //
+    //Expression x2("1-(2+3)-(4+5)-6");
+    //alertString(x2.evaluateToString());
+
+    //Expression x3("1-(2+3)-(4+5)-6*2+1*3");
+    //alertString(x3.evaluateToString());
+    //
+    //Expression x5("1.1+2.32*3+5.2322231");
+    //alertString(x5.evaluateToString());
+
+    //Expression x4("1-(2+3)-(4+5)-6");
+    //char* output;
+    //x4.evaluateToCharArray(&output);
+    //alertCharArray(output);
+    //delete [] output;
 
     ////Testing vector<string>
     //int i;

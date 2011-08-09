@@ -43,6 +43,8 @@
 #include "DummyStaticDialog.h"
 #include "SnippetDock.h"
 #include "Version.h"
+#include "Evaluate.h"
+
 // 
 const TCHAR NPP_PLUGIN_NAME[] = TEXT(PLUGIN_NAME);   // Plugin name
 const int nbFunc = MENU_LENGTH;    // Number of your plugin commands
@@ -75,6 +77,7 @@ void paramsInsertion(int &firstPos, char* hotSpot);
 void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint);
 void executeCommand(int &firstPos, char* hotSpotText);
 void launchMessageBox(int &firstPos, char* hotSpotText);
+void evaluateExpression(int &firstPos, char* hotSpotText);
 void chainSnippet(int &firstPos, char* hotSpotText);
 bool hotSpotNavigation();
 int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, bool dynamic);
