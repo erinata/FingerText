@@ -61,13 +61,17 @@ private:
 private:
     std::string charToString(const char &);      
     std::string doubleToString(const double &);     
-    double stringToDouble(const std::string &);        
+    double stringToDouble(const std::string &); 
     bool isDigit(const char &c);
     int checkOperator(const char&); 
     void parseOperand(const double &);  
     void parseOperator(const char &);
+    void processExpression(std::string input);
+    std::string rephrasing(std::string input);
     void toPostfix(std::string infix);        
     double operate(const std::string &, const double &, const double &); // calculate result by operator and operand
+    void findAndReplace(std::string& str, const std::string& oldStr, const std::string& newStr);
+    int factorial(int number);
 };
 
 #endif

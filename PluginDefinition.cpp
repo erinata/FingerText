@@ -3801,6 +3801,18 @@ void testing()
     //HWND curScintilla = getCurrentScintilla();
     alertCharArray("testing1");
 
+    ////Testing Find and replace
+    //std::string str1 = "abcdecdf";
+    //std::string str2 = "cd";
+    //std::string str3 = "ghicdjk";
+    //alertString(str1);
+    //alertString(str2);
+    //alertString(str3);
+    //
+    //findAndReplace(str1,str2,str3);
+    //alertString(str1);
+
+    
     ////testing evaluate
     //Expression x1("1-2+3-4+5-6");
     //alertString(x1.evaluateToString());
@@ -4317,6 +4329,16 @@ void alertVector(std::vector<std::string> v)
         i++;
     }
 
+}
+
+void findAndReplace(std::string& str, const std::string& oldStr, const std::string& newStr)
+{
+  size_t pos = 0;
+  while((pos = str.find(oldStr, pos)) != std::string::npos)
+  {
+     str.replace(pos, oldStr.length(), newStr);
+     pos += newStr.length();
+  }
 }
 
 //Super buggy implementation of a word delimiter splitter

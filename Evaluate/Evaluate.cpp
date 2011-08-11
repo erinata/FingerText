@@ -32,10 +32,10 @@
 
 #include "Evaluate.h"
 // constructor
-Expression::Expression(char *val) 
+Expression::Expression(char *input) 
 {
     isError = false;
-    this->toPostfix(val);          // convert infix to postfix
+    this->processExpression(input);        
 }
 
 //TODO: make a class to centralize all the type conversion
@@ -70,6 +70,18 @@ int Expression::checkOperator(const char &c)
 {
     switch(c) 
     {
+        //TODO: p - combination, P - permutation, a - absolute value, 
+        //TODO: r - round down, R - round up
+        
+        case 's' :
+        case 'c' :
+        case 't' :
+        case 'l' :
+        case 'S' :
+        case 'C' :
+        case 'T' :
+        case 'L' :
+        case '!' : return 5;
         case '^' : return 4; 
         case '%' : 
         case '*' :
@@ -154,7 +166,28 @@ void Expression::parseOperator(const char &c)
     }
 }
 
+void Expression::processExpression(std::string input)
+{
+    std::string infix = rephrasing(input);
+    this->toPostfix(infix);  // convert infix to postfix
+}
 
+std::string Expression::rephrasing(std::string input)
+{
+    //TODO: cater lower case
+    findAndReplace(input,"pi","3.141592654");
+    findAndReplace(input,"!","!0");
+    findAndReplace(input,"ln","0l");
+    findAndReplace(input,"log","0L");
+    findAndReplace(input,"sin","0s");
+    findAndReplace(input,"asin","0S");
+    findAndReplace(input,"cos","0c");
+    findAndReplace(input,"acos","0C");
+    findAndReplace(input,"tan","0t");
+    findAndReplace(input,"atan","0T");
+
+    return input;
+}
 
 // Convert infix to postfix
 // Algorithm : 
@@ -226,15 +259,47 @@ double Expression::operate(const std::string &operation, const double &operand1,
         return static_cast<int>(operand2) % static_cast<int>(operand1);
     else if (operation == "^")
         return std::pow(operand2,operand1);
-    
+    else if (operation == "!")
+        return factorial(static_cast<int>(operand2));
+    else if (operation == "l")
+        return log(operand1);
+    else if (operation == "L")
+        return log10(operand1);
+    else if (operation == "s")
+        return sin(operand1);
+    else if (operation == "S")
+        return asin(operand1);
+    else if (operation == "c")
+        return cos(operand1);
+    else if (operation == "C")
+        return acos(operand1);
+    else if (operation == "t")
+        return tan(operand1);
+    else if (operation == "T")
+        return atan(operand1);
     else
         return 0;
+}
+
+int Expression::factorial(int number)
+{
+    int result = 1;
+    int i;
+    for (i = number; i>0; i--)
+    {
+        result = result * i;
+    }
+
+    return result;
+
+
+
 }
 
 // get evaluation result
 double Expression::evaluate(void) 
 {
-    // Clear OperandStack
+    // The operandstack should be empty, if not, empty it label it an error
     while(!operandStack.empty()) 
     {
         isError = true;
@@ -293,3 +358,12 @@ void Expression::evaluateToCharArray(char** output)
     strcpy(*output,temp.c_str());
 }
 
+void Expression::findAndReplace(std::string& str, const std::string& oldStr, const std::string& newStr)
+{
+  size_t pos = 0;
+  while((pos = str.find(oldStr, pos)) != std::string::npos)
+  {
+     str.replace(pos, oldStr.length(), newStr);
+     pos += newStr.length();
+  }
+}
