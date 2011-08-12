@@ -1,7 +1,9 @@
 changelog (for developers only, include unreleased versions)
 
 0.5.31
-****** Fixed freeze when closing npp immediately after upgrade 
+- Fixed: freeze when closing npp immediately after upgrade 
+****** Added: dynamic hotspot (eva)
+- Changed: Snippets can be triggered after period
 
 0.5.30
 - parameter insertion handle multi identical hotspots correctly

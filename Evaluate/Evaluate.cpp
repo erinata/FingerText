@@ -72,6 +72,8 @@ int Expression::checkOperator(const char &c)
     {
         //TODO: p - combination, P - permutation, a - absolute value, 
         //TODO: r - round down, R - round up
+        //TODO: round to nearest integer, truncate
+
         
         case 's' :
         case 'c' :

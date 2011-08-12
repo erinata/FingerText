@@ -549,11 +549,11 @@ bool getLineChecked(char **buffer, int lineNumber, TCHAR* errorText)
         char* wordChar;
         if (lineNumber==2)
         {
-            wordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.:";
+            wordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_:";
             
         } else //if (lineNumber==1)
         {
-            wordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.";
+            wordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
         }
         ::SendScintilla(SCI_SETWORDCHARS, 0, (LPARAM)wordChar);
         tagPosEnd = ::SendScintilla(SCI_WORDENDPOSITION,tagPosStart,0);
@@ -2095,7 +2095,7 @@ int getCurrentTag(int posCurrent, char **buffer, int triggerLength)
     if (triggerLength<=0)
     {
         //TODO: global variable for word Char?
-        char wordChar[MAX_PATH]="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.";
+        char wordChar[MAX_PATH]="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
 
         //alertNumber(wcslen(g_customEscapeChar));
         //TODO: potential performance improvement by forming the wordchar with escape char that the initialization
