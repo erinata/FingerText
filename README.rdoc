@@ -4,7 +4,7 @@ Tab triggered snippet plugin for Notepad++.
 
 == Description
 
-FingerText is a tab triggered snippet plugin for Notepad++. Support multiple hotspots simultaneous editing, nested hotspots, dynamic hotspots(a lot more than just plain text, you can run commands, or trigger another snippet in your snippets), hotspot text hint(instead of just a $ or # sign) and hotspot default value. It also features a SnippetDock which shows a list of currently available snippets. (see screenshots) You can import or export your snippets and share it to others.
+FingerText is a tab triggered snippet plugin for Notepad++. Support multiple hotspots simultaneous editing, nested hotspots, dynamic hotspots(a lot more than just plain text, you can run commands, or trigger another snippet in your snippets), hotspot text hint(instead of just a $ or # sign) and hotspot default value. It also features a SnippetDock which shows a list of currently available snippets. (see screenshots) You can import or export your snippets and share them to others.
 
 If you are new to FingerText, follow the section "Install", "Importing Sample Snippets" and "Basic Usage" in this file. That should give you a step by step tutorial on how to use FingerText.
 

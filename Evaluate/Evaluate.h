@@ -54,7 +54,7 @@ private:
     std::stack<char> operatorStack;             
     // The vaiable for holding  math expression in postfix form
     std::vector<std::pair<int, std::string>> postfix;
-    std::string errorMessage;
+    //std::string errorMessage;
     bool isDecimal;
     bool isError;
 

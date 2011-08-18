@@ -70,7 +70,7 @@ int Expression::checkOperator(const char &c)
 {
     switch(c) 
     {
-        //TODO: p - combination, P - permutation, a - absolute value, 
+        //TODO: p - combination, P - permutation, a - absolute value, e - exponential
         //TODO: r - round down, R - round up
         //TODO: round to nearest integer, truncate
 
@@ -286,16 +286,8 @@ double Expression::operate(const std::string &operation, const double &operand1,
 int Expression::factorial(int number)
 {
     int result = 1;
-    int i;
-    for (i = number; i>0; i--)
-    {
-        result = result * i;
-    }
-
+    for (int i = number; i>0; i--) result = result * i;
     return result;
-
-
-
 }
 
 // get evaluation result
@@ -362,10 +354,10 @@ void Expression::evaluateToCharArray(char** output)
 
 void Expression::findAndReplace(std::string& str, const std::string& oldStr, const std::string& newStr)
 {
-  size_t pos = 0;
-  while((pos = str.find(oldStr, pos)) != std::string::npos)
-  {
-     str.replace(pos, oldStr.length(), newStr);
-     pos += newStr.length();
-  }
+    size_t pos = 0;
+    while((pos = str.find(oldStr, pos)) != std::string::npos)
+    {
+       str.replace(pos, oldStr.length(), newStr);
+       pos += newStr.length();
+    }
 }

@@ -742,9 +742,11 @@ bool dynamicHotspot(int &startingPos)
     int limitCounter = 0;
     do 
     {
+        
         ::SendScintilla(SCI_GOTOPOS,checkPoint,0);
         spot = searchNext(tagTail);   // Find the tail first so that nested snippets are triggered correctly
         //spot = searchNext(curScintilla, tagSign);
+        alertNumber(spot);
         if (spot>=0)
 	    {
             checkPoint = ::SendScintilla(SCI_GETCURRENTPOS,0,0)+1;
@@ -792,7 +794,6 @@ bool dynamicHotspot(int &startingPos)
                 }
                 else
                 {
-                    
                     paramsInsertion(firstPos,hotSpot);
                     limitCounter++;
                 }
@@ -800,7 +801,7 @@ bool dynamicHotspot(int &startingPos)
             //////////////////////
         }
         
-    } while ((spotComplete>=0) && (spot>0) && (limitCounter<g_chainLimit));
+    } while ((spotComplete>=0) && (spot>0) && (limitCounter<g_chainLimit) && (spotType!=0));
 
     //TODO: loosen the limit to the limit of special spot, and ++limit for every search so that less frezze will happen
     if (limitCounter>=g_chainLimit) ::MessageBox(nppData._nppHandle, TEXT("Dynamic hotspots triggering limit exceeded."), NPP_PLUGIN_NAME, MB_OK);
@@ -3666,8 +3667,6 @@ void tabActivate()
             bool tagFound = false;
             if (posSelectionStart==posSelectionEnd)
             {
-
-
                 tagFound = triggerTag(posCurrent);
             }
 
@@ -3800,7 +3799,6 @@ void testing()
     
     //HWND curScintilla = getCurrentScintilla();
     alertCharArray("testing1");
-
     ////Testing Find and replace
     //std::string str1 = "abcdecdf";
     //std::string str2 = "cd";
