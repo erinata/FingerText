@@ -720,12 +720,97 @@ void restoreTab(int &posCurrent, int &posSelectionStart, int &posSelectionEnd)
     ::SendScintilla(SCI_TAB,0,0);	
 }
 
+int searchPrevMatchedSign(char* tagSign, char* tagTail)
+{
+    int signSpot = -1;
+    int tailSpot = -1;
+    int unmatchedTail = 0;
+    
+    do
+    {
+        
+        int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+        tailSpot = searchPrev(tagTail);
+        ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
+        signSpot = searchPrev(tagSign);
+        if (signSpot == -1) 
+        {
+            
+            return -1;
+        }
+
+        if ((signSpot > tailSpot) && (unmatchedTail == 0))
+        {
+            
+            return signSpot;
+        } else if (signSpot > tailSpot)
+        {
+            ::SendScintilla(SCI_GOTOPOS,signSpot,0);
+            unmatchedTail--;
+        } else
+        {
+            ::SendScintilla(SCI_GOTOPOS,tailSpot,0);
+            unmatchedTail++;
+        
+        }
+        
+    } while (1);
+    return -1;
+}
+
+int searchNextMatchedTail(char* tagSign, char* tagTail)
+{
+    // This function is tested to work when the position is at the end of tagSign
+
+    int signSpot = -1;
+    int tailSpot = -1;
+    int unmatchedSign = 0;
+    
+    do
+    {
+        
+        int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+        signSpot = searchNext(tagSign);
+        if (signSpot != -1) signSpot = signSpot+4;
+        ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
+        tailSpot = searchNext(tagTail);
+        if (tailSpot != -1) tailSpot = tailSpot+3;
+        
+        //alertNumber(tailSpot);
+        //alertNumber(signSpot);
+        //alertNumber(unmatchedSign); 
+        
+        if (tailSpot == -1) return -1;
+               
+        
+        //if (signSpot == -1) return tailSpot;
+
+
+        if (((signSpot > tailSpot) || ((signSpot == -1)  && (tailSpot>=0))) && (unmatchedSign == 0))
+        {
+            return tailSpot;
+        } else if (((signSpot > tailSpot) || ((signSpot == -1)  && (tailSpot>=0))))
+        {
+            ::SendScintilla(SCI_GOTOPOS,tailSpot,0);
+            unmatchedSign--;
+        } else
+        {
+            
+            ::SendScintilla(SCI_GOTOPOS,signSpot,0);
+            unmatchedSign++;
+        
+        }
+        
+    } while (1);
+    return -1;
+}
+
 // TODO: refactor the dynamic hotspot functions
 bool dynamicHotspot(int &startingPos)
 {
     int checkPoint = startingPos;    
     bool normalSpotTriggered = false;
-
+    
     char tagSign[] = "$[![";
     //int tagSignLength = strlen(tagSign);
     int tagSignLength = 4;
@@ -743,7 +828,7 @@ bool dynamicHotspot(int &startingPos)
     int limitCounter = 0;
     do 
     {
-     
+        //alertString(g_hotspotParams[0]);
         ::SendScintilla(SCI_GOTOPOS,checkPoint,0);
         spot = searchNext(tagTail);   // Find the tail first so that nested snippets are triggered correctly
         //spot = searchNext(curScintilla, tagSign);
@@ -752,7 +837,10 @@ bool dynamicHotspot(int &startingPos)
 	    {
             checkPoint = ::SendScintilla(SCI_GETCURRENTPOS,0,0)+1;
             spotComplete = -1;
-            spotComplete = searchPrev(tagSign);
+            //spotComplete = searchPrev(tagSign);
+
+            spotComplete = searchPrevMatchedSign(tagSign,tagTail);
+
             if (spotComplete>=0)
             {
 
@@ -760,51 +848,63 @@ bool dynamicHotspot(int &startingPos)
                 int secondPos = 0;
                 spotType = grabHotSpotContent(&hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength);
                 
-                if ((spotType>0) && (!normalSpotTriggered))
+                if (spotType>0)
                 {
-                    ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)hotSpotText+5);
+
+                    if (!normalSpotTriggered)
+                    {
+                        ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)hotSpotText+5);
                  
-                    ::SendScintilla(SCI_GOTOPOS,secondPos+3,0); // TODO: Check whether this GOTOPOS is necessary
+                        ::SendScintilla(SCI_GOTOPOS,secondPos+3,0); // TODO: Check whether this GOTOPOS is necessary
                 
-                    //TODO: checkPoint = firstPos; not needed?
+                        //TODO: checkPoint = firstPos; not needed?
                 
-                    if (spotType == 1)
-                    {
-                        checkPoint = firstPos;
-                        chainSnippet(firstPos, hotSpotText+5);
-                        
-                        limitCounter++;
-                    } else if (spotType == 2)
-                    {
-                        checkPoint = firstPos;
-                        keyWordSpot(firstPos,hotSpotText+5, startingPos, checkPoint);
-                        
-                        limitCounter++;
-                    } else if (spotType == 3)
-                    {
-                        checkPoint = firstPos;
-                        executeCommand(firstPos, hotSpotText+5);
-                        
-                        limitCounter++;
-                    } else if (spotType == 4)
-                    {
-                        checkPoint = firstPos;
-                        launchMessageBox(firstPos,hotSpotText+5);
+                        if (spotType == 1)
+                        {
+                            checkPoint = firstPos;
+                            chainSnippet(firstPos, hotSpotText+5);
+                            
+                            limitCounter++;
+                        } else if (spotType == 2)
+                        {
+                            checkPoint = firstPos;
+                            keyWordSpot(firstPos,hotSpotText+5, startingPos, checkPoint);
+                            
+                            limitCounter++;
+                        } else if (spotType == 3)
+                        {
+                            checkPoint = firstPos;
+                            executeCommand(firstPos, hotSpotText+5);
+                            
+                            limitCounter++;
+                        } else if (spotType == 4)
+                        {
+                            checkPoint = firstPos;
+                            launchMessageBox(firstPos,hotSpotText+5);
 
-                        limitCounter++;
-                    } else if (spotType == 5)
-                    {
-                        checkPoint = firstPos;
-                        evaluateExpression(firstPos,hotSpotText+5);
+                            limitCounter++;
+                        } else if (spotType == 5)
+                        {
+                            checkPoint = firstPos;
+                            evaluateExpression(firstPos,hotSpotText+5);
 
-                        limitCounter++;
+                            limitCounter++;
+                        }
+                    } else
+                    {
+                        //alert();
                     }
                 }
                 else
                 {
+                    if (!g_hotspotParams.empty())
+                    {
+                        paramsInsertion(firstPos,hotSpot,checkPoint);
+                    } else
+                    {
+                        normalSpotTriggered = true;
+                    }
 
-                    normalSpotTriggered = true;
-                    paramsInsertion(firstPos,hotSpot);
                     limitCounter++;
                 }
             }
@@ -825,7 +925,7 @@ bool dynamicHotspot(int &startingPos)
     return false;
 }
 
-void paramsInsertion(int &firstPos, char* hotSpot)
+void paramsInsertion(int &firstPos, char* hotSpot, int &checkPoint)
 {
     if (!g_hotspotParams.empty())
     {
@@ -839,6 +939,7 @@ void paramsInsertion(int &firstPos, char* hotSpot)
         {
             
             //::SendScintilla(SCI_SETSEL,firstPos,secondPos+3);
+            bool first = true;
             int found;
             do
             {
@@ -846,7 +947,15 @@ void paramsInsertion(int &firstPos, char* hotSpot)
                 found = searchNext(hotSpot);
                 //endPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
                 //::SendScintilla(SCI_SETSEL,endPos-strlen(hotSpot),endPos);
-                if (found >=0) ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)hotspotParamsCharArray);
+                if (found >=0)
+                {
+                    if (first)
+                    {
+                        checkPoint = checkPoint - strlen(hotSpot) +strlen(hotspotParamsCharArray);
+                        first = false;
+                    }
+                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)hotspotParamsCharArray);
+                }
                 //alertNumber(found);
             } while (found >= 0);
         }
@@ -3789,9 +3898,11 @@ void tabActivate()
 void testing2()
 {
     ::MessageBox(nppData._nppHandle, TEXT("Testing2!"), NPP_PLUGIN_NAME, MB_OK);
+    //searchNext("]!]");
+    //searchPrev("$[![");
+    alertNumber(searchPrevMatchedSign("$[![","]!]"));
     //HWND curScintilla = getCurrentScintilla();
 }
-
 
 
 void testing()
@@ -3799,6 +3910,7 @@ void testing()
     
     //HWND curScintilla = getCurrentScintilla();
     alertCharArray("testing1");
+    alertNumber(searchNextMatchedTail("$[![","]!]"));
     ////Testing Find and replace
     //std::string str1 = "abcdecdf";
     //std::string str2 = "cd";

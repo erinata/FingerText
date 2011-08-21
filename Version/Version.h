@@ -38,4 +38,4 @@
 #define PLUGIN_NAME "FingerText"
 #define COPYRIGHT_TEXT "Copyright (C) 2011"
 #define DESCRIPTION_TEXT "A snippet plugin for notepad++"
-#define MENU_LENGTH 15
+#define MENU_LENGTH 19
