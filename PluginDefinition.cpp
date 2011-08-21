@@ -724,6 +724,7 @@ void restoreTab(int &posCurrent, int &posSelectionStart, int &posSelectionEnd)
 bool dynamicHotspot(int &startingPos)
 {
     int checkPoint = startingPos;    
+    bool normalSpotTriggered = false;
 
     char tagSign[] = "$[![";
     //int tagSignLength = strlen(tagSign);
@@ -746,7 +747,7 @@ bool dynamicHotspot(int &startingPos)
         ::SendScintilla(SCI_GOTOPOS,checkPoint,0);
         spot = searchNext(tagTail);   // Find the tail first so that nested snippets are triggered correctly
         //spot = searchNext(curScintilla, tagSign);
-        alertNumber(spot);
+        
         if (spot>=0)
 	    {
             checkPoint = ::SendScintilla(SCI_GETCURRENTPOS,0,0)+1;
@@ -759,33 +760,40 @@ bool dynamicHotspot(int &startingPos)
                 int secondPos = 0;
                 spotType = grabHotSpotContent(&hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength,true);
                 
+                // TODO: consider moving this part to the function calling grabHotSpotContent, this facilitates at least the implementation of (nor) hotspot
+                if ((spotType>0) && (!normalSpotTriggered))
+                {
+                    ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)hotSpotText+5);
+                } 
+                ::SendScintilla(SCI_GOTOPOS,secondPos+3,0);
                 ///////////////////
                 //TODO: checkPoint = firstPos; not needed?
-                if (spotType == 1)
+                
+                if ((spotType == 1) && (!normalSpotTriggered))
                 {
                     checkPoint = firstPos;
                     chainSnippet(firstPos, hotSpotText+5);
                     
                     limitCounter++;
-                } else if (spotType == 2)
+                } else if ((spotType == 2) && (!normalSpotTriggered))
                 {
                     checkPoint = firstPos;
                     keyWordSpot(firstPos,hotSpotText+5, startingPos, checkPoint);
                     
                     limitCounter++;
-                } else if (spotType == 3)
+                } else if ((spotType == 3) && (!normalSpotTriggered))
                 {
                     checkPoint = firstPos;
                     executeCommand(firstPos, hotSpotText+5);
                     
                     limitCounter++;
-                } else if (spotType == 4)
+                } else if ((spotType == 4) && (!normalSpotTriggered))
                 {
                     checkPoint = firstPos;
                     launchMessageBox(firstPos,hotSpotText+5);
 
                     limitCounter++;
-                } else if (spotType == 5)
+                } else if ((spotType == 5) && (!normalSpotTriggered))
                 {
                     checkPoint = firstPos;
                     evaluateExpression(firstPos,hotSpotText+5);
@@ -794,6 +802,7 @@ bool dynamicHotspot(int &startingPos)
                 }
                 else
                 {
+                    normalSpotTriggered = true;
                     paramsInsertion(firstPos,hotSpot);
                     limitCounter++;
                 }
@@ -801,7 +810,7 @@ bool dynamicHotspot(int &startingPos)
             //////////////////////
         }
         
-    } while ((spotComplete>=0) && (spot>0) && (limitCounter<g_chainLimit) && (spotType!=0));
+    } while ((spotComplete>=0) && (spot>0) && (limitCounter<g_chainLimit));  // && (spotType!=0)
 
     //TODO: loosen the limit to the limit of special spot, and ++limit for every search so that less frezze will happen
     if (limitCounter>=g_chainLimit) ::MessageBox(nppData._nppHandle, TEXT("Dynamic hotspots triggering limit exceeded."), NPP_PLUGIN_NAME, MB_OK);
@@ -1475,7 +1484,11 @@ bool hotSpotNavigation()
             int firstPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
             int secondPos = 0;
             grabHotSpotContent(&hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength,false);
-            
+
+            ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)hotSpotText);
+
+            ::SendScintilla(SCI_GOTOPOS,secondPos+3,0);  
+
             ::SendScintilla(SCI_GOTOPOS,firstPos,0);
 
             int tempOptionStart = 0;
@@ -1643,15 +1656,6 @@ int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &sec
     *hotSpot = new char[secondPos+3 - firstPos + 1];
     ::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(*hotSpot));
 
-    // TODO: consider moving this part to the function calling grabHotSpotContent, this facilitates at least the implementation of (nor) hotspot
-    if ((spotType>0) && (dynamic))
-    {
-        ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)*hotSpotText+5);
-    } else if (!dynamic)
-    {
-        ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)*hotSpotText);
-    }
-    ::SendScintilla(SCI_GOTOPOS,secondPos+3,0);
     
     return spotType;
     //return secondPos;  
