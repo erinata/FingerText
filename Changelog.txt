@@ -2,6 +2,7 @@ changelog (for developers only, include unreleased versions)
 
 0.5.32
 ****** Fixed: a bug causing nested normal hotspot not triggering in correct sequence is fixed.
+****** Improved performance by removing redundant check during parameter insertion
 
 0.5.31
 - Fixed: freeze when closing npp immediately after upgrade 

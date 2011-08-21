@@ -743,7 +743,7 @@ bool dynamicHotspot(int &startingPos)
     int limitCounter = 0;
     do 
     {
-        
+     
         ::SendScintilla(SCI_GOTOPOS,checkPoint,0);
         spot = searchNext(tagTail);   // Find the tail first so that nested snippets are triggered correctly
         //spot = searchNext(curScintilla, tagSign);
@@ -758,59 +758,59 @@ bool dynamicHotspot(int &startingPos)
 
                 int firstPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
                 int secondPos = 0;
-                spotType = grabHotSpotContent(&hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength,true);
+                spotType = grabHotSpotContent(&hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength);
                 
-                // TODO: consider moving this part to the function calling grabHotSpotContent, this facilitates at least the implementation of (nor) hotspot
                 if ((spotType>0) && (!normalSpotTriggered))
                 {
                     ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)hotSpotText+5);
-                } 
-                ::SendScintilla(SCI_GOTOPOS,secondPos+3,0);
-                ///////////////////
-                //TODO: checkPoint = firstPos; not needed?
+                 
+                    ::SendScintilla(SCI_GOTOPOS,secondPos+3,0); // TODO: Check whether this GOTOPOS is necessary
                 
-                if ((spotType == 1) && (!normalSpotTriggered))
-                {
-                    checkPoint = firstPos;
-                    chainSnippet(firstPos, hotSpotText+5);
-                    
-                    limitCounter++;
-                } else if ((spotType == 2) && (!normalSpotTriggered))
-                {
-                    checkPoint = firstPos;
-                    keyWordSpot(firstPos,hotSpotText+5, startingPos, checkPoint);
-                    
-                    limitCounter++;
-                } else if ((spotType == 3) && (!normalSpotTriggered))
-                {
-                    checkPoint = firstPos;
-                    executeCommand(firstPos, hotSpotText+5);
-                    
-                    limitCounter++;
-                } else if ((spotType == 4) && (!normalSpotTriggered))
-                {
-                    checkPoint = firstPos;
-                    launchMessageBox(firstPos,hotSpotText+5);
+                    //TODO: checkPoint = firstPos; not needed?
+                
+                    if (spotType == 1)
+                    {
+                        checkPoint = firstPos;
+                        chainSnippet(firstPos, hotSpotText+5);
+                        
+                        limitCounter++;
+                    } else if (spotType == 2)
+                    {
+                        checkPoint = firstPos;
+                        keyWordSpot(firstPos,hotSpotText+5, startingPos, checkPoint);
+                        
+                        limitCounter++;
+                    } else if (spotType == 3)
+                    {
+                        checkPoint = firstPos;
+                        executeCommand(firstPos, hotSpotText+5);
+                        
+                        limitCounter++;
+                    } else if (spotType == 4)
+                    {
+                        checkPoint = firstPos;
+                        launchMessageBox(firstPos,hotSpotText+5);
 
-                    limitCounter++;
-                } else if ((spotType == 5) && (!normalSpotTriggered))
-                {
-                    checkPoint = firstPos;
-                    evaluateExpression(firstPos,hotSpotText+5);
+                        limitCounter++;
+                    } else if (spotType == 5)
+                    {
+                        checkPoint = firstPos;
+                        evaluateExpression(firstPos,hotSpotText+5);
 
-                    limitCounter++;
+                        limitCounter++;
+                    }
                 }
                 else
                 {
+
                     normalSpotTriggered = true;
                     paramsInsertion(firstPos,hotSpot);
                     limitCounter++;
                 }
             }
-            //////////////////////
         }
         
-    } while ((spotComplete>=0) && (spot>0) && (limitCounter<g_chainLimit));  // && (spotType!=0)
+    } while ((spotComplete>=0) && (spot>0) && (limitCounter<g_chainLimit) && !((g_hotspotParams.empty()) && (normalSpotTriggered))  );  // && (spotType!=0)
 
     //TODO: loosen the limit to the limit of special spot, and ++limit for every search so that less frezze will happen
     if (limitCounter>=g_chainLimit) ::MessageBox(nppData._nppHandle, TEXT("Dynamic hotspots triggering limit exceeded."), NPP_PLUGIN_NAME, MB_OK);
@@ -1483,11 +1483,9 @@ bool hotSpotNavigation()
         {
             int firstPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
             int secondPos = 0;
-            grabHotSpotContent(&hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength,false);
+            grabHotSpotContent(&hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength);
 
             ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)hotSpotText);
-
-            ::SendScintilla(SCI_GOTOPOS,secondPos+3,0);  
 
             ::SendScintilla(SCI_GOTOPOS,firstPos,0);
 
@@ -1617,10 +1615,8 @@ bool hotSpotNavigation()
     return false;
 }
 
-int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, bool dynamic)
+int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength)
 {
-    //TODO: examine whether the bool dynamic is still needed, or we just use the (cha) (key) (cmd) and (opt) to determine what should happen
-    
     int spotType = 0;
 
     searchNext("]!]");

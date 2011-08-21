@@ -80,7 +80,7 @@ void launchMessageBox(int &firstPos, char* hotSpotText);
 void evaluateExpression(int &firstPos, char* hotSpotText);
 void chainSnippet(int &firstPos, char* hotSpotText);
 bool hotSpotNavigation();
-int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, bool dynamic);
+int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength);
 void showPreview(bool top = false);
 void emptyFile(TCHAR* fileName);
 void writeDefaultGroupFile();
