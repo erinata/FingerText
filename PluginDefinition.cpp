@@ -66,6 +66,8 @@ bool g_rectSelection;
 
 int g_editorLineCount;
 
+int g_lastTriggerPosition;
+
 // For option hotspot
 bool g_optionMode;
 //bool g_optionOperating;
@@ -73,6 +75,8 @@ int g_optionStartPosition;
 int g_optionEndPosition;
 int g_optionCurrent;
 int g_optionNumber;
+
+
 //char *g_optionArray[] = {"","","","","","","","","","","","","","","","","","","",""};
 char *g_optionArray[] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 
@@ -722,6 +726,8 @@ void restoreTab(int &posCurrent, int &posSelectionStart, int &posSelectionEnd)
 
 int searchPrevMatchedSign(char* tagSign, char* tagTail)
 {
+    //This function works when the caret is at the beginning of tagtail
+    // it return the position at the beginning of the tagsign if found
     int signSpot = -1;
     int tailSpot = -1;
     int unmatchedTail = 0;
@@ -761,30 +767,31 @@ int searchPrevMatchedSign(char* tagSign, char* tagTail)
 int searchNextMatchedTail(char* tagSign, char* tagTail)
 {
     // This function is tested to work when the position is at the end of tagSign
+    // And this return the position at the END of tailsign, if found
+   
 
     int signSpot = -1;
     int tailSpot = -1;
     int unmatchedSign = 0;
     
+    int signLength = strlen(tagSign);
+    int tailLength = strlen(tagTail);
+
     do
     {
         
         int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
         signSpot = searchNext(tagSign);
-        if (signSpot != -1) signSpot = signSpot+4;
+        if (signSpot != -1) signSpot = signSpot+signLength;
         ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
         tailSpot = searchNext(tagTail);
-        if (tailSpot != -1) tailSpot = tailSpot+3;
+        if (tailSpot != -1) tailSpot = tailSpot+tailLength;
         
         //alertNumber(tailSpot);
         //alertNumber(signSpot);
         //alertNumber(unmatchedSign); 
         
         if (tailSpot == -1) return -1;
-               
-        
-        //if (signSpot == -1) return tailSpot;
-
 
         if (((signSpot > tailSpot) || ((signSpot == -1)  && (tailSpot>=0))) && (unmatchedSign == 0))
         {
@@ -795,10 +802,8 @@ int searchNextMatchedTail(char* tagSign, char* tagTail)
             unmatchedSign--;
         } else
         {
-            
             ::SendScintilla(SCI_GOTOPOS,signSpot,0);
             unmatchedSign++;
-        
         }
         
     } while (1);
@@ -806,19 +811,19 @@ int searchNextMatchedTail(char* tagSign, char* tagTail)
 }
 
 // TODO: refactor the dynamic hotspot functions
-bool dynamicHotspot(int &startingPos)
+bool dynamicHotspot(int &startingPos, char* tagSign = "$[![", char* tagTail = "]!]")
 {
     int checkPoint = startingPos;    
     bool normalSpotTriggered = false;
     
-    char tagSign[] = "$[![";
+    //char tagSign[] = "$[![";
+    //int tagSignLength = strlen(tagSign);
+    //char tagTail[] = "]!]";
+    //int tagTailLength = strlen(tagTail);
+
     //int tagSignLength = strlen(tagSign);
     int tagSignLength = 4;
-    char tagTail[] = "]!]";
-    //int tagTailLength = strlen(tagTail);
-    
-    //int tagSignLength = strlen(tagSign);
-    //int tagSignLength = 4;
+
     char* hotSpotText;
     char* hotSpot;
     int spot = -1;
@@ -1276,6 +1281,8 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
         //TODO: lots of issues in the GET and CUT keywords, when nothing can be cut
         //TODO: write a function to get the command and parameter sepearately. or turn this whole thing into a new type of hotspot
         //TODO: a complete rewrite of GET, GET:, GETALL, GETLINE, CUT, CUT:
+
+        //TODO: remember to deal with g_lastTriggerPosition when rewriting CUT and GET
         
         emptyFile(g_fttempPath);
         char* getTerm;
@@ -1570,15 +1577,15 @@ char* getDateTime(char *format, bool getDate, int flags)
 //    return spotFound;
 //}
 
-bool hotSpotNavigation()
+bool hotSpotNavigation(char* tagSign = "$[![" , char* tagTail= "]!]")
 {
     // TODO: consolidate this part with dynamic hotspots? 
 
-    char tagSign[] = "$[![";
+    //char tagSign[] = "$[![";
     //int tagSignLength = strlen(tagSign);
-    int tagSignLength = 4;
-    char tagTail[] = "]!]";
+    //char tagTail[] = "]!]";
     //int tagTailLength = strlen(tagTail);
+    int tagSignLength = 4;
 
     char *hotSpotText;
     char *hotSpot;
@@ -1988,6 +1995,8 @@ void initialize()
     g_optionEndPosition = 0;
     g_optionCurrent = 0;
     g_optionNumber = 0;
+
+    g_lastTriggerPosition = 0;
     
     //g_customScope = "";
     //g_display=false;
@@ -3067,6 +3076,7 @@ void updateScintilla()
 void updateMode()
 {
     updateScintilla();
+    g_lastTriggerPosition = 0;
     //TODO: should change to edit mode and normal mode by a button, and dynamically adjust the dock content
     //HWND curScintilla = getCurrentScintilla();
     TCHAR fileType[MAX_PATH];
@@ -3191,17 +3201,17 @@ void showAbout()
     _tcscat_s(versionText, TEXT(" "));
     _tcscat_s(versionText, TEXT(VERSION_TEXT));
     _tcscat_s(versionText, TEXT(VERSION_TEXT_STAGE));
-    _tcscat_s(versionText,TEXT("\
-\r\n\
-July 2011\r\n\r\n\
-Author: Tom Lam\r\n\
-Email: erinata@gmail.com\r\n\r\n\
-Update to the lastest version:\r\n\
-     http://sourceforge.net/projects/fingertext/ \r\n\
-Usage Guide and Source code:\r\n\
-     http://github.com/erinata/FingerText \r\n\r\n\
-(Snippets created using FingerText 0.3.5 or earlier versions are not compatible with this version)\
-"));
+    _tcscat_s(versionText,TEXT("\r\n"));
+    _tcscat_s(versionText,TEXT(DATE_TEXT));
+
+    _tcscat_s(versionText,TEXT("\r\n\r\n"));
+    _tcscat_s(versionText,TEXT(AUTHOR_TEXT));
+    _tcscat_s(versionText,TEXT(EMAIL_TEXT));
+
+    _tcscat_s(versionText,TEXT("\r\n"));
+
+    _tcscat_s(versionText,TEXT(ABOUT_TEXT));
+
     ::MessageBox(nppData._nppHandle, versionText, NPP_PLUGIN_NAME, MB_OK);
 }
 
@@ -3765,7 +3775,7 @@ void tabActivate()
         //} else
         //{
             g_hotspotParams.clear();
-
+            
             g_liveHintUpdate--;
             g_selectionMonitor--;
             
@@ -3779,8 +3789,13 @@ void tabActivate()
                 tagFound = triggerTag(posCurrent);
             }
 
-            if (tagFound) ::SendScintilla(SCI_AUTOCCANCEL,0,0);
-            posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+            if (tagFound)
+            {
+                ::SendScintilla(SCI_AUTOCCANCEL,0,0);
+                posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+                g_lastTriggerPosition = posCurrent;
+            } 
+            
 
             bool navSpot = false;
             bool dynamicSpot = false;
@@ -3805,7 +3820,12 @@ void tabActivate()
                     //dynamicHotspot(curScintilla, posCurrent);
                 //}
 
-                //if (searchNext(curScintilla, "$[![(")>=0)  
+                if ((!tagFound) && (searchNext("$[![")<0))
+                {
+                    ::SendScintilla(SCI_GOTOPOS,g_lastTriggerPosition,0);
+                    posCurrent = g_lastTriggerPosition;
+                }
+
                 dynamicSpot = dynamicHotspot(posCurrent); //TODO: May still consider do some checking before going into dynamic hotspot for performance improvement
                     
                 if (g_preserveSteps==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
@@ -3814,6 +3834,7 @@ void tabActivate()
                 //{
                 ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
                 navSpot = hotSpotNavigation();
+
 
                 if ((navSpot) || (dynamicSpot)) ::SendScintilla(SCI_AUTOCCANCEL,0,0);
                 //}
@@ -3900,7 +3921,7 @@ void testing2()
     ::MessageBox(nppData._nppHandle, TEXT("Testing2!"), NPP_PLUGIN_NAME, MB_OK);
     //searchNext("]!]");
     //searchPrev("$[![");
-    alertNumber(searchPrevMatchedSign("$[![","]!]"));
+    //alertNumber(searchPrevMatchedSign("$[![","]!]"));
     //HWND curScintilla = getCurrentScintilla();
 }
 
@@ -3910,7 +3931,13 @@ void testing()
     
     //HWND curScintilla = getCurrentScintilla();
     alertCharArray("testing1");
-    alertNumber(searchNextMatchedTail("$[![","]!]"));
+
+
+    alertNumber(g_lastTriggerPosition);
+
+    //alertNumber(searchNextMatchedTail("$[![","]!]"));
+
+
     ////Testing Find and replace
     //std::string str1 = "abcdecdf";
     //std::string str2 = "cd";

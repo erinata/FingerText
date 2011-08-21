@@ -27,15 +27,26 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-#define VERSION_TEXT "0.5.31.0"
-#define VERSION_NUM 0,5,31,0
-#define VERSION_LINEAR 531
+#define VERSION_TEXT "0.5.32.0"
+#define VERSION_NUM 0,5,32,0
+#define VERSION_LINEAR 532
 #define VERSION_KEEP_CONFIG_START 500
-#define VERSION_KEEP_CONFIG_END 531
+#define VERSION_KEEP_CONFIG_END 532
 #define VERSION_TEXT_STAGE "(Alpha)"
 
 #define AUTHOR_NAME "erinata"
 #define PLUGIN_NAME "FingerText"
 #define COPYRIGHT_TEXT "Copyright (C) 2011"
 #define DESCRIPTION_TEXT "A snippet plugin for notepad++"
+
+#define DATE_TEXT "August 2011"
+#define AUTHOR_TEXT "Author: Tom Lam\r\n"
+#define EMAIL_TEXT "Email: erinata@gmail.com\r\n"
+#define ABOUT_TEXT "Update to the lastest version:\r\n\
+     http://sourceforge.net/projects/fingertext/ \r\n\
+Usage Guide and Source code:\r\n\
+     http://github.com/erinata/FingerText \r\n\r\n\
+(Snippets created using FingerText 0.3.5 or earlier versions are not compatible with this version)\
+"
+
 #define MENU_LENGTH 19
