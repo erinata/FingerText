@@ -1,7 +1,7 @@
 changelog (for developer use only, include unreleased versions)
 
-0.5.34
-****** delimiter of parameter insertion changed to , instead of ;
+0.5.33.4
+****** Added: user customizable delimiter of parameter insertion, default value is set to ,
 
 0.5.33.3
 ****** Changed keywords in finding external window

@@ -105,6 +105,7 @@ wchar_t* g_tempWindowKey;
 
 #define DEFAULT_CUSTOM_SCOPE TEXT("")
 #define DEFAULT_CUSTOM_ESCAPE_CHAR TEXT("")
+#define DEFAULT_PARAMS_DELIMITER TEXT(",")
 
 int g_snippetListLength;
 int g_snippetListOrderTagType;
@@ -124,6 +125,7 @@ int g_snippetDockState;
 
 TCHAR* g_customEscapeChar;
 TCHAR* g_customScope;
+TCHAR* g_paramsDelimiter;
 
 DockingDlg snippetDock;
 DummyStaticDlg	dummyStaticDlg;
@@ -1429,6 +1431,14 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
         startingPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
         checkPoint = startingPos;
         ::SendScintilla(SCI_CUT,0,0);
+    } else if (strcmp(hotSpotText,"COPYLINE")==0)
+    {
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        ::SendScintilla(SCI_SETSEL,startingPos-1,startingPos);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        ::SendScintilla(SCI_GOTOPOS,startingPos-1,0);
+        ::SendScintilla(SCI_HOMEEXTEND,0,0);
+        ::SendScintilla(SCI_COPY,0,0);
     } else if (strncmp(hotSpotText,"UPPER:",6)==0)
     {
         char* getTerm;
@@ -1443,6 +1453,10 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
         strcpy(getTerm,hotSpotText+6);
         ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)::_strlwr(getTerm));
         delete [] getTerm;
+    } else if (strcmp(hotSpotText,"FOCUS")==0)
+    {
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        setFocusToWindow();
     } else if (strncmp(hotSpotText,"FINDWIN:",8)==0)
     {
         char* getTerm;
@@ -1516,6 +1530,15 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
     } else if ((strncmp(hotSpotText,"COUNT_",6)==0) && (strncmp(hotSpotText+7,":",1)==0))
     {
         // TODO: fill in content for this COUNT keyword
+    } else
+    {
+        char* errorMessage = new char[strlen(hotSpotText)+40];
+        strcpy(errorMessage,"\r\n'");
+        strcat(errorMessage,hotSpotText);
+        strcat(errorMessage,"' is not a keyword in fingertext\r\n");
+        
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)errorMessage);
+        delete [] errorMessage;
     }
 
     //else if (strcmp(hotSpotText,"DATESHORT")==0)
@@ -2011,6 +2034,7 @@ void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
     delete [] g_snippetCache;
     delete [] g_customScope;
     delete [] g_customEscapeChar;
+    delete [] g_paramsDelimiter;
     //if (g_newUpdate) writeConfig();
     if (g_dbOpen)
     {
@@ -2026,6 +2050,7 @@ void initialize()
     g_enable = true;
     g_customScope = new TCHAR[MAX_PATH];
     g_customEscapeChar = new TCHAR[MAX_PATH];
+    g_paramsDelimiter = new TCHAR[2];
     g_selectionMonitor = 1;
     g_rectSelection = false;
 
@@ -2136,6 +2161,7 @@ void resetDefaultSettings()
 
     g_customScope = DEFAULT_CUSTOM_SCOPE;
     g_customEscapeChar = DEFAULT_CUSTOM_ESCAPE_CHAR;
+    g_paramsDelimiter = DEFAULT_PARAMS_DELIMITER;
 }
 
 //void saveCustomScope()
@@ -2163,6 +2189,8 @@ void writeConfig()
     
     writeConfigTextChar(g_customEscapeChar,TEXT("escape_char"));
     writeConfigTextChar(g_customScope,TEXT("custom_scope"));
+    writeConfigTextChar(g_paramsDelimiter,TEXT("params_delimiter"));
+    
 }
 
 void loadConfig()
@@ -2185,6 +2213,7 @@ void loadConfig()
 
     GetPrivateProfileString(NPP_PLUGIN_NAME, TEXT("escape_char"),DEFAULT_CUSTOM_ESCAPE_CHAR,g_customEscapeChar,MAX_PATH,g_iniPath);
     GetPrivateProfileString(NPP_PLUGIN_NAME, TEXT("custom_scope"),DEFAULT_CUSTOM_SCOPE,g_customScope,MAX_PATH,g_iniPath);
+    GetPrivateProfileString(NPP_PLUGIN_NAME, TEXT("params_delimiter"),DEFAULT_PARAMS_DELIMITER,g_paramsDelimiter,MAX_PATH,g_iniPath);
 }
 
 void setupConfigFile()
@@ -3683,7 +3712,8 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
                 ::SendScintilla(SCI_SETSELECTION,paramStart + 1,paramEnd - 1);
                 char* paramsContent = new char[paramEnd - 1 - (paramStart + 1) + 1];
                 ::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(paramsContent));
-                g_hotspotParams = split(paramsContent,',');
+                char paramsDelimiter = g_paramsDelimiter[0];
+                g_hotspotParams = split(paramsContent,paramsDelimiter);
                 ::SendScintilla(SCI_SETSELECTION,paramStart,paramEnd);
                 ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
                 delete [] paramsContent;
