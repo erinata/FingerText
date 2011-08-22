@@ -815,6 +815,7 @@ int searchNextMatchedTail(char* tagSign, char* tagTail)
 // TODO: refactor the dynamic hotspot functions
 bool dynamicHotspot(int &startingPos, char* tagSign = "$[![", char* tagTail = "]!]")
 {
+    
     int checkPoint = startingPos;    
     bool normalSpotTriggered = false;
     
@@ -835,6 +836,7 @@ bool dynamicHotspot(int &startingPos, char* tagSign = "$[![", char* tagTail = "]
     int limitCounter = 0;
     do 
     {
+        
         //alertString(g_hotspotParams[0]);
         ::SendScintilla(SCI_GOTOPOS,checkPoint,0);
         spot = searchNext(tagTail);   // Find the tail first so that nested snippets are triggered correctly
@@ -847,13 +849,14 @@ bool dynamicHotspot(int &startingPos, char* tagSign = "$[![", char* tagTail = "]
             //spotComplete = searchPrev(tagSign);
 
             spotComplete = searchPrevMatchedSign(tagSign,tagTail);
-
+            
             if (spotComplete>=0)
             {
 
                 int firstPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
                 int secondPos = 0;
-                spotType = grabHotSpotContent(&hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength);
+                
+                spotType = grabHotSpotContent(&hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength, tagTail);
                 
                 if (spotType>0)
                 {
@@ -921,7 +924,7 @@ bool dynamicHotspot(int &startingPos, char* tagSign = "$[![", char* tagTail = "]
 
     //TODO: loosen the limit to the limit of special spot, and ++limit for every search so that less frezze will happen
     if (limitCounter>=g_chainLimit) ::MessageBox(nppData._nppHandle, TEXT("Dynamic hotspots triggering limit exceeded."), NPP_PLUGIN_NAME, MB_OK);
-
+    
     if (limitCounter>0)
     {
         delete [] hotSpot;
@@ -1601,7 +1604,7 @@ bool hotSpotNavigation(char* tagSign = "$[![" , char* tagTail= "]!]")
         {
             int firstPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
             int secondPos = 0;
-            grabHotSpotContent(&hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength);
+            grabHotSpotContent(&hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength, tagTail);
 
             ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)hotSpotText);
 
@@ -1733,11 +1736,11 @@ bool hotSpotNavigation(char* tagSign = "$[![" , char* tagTail= "]!]")
     return false;
 }
 
-int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength)
+int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, char* tagTail = "]!]")
 {
     int spotType = 0;
 
-    searchNext("]!]");
+    searchNext(tagTail);
 	secondPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
 
     ::SendScintilla(SCI_SETSELECTION,firstPos+signLength,secondPos);
@@ -3876,43 +3879,53 @@ void tabActivate()
             
 
             bool navSpot = false;
+            bool dynamicSpot0 = false;
+            bool dynamicSpot1 = false;
+            bool dynamicSpot2 = false;
             bool dynamicSpot = false;
+
             if (g_editorView == false)
             {
- 
-                //int specialSpot = searchNext(curScintilla, "$[![");
-                //if (specialSpot>=0)
-                //{
-                    //::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
-                
-                    ////dynamic hotspot (chain snippet)
-                    //chainSnippet(curScintilla, posCurrent);
-                    //dynamicHotspot(curScintilla, posCurrent, 1);
-                    ////dynamic hotspot (keyword spot)
-                    //keyWordSpot(curScintilla, posCurrent);
-                    //dynamicHotspot(curScintilla, posCurrent, 2);
-                    ////dynamic hotspot (Command Line)
-                    //executeCommand(curScintilla, posCurrent);
-                    //dynamicHotspot(curScintilla, posCurrent, 3);
-
-                    //dynamicHotspot(curScintilla, posCurrent);
-                //}
-
-                if ((!tagFound) && (searchNext("$[![")<0))
+                if (!tagFound) 
                 {
-                    ::SendScintilla(SCI_GOTOPOS,g_lastTriggerPosition,0);
-                    posCurrent = g_lastTriggerPosition;
+                    if (searchNext("$[2[") < 0)
+                    {
+                        if (searchNext("$[1[")<0)
+                        {
+                            if (searchNext("$[![")<0)
+                            {
+                                ::SendScintilla(SCI_GOTOPOS,g_lastTriggerPosition,0);
+                                posCurrent = g_lastTriggerPosition;
+ 
+                            }
+                        }
+                    }
+                }
+                //TODO: turn this into array and while loop
+                //TODO: cater more level of priority 
+                dynamicSpot2 = dynamicHotspot(posCurrent,"$[2[","]2]");
+                ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
+                navSpot = hotSpotNavigation("$[2[","]2]");
+
+                if (navSpot == false)
+                {
+                    dynamicSpot1 = dynamicHotspot(posCurrent,"$[1[","]1]");
+                    ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
+                    navSpot = hotSpotNavigation("$[1[","]1]");
+                }
+                if (navSpot == false)
+                {
+                    dynamicSpot0 = dynamicHotspot(posCurrent); //TODO: May still consider do some checking before going into dynamic hotspot for performance improvement
+                    ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
+                    navSpot = hotSpotNavigation();
                 }
 
-                dynamicSpot = dynamicHotspot(posCurrent); //TODO: May still consider do some checking before going into dynamic hotspot for performance improvement
-                    
+                if ((dynamicSpot2) || (dynamicSpot1) || (dynamicSpot0)) dynamicSpot = true;
+                
+                //TODO: this line is position here so the priority spot can be implement, but this cause the 
+                //      1st hotspot not undoable when the snippet is triggered. More investigation on how to
+                //      manipulate the undo list is required to make these 2 features compatible
                 if (g_preserveSteps==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
-	            
-                //if (specialSpot>=0)
-                //{
-                ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
-                navSpot = hotSpotNavigation();
-
 
                 if ((navSpot) || (dynamicSpot)) ::SendScintilla(SCI_AUTOCCANCEL,0,0);
                 //}
@@ -3972,9 +3985,22 @@ void tabActivate()
 
 void testing2()
 {
+    //HWND curScintilla = getCurrentScintilla();
     ::MessageBox(nppData._nppHandle, TEXT("Testing2!"), NPP_PLUGIN_NAME, MB_OK);
 
 
+
+}
+
+
+void testing()
+{
+    
+    //HWND curScintilla = getCurrentScintilla();
+    alertCharArray("testing1");
+
+
+    
     //// getting windows by enum windows
     //
     //setFocusToWindow("Firefox");
@@ -4008,25 +4034,6 @@ void testing2()
     //
     //SetActiveWindow(nppData._nppHandle);
     //SetForegroundWindow(nppData._nppHandle);
-
-    
-    //searchNext("]!]");
-    //searchPrev("$[![");
-    //alertNumber(searchPrevMatchedSign("$[![","]!]"));
-    //HWND curScintilla = getCurrentScintilla();
-}
-
-
-void testing()
-{
-    
-    //HWND curScintilla = getCurrentScintilla();
-    alertCharArray("testing1");
-
-
-    alertNumber(g_lastTriggerPosition);
-
-    //alertNumber(searchNextMatchedTail("$[![","]!]"));
 
 
     ////Testing Find and replace

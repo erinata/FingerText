@@ -27,8 +27,8 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-#define VERSION_TEXT "0.5.33.0"
-#define VERSION_NUM 0,5,33,0
+#define VERSION_TEXT "0.5.33.1"
+#define VERSION_NUM 0,5,33,1
 #define VERSION_LINEAR 533
 #define VERSION_KEEP_CONFIG_START 500
 #define VERSION_KEEP_CONFIG_END 533
@@ -49,4 +49,4 @@ Usage Guide and Source code:\r\n\
 (Snippets created using FingerText 0.3.5 or earlier versions are not compatible with this version)\
 "
 
-#define MENU_LENGTH 15
+#define MENU_LENGTH 19
