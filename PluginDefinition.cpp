@@ -75,13 +75,15 @@ int g_optionStartPosition;
 int g_optionEndPosition;
 int g_optionCurrent;
 int g_optionNumber;
-
-
 //char *g_optionArray[] = {"","","","","","","","","","","","","","","","","","","",""};
 char *g_optionArray[] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 
 //For shorthand
 std::vector<std::string> g_hotspotParams;
+
+HWND g_tempWindowHandle;
+//std::string g_tempWindowKey;
+wchar_t* g_tempWindowKey;
 
 
 // Config file content
@@ -3699,6 +3701,69 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
 //}
 
 
+void GenerateKey(int vk, bool keyDown) {
+
+    KEYBDINPUT  kb = {0};
+    INPUT       Input = {0};
+
+    ZeroMemory(&kb, sizeof(KEYBDINPUT));
+    ZeroMemory(&Input, sizeof(INPUT));
+
+    if (keyDown)
+    {
+        kb.dwFlags  = 0;
+    } else
+    {
+        kb.dwFlags  =  KEYEVENTF_KEYUP;
+    }
+    kb.dwFlags |= KEYEVENTF_EXTENDEDKEY;
+
+    kb.wVk  = vk;
+    Input.type  = INPUT_KEYBOARD;
+    Input.ki  = kb;
+    SendInput(1, &Input, sizeof(Input));
+    ZeroMemory(&kb, sizeof(KEYBDINPUT));
+    ZeroMemory(&Input, sizeof(INPUT));
+    return;
+}
+
+BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
+{
+    TCHAR title[1000];
+    ZeroMemory(title, sizeof(title));
+    GetWindowText(hwnd, title, sizeof(title)/sizeof(title[0]));
+    if(_tcsstr(title, g_tempWindowKey))
+    {
+        g_tempWindowHandle = hwnd;
+        return false;
+    }
+    return true;
+    
+}
+
+void setFocusToWindow(std::string searchKey = "", bool enumChild = false, HWND parentWindow = 0)
+{
+    char* temp = new char [searchKey.size()+1];
+    strcpy(temp, searchKey.c_str());
+    convertToWideChar(temp, &g_tempWindowKey);
+    
+    if (enumChild)
+    {
+        EnumChildWindows(parentWindow, enumWindowsProc, 0);
+    } else
+    {
+        EnumWindows(enumWindowsProc, 0);
+    }
+    SetActiveWindow(g_tempWindowHandle);
+    SetForegroundWindow(g_tempWindowHandle);
+
+    delete [] temp;
+    delete [] g_tempWindowKey;
+
+}
+
+
+
 char* getLangTagType()
 {
     int curLang = 0;
@@ -3719,6 +3784,9 @@ char* getLangTagType()
     return s[curLang];
     //return "";
 }
+
+
+
 
 void tabActivate()
 {
@@ -3891,34 +3959,46 @@ void tabActivate()
 //    
 //}
 
-//void GenerateKey(int vk, BOOL bExtended) {
-//
-//    KEYBDINPUT  kb = {0};
-//    INPUT       Input = {0};
-//
-//    /* Generate a "key down" */
-//    if (bExtended) { kb.dwFlags  = KEYEVENTF_EXTENDEDKEY; }
-//    kb.wVk  = vk;
-//    Input.type  = INPUT_KEYBOARD;
-//    Input.ki  = kb;
-//    SendInput(1, &Input, sizeof(Input));
-//
-//    /* Generate a "key up" */
-//    ZeroMemory(&kb, sizeof(KEYBDINPUT));
-//    ZeroMemory(&Input, sizeof(INPUT));
-//    kb.dwFlags  =  KEYEVENTF_KEYUP;
-//    if (bExtended) { kb.dwFlags |= KEYEVENTF_EXTENDEDKEY; }
-//    kb.wVk = vk;
-//    Input.type = INPUT_KEYBOARD;
-//    Input.ki = kb;
-//    SendInput(1, &Input, sizeof(Input));
-//
-//    return;
-//}
 
 void testing2()
 {
     ::MessageBox(nppData._nppHandle, TEXT("Testing2!"), NPP_PLUGIN_NAME, MB_OK);
+
+
+    // getting windows by enum windows
+    
+    setFocusToWindow("Firefox");
+    ::Sleep(2000);
+    setFocusToWindow("Notepad++");
+    ::Sleep(2000);
+    setFocusToWindow("RGui");
+    ::Sleep(2000);
+    setFocusToWindow("Console",true,g_tempWindowHandle);
+
+    
+
+    ////testing generatekey and get other windows
+    //HWND hwnd;
+    //hwnd = FindWindow(NULL,TEXT("RGui"));
+    //
+    //
+    //SetActiveWindow(hwnd);
+    //SetForegroundWindow(hwnd);
+    //
+    //::GenerateKey(VK_CONTROL, true);
+    //::GenerateKey(0x56, true);
+    //::GenerateKey(0x56, false);
+    //::GenerateKey(VK_CONTROL, false);
+    //
+    ////::Sleep(1000);
+    //::GenerateKey(VK_RETURN, true);
+    //::GenerateKey(VK_RETURN, false);
+    //::Sleep(1000);
+    //
+    //SetActiveWindow(nppData._nppHandle);
+    //SetForegroundWindow(nppData._nppHandle);
+
+    
     //searchNext("]!]");
     //searchPrev("$[![");
     //alertNumber(searchPrevMatchedSign("$[![","]!]"));

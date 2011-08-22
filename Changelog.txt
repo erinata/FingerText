@@ -1,10 +1,10 @@
 changelog (for developers only, include unreleased versions)
 
 0.5.32
-- Fixed: a bug causing nested normal hotspot not triggering in correct sequence is fixed.
-- Improved performance by removing redundant check during parameter insertion
-- Hotspot that skipped by manually moving the caret will be pick up after all other hotspots are triggered
-
+****** Fixed: a bug causing nested normal hotspot not triggering in correct sequence is fixed.
+****** Improved performance by removing redundant check during parameter insertion
+****** Hotspot that skipped by manually moving the caret will be pick up after all other hotspots are triggered
+****** Add functions to prepare for future implementation of getting window focus and type in another window
 
 0.5.31
 - Fixed: freeze when closing npp immediately after upgrade 

@@ -139,6 +139,10 @@ void convertToWideChar(char* orig, wchar_t **wideChar);
 void insertPath(TCHAR* path);
 void insertNppPath(int msg);
 
+void GenerateKey(int vk, bool keyDown);
+BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam);
+void setFocusToWindow(std::string searchKey, bool enumChild, HWND parentWindow);
+
 void selectionMonitor(int contentChange);
 bool triggerTag(int &posCurrent,bool triggerTextComplete = false,int triggerLength = 0);
 void tagComplete();
