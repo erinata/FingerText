@@ -1443,6 +1443,42 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
         strcpy(getTerm,hotSpotText+6);
         ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)::_strlwr(getTerm));
         delete [] getTerm;
+    } else if (strncmp(hotSpotText,"FINDWIN:",8)==0)
+    {
+        char* getTerm;
+        getTerm = new char[strlen(hotSpotText)];
+        strcpy(getTerm,hotSpotText+8);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        ::std::string tempString(getTerm);
+        ::searchWindowByName(tempString);
+        delete [] getTerm;
+    } else if (strncmp(hotSpotText,"FINDCHILD:",10)==0)
+    {
+        char* getTerm;
+        getTerm = new char[strlen(hotSpotText)];
+        strcpy(getTerm,hotSpotText+10);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        ::std::string tempString(getTerm);
+        ::searchWindowByName(tempString,g_tempWindowHandle);
+        delete [] getTerm;
+    } else if (strncmp(hotSpotText,"KEYDOWN:",8)==0)
+    {
+        char* getTerm;
+        getTerm = new char[strlen(hotSpotText)];
+        strcpy(getTerm,hotSpotText+8);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        setFocusToWindow();
+        generateKey(toVk(getTerm),true);
+        delete [] getTerm;
+    } else if (strncmp(hotSpotText,"KEYUP:",6)==0)
+    {
+        char* getTerm;
+        getTerm = new char[strlen(hotSpotText)];
+        strcpy(getTerm,hotSpotText+6);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        setFocusToWindow();
+        generateKey(toVk(getTerm),false);
+        delete [] getTerm;
     } else if (strncmp(hotSpotText,"TIME:",5)==0)
     {
         char* getTerm;
@@ -3647,7 +3683,7 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
                 ::SendScintilla(SCI_SETSELECTION,paramStart + 1,paramEnd - 1);
                 char* paramsContent = new char[paramEnd - 1 - (paramStart + 1) + 1];
                 ::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(paramsContent));
-                g_hotspotParams = split(paramsContent,';');
+                g_hotspotParams = split(paramsContent,',');
                 ::SendScintilla(SCI_SETSELECTION,paramStart,paramEnd);
                 ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
                 delete [] paramsContent;
@@ -3703,30 +3739,37 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
 //    return tagFound;
 //}
 
+void generateStroke(int vk)
+{
+    generateKey(vk,true);
+    generateKey(vk,false);
+}
 
-void GenerateKey(int vk, bool keyDown) {
+void generateKey(int vk, bool keyDown) 
+{
+    if (vk == 0) return;
 
-    KEYBDINPUT  kb = {0};
-    INPUT       Input = {0};
+    KEYBDINPUT kb = {0};
+    INPUT input = {0};
 
     ZeroMemory(&kb, sizeof(KEYBDINPUT));
-    ZeroMemory(&Input, sizeof(INPUT));
+    ZeroMemory(&input, sizeof(INPUT));
 
     if (keyDown)
     {
-        kb.dwFlags  = 0;
+        kb.dwFlags = 0;
     } else
     {
-        kb.dwFlags  =  KEYEVENTF_KEYUP;
+        kb.dwFlags = KEYEVENTF_KEYUP;
     }
     kb.dwFlags |= KEYEVENTF_EXTENDEDKEY;
 
     kb.wVk  = vk;
-    Input.type  = INPUT_KEYBOARD;
-    Input.ki  = kb;
-    SendInput(1, &Input, sizeof(Input));
+    input.type  = INPUT_KEYBOARD;
+    input.ki  = kb;
+    SendInput(1, &input, sizeof(input));
     ZeroMemory(&kb, sizeof(KEYBDINPUT));
-    ZeroMemory(&Input, sizeof(INPUT));
+    ZeroMemory(&input, sizeof(INPUT));
     return;
 }
 
@@ -3744,17 +3787,15 @@ BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
     
 }
 
-void setFocusToWindow(std::string searchKey = "", HWND parentWindow = 0)
+void searchWindowByName(std::string searchKey, HWND parentWindow)
 {
+
     if (searchKey == "")
     {
-        SetActiveWindow(nppData._nppHandle);
-        SetForegroundWindow(nppData._nppHandle);
-
-
+        g_tempWindowHandle = nppData._nppHandle;
+        
     } else
     {
-
         char* temp = new char [searchKey.size()+1];
         strcpy(temp, searchKey.c_str());
         convertToWideChar(temp, &g_tempWindowKey);
@@ -3766,15 +3807,19 @@ void setFocusToWindow(std::string searchKey = "", HWND parentWindow = 0)
         {
             EnumWindows(enumWindowsProc, 0);
         }
-        SetActiveWindow(g_tempWindowHandle);
-        SetForegroundWindow(g_tempWindowHandle);
-
         delete [] temp;
         delete [] g_tempWindowKey;
     }
 
 }
 
+void setFocusToWindow()
+{
+    
+    SetActiveWindow(g_tempWindowHandle);
+    SetForegroundWindow(g_tempWindowHandle);
+    
+}
 
 
 char* getLangTagType()
@@ -3814,6 +3859,7 @@ void tabActivate()
     } else
     {
         int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+        int posTriggerStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
         int lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION,posCurrent,0);
 
         if ((g_editorView == true) && (lineCurrent <=2))
@@ -3896,13 +3942,15 @@ void tabActivate()
                             {
                                 ::SendScintilla(SCI_GOTOPOS,g_lastTriggerPosition,0);
                                 posCurrent = g_lastTriggerPosition;
- 
+                
                             }
                         }
                     }
                 }
                 //TODO: turn this into array and while loop
-                //TODO: cater more level of priority 
+                //TODO: cater more level of priority
+                //TODO: Params inertion will stop when navSpot is true, so it is not working properly under differnt level of priority
+                //      Or in other words it only work for the highest existing level of priority
                 dynamicSpot2 = dynamicHotspot(posCurrent,"$[2[","]2]");
                 ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
                 navSpot = hotSpotNavigation("$[2[","]2]");
@@ -3942,7 +3990,9 @@ void tabActivate()
             {
                 if ((navSpot == false) && (tagFound == false) && (dynamicSpot==false)) 
 	    	    {
-                    ::SendScintilla(SCI_GOTOPOS, posCurrent, 0);
+                    
+                    ::SendScintilla(SCI_GOTOPOS, posTriggerStart, 0);
+                    posCurrent = posTriggerStart;
                     //completeFound = snippetComplete();
                     completeFound = triggerTag(posCurrent,true);
                     if (completeFound)
@@ -3981,15 +4031,149 @@ void tabActivate()
 //    system("npp -multiInst");
 //    
 //}
+int toVk(char* input)
+{
+    if (strlen(input) == 1)
+    {
+        return (int)input[0];
+    }
+
+    //if (strcmp(input,"1") == 0) return 0x31;
+    //else if (strcmp(input,"2") == 0) return 0x32;
+    //else if (strcmp(input,"3") == 0) return 0x33;
+    //else if (strcmp(input,"4") == 0) return 0x34;
+    //else if (strcmp(input,"5") == 0) return 0x35;
+    //else if (strcmp(input,"6") == 0) return 0x36;
+    //else if (strcmp(input,"7") == 0) return 0x37;
+    //else if (strcmp(input,"8") == 0) return 0x38;
+    //else if (strcmp(input,"9") == 0) return 0x39;
+    //else if (strcmp(input,"0") == 0) return 0x30;
+    //else if (strcmp(input,"A") == 0) return 0x41;
+    //else if (strcmp(input,"B") == 0) return 0x42;
+    //else if (strcmp(input,"C") == 0) return 0x43;
+    //else if (strcmp(input,"D") == 0) return 0x44;
+    //else if (strcmp(input,"E") == 0) return 0x45;
+    //else if (strcmp(input,"F") == 0) return 0x46;
+    //else if (strcmp(input,"G") == 0) return 0x47;
+    //else if (strcmp(input,"H") == 0) return 0x48;
+    //else if (strcmp(input,"I") == 0) return 0x49;
+    //else if (strcmp(input,"J") == 0) return 0x4A;
+    //else if (strcmp(input,"K") == 0) return 0x4B;
+    //else if (strcmp(input,"L") == 0) return 0x4C;
+    //else if (strcmp(input,"M") == 0) return 0x4D;
+    //else if (strcmp(input,"N") == 0) return 0x4E;
+    //else if (strcmp(input,"O") == 0) return 0x4F;
+    //else if (strcmp(input,"P") == 0) return 0x50;
+    //else if (strcmp(input,"Q") == 0) return 0x51;
+    //else if (strcmp(input,"R") == 0) return 0x52;
+    //else if (strcmp(input,"S") == 0) return 0x53;
+    //else if (strcmp(input,"T") == 0) return 0x54;
+    //else if (strcmp(input,"U") == 0) return 0x55;
+    //else if (strcmp(input,"V") == 0) return 0x56;
+    //else if (strcmp(input,"W") == 0) return 0x57;
+    //else if (strcmp(input,"X") == 0) return 0x58;
+    //else if (strcmp(input,"Y") == 0) return 0x59;
+    //else if (strcmp(input,"Z") == 0) return 0x5A;
+
+    if (strcmp(input,"BACK") == 0) return 0x08;
+    else if (strcmp(input,"TAB") == 0) return 0x09;
+    else if (strcmp(input,"CLEAR") == 0) return 0x0C;
+    else if (strcmp(input,"RETURN") == 0) return 0x0D;
+    else if (strcmp(input,"SHIFT") == 0) return 0x10;
+    else if (strcmp(input,"CONTROL") == 0) return 0x11;
+    else if (strcmp(input,"MENU") == 0) return 0x12;
+    else if (strcmp(input,"PAUSE") == 0) return 0x13;
+    else if (strcmp(input,"CAPITAL") == 0) return 0x14;
+    else if (strcmp(input,"ESCAPE") == 0) return 0x1B;
+    else if (strcmp(input,"SPACE") == 0) return 0x20;
+    else if (strcmp(input,"PRIOR") == 0) return 0x21;
+    else if (strcmp(input,"NEXT") == 0) return 0x22;
+    else if (strcmp(input,"END") == 0) return 0x23;
+    else if (strcmp(input,"HOME") == 0) return 0x24;
+    else if (strcmp(input,"LEFT") == 0) return 0x25;
+    else if (strcmp(input,"UP") == 0) return 0x26;
+    else if (strcmp(input,"RIGHT") == 0) return 0x27;
+    else if (strcmp(input,"DOWN") == 0) return 0x28;
+    else if (strcmp(input,"SELECT") == 0) return 0x29;
+    else if (strcmp(input,"EXECUTE") == 0) return 0x2B;
+    else if (strcmp(input,"SNAPSHOT") == 0) return 0x2C;
+    else if (strcmp(input,"INSERT") == 0) return 0x2D;
+    else if (strcmp(input,"DELETE") == 0) return 0x2E;
+    else if (strcmp(input,"HELP") == 0) return 0x2F;
+    else if (strcmp(input,"LWIN") == 0) return 0x5B;
+    else if (strcmp(input,"RWIN") == 0) return 0x5C;
+    else if (strcmp(input,"APPS") == 0) return 0x5D;
+    else if (strcmp(input,"NUMPAD0") == 0) return 0x60;
+    else if (strcmp(input,"NUMPAD1") == 0) return 0x61;
+    else if (strcmp(input,"NUMPAD2") == 0) return 0x62;
+    else if (strcmp(input,"NUMPAD3") == 0) return 0x63;
+    else if (strcmp(input,"NUMPAD4") == 0) return 0x64;
+    else if (strcmp(input,"NUMPAD5") == 0) return 0x65;
+    else if (strcmp(input,"NUMPAD6") == 0) return 0x66;
+    else if (strcmp(input,"NUMPAD7") == 0) return 0x67;
+    else if (strcmp(input,"NUMPAD8") == 0) return 0x68;
+    else if (strcmp(input,"NUMPAD9") == 0) return 0x69;
+    else if (strcmp(input,"MULTIPLY") == 0) return 0x6A;
+    else if (strcmp(input,"ADD") == 0) return 0x6B;
+    else if (strcmp(input,"SEPARATOR") == 0) return 0x6C;
+    else if (strcmp(input,"SUBTRACT") == 0) return 0x6D;
+    else if (strcmp(input,"DECIMAL") == 0) return 0x6E;
+    else if (strcmp(input,"DIVIDE") == 0) return 0x6F;
+    else if (strcmp(input,"F1") == 0) return 0x70;
+    else if (strcmp(input,"F2") == 0) return 0x71;
+    else if (strcmp(input,"F3") == 0) return 0x72;
+    else if (strcmp(input,"F4") == 0) return 0x73;
+    else if (strcmp(input,"F5") == 0) return 0x74;
+    else if (strcmp(input,"F6") == 0) return 0x75;
+    else if (strcmp(input,"F7") == 0) return 0x76;
+    else if (strcmp(input,"F8") == 0) return 0x77;
+    else if (strcmp(input,"F9") == 0) return 0x78;
+    else if (strcmp(input,"F10") == 0) return 0x79;
+    else if (strcmp(input,"F11") == 0) return 0x7A;
+    else if (strcmp(input,"F12") == 0) return 0x7B;
+    else if (strcmp(input,"F13") == 0) return 0x7C;
+    else if (strcmp(input,"F14") == 0) return 0x7D;
+    else if (strcmp(input,"F15") == 0) return 0x7E;
+    else if (strcmp(input,"F16") == 0) return 0x7F;
+    else if (strcmp(input,"F17") == 0) return 0x80;
+    else if (strcmp(input,"F18") == 0) return 0x81;
+    else if (strcmp(input,"F19") == 0) return 0x82;
+    else if (strcmp(input,"F20") == 0) return 0x83;
+    else if (strcmp(input,"F21") == 0) return 0x84;
+    else if (strcmp(input,"F22") == 0) return 0x85;
+    else if (strcmp(input,"F23") == 0) return 0x86;
+    else if (strcmp(input,"F24") == 0) return 0x87;
+    else if (strcmp(input,"NUMLOCK") == 0) return 0x90;
+    else if (strcmp(input,"SCROLL") == 0) return 0x91;
+    else if (strcmp(input,"LSHIFT") == 0) return 0xA0;
+    else if (strcmp(input,"RSHIFT") == 0) return 0xA1;
+    else if (strcmp(input,"LCONTROL") == 0) return 0xA2;
+    else if (strcmp(input,"RCONTROL") == 0) return 0xA3;
+    else if (strcmp(input,"LMENU") == 0) return 0xA4;
+    else if (strcmp(input,"RMENU") == 0) return 0xA5;
+    else return 0;
+    //TODO: complete this list
+
+}
+
+
+
+
+
+
+
 
 
 void testing2()
 {
     //HWND curScintilla = getCurrentScintilla();
     ::MessageBox(nppData._nppHandle, TEXT("Testing2!"), NPP_PLUGIN_NAME, MB_OK);
-
-
-
+    searchWindowByName("R Console");
+    setFocusToWindow();
+    ::generateKey(VK_CONTROL, true);
+    ::generateStroke(0x56);
+    ::generateKey(VK_CONTROL, false);
+    ::generateStroke(VK_RETURN);
 }
 
 
@@ -3999,17 +4183,17 @@ void testing()
     //HWND curScintilla = getCurrentScintilla();
     alertCharArray("testing1");
 
+    // test getting windows by enum windows
+    searchWindowByName("RGui");
+    searchWindowByName("R Console",g_tempWindowHandle);
+    setFocusToWindow();
+    ::generateKey(toVk("CONTROL"), true);
+    ::generateStroke(toVk("V"));
+    ::generateKey(toVk("CONTROL"), false);
+    ::generateStroke(VK_RETURN);
+    //HWND tempWindowHandle = ::FindWindowEx(g_tempWindowHandle, 0, TEXT("Edit"),0);
 
-    
-    //// getting windows by enum windows
-    //
-    //setFocusToWindow("Firefox");
-    //::Sleep(2000);
-    //setFocusToWindow();
-    //::Sleep(2000);
-    //setFocusToWindow("RGui");
-    //::Sleep(2000);
-    //setFocusToWindow("Console",g_tempWindowHandle);
+
 
 
     

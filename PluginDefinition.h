@@ -49,6 +49,8 @@
 const TCHAR NPP_PLUGIN_NAME[] = TEXT(PLUGIN_NAME);   // Plugin name
 const int nbFunc = MENU_LENGTH;    // Number of your plugin commands
 
+//TODO: move all the default values to declaration
+
 // Functions in the plugin template(NppPluginTemplate) provided by Don Ho. 
 void pluginInit(HANDLE hModule);   // Initialization of your plugin data; called while plugin loading
 void pluginCleanUp();    // Cleaning of your plugin; called while plugin unloading
@@ -74,7 +76,7 @@ void writeConfigText(int configInt, TCHAR* section);
 void restoreTab(int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
 int searchPrevMatchedSign(char* tagSign, char* tagTail);
 int searchPrevMatchedTail(char* tagSign, char* tagTail);
-bool dynamicHotspot(int &startingPos, char* tagSign, char* tagTail);
+bool dynamicHotspot(int &startingPos, char* tagSign, char* tagTail, bool normalSpotTriggered);
 void paramsInsertion(int &firstPos, char* hotSpot, int &checkPoint);
 void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint);
 void executeCommand(int &firstPos, char* hotSpotText);
@@ -139,9 +141,11 @@ void convertToWideChar(char* orig, wchar_t **wideChar);
 void insertPath(TCHAR* path);
 void insertNppPath(int msg);
 
-void GenerateKey(int vk, bool keyDown);
+void generateStroke(int vk);
+void generateKey(int vk, bool keyDown);
 BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam);
-void setFocusToWindow(std::string searchKey, HWND parentWindow);
+void setFocusToWindow();
+void searchWindowByName(std::string searchKey = "", HWND parentWindow = 0);
 
 void selectionMonitor(int contentChange);
 bool triggerTag(int &posCurrent,bool triggerTextComplete = false,int triggerLength = 0);
@@ -154,6 +158,8 @@ void addOptionItem(char* item);
 void cleanOptionItem();
 void turnOffOptionMode();
 void optionNavigate(bool toNext);
+
+int toVk(char* input);
 
 void testing();
 void testing2();

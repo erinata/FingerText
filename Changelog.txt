@@ -1,9 +1,20 @@
 changelog (for developer use only, include unreleased versions)
 
-0.5.33
+0.5.34
+****** delimiter of parameter insertion changed to , instead of ;
+
+0.5.33.3
+****** Changed keywords in finding external window
+****** Add FINDCHILD
+
+0.5.33.2
+****** Fixed: tag_tab_completion notworking
+****** Added: keyword to send keys to external window
+
+0.5.33.1
 ****** Added: priority hotspots
 
-0.5.32
+0.5.33
 - Fixed: a bug causing nested normal hotspot not triggering in correct sequence is fixed.
 - Improved performance by removing redundant check during parameter insertion
 - Hotspot that skipped by manually moving the caret will be pick up after all other hotspots are triggered
