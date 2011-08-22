@@ -174,9 +174,13 @@ void Expression::processExpression(std::string input)
     this->toPostfix(infix);  // convert infix to postfix
 }
 
+
+
 std::string Expression::rephrasing(std::string input)
 {
-    //TODO: cater lower case
+    int length = input.length();
+    for (int j=0; j<length; ++j) input[j]=tolower(input[j]);
+
     findAndReplace(input,"pi","3.141592654");
     findAndReplace(input,"!","!0");
     findAndReplace(input,"ln","0l");
@@ -217,7 +221,7 @@ void Expression::toPostfix(std::string infix)
             }
             //else if ((*p == '(') || (*p == ')'))
             //{
-                parseOperator(*p);
+            parseOperator(*p);
             //}
         } else if (isDigit(*p))
             if (*p == '.') 

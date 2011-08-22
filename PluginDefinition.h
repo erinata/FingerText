@@ -97,8 +97,8 @@ bool hotSpotNavigation(HWND &curScintilla);
 //void insertChainSnippetSign();
 //void insertKeyWordSpotSign();
 //void insertCommandLineSign();
-bool getLineChecked(char **buffer, int lineNumber, TCHAR* errorText);
 void insertTagSign(char * tagSign);
+bool getLineChecked(char **buffer, int lineNumber, TCHAR* errorText);
 bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag);
 void openDatabase();
 int getCurrentTag(int posCurrent, char **buffer, int triggerLength = 0);
@@ -141,7 +141,7 @@ void insertNppPath(int msg);
 
 void GenerateKey(int vk, bool keyDown);
 BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam);
-void setFocusToWindow(std::string searchKey, bool enumChild, HWND parentWindow);
+void setFocusToWindow(std::string searchKey, HWND parentWindow);
 
 void selectionMonitor(int contentChange);
 bool triggerTag(int &posCurrent,bool triggerTextComplete = false,int triggerLength = 0);
@@ -169,4 +169,3 @@ std::vector<std::string> split(char* str, char c = ' ');
 //std::vector<std::string> split2(char* str, char c1, char c2, char c3);
 
 #endif //PLUGINDEFINITION_H
-

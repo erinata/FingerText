@@ -555,7 +555,7 @@ bool getLineChecked(char **buffer, int lineNumber, TCHAR* errorText)
         char* wordChar;
         if (lineNumber==2)
         {
-            wordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_:";
+            wordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_:.";
             
         } else //if (lineNumber==1)
         {
@@ -3741,24 +3741,34 @@ BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
     
 }
 
-void setFocusToWindow(std::string searchKey = "", bool enumChild = false, HWND parentWindow = 0)
+void setFocusToWindow(std::string searchKey = "", HWND parentWindow = 0)
 {
-    char* temp = new char [searchKey.size()+1];
-    strcpy(temp, searchKey.c_str());
-    convertToWideChar(temp, &g_tempWindowKey);
-    
-    if (enumChild)
+    if (searchKey == "")
     {
-        EnumChildWindows(parentWindow, enumWindowsProc, 0);
+        SetActiveWindow(nppData._nppHandle);
+        SetForegroundWindow(nppData._nppHandle);
+
+
     } else
     {
-        EnumWindows(enumWindowsProc, 0);
-    }
-    SetActiveWindow(g_tempWindowHandle);
-    SetForegroundWindow(g_tempWindowHandle);
 
-    delete [] temp;
-    delete [] g_tempWindowKey;
+        char* temp = new char [searchKey.size()+1];
+        strcpy(temp, searchKey.c_str());
+        convertToWideChar(temp, &g_tempWindowKey);
+        
+        if (parentWindow != 0)
+        {
+            EnumChildWindows(parentWindow, enumWindowsProc, 0);
+        } else
+        {
+            EnumWindows(enumWindowsProc, 0);
+        }
+        SetActiveWindow(g_tempWindowHandle);
+        SetForegroundWindow(g_tempWindowHandle);
+
+        delete [] temp;
+        delete [] g_tempWindowKey;
+    }
 
 }
 
@@ -3965,15 +3975,16 @@ void testing2()
     ::MessageBox(nppData._nppHandle, TEXT("Testing2!"), NPP_PLUGIN_NAME, MB_OK);
 
 
-    // getting windows by enum windows
-    
-    setFocusToWindow("Firefox");
-    ::Sleep(2000);
-    setFocusToWindow("Notepad++");
-    ::Sleep(2000);
-    setFocusToWindow("RGui");
-    ::Sleep(2000);
-    setFocusToWindow("Console",true,g_tempWindowHandle);
+    //// getting windows by enum windows
+    //
+    //setFocusToWindow("Firefox");
+    //::Sleep(2000);
+    //setFocusToWindow();
+    //::Sleep(2000);
+    //setFocusToWindow("RGui");
+    //::Sleep(2000);
+    //setFocusToWindow("Console",g_tempWindowHandle);
+
 
     
 
@@ -4545,7 +4556,6 @@ void alertVector(std::vector<std::string> v)
         alertString(v[i]);
         i++;
     }
-
 }
 
 void findAndReplace(std::string& str, const std::string& oldStr, const std::string& newStr)

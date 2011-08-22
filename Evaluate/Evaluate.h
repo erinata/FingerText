@@ -37,6 +37,8 @@
 #include <sstream>
 #include <stack>
 #include <vector>
+#include <cctype>
+
 
 #define OPERATOR 0
 #define OPERAND 1
