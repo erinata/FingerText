@@ -85,7 +85,6 @@ HWND g_tempWindowHandle;
 //std::string g_tempWindowKey;
 wchar_t* g_tempWindowKey;
 
-
 // Config file content
 #define DEFAULT_SNIPPET_LIST_LENGTH 1000
 #define DEFAULT_SNIPPET_LIST_ORDER_TAG_TYPE 1
@@ -154,6 +153,8 @@ DummyStaticDlg	dummyStaticDlg;
 #define TESTING_INDEX 17
 #define TESTING2_INDEX 18
 
+//TODO: Add icon to messageboxes
+
 // Initialize your plugin data here; called while plugin loading   
 void pluginInit(HANDLE hModule)
 {
@@ -183,12 +184,6 @@ void commandMenuInit()
 	shKey->_isCtrl = false;
 	shKey->_isShift = false;
 	shKey->_key = VK_TAB;
-
-    //ShortcutKey *shKey2 = new ShortcutKey;
-	//shKey2->_isAlt = false;
-	//shKey2->_isCtrl = true;
-	//shKey2->_isShift = false;
-	//shKey2->_key = VK_F4;
 
     setCommand(TRIGGER_SNIPPET_INDEX, TEXT("Trigger Snippet/Navigate to Hotspot"), tabActivate, shKey, false);
     
@@ -225,11 +220,8 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
     //            bool check0nInit                // optional. Make this menu item be checked visually
     //            );
 
-    if (index >= nbFunc)
-        return false;
-
-    if (!pFunc)
-        return false;
+    if (index >= nbFunc) return false;
+    if (!pFunc) return false;
 
     lstrcpy(funcItem[index]._itemName, cmdName);
     funcItem[index]._pFunc = pFunc;
@@ -288,7 +280,7 @@ void openDummyStaticDlg(void)
 //
 //}
 
-char *findTagSQLite(char *tag, char *tagCompare, bool similar=false)
+char *findTagSQLite(char *tag, char *tagCompare, bool similar)
 {
     //alertCharArray(tagCompare);
 	char *expanded = NULL;
@@ -815,7 +807,7 @@ int searchNextMatchedTail(char* tagSign, char* tagTail)
 }
 
 // TODO: refactor the dynamic hotspot functions
-bool dynamicHotspot(int &startingPos, char* tagSign = "$[![", char* tagTail = "]!]")
+bool dynamicHotspot(int &startingPos, char* tagSign, char* tagTail)
 {
     
     int checkPoint = startingPos;    
@@ -1641,7 +1633,7 @@ char* getDateTime(char *format, bool getDate, int flags)
 //    return spotFound;
 //}
 
-bool hotSpotNavigation(char* tagSign = "$[![" , char* tagTail= "]!]")
+bool hotSpotNavigation(char* tagSign, char* tagTail)
 {
     // TODO: consolidate this part with dynamic hotspots? 
 
@@ -1795,7 +1787,7 @@ bool hotSpotNavigation(char* tagSign = "$[![" , char* tagTail= "]!]")
     return false;
 }
 
-int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, char* tagTail = "]!]")
+int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, char* tagTail)
 {
     int spotType = 0;
 
@@ -3889,7 +3881,7 @@ void tabActivate()
     } else
     {
         int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-        int posTriggerStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+        //int posTriggerStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
         int lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION,posCurrent,0);
 
         if ((g_editorView == true) && (lineCurrent <=2))
@@ -4021,8 +4013,8 @@ void tabActivate()
                 if ((navSpot == false) && (tagFound == false) && (dynamicSpot==false)) 
 	    	    {
                     
-                    ::SendScintilla(SCI_GOTOPOS, posTriggerStart, 0);
-                    posCurrent = posTriggerStart;
+                    ::SendScintilla(SCI_GOTOPOS, posSelectionStart, 0);
+                    posCurrent = posSelectionStart;
                     //completeFound = snippetComplete();
                     completeFound = triggerTag(posCurrent,true);
                     if (completeFound)

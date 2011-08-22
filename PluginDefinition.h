@@ -49,8 +49,6 @@
 const TCHAR NPP_PLUGIN_NAME[] = TEXT(PLUGIN_NAME);   // Plugin name
 const int nbFunc = MENU_LENGTH;    // Number of your plugin commands
 
-//TODO: move all the default values to declaration
-
 // Functions in the plugin template(NppPluginTemplate) provided by Don Ho. 
 void pluginInit(HANDLE hModule);   // Initialization of your plugin data; called while plugin loading
 void pluginCleanUp();    // Cleaning of your plugin; called while plugin unloading
@@ -66,6 +64,7 @@ sptr_t SendScintilla(unsigned int iMessage, uptr_t wParam, sptr_t lParam);
 void updateScintilla();
 
 // Functions for Fingertext
+char *findTagSQLite(char *tag, char *tagCompare, bool similar = false);
 void openDummyStaticDlg(void);
 void toggleDisable();
 void writeConfig();
@@ -76,15 +75,15 @@ void writeConfigText(int configInt, TCHAR* section);
 void restoreTab(int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
 int searchPrevMatchedSign(char* tagSign, char* tagTail);
 int searchPrevMatchedTail(char* tagSign, char* tagTail);
-bool dynamicHotspot(int &startingPos, char* tagSign, char* tagTail, bool normalSpotTriggered);
+bool dynamicHotspot(int &startingPos, char* tagSign = "$[![", char* tagTail = "]!]");
 void paramsInsertion(int &firstPos, char* hotSpot, int &checkPoint);
 void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint);
 void executeCommand(int &firstPos, char* hotSpotText);
 void launchMessageBox(int &firstPos, char* hotSpotText);
 void evaluateExpression(int &firstPos, char* hotSpotText);
 void chainSnippet(int &firstPos, char* hotSpotText);
-bool hotSpotNavigation(char* tagSign, char* tagTail);
-int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, char* tagTail);
+bool hotSpotNavigation(char* tagSign = "$[![", char* tagTail = "]!]");
+int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, char* tagTail = "]!]");
 void showPreview(bool top = false);
 void emptyFile(TCHAR* fileName);
 void writeDefaultGroupFile();
