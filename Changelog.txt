@@ -1,17 +1,18 @@
 changelog (for developer use only, include unreleased versions)
 
 0.5.34
-****** clean up reducdant caret position record
+- clean up redundant caret position record
+- Fixed: tab caused document to scroll in large documents
 
 0.5.33.4
-****** Added: user customizable delimiter of parameter insertion, default value is set to ,
+- Added: user customizable delimiter of parameter insertion, default value is set to ,
 
 0.5.33.3
-****** Changed keywords in finding external window to FINDWIN
-****** Add FINDCHILD
+- Changed keywords in finding external window to FINDWIN
+- Add FINDCHILD
 
 0.5.33.2
-****** Fixed: tag_tab_completion notworking
+- Fixed: tag_tab_completion notworking
 ****** Added: keyword to send keys to external window
 
 0.5.33.1

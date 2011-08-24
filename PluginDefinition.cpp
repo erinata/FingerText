@@ -3962,9 +3962,11 @@ void tabActivate()
                         {
                             if (searchNext("$[![")<0)
                             {
-                                ::SendScintilla(SCI_GOTOPOS,g_lastTriggerPosition,0);
-                                posCurrent = g_lastTriggerPosition;
-                
+                                if ((searchPrev("$[2[") >= 0) || (searchPrev("$[1[")>=0) || (searchPrev("$[![")>=0))
+                                {
+                                    ::SendScintilla(SCI_GOTOPOS,g_lastTriggerPosition,0);
+                                    posCurrent = g_lastTriggerPosition;
+                                }
                             }
                         }
                     }
@@ -3973,6 +3975,7 @@ void tabActivate()
                 //TODO: cater more level of priority
                 //TODO: Params inertion will stop when navSpot is true, so it is not working properly under differnt level of priority
                 //      Or in other words it only work for the highest existing level of priority
+                //TODO: not sure why the option system is working with priority, need to make sure
                 dynamicSpot2 = dynamicHotspot(posCurrent,"$[2[","]2]");
                 ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
                 navSpot = hotSpotNavigation("$[2[","]2]");
@@ -4002,7 +4005,6 @@ void tabActivate()
             } else
             {
                 if (g_preserveSteps==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
-
             }
 
             bool snippetHint = false;
@@ -4053,12 +4055,16 @@ void tabActivate()
 //    system("npp -multiInst");
 //    
 //}
+
 int toVk(char* input)
 {
     if (strlen(input) == 1)
     {
-        return (int)input[0];
+        char i = toupper(input[0]);
+        return (int)i;
     }
+    //TODO: cater lower case for other keywords
+
 
     //if (strcmp(input,"1") == 0) return 0x31;
     //else if (strcmp(input,"2") == 0) return 0x32;
