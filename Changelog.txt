@@ -1,11 +1,27 @@
 changelog (for developer use only, include unreleased versions)
 
+0.5.37
+****** Added: FTCUT and FTCOPY series, which is a copy of the CUT and COPY series but utilitize fingertext custom clipboard instead of the reguler clipboard
+****** Added: FTPASTE to retrieve text from fingertext custom clipboard
+****** Added: SETFILE, WRITE: and READ for writing and reading files
+****** Added: WRITETEMP and FTWRITETEMP for writing to the temp file, READTEMP for reading tempfile
+****** Changed: FINDWIN and FINDCHILD are changed to SETWIN SETCHILD WINFOCUS 
+****** Changed: the old non-published GET series is axed
+****** Fixed: import snippet character overflow problem
+
+
+0.5.36
+****** Changed: CUT and COPY keyword are referencing the start of hotspot instead of startingPos.
+****** Fixed: Params insertion cause fingertext to freeze
+****** Refactoring and clean the COPY and CUT keyword code
+
 0.5.35
 ****** Added: Customizable option delimiter of (opt), the default delimiter is set to be |
 ****** Changed: Increase the limit of total number of options to 50
 ****** Fixed: Pressing return key in the triggertext field of snippet editor cause annotation bug.
 ****** Added: dynamic hotspot (lis), which is a drop down box version of (opt)
 ****** Added: keyword KEYHIT, which is essentially the same as KEYDOWN + KEYUP
+****** Total rewrite of CUT: COPY: CUTLINE COPYLINE CUTDOC COPYDOC CUT'X' and COPY'X'
 
 0.5.34
 - clean up redundant caret position record

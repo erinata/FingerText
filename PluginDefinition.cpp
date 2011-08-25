@@ -50,6 +50,7 @@ TCHAR g_iniPath[MAX_PATH];
 TCHAR g_ftbPath[MAX_PATH];
 TCHAR g_fttempPath[MAX_PATH];
 TCHAR g_dataBasePath[MAX_PATH];
+TCHAR g_currentFocusPath[MAX_PATH];
 //TCHAR g_groupPath[MAX_PATH];
 
 SnipIndex* g_snippetCache;
@@ -67,6 +68,8 @@ bool g_rectSelection;
 int g_editorLineCount;
 
 int g_lastTriggerPosition;
+char* g_customClipBoard;
+
 
 // For option hotspot
 bool g_optionMode;
@@ -164,11 +167,13 @@ DummyStaticDlg	dummyStaticDlg;
 void pluginInit(HANDLE hModule)
 {
     g_hModule = hModule;
-    
+    g_customClipBoard = new char[1];
+    strcpy(g_customClipBoard,"");
 }
 
 void pluginCleanUp()
 {
+    delete [] g_customClipBoard;
     //TODO: think about how to save the parameters for the next session during clean up
     g_liveHintUpdate = 0;
     //saveCustomScope();
@@ -383,7 +388,6 @@ FingerText 0.3.5 or below use a 'one snippet per file' system to store snippets,
 ");
 
         ::SendMessage(getCurrentScintilla(), SCI_INSERTTEXT, 0, (LPARAM)welcomeText);
-
         delete [] welcomeText;
     }
 }
@@ -530,7 +534,7 @@ void deleteSnippet()
     }
     sqlite3_finalize(stmt);
     
-    updateDockItems(false,false);    
+    updateDockItems(false,false);
 }
 
 bool getLineChecked(char **buffer, int lineNumber, TCHAR* errorText)
@@ -1241,16 +1245,653 @@ void launchMessageBox(int &firstPos, char* hotSpotText)
     delete [] getTermWide;
 }
 
+
+//void textCopyCut(int type, int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint)
+//{
+//    if (type == 1)   // COPY
+//    {
+//        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//        ::SendScintilla(SCI_SETSEL,startingPos-1,startingPos);
+//        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//        ::SendScintilla(SCI_GOTOPOS,startingPos-1,0);
+//        ::SendScintilla(SCI_WORDLEFTEXTEND,0,0);
+//        ::SendScintilla(SCI_COPY,0,0);
+//    } else if (type == 2)    // CUT
+//    {
+//        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//        ::SendScintilla(SCI_SETSEL,startingPos-1,startingPos);
+//        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//        ::SendScintilla(SCI_GOTOPOS,startingPos-1,0);
+//        ::SendScintilla(SCI_WORDLEFTEXTEND,0,0);
+//        startingPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+//        if (checkPoint > startingPos) checkPoint = startingPos;
+//        if (g_lastTriggerPosition > startingPos) g_lastTriggerPosition = startingPos;
+//        ::SendScintilla(SCI_CUT,0,0);
+//    } else if (type == 3)     // COPY'
+//    {
+//        int keywordLength = 5;
+//        int hotSpotTextLength = strlen(hotSpotText);
+//        int paramNumber = 0;
+//        if (hotSpotTextLength - (keywordLength + 1) > 0)
+//        {
+//            char* param;
+//            param = new char[hotSpotTextLength - (keywordLength + 1) + 1];
+//            strncpy(param,hotSpotText+keywordLength,hotSpotTextLength - (keywordLength + 1));
+//            param[hotSpotTextLength - (keywordLength + 1)] = '\0';
+//            paramNumber = ::atoi(param);
+//        }
+//        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//        ::SendScintilla(SCI_SETSEL,startingPos-1,startingPos);
+//        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//
+//        if (paramNumber > 0)
+//        {
+//            
+//            int targetLine = (::SendScintilla(SCI_LINEFROMPOSITION,startingPos-1,0)) - paramNumber + 1;
+//            if (targetLine<0) targetLine = 0;
+//            int targetPos = ::SendScintilla(SCI_POSITIONFROMLINE,targetLine,0);
+//            ::SendScintilla(SCI_SETSELECTION, targetPos, startingPos-1);
+//            //::SendScintilla(SCI_GOTOPOS,startingPos-1,0);
+//            //::SendScintilla(SCI_WORDLEFTEXTEND,0,0);
+//            ::SendScintilla(SCI_COPY,0,0);
+//        
+//        }
+//    } else if (type == 4)     // CUT'
+//    {
+//        int keywordLength = 4;
+//        int hotSpotTextLength = strlen(hotSpotText);
+//        int paramNumber = 0;
+//        if (hotSpotTextLength - (keywordLength + 1) > 0)
+//        {
+//            char* param;
+//            param = new char[hotSpotTextLength - (keywordLength + 1) + 1];
+//            strncpy(param,hotSpotText+keywordLength,hotSpotTextLength - (keywordLength + 1));
+//            param[hotSpotTextLength - (keywordLength + 1)] = '\0';
+//            paramNumber = ::atoi(param);
+//        }
+//        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//        ::SendScintilla(SCI_SETSEL,startingPos-1,startingPos);
+//        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//
+//        if (paramNumber > 0)
+//        {
+//            
+//            int targetLine = (::SendScintilla(SCI_LINEFROMPOSITION,startingPos-1,0)) - paramNumber + 1;
+//            if (targetLine<0) targetLine = 0;
+//            int targetPos = ::SendScintilla(SCI_POSITIONFROMLINE,targetLine,0);
+//            ::SendScintilla(SCI_SETSELECTION, targetPos, startingPos-1);
+//
+//            if (checkPoint > startingPos) checkPoint = targetPos;
+//            if (g_lastTriggerPosition > startingPos) g_lastTriggerPosition = targetPos;
+//            //::SendScintilla(SCI_GOTOPOS,startingPos-1,0);
+//            //::SendScintilla(SCI_WORDLEFTEXTEND,0,0);
+//            ::SendScintilla(SCI_CUT,0,0);
+//        }
+//    } else if (type == 5)     // COPYLINE
+//    {
+//        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//        ::SendScintilla(SCI_SETSEL,startingPos-1,startingPos);
+//        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//        ::SendScintilla(SCI_GOTOPOS,startingPos-1,0);
+//        ::SendScintilla(SCI_HOMEEXTEND,0,0);
+//        ::SendScintilla(SCI_COPY,0,0);
+//    } else if (type == 6)     // CUTLINE
+//    {
+//        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//        ::SendScintilla(SCI_SETSEL,startingPos-1,startingPos);
+//        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//        ::SendScintilla(SCI_GOTOPOS,startingPos-1,0);
+//        ::SendScintilla(SCI_HOMEEXTEND,0,0);
+//        startingPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+//        if (checkPoint > startingPos) checkPoint = startingPos;
+//        if (g_lastTriggerPosition > startingPos) g_lastTriggerPosition = startingPos;
+//        ::SendScintilla(SCI_CUT,0,0);
+//    } else if (type == 7)     // COPYDOC
+//    {
+//        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//        ::SendScintilla(SCI_SETSEL,startingPos-1,startingPos);
+//        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//        ::SendScintilla(SCI_GOTOPOS,startingPos-1,0);
+//        ::SendScintilla(SCI_DOCUMENTSTARTEXTEND,0,0);
+//        ::SendScintilla(SCI_COPY,0,0);
+//    } else if (type == 8)     // CUTDOC
+//    {
+//        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//        ::SendScintilla(SCI_SETSEL,startingPos-1,startingPos);
+//        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//        ::SendScintilla(SCI_GOTOPOS,startingPos-1,0);
+//        ::SendScintilla(SCI_DOCUMENTSTARTEXTEND,0,0);
+//        startingPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+//        if (checkPoint > startingPos) checkPoint = startingPos;  //TODO: no need to check for this?
+//        if (g_lastTriggerPosition > startingPos) g_lastTriggerPosition = startingPos;
+//        ::SendScintilla(SCI_CUT,0,0);
+//    } else if (type == 9)     // COPY:
+//    {
+//        int hotSpotTextLength = 5;
+//        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//        
+//        if (startingPos !=0)
+//        {
+//            char* getTerm;
+//            getTerm = new char[strlen(hotSpotText)];
+//            strcpy(getTerm,hotSpotText+hotSpotTextLength);
+//            int scriptFound = -1;
+//            if (strlen(getTerm)>0)
+//            {
+//                ::SendScintilla(SCI_GOTOPOS,startingPos-1,0);
+//                scriptFound = searchPrev(getTerm);
+//            }
+//            delete [] getTerm;
+//            
+//            int selectionEnd = startingPos-1; // -1 because the space before the snippet tag should not be included
+//            int selectionStart;
+//
+//            int scriptStart = 0;
+//            if (scriptFound>=0)
+//            {
+//                scriptStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+//                selectionStart = scriptStart + strlen(hotSpotText) - hotSpotTextLength;
+//            } else
+//            {
+//                selectionStart = 0;
+//                scriptStart = 0;
+//            }
+//            
+//            if (selectionEnd>=selectionStart)
+//            {
+//                ::SendScintilla(SCI_SETSEL,selectionStart,selectionEnd);
+//                ::SendScintilla(SCI_COPY,0,0);
+//            } else
+//            {
+//                alertCharArray("keyword COPY: caused an error.");
+//            }
+//        } else
+//        {
+//            //TODO: error message when using CUT: at the beginning of the document?
+//        }
+//    } else if (type == 10)     // CUT:
+//    {
+//        int hotSpotTextLength = 4;
+//        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//        
+//        if (startingPos !=0)
+//        {
+//            char* getTerm;
+//            getTerm = new char[strlen(hotSpotText)];
+//            strcpy(getTerm,hotSpotText+hotSpotTextLength);
+//            int scriptFound = -1;
+//            if (strlen(getTerm)>0)
+//            {
+//                ::SendScintilla(SCI_GOTOPOS,startingPos-1,0);
+//                scriptFound = searchPrev(getTerm);
+//            }
+//            delete [] getTerm;
+//            
+//            int selectionEnd = startingPos-1; // -1 because the space before the snippet tag should not be included
+//            int selectionStart;
+//
+//            int scriptStart = 0;
+//            if (scriptFound>=0)
+//            {
+//                scriptStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+//                selectionStart = scriptStart+strlen(hotSpotText)-hotSpotTextLength;
+//            } else
+//            {
+//                selectionStart = 0;
+//                scriptStart = 0;
+//            }
+//            
+//            if (selectionEnd>=selectionStart)
+//            {
+//                ::SendScintilla(SCI_SETSEL,selectionStart,selectionEnd);
+//                ::SendScintilla(SCI_COPY,0,0);
+//                ::SendScintilla(SCI_SETSEL,scriptStart,selectionEnd+1); //+1 to make up the -1 in setting the selection End
+//                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//
+//                startingPos = scriptStart;
+//                if (checkPoint > startingPos) checkPoint = startingPos;
+//                if (g_lastTriggerPosition > startingPos) g_lastTriggerPosition = startingPos;
+//
+//            } else
+//            {
+//                alertCharArray("keyword CUT: caused an error.");
+//            }
+//        } else
+//        {
+//            //TODO: error message when using CUT: at the beginning of the document?
+//        }
+//    }
+//
+//}
+
+void addToCustomClipBoard(char* input)
+{
+    delete [] g_customClipBoard;
+    g_customClipBoard = new char[strlen(input)+1];
+    strcpy(g_customClipBoard, input);
+}
+
+
+void textCopyCut(int sourceType, int operationType, int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint)
+{
+    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+    if (firstPos != 0)
+    {
+        int scriptStart;
+        int selectionStart;
+        int selectionEnd;
+
+        ::SendScintilla(SCI_SETSEL,firstPos-1,firstPos);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        ::SendScintilla(SCI_GOTOPOS,firstPos-1,0);
+
+        if (sourceType == 1)
+        {
+            ::SendScintilla(SCI_WORDLEFTEXTEND,0,0);
+
+        } else if (sourceType == 2)     
+        {
+            ::SendScintilla(SCI_HOMEEXTEND,0,0);
+
+        } else if (sourceType == 3)
+        {
+            ::SendScintilla(SCI_DOCUMENTSTARTEXTEND,0,0);
+
+        } else if (sourceType == 4) 
+        {
+            int keywordLength;
+            if (operationType == 0) keywordLength = 4;
+            else if (operationType == 1) keywordLength = 5;
+            else if (operationType == 2) keywordLength = 6;
+            else if (operationType == 3) keywordLength = 7;
+
+            int hotSpotTextLength = strlen(hotSpotText);
+            int paramNumber = 0;
+            if (hotSpotTextLength - (keywordLength + 1) > 0)
+            {
+                char* param;
+                param = new char[hotSpotTextLength - (keywordLength + 1) + 1];
+                strncpy(param,hotSpotText+keywordLength,hotSpotTextLength - (keywordLength + 1));
+                param[hotSpotTextLength - (keywordLength + 1)] = '\0';
+                paramNumber = ::atoi(param);
+            }
+
+            if (paramNumber < 0) paramNumber = 0;
+            
+            int targetLine = (::SendScintilla(SCI_LINEFROMPOSITION,firstPos-1,0)) - paramNumber + 1;
+            if (targetLine<0) targetLine = 0;
+            int targetPos = ::SendScintilla(SCI_POSITIONFROMLINE,targetLine,0);
+            ::SendScintilla(SCI_SETSELECTION, targetPos, firstPos-1);
+
+
+        } else if (sourceType == 5)
+        {
+            int keywordLength;
+            if (operationType == 0) keywordLength = 4;
+            else if (operationType == 1) keywordLength = 5;
+            else if (operationType == 2) keywordLength = 6;
+            else if (operationType == 3) keywordLength = 7;
+
+            char* getTerm;
+            getTerm = new char[strlen(hotSpotText)];
+            strcpy(getTerm,hotSpotText+keywordLength);
+            int scriptFound = -1;
+            if (strlen(getTerm)>0) scriptFound = searchPrev(getTerm);
+            delete [] getTerm;
+            
+            selectionEnd = firstPos-1; // -1 because the space before the snippet tag should not be included
+
+            if (scriptFound>=0)
+            {
+                scriptStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+                selectionStart = scriptStart + strlen(hotSpotText) - keywordLength;
+            } else
+            {
+                scriptStart = 0;
+                selectionStart = 0;
+            }
+
+            if (selectionEnd < selectionStart) selectionStart = selectionEnd;
+            
+            ::SendScintilla(SCI_SETSEL,selectionStart,selectionEnd);
+        }
+
+        if (operationType == 0)
+        {
+            startingPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+            if (sourceType == 5) startingPos = scriptStart;
+            if (checkPoint > startingPos) checkPoint = startingPos;  
+            if (g_lastTriggerPosition > startingPos) g_lastTriggerPosition = startingPos;
+            ::SendScintilla(SCI_CUT,0,0);
+            if (sourceType == 5)
+            {
+                ::SendScintilla(SCI_SETSEL,scriptStart,selectionStart); //Delete the search key
+                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+            }
+        } else if (operationType == 1)  
+        {
+            ::SendScintilla(SCI_COPY,0,0);
+            
+        } else if (operationType == 2)
+        {
+            startingPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+            if (sourceType == 5) startingPos = scriptStart;
+            if (checkPoint > startingPos) checkPoint = startingPos;
+            if (g_lastTriggerPosition > startingPos) g_lastTriggerPosition = startingPos;
+            delete [] g_customClipBoard;
+            g_customClipBoard = new char [(::SendScintilla(SCI_GETSELECTIONEND,0,0)) - (::SendScintilla(SCI_GETSELECTIONSTART,0,0)) +1];
+            ::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(g_customClipBoard));
+            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+            if (sourceType == 5)
+            {
+                ::SendScintilla(SCI_SETSEL,scriptStart,selectionStart); //Delete the search key
+                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+            }
+
+        } else if (operationType == 3)
+        {
+            delete [] g_customClipBoard;
+            g_customClipBoard = new char [(::SendScintilla(SCI_GETSELECTIONEND,0,0)) - (::SendScintilla(SCI_GETSELECTIONSTART,0,0)) +1];
+            ::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(g_customClipBoard));
+        }
+    }
+
+}
+
 void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint)
 {
-    
-    int triggerPos = strlen(hotSpotText)+firstPos;
+    int hotSpotTextLength = strlen(hotSpotText);
+    int triggerPos = hotSpotTextLength+firstPos;
+
     ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
     //TODO: At least I should rearrange the keyword a little bit for efficiency
+    //TODO: refactor the logic of checking colon version, for example DATE and DATE: for efficiency
+
     if (strcmp(hotSpotText,"PASTE")==0)
     {
         ::SendScintilla(SCI_PASTE,0,0);
 	    
+    } else if (strcmp(hotSpotText,"FTPASTE")==0)
+    {
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)g_customClipBoard);
+    } else if ((strcmp(hotSpotText,"CUT")==0) || (strcmp(hotSpotText,"CUTWORD")==0))
+    {
+        textCopyCut(1, 0, firstPos, hotSpotText, startingPos, checkPoint); 
+    } else if ((strcmp(hotSpotText,"COPY")==0) || (strcmp(hotSpotText,"COPYWORD")==0))
+    {
+        textCopyCut(1, 1, firstPos, hotSpotText, startingPos, checkPoint);
+    } else if (strcmp(hotSpotText,"CUTLINE")==0)
+    {
+        textCopyCut(2, 0, firstPos, hotSpotText, startingPos, checkPoint);
+    } else if (strcmp(hotSpotText,"COPYLINE")==0)
+    {
+        textCopyCut(2, 1, firstPos, hotSpotText, startingPos, checkPoint);
+    } else if (strcmp(hotSpotText,"CUTDOC")==0)
+    {
+        textCopyCut(3, 0, firstPos, hotSpotText, startingPos, checkPoint);
+    } else if (strcmp(hotSpotText,"COPYDOC")==0)
+    {
+        textCopyCut(3, 1, firstPos, hotSpotText, startingPos, checkPoint);
+    } else if ((strncmp(hotSpotText,"CUT'",4)==0) && (strncmp(hotSpotText+hotSpotTextLength-1,"'",1)==0))
+    {
+        textCopyCut(4, 0, firstPos, hotSpotText, startingPos, checkPoint);
+    } else if ((strncmp(hotSpotText,"COPY'",5)==0) && (strncmp(hotSpotText+hotSpotTextLength-1,"'",1)==0))
+    {
+        textCopyCut(4, 1, firstPos, hotSpotText, startingPos, checkPoint);
+    } else if (strncmp(hotSpotText,"CUT:",4)==0) 
+    {
+        textCopyCut(5, 0, firstPos, hotSpotText, startingPos, checkPoint);
+    } else if (strncmp(hotSpotText,"COPY:",5)==0) 
+    {
+        textCopyCut(5, 1, firstPos, hotSpotText, startingPos, checkPoint);
+    } else if ((strcmp(hotSpotText,"FTCUT")==0) || (strcmp(hotSpotText,"FTCUTWORD")==0))
+    {
+        textCopyCut(1, 2, firstPos, hotSpotText, startingPos, checkPoint); 
+    } else if ((strcmp(hotSpotText,"FTCOPY")==0) || (strcmp(hotSpotText,"FTCOPYWORD")==0))
+    {
+        textCopyCut(1, 3, firstPos, hotSpotText, startingPos, checkPoint);
+    } else if (strcmp(hotSpotText,"FTCUTLINE")==0)
+    {
+        textCopyCut(2, 2, firstPos, hotSpotText, startingPos, checkPoint);
+    } else if (strcmp(hotSpotText,"FTCOPYLINE")==0)
+    {
+        textCopyCut(2, 3, firstPos, hotSpotText, startingPos, checkPoint);
+    } else if (strcmp(hotSpotText,"FTCUTDOC")==0)
+    {
+        textCopyCut(3, 2, firstPos, hotSpotText, startingPos, checkPoint);
+    } else if (strcmp(hotSpotText,"FTCOPYDOC")==0)
+    {
+        textCopyCut(3, 3, firstPos, hotSpotText, startingPos, checkPoint);
+    } else if ((strncmp(hotSpotText,"FTCUT'",6)==0) && (strncmp(hotSpotText+hotSpotTextLength-1,"'",1)==0))
+    {
+        textCopyCut(4, 2, firstPos, hotSpotText, startingPos, checkPoint);
+    } else if ((strncmp(hotSpotText,"FTCOPY'",7)==0) && (strncmp(hotSpotText+hotSpotTextLength-1,"'",1)==0))
+    {
+        textCopyCut(4, 3, firstPos, hotSpotText, startingPos, checkPoint);
+    } else if (strncmp(hotSpotText,"FTCUT:",6)==0) 
+    {
+        textCopyCut(5, 2, firstPos, hotSpotText, startingPos, checkPoint);
+    } else if (strncmp(hotSpotText,"FTCOPY:",7)==0) 
+    {
+        textCopyCut(5, 3, firstPos, hotSpotText, startingPos, checkPoint);
+    } else if ((strcmp(hotSpotText,"TEMP")==0) && (strcmp(hotSpotText,"TEMPFILE")==0))
+    {
+        insertPath(g_fttempPath);
+
+    } else if (strcmp(hotSpotText,"FILEFOCUS")==0)
+    {
+        insertPath(g_currentFocusPath);
+
+    } else if (strncmp(hotSpotText,"SETFILE:",8)==0)  //TODO: a lot of refactoring needed for the file series
+    {
+        char* getTerm;
+        TCHAR* getTermWide;
+        getTerm = new char[hotSpotTextLength];
+        strcpy(getTerm,hotSpotText+8);
+        convertToWideChar(getTerm, &getTermWide);
+        if (strlen(getTerm) < MAX_PATH)
+        {
+            ::_tcscpy_s(g_currentFocusPath,getTermWide);
+            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+            emptyFile(g_currentFocusPath);
+        } else 
+        {
+            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"The file name is too long.");
+        }
+
+        delete [] getTerm;
+        delete [] getTermWide;
+        
+    } else if (strncmp(hotSpotText,"WRITE:",6) == 0)  
+    {
+        //TODO: Should have Append mode  
+        //TODO: refactor file wriiting to another function
+        emptyFile(g_currentFocusPath);
+        char* getTerm;
+        getTerm = new char[hotSpotTextLength];
+        strcpy(getTerm,hotSpotText+6);
+        std::ofstream fileStream(g_currentFocusPath, std::ios::binary); // need to open in binary so that there will not be extra spaces written to the document
+        if (fileStream.is_open())
+        {
+            fileStream << getTerm;
+            fileStream.close();
+            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        } else
+        {
+            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"The file cannot be opened.");
+        }
+        delete [] getTerm;
+    } else if (strncmp(hotSpotText,"WRITETEMP:",10) == 0)
+    {
+        emptyFile(g_fttempPath);
+        char* getTerm;
+        getTerm = new char[hotSpotTextLength];
+        strcpy(getTerm,hotSpotText+10);
+        std::ofstream fileStream(g_fttempPath, std::ios::binary); // need to open in binary so that there will not be extra spaces written to the document
+        if (fileStream.is_open())
+        {
+            fileStream << getTerm;
+            fileStream.close();
+            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        } else
+        {
+            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"The file cannot be opened.");
+        }
+        delete [] getTerm;
+    } else if (strcmp(hotSpotText,"FTWRITE") == 0)
+    {
+        emptyFile(g_currentFocusPath);
+        
+        std::ofstream fileStream(g_currentFocusPath, std::ios::binary); // need to open in binary so that there will not be extra spaces written to the document
+        if (fileStream.is_open())
+        {
+            fileStream << g_customClipBoard;
+            fileStream.close();
+            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        } else
+        {
+            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"The file cannot be opened.");
+        }
+
+    } else if (strcmp(hotSpotText,"FTWRITETEMP") == 0)
+    {
+        emptyFile(g_fttempPath);
+        
+        std::ofstream fileStream(g_fttempPath, std::ios::binary); // need to open in binary so that there will not be extra spaces written to the document
+        if (fileStream.is_open())
+        {
+            fileStream << g_customClipBoard;
+            fileStream.close();
+            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        } else
+        {
+            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"The file cannot be opened.");
+        }
+
+    } else if (strcmp(hotSpotText,"READ") == 0)
+    {
+        char* buffer;
+
+        std::ifstream fileStream;
+        fileStream.open (g_currentFocusPath, std::ios::binary | std::ios::in);
+
+        if (fileStream.is_open())
+        {
+            fileStream.seekg (0, std::ios::end);
+            int length = fileStream.tellg();
+            fileStream.seekg (0, std::ios::beg);
+
+            buffer = new char [length+1];
+            
+            fileStream.read (buffer,length);
+            buffer[length] = '\0';
+            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)buffer);
+            fileStream.close();
+            delete[] buffer;
+        } else
+        {
+            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"The file cannot be opened.");
+        }
+  
+    } else if (strcmp(hotSpotText,"READTEMP") == 0)
+    {
+        char* buffer;
+        
+        std::ifstream fileStream;
+        fileStream.open (g_fttempPath, std::ios::binary | std::ios::in);
+        if (fileStream.is_open())
+        {
+            fileStream.seekg (0, std::ios::end);
+            int length = fileStream.tellg();
+            fileStream.seekg (0, std::ios::beg);
+
+            buffer = new char [length+1];
+            
+            fileStream.read (buffer,length);
+            buffer[length] = '\0';
+            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)buffer);
+            fileStream.close();
+            delete[] buffer;
+        } else
+        {
+            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"The file cannot be opened.");
+        }
+    } else if (strncmp(hotSpotText,"UPPER:",6)==0)
+    {
+        char* getTerm;
+        getTerm = new char[hotSpotTextLength];
+        strcpy(getTerm,hotSpotText+6);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)::_strupr(getTerm));
+        delete [] getTerm;
+    } else if (strncmp(hotSpotText,"LOWER:",6)==0)
+    {
+        char* getTerm;
+        getTerm = new char[hotSpotTextLength];
+        strcpy(getTerm,hotSpotText+6);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)::_strlwr(getTerm));
+        delete [] getTerm;
+    } else if (strcmp(hotSpotText,"WINFOCUS")==0)
+    {
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        setFocusToWindow();
+    } else if (strncmp(hotSpotText,"SETWIN:",7)==0)
+    {
+        char* getTerm;
+        getTerm = new char[hotSpotTextLength];
+        strcpy(getTerm,hotSpotText+7);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        ::std::string tempString(getTerm);
+        ::searchWindowByName(tempString);
+        delete [] getTerm;
+    } else if (strncmp(hotSpotText,"SETCHILD:",9)==0)
+    {
+        char* getTerm;
+        getTerm = new char[hotSpotTextLength];
+        strcpy(getTerm,hotSpotText+9);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        ::std::string tempString(getTerm);
+        ::searchWindowByName(tempString,g_tempWindowHandle);
+        delete [] getTerm;
+    } else if (strncmp(hotSpotText,"KEYDOWN:",8)==0)
+    {
+        char* getTerm;
+        getTerm = new char[hotSpotTextLength];
+        strcpy(getTerm,hotSpotText+8);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        setFocusToWindow();
+        generateKey(toVk(getTerm),true);
+        delete [] getTerm;
+    } else if (strncmp(hotSpotText,"KEYUP:",6)==0)
+    {
+        char* getTerm;
+        getTerm = new char[hotSpotTextLength];
+        strcpy(getTerm,hotSpotText+6);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        setFocusToWindow();
+        generateKey(toVk(getTerm),false);
+        delete [] getTerm;
+    }  else if (strncmp(hotSpotText,"KEYHIT:",7)==0)
+    {
+        char* getTerm;
+        getTerm = new char[hotSpotTextLength];
+        strcpy(getTerm,hotSpotText+7);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        setFocusToWindow();
+        generateKey(toVk(getTerm),true);
+        generateKey(toVk(getTerm),false);
+        delete [] getTerm;
+    } else if (strncmp(hotSpotText,"SCOPE:",6)==0)
+    {
+        char* getTerm;
+        getTerm = new char[hotSpotTextLength];
+        strcpy(getTerm,hotSpotText+6);
+        //TCHAR* scopeWide = new TCHAR[strlen(getTerm)*4+!];
+        convertToWideChar(getTerm, &g_customScope);
+        writeConfigTextChar(g_customScope,TEXT("custom_scope"));
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        updateDockItems(false,false);
+        //snippetHintUpdate();
+        delete [] getTerm;
     } else if (strcmp(hotSpotText,"DATE")==0)
     {
         char* dateText = getDateTime(NULL,true,DATE_LONGDATE);
@@ -1264,6 +1905,24 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
         ::SendScintilla( SCI_REPLACESEL, 0, (LPARAM)timeText);
         delete [] timeText;
         //insertDateTime(false,0,curScintilla);
+    } else if (strncmp(hotSpotText,"DATE:",5)==0)
+    {
+        char* getTerm;
+        getTerm = new char[hotSpotTextLength];
+        strcpy(getTerm,hotSpotText+5);
+        char* dateReturn = getDateTime(getTerm);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)dateReturn);
+        delete [] dateReturn;
+        delete [] getTerm;
+    } else if (strncmp(hotSpotText,"TIME:",5)==0)
+    {
+        char* getTerm;
+        getTerm = new char[hotSpotTextLength];
+        strcpy(getTerm,hotSpotText+5);
+        char* timeReturn = getDateTime(getTerm,false);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)timeReturn);
+        delete [] timeReturn;
+        delete [] getTerm;
     } else if (strcmp(hotSpotText,"FILENAME")==0)
     {
         insertNppPath(NPPM_GETNAMEPART);
@@ -1276,260 +1935,6 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
     {
         insertNppPath(NPPM_GETCURRENTDIRECTORY);
     //} else if (strcmp(hotSpotText,"GETSCRIPT")==0) 
-    } else if (strcmp(hotSpotText,"TEMPFILE")==0)
-    {
-        insertPath(g_fttempPath);
-
-    } else if (strncmp(hotSpotText,"GET:",4)==0) 
-    {
-        //TODO: lots of issues in the GET and CUT keywords, when nothing can be cut
-        //TODO: write a function to get the command and parameter sepearately. or turn this whole thing into a new type of hotspot
-        //TODO: a complete rewrite of GET, GET:, GETALL, GETLINE, CUT, CUT:
-
-        //TODO: remember to deal with g_lastTriggerPosition when rewriting CUT and GET
-        
-        emptyFile(g_fttempPath);
-        char* getTerm;
-        getTerm = new char[strlen(hotSpotText)];
-        strcpy(getTerm,hotSpotText+4);
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        int scriptFound = -1;
-        if (strlen(getTerm)>0)
-        {
-            ::SendScintilla(SCI_GOTOPOS,startingPos-1,0);
-            scriptFound = searchPrev(getTerm);
-        }
-        delete [] getTerm;
-
-        int scriptStart = 0;
-        if (scriptFound>=0)
-        {
-            scriptStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-        }
-            
-        int selectionEnd = startingPos-1; // -1 because the space before the snippet tag should not be included
-        int selectionStart = scriptStart+strlen(hotSpotText)-4;
-        if (selectionEnd>=selectionStart)
-        {
-            ::SendScintilla(SCI_SETSEL,selectionStart,selectionEnd);
-            char* selection = new char [selectionEnd - selectionStart +1];
-            ::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
-            ::SendScintilla(SCI_SETSEL,scriptStart,selectionEnd+1); //+1 to make up the -1 in setting the selection End
-            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-            startingPos = startingPos - (selectionEnd - scriptStart + 1); //+1 to make up the -1 in setting the selection End
-            checkPoint = checkPoint - (selectionEnd - scriptStart + 1); //+1 to make up the -1 in setting the selection End
-            std::ofstream myfile(g_fttempPath, std::ios::binary); // need to open in binary so that there will not be extra spaces written to the document
-            if (myfile.is_open())
-            {
-                myfile << selection;
-                myfile.close();
-            }
-            delete [] selection;
-        } else
-        {
-            alertCharArray("keyword GET: caused an error.");
-        }
-    } else if (strcmp(hotSpotText,"GET")==0)
-    {
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        ::SendScintilla(SCI_SETSEL,startingPos-1,startingPos);
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        ::SendScintilla(SCI_GOTOPOS,startingPos-1,0);
-        ::SendScintilla(SCI_WORDLEFTEXTEND,0,0);
-        char* selection = new char [startingPos -1 - ::SendScintilla(SCI_GETCURRENTPOS,0,0) +1];
-        ::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        startingPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-        checkPoint = startingPos;
-        std::ofstream myfile(g_fttempPath, std::ios::binary);
-        if (myfile.is_open())
-        {
-            myfile << selection;
-            myfile.close();
-        }
-        delete [] selection;
-
-    } else if (strcmp(hotSpotText,"GETLINE")==0)
-    {
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        ::SendScintilla(SCI_SETSEL,startingPos-1,startingPos);
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        ::SendScintilla(SCI_GOTOPOS,startingPos-1,0);
-        ::SendScintilla(SCI_HOMEEXTEND,0,0);
-        char* selection = new char [startingPos -1 - ::SendScintilla(SCI_GETCURRENTPOS,0,0) +1];
-        ::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        startingPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-        checkPoint = startingPos;
-        std::ofstream myfile(g_fttempPath, std::ios::binary);
-        if (myfile.is_open())
-        {
-            myfile << selection;
-            myfile.close();
-        }
-        delete [] selection;
-
-    } else if (strncmp(hotSpotText,"CUT:",4)==0) 
-    {
-        emptyFile(g_fttempPath);
-        char* getTerm;
-        getTerm = new char[strlen(hotSpotText)];
-        strcpy(getTerm,hotSpotText+4);
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        int scriptFound = -1;
-        if (strlen(getTerm)>0)
-        {
-            ::SendScintilla(SCI_GOTOPOS,startingPos-1,0);
-            scriptFound = searchPrev(getTerm);
-        }
-        delete [] getTerm;
-        // TODO: still a bug when triggered from the beginning of the document with a searching term. For example: $[![(key)CUT: ]!]$[![(key)SCOPE:$[![(key)PASTE]!]]!][>END<] (testscope) will get 1 missing character when triggering from start of the document
-        // TODO: same problem for GET:
-        int scriptStart = 0;
-        if (scriptFound>=0)
-        {
-            scriptStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-        }
-        int selectionEnd = startingPos-1; // -1 because the space before the snippet tag should not be included
-        int selectionStart = scriptStart+strlen(hotSpotText)-4;
-        if (selectionEnd>=selectionStart)
-        {
-            ::SendScintilla(SCI_SETSEL,selectionStart,selectionEnd);
-            ::SendScintilla(SCI_COPY,0,0);
-            ::SendScintilla(SCI_SETSEL,scriptStart,selectionEnd+1); //+1 to make up the -1 in setting the selection End
-            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-            startingPos = startingPos - (selectionEnd - scriptStart + 1); //+1 to make up the -1 in setting the selection End
-            checkPoint = checkPoint - (selectionEnd - scriptStart + 1); //+1 to make up the -1 in setting the selection End
-        } else
-        {
-            //alertNumber(selectionStart);
-            //alertNumber(selectionEnd);
-            alertCharArray("keyword CUT: caused an error.");
-        }
-            
-        
-    } else if (strcmp(hotSpotText,"CUT")==0)
-    {
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        ::SendScintilla(SCI_SETSEL,startingPos-1,startingPos);
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        ::SendScintilla(SCI_GOTOPOS,startingPos-1,0);
-        ::SendScintilla(SCI_WORDLEFTEXTEND,0,0);
-        startingPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-        checkPoint = startingPos;
-        ::SendScintilla(SCI_CUT,0,0);
-    } else if (strcmp(hotSpotText,"CUTLINE")==0)
-    {
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        ::SendScintilla(SCI_SETSEL,startingPos-1,startingPos);
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        ::SendScintilla(SCI_GOTOPOS,startingPos-1,0);
-        ::SendScintilla(SCI_HOMEEXTEND,0,0);
-        startingPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-        checkPoint = startingPos;
-        ::SendScintilla(SCI_CUT,0,0);
-    } else if (strcmp(hotSpotText,"COPYLINE")==0)
-    {
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        ::SendScintilla(SCI_SETSEL,startingPos-1,startingPos);
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        ::SendScintilla(SCI_GOTOPOS,startingPos-1,0);
-        ::SendScintilla(SCI_HOMEEXTEND,0,0);
-        ::SendScintilla(SCI_COPY,0,0);
-    } else if (strncmp(hotSpotText,"UPPER:",6)==0)
-    {
-        char* getTerm;
-        getTerm = new char[strlen(hotSpotText)];
-        strcpy(getTerm,hotSpotText+6);
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)::_strupr(getTerm));
-        delete [] getTerm;
-    } else if (strncmp(hotSpotText,"LOWER:",6)==0)
-    {
-        char* getTerm;
-        getTerm = new char[strlen(hotSpotText)];
-        strcpy(getTerm,hotSpotText+6);
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)::_strlwr(getTerm));
-        delete [] getTerm;
-    } else if (strcmp(hotSpotText,"FOCUS")==0)
-    {
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        setFocusToWindow();
-    } else if (strncmp(hotSpotText,"FINDWIN:",8)==0)
-    {
-        char* getTerm;
-        getTerm = new char[strlen(hotSpotText)];
-        strcpy(getTerm,hotSpotText+8);
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        ::std::string tempString(getTerm);
-        ::searchWindowByName(tempString);
-        delete [] getTerm;
-    } else if (strncmp(hotSpotText,"FINDCHILD:",10)==0)
-    {
-        char* getTerm;
-        getTerm = new char[strlen(hotSpotText)];
-        strcpy(getTerm,hotSpotText+10);
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        ::std::string tempString(getTerm);
-        ::searchWindowByName(tempString,g_tempWindowHandle);
-        delete [] getTerm;
-    } else if (strncmp(hotSpotText,"KEYDOWN:",8)==0)
-    {
-        char* getTerm;
-        getTerm = new char[strlen(hotSpotText)];
-        strcpy(getTerm,hotSpotText+8);
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        setFocusToWindow();
-        generateKey(toVk(getTerm),true);
-        delete [] getTerm;
-    } else if (strncmp(hotSpotText,"KEYUP:",6)==0)
-    {
-        char* getTerm;
-        getTerm = new char[strlen(hotSpotText)];
-        strcpy(getTerm,hotSpotText+6);
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        setFocusToWindow();
-        generateKey(toVk(getTerm),false);
-        delete [] getTerm;
-    }  else if (strncmp(hotSpotText,"KEYHIT:",7)==0)
-    {
-        char* getTerm;
-        getTerm = new char[strlen(hotSpotText)];
-        strcpy(getTerm,hotSpotText+7);
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        setFocusToWindow();
-        generateKey(toVk(getTerm),true);
-        generateKey(toVk(getTerm),false);
-        delete [] getTerm;
-    } else if (strncmp(hotSpotText,"TIME:",5)==0)
-    {
-        char* getTerm;
-        getTerm = new char[strlen(hotSpotText)];
-        strcpy(getTerm,hotSpotText+5);
-        char* timeReturn = getDateTime(getTerm,false);
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)timeReturn);
-        delete [] timeReturn;
-        delete [] getTerm;
-    } else if (strncmp(hotSpotText,"DATE:",5)==0)
-    {
-        char* getTerm;
-        getTerm = new char[strlen(hotSpotText)];
-        strcpy(getTerm,hotSpotText+5);
-        char* dateReturn = getDateTime(getTerm);
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)dateReturn);
-        delete [] dateReturn;
-        delete [] getTerm;
-    } else if (strncmp(hotSpotText,"SCOPE:",6)==0)
-    {
-        char* getTerm;
-        getTerm = new char[strlen(hotSpotText)];
-        strcpy(getTerm,hotSpotText+6);
-        //TCHAR* scopeWide = new TCHAR[strlen(getTerm)*4+!];
-        convertToWideChar(getTerm, &g_customScope);
-        writeConfigTextChar(g_customScope,TEXT("custom_scope"));
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        updateDockItems(false,false);
-        //snippetHintUpdate();
-        delete [] getTerm;
     } else if ((strncmp(hotSpotText,"CLEAN_",6)==0) && (strncmp(hotSpotText+7,":",1)==0))
     {
         // TODO: fill in content for this CLEAN keyword
@@ -1539,10 +1944,16 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
         // TODO: fill in content for this COUNT keyword
     } else
     {
-        char* errorMessage = new char[strlen(hotSpotText)+40];
-        strcpy(errorMessage,"\r\n'");
-        strcat(errorMessage,hotSpotText);
-        strcat(errorMessage,"' is not a keyword in fingertext\r\n");
+        char* errorMessage = new char[hotSpotTextLength+40];
+        if (hotSpotTextLength>0)
+        {
+            strcpy(errorMessage,"'");
+            strcat(errorMessage, hotSpotText);
+            strcat(errorMessage,"' is not a keyword in fingertext.");
+        } else
+        {
+            strcpy(errorMessage,"Keyword missing.");
+        }
         
         ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)errorMessage);
         delete [] errorMessage;
@@ -2291,12 +2702,8 @@ void setupConfigFile()
         writeConfig();
         //saveCustomScope();
         g_newUpdate = true;
-    }
-
-   
+    }   
 }
-
-
 
 void writeConfigText(int configInt, TCHAR* section)
 {
@@ -2310,7 +2717,6 @@ void writeConfigTextChar(TCHAR* configChar, TCHAR* section)
     ::WritePrivateProfileString(NPP_PLUGIN_NAME, section, configChar, g_iniPath);
 }
 
-
 //void writeDefaultGroupFile()
 //{
 //    ::WritePrivateProfileString(TEXT("Snippet Group"), TEXT("LANG_0"), TEXT(".txt|.ini|.log"), g_groupPath);
@@ -2321,7 +2727,6 @@ void writeConfigTextChar(TCHAR* configChar, TCHAR* section)
 //    //::WritePrivateProfileString(TEXT("Snippet Group"), TEXT("GROUP.rb"), TEXT(".rb"), g_groupPath);
 // 
 //}
-
 
 int getCurrentTag(int posCurrent, char **buffer, int triggerLength)
 {
@@ -2610,7 +3015,6 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
 void populateDockItems()
 {
     //TODO: Use 2 columns of list box, or list control
-    
     for (int j=0;j<g_snippetListLength;j++)
     {
         if (g_snippetCache[j].scope !=NULL)
@@ -2826,6 +3230,7 @@ void convertToWideChar(char* orig, wchar_t **wideChar)
 //TODO: Or it should be rewrite, import snippet should open the snippetediting.ftb, turn or annotation, and cut and paste the snippet on to that file and use the saveSnippet function
 void importSnippets()
 {
+    
     //TODO: importing snippet will change the current directory, which is not desirable effect
     if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
     {
@@ -2874,7 +3279,7 @@ void importSnippets()
 
         //::MessageBox(nppData._nppHandle, (LPCWSTR)fileName, NPP_PLUGIN_NAME, MB_OK);
         std::ifstream file;
-        file.open((LPCWSTR)fileName);   // TODO: This part may cause problem in chinese file names
+        file.open((LPCWSTR)fileName, std::ios::binary | std::ios::in);   // TODO: This part may cause problem in chinese file names
 
         file.seekg(0, std::ios::end);
         int fileLength = file.tellg();
@@ -2886,6 +3291,7 @@ void importSnippets()
             ZeroMemory(fileText,fileLength);
 
             file.read(fileText,fileLength);
+            fileText[fileLength] = '\0';
             file.close();
         
             ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
@@ -3402,7 +3808,6 @@ __________________________________________________________________________\r\n\r
 //For option dynamic hotspot
 void cleanOptionItem()
 {
-   
     int i = 0;
     while (i<g_optionNumber)
     {
@@ -3610,7 +4015,7 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
     if (triggerTextComplete == false)
     {
         paramPos = ::SendScintilla(SCI_BRACEMATCH,posCurrent-1,0);
-        if (paramPos>=0)
+        if ((paramPos>=0) && (paramPos<posCurrent))
         {
             posCurrent = paramPos;
             ::SendScintilla(SCI_GOTOPOS,paramPos,0);
@@ -3900,7 +4305,6 @@ void setFocusToWindow()
     
 }
 
-
 char* getLangTagType()
 {
     int curLang = 0;
@@ -3921,9 +4325,6 @@ char* getLangTagType()
     return s[curLang];
     //return "";
 }
-
-
-
 
 void tabActivate()
 {
@@ -3954,6 +4355,7 @@ void tabActivate()
 
         } else
         {
+
 
         //bool optionTriggered = false;
         //if (g_optionMode == true)
@@ -4300,12 +4702,8 @@ void testing2()
 {
     //HWND curScintilla = getCurrentScintilla();
     ::MessageBox(nppData._nppHandle, TEXT("Testing2!"), NPP_PLUGIN_NAME, MB_OK);
-    searchWindowByName("R Console");
-    setFocusToWindow();
-    ::generateKey(VK_CONTROL, true);
-    ::generateStroke(0x56);
-    ::generateKey(VK_CONTROL, false);
-    ::generateStroke(VK_RETURN);
+
+    alertCharArray(g_customClipBoard);
 }
 
 
@@ -4315,7 +4713,9 @@ void testing()
     //HWND curScintilla = getCurrentScintilla();
     alertCharArray("testing1");
 
-    ::SendScintilla(SCI_CALLTIPSHOW,0,(LPARAM)"Hello World!");
+
+    ////Test calltip
+    //::SendScintilla(SCI_CALLTIPSHOW,0,(LPARAM)"Hello World!");
 
 
 

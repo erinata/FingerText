@@ -77,6 +77,8 @@ int searchPrevMatchedSign(char* tagSign, char* tagTail);
 int searchPrevMatchedTail(char* tagSign, char* tagTail);
 bool dynamicHotspot(int &startingPos, char* tagSign = "$[![", char* tagTail = "]!]");
 void paramsInsertion(int &firstPos, char* hotSpot, int &checkPoint);
+void addToCustomClipBoard(char* input);
+void textCopyCut(int sourceType, int operationType, int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint);
 void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint);
 void executeCommand(int &firstPos, char* hotSpotText);
 void launchMessageBox(int &firstPos, char* hotSpotText);
