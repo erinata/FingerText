@@ -76,7 +76,12 @@ int g_optionEndPosition;
 int g_optionCurrent;
 int g_optionNumber;
 //char *g_optionArray[] = {"","","","","","","","","","","","","","","","","","","",""};
-char *g_optionArray[] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
+char *g_optionArray[] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
+int g_optionArrayLength = 50;
+
+char *g_tagSignList[] = {"$[![","$[1[","$[2[","$[3["};
+char *g_tagTailList[] = {"]!]","]1]","]2]","]3]"};
+int g_listLength = 4;
 
 //For shorthand
 std::vector<std::string> g_hotspotParams;
@@ -1661,22 +1666,49 @@ bool hotSpotNavigation(char* tagSign, char* tagTail)
 
             ::SendScintilla(SCI_GOTOPOS,firstPos,0);
 
-            int tempOptionStart = 0;
-            int tempOptionEnd = 0;
-
+            //TODO: refactor the option hotspot part to a function
             if (strncmp(hotSpotText,"(opt)",5)==0)
             {
-                //TODO: refactor the option hotspot part to a function
+                int tempOptionStart = 0;
+                int tempOptionEnd = 0;
+                char* optionDelimiter;
+                
+                if (strncmp(hotSpotText+5,"DELIMIT'",8)==0)
+                {
+                    ::SendScintilla(SCI_GOTOPOS,firstPos + 5 + 8,0);
+                    int delimitEnd = searchNext("':");
+                    
+                    if ((delimitEnd>=0) && (delimitEnd < secondPos - 4))
+                    {
+                        
+                        ::SendScintilla(SCI_SETSELECTION,firstPos + 5 + 8,delimitEnd);
+                        
+                        optionDelimiter = new char[delimitEnd - (firstPos + 5 + 8) + 1];
+                        ::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(optionDelimiter));
+                        ::SendScintilla(SCI_SETSELECTION,firstPos + 5,delimitEnd + 2);
+                        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+                        secondPos = secondPos - (delimitEnd + 2 - (firstPos + 5));
+                    } else
+                    {
+                        optionDelimiter = new char[2];
+                        strcpy(optionDelimiter,"|");
+                    }
+                } else
+                {
+                    optionDelimiter = new char[2];
+                    strcpy(optionDelimiter,"|");
+                }
+                //char* optionDelimiter = "|";
                 
                 cleanOptionItem();
-                tempOptionEnd = firstPos + 5 - 3;
+                tempOptionEnd = firstPos + 5 - strlen(optionDelimiter);
                 int i =0;
                 int optionFound = -1;
-                while (i<20)
+                while (i<g_optionArrayLength)
                 {
-                    tempOptionStart = tempOptionEnd + 3;
+                    tempOptionStart = tempOptionEnd + strlen(optionDelimiter);
                     ::SendScintilla(SCI_GOTOPOS,tempOptionStart,0);
-                    optionFound = searchNext("|~|");
+                    optionFound = searchNext(optionDelimiter);
                     if ((optionFound>=0) && (::SendScintilla(SCI_GETCURRENTPOS,0,0)<secondPos))
                     {
                         tempOptionEnd = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
@@ -1699,6 +1731,8 @@ bool hotSpotNavigation(char* tagSign, char* tagTail)
                         break;
                     }
                 };
+
+                delete [] optionDelimiter;
 
                 //g_optionOperating = true; 
 
@@ -3363,7 +3397,7 @@ void cleanOptionItem()
 void addOptionItem(char* item)
 {
     // TODO: should use stack?
-    if (g_optionNumber<20)
+    if (g_optionNumber<g_optionArrayLength)
     {
         g_optionArray[g_optionNumber] = item;
         g_optionNumber++;
@@ -3472,7 +3506,7 @@ void selectionMonitor(int contentChange)
             int selectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
             int selectionStartLine = ::SendScintilla(SCI_LINEFROMPOSITION,selectionStart,0);
             int selectionEndLine = ::SendScintilla(SCI_LINEFROMPOSITION,selectionEnd,0);
-
+            
             //alertNumber(lineCurrent);
             //if (contentChange)
             if (contentChange & (SC_UPDATE_CONTENT))
@@ -3533,7 +3567,9 @@ void selectionMonitor(int contentChange)
         }
         g_modifyResponse = true;
         g_selectionMonitor++;
+        refreshAnnotation();  //TODO: consider only refresh annotation under some situation (for example only when an undo is done) to improve efficiency.
     }
+    
     
 }
 
@@ -3947,53 +3983,100 @@ void tabActivate()
             
 
             bool navSpot = false;
-            bool dynamicSpot0 = false;
-            bool dynamicSpot1 = false;
-            bool dynamicSpot2 = false;
+            //bool dynamicSpot0 = false;
+            //bool dynamicSpot1 = false;
+            //bool dynamicSpot2 = false;
+            bool dynamicSpotTemp = false;
             bool dynamicSpot = false;
 
             if (g_editorView == false)
             {
+                
+
+                int i;
                 if (!tagFound) 
                 {
-                    if (searchNext("$[2[") < 0)
+                    i = g_listLength-1;
+                    do
                     {
-                        if (searchNext("$[1[")<0)
+                        if (searchPrev(g_tagSignList[i]) >= 0)
                         {
-                            if (searchNext("$[![")<0)
-                            {
-                                if ((searchPrev("$[2[") >= 0) || (searchPrev("$[1[")>=0) || (searchPrev("$[![")>=0))
-                                {
-                                    ::SendScintilla(SCI_GOTOPOS,g_lastTriggerPosition,0);
-                                    posCurrent = g_lastTriggerPosition;
-                                }
-                            }
+                            ::SendScintilla(SCI_GOTOPOS,g_lastTriggerPosition,0);
+                            posCurrent = g_lastTriggerPosition;
+                            break;   
                         }
-                    }
+                        i--;
+                    } while (i>=0);
+
+                 
+                    //if (searchNext("$[2[") < 0)
+                    //{
+                    //    if (searchNext("$[1[")<0)
+                    //    {
+                    //        if (searchNext("$[![")<0)
+                    //        {
+                                //if ((searchPrev("$[2[") >= 0) || (searchPrev("$[1[")>=0) || (searchPrev("$[![")>=0))
+                                //{
+                                //    ::SendScintilla(SCI_GOTOPOS,g_lastTriggerPosition,0);
+                                //    posCurrent = g_lastTriggerPosition;
+                                //}
+                    //       }
+                    //   }
+                    //}
                 }
                 //TODO: turn this into array and while loop
                 //TODO: cater more level of priority
                 //TODO: Params inertion will stop when navSpot is true, so it is not working properly under differnt level of priority
                 //      Or in other words it only work for the highest existing level of priority
-                //TODO: not sure why the option system is working with priority, need to make sure
-                dynamicSpot2 = dynamicHotspot(posCurrent,"$[2[","]2]");
-                ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
-                navSpot = hotSpotNavigation("$[2[","]2]");
-
-                if (navSpot == false)
+                i = g_listLength - 1;
+                
+                do
                 {
-                    dynamicSpot1 = dynamicHotspot(posCurrent,"$[1[","]1]");
+                    if (dynamicSpot)
+                    {
+                        dynamicHotspot(posCurrent,g_tagSignList[i],g_tagTailList[i]);
+                    } else
+                    {
+                        dynamicSpot = dynamicHotspot(posCurrent,g_tagSignList[i],g_tagTailList[i]);
+                    }
                     ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
-                    navSpot = hotSpotNavigation("$[1[","]1]");
-                }
-                if (navSpot == false)
-                {
-                    dynamicSpot0 = dynamicHotspot(posCurrent); //TODO: May still consider do some checking before going into dynamic hotspot for performance improvement
-                    ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
-                    navSpot = hotSpotNavigation();
-                }
+                    
+                     
+                    navSpot = hotSpotNavigation(g_tagSignList[i],g_tagTailList[i]);
+                    i--;
+                } while ((navSpot == false) && (i >= 0));
 
-                if ((dynamicSpot2) || (dynamicSpot1) || (dynamicSpot0)) dynamicSpot = true;
+                
+                //dynamicSpot = dynamicHotspot(posCurrent,"$[2[","]2]");
+                //::SendScintilla(SCI_GOTOPOS,posCurrent,0);
+                //navSpot = hotSpotNavigation("$[2[","]2]");
+                //
+                //if (navSpot == false)
+                //{
+                //    if (dynamicSpot)
+                //    {
+                //        dynamicHotspot(posCurrent,"$[1[","]1]");
+                //    } else
+                //    {
+                //        dynamicSpot = dynamicHotspot(posCurrent,"$[1[","]1]");
+                //    }
+                //    ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
+                //    navSpot = hotSpotNavigation("$[1[","]1]");
+                //}
+                //if (navSpot == false)
+                //{
+                //    if (dynamicSpot)
+                //    {
+                //        dynamicHotspot(posCurrent); //TODO: May still consider do some checking before going into dynamic hotspot for performance improvement
+                //    } else
+                //    {
+                //        dynamicSpot = dynamicHotspot(posCurrent);
+                //    }
+                //    ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
+                //    navSpot = hotSpotNavigation();
+                //}
+
+                //if ((dynamicSpot2) || (dynamicSpot1) || (dynamicSpot0)) dynamicSpot = true;
                 
                 //TODO: this line is position here so the priority spot can be implement, but this cause the 
                 //      1st hotspot not undoable when the snippet is triggered. More investigation on how to

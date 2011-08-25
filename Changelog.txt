@@ -1,5 +1,10 @@
 changelog (for developer use only, include unreleased versions)
 
+0.5.35
+****** Added: Customizable option delimiter of (opt), the default delimiter is set to be |
+****** Changed: Increase the limit of total number of options to 50
+****** Fixed: Pressing return key in the triggertext field of snippet editor cause annotation bug.
+
 0.5.34
 - clean up redundant caret position record
 - Fixed: tab caused document to scroll in large documents
