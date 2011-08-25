@@ -1490,6 +1490,16 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
         setFocusToWindow();
         generateKey(toVk(getTerm),false);
         delete [] getTerm;
+    }  else if (strncmp(hotSpotText,"KEYHIT:",7)==0)
+    {
+        char* getTerm;
+        getTerm = new char[strlen(hotSpotText)];
+        strcpy(getTerm,hotSpotText+7);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        setFocusToWindow();
+        generateKey(toVk(getTerm),true);
+        generateKey(toVk(getTerm),false);
+        delete [] getTerm;
     } else if (strncmp(hotSpotText,"TIME:",5)==0)
     {
         char* getTerm;
@@ -1638,8 +1648,9 @@ char* getDateTime(char *format, bool getDate, int flags)
 //    return spotFound;
 //}
 
-bool hotSpotNavigation(char* tagSign, char* tagTail)
+int hotSpotNavigation(char* tagSign, char* tagTail)
 {
+    int retVal = 0;
     // TODO: consolidate this part with dynamic hotspots? 
 
     //char tagSign[] = "$[![";
@@ -1662,16 +1673,25 @@ bool hotSpotNavigation(char* tagSign, char* tagTail)
             int secondPos = 0;
             grabHotSpotContent(&hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength, tagTail);
 
-            ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)hotSpotText);
-
-            ::SendScintilla(SCI_GOTOPOS,firstPos,0);
-
-            //TODO: refactor the option hotspot part to a function
-            if (strncmp(hotSpotText,"(opt)",5)==0)
+            if (strncmp(hotSpotText,"(lis)",5)==0)
             {
+                ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
+
+                ::SendScintilla(SCI_GOTOPOS,firstPos,0);
+                
+                ::SendScintilla(SCI_AUTOCSETSEPARATOR, (LPARAM)'|', 0); 
+                ::SendScintilla(SCI_AUTOCSHOW, 0, (LPARAM)(hotSpotText+5));
+                retVal = 3;
+
+            } else if (strncmp(hotSpotText,"(opt)",5)==0)
+            {
+                ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)hotSpotText);
+                ::SendScintilla(SCI_GOTOPOS,firstPos,0);
+                //TODO: refactor the option hotspot part to a function
                 int tempOptionStart = 0;
                 int tempOptionEnd = 0;
                 char* optionDelimiter;
+                
                 
                 if (strncmp(hotSpotText+5,"DELIMIT'",8)==0)
                 {
@@ -1680,7 +1700,6 @@ bool hotSpotNavigation(char* tagSign, char* tagTail)
                     
                     if ((delimitEnd>=0) && (delimitEnd < secondPos - 4))
                     {
-                        
                         ::SendScintilla(SCI_SETSELECTION,firstPos + 5 + 8,delimitEnd);
                         
                         optionDelimiter = new char[delimitEnd - (firstPos + 5 + 8) + 1];
@@ -1759,10 +1778,12 @@ bool hotSpotNavigation(char* tagSign, char* tagTail)
 
                 //::SendMessage(curScintilla,SCI_SETSELECTION,firstPos,secondPos);
                 //::SendMessage(curScintilla, SCI_REPLACESEL, 0, (LPARAM)g_optionArray[g_optionCurrent]);
-
+                retVal = 2;
             } else
             {
+                ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)hotSpotText);
 
+                ::SendScintilla(SCI_GOTOPOS,firstPos,0);
                 int hotSpotFound=-1;
                 int tempPos[100];
                 int i=1;
@@ -1803,22 +1824,22 @@ bool hotSpotNavigation(char* tagSign, char* tagTail)
                 ::SendScintilla(SCI_SCROLLCARET,0,0);
                 //::SendScintilla(SCI_LINESCROLL,0,20);
                 //TODO: scrollcaret is not working correctly when thre is a dock visible
-
+                retVal = 1;
             }
 
             delete [] hotSpot;
             delete [] hotSpotText;
 
             if (g_preserveSteps==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
-            return true;
+            
         }
 	} else
     {
         //delete [] hotSpot;  // Don't try to delete if it has not been initialized
         //delete [] hotSpotText;
-        return false;
+        retVal = 0;
     }
-    return false;
+    return retVal;
 }
 
 int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, char* tagTail)
@@ -3907,7 +3928,6 @@ char* getLangTagType()
 void tabActivate()
 {
 
-    //TODO: in general I should add logo to all the messages
     //HWND curScintilla = getCurrentScintilla();
 
     //if ((g_enable==false) || (::SendScintilla(SCI_SELECTIONISRECTANGLE,0,0)==1))
@@ -3982,7 +4002,7 @@ void tabActivate()
             } 
             
 
-            bool navSpot = false;
+            int navSpot = 0;
             //bool dynamicSpot0 = false;
             //bool dynamicSpot1 = false;
             //bool dynamicSpot2 = false;
@@ -3991,14 +4011,13 @@ void tabActivate()
 
             if (g_editorView == false)
             {
-                
-
                 int i;
                 if (!tagFound) 
                 {
                     i = g_listLength-1;
                     do
                     {
+
                         if (searchPrev(g_tagSignList[i]) >= 0)
                         {
                             ::SendScintilla(SCI_GOTOPOS,g_lastTriggerPosition,0);
@@ -4043,8 +4062,9 @@ void tabActivate()
                     
                      
                     navSpot = hotSpotNavigation(g_tagSignList[i],g_tagTailList[i]);
+                    
                     i--;
-                } while ((navSpot == false) && (i >= 0));
+                } while ((navSpot == 0) && (i >= 0));
 
                 
                 //dynamicSpot = dynamicHotspot(posCurrent,"$[2[","]2]");
@@ -4083,7 +4103,10 @@ void tabActivate()
                 //      manipulate the undo list is required to make these 2 features compatible
                 if (g_preserveSteps==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
 
-                if ((navSpot) || (dynamicSpot)) ::SendScintilla(SCI_AUTOCCANCEL,0,0);
+                if (navSpot != 3)
+                {
+                    if ((navSpot > 0) || (dynamicSpot)) ::SendScintilla(SCI_AUTOCCANCEL,0,0);
+                }
                 //}
             } else
             {
@@ -4095,7 +4118,7 @@ void tabActivate()
             bool completeFound = false;
             if (g_tabTagCompletion == 1)
             {
-                if ((navSpot == false) && (tagFound == false) && (dynamicSpot==false)) 
+                if ((navSpot == 0) && (tagFound == false) && (dynamicSpot==false)) 
 	    	    {
                     
                     ::SendScintilla(SCI_GOTOPOS, posSelectionStart, 0);
@@ -4110,9 +4133,7 @@ void tabActivate()
 	    	    }
             }
             
-            
-            
-            if ((navSpot == false) && (tagFound == false) && (completeFound==false) && (dynamicSpot==false)) 
+            if ((navSpot == 0) && (tagFound == false) && (completeFound==false) && (dynamicSpot==false)) 
             {
                 if (g_optionMode == true)
                 {
@@ -4294,20 +4315,24 @@ void testing()
     //HWND curScintilla = getCurrentScintilla();
     alertCharArray("testing1");
 
-    // test getting windows by enum windows
-    searchWindowByName("RGui");
-    searchWindowByName("R Console",g_tempWindowHandle);
-    setFocusToWindow();
-    ::generateKey(toVk("CONTROL"), true);
-    ::generateStroke(toVk("V"));
-    ::generateKey(toVk("CONTROL"), false);
-    ::generateStroke(VK_RETURN);
+    ::SendScintilla(SCI_CALLTIPSHOW,0,(LPARAM)"Hello World!");
+
+
+
+
+
+    //// test getting windows by enum windows
+    //searchWindowByName("RGui");
+    //searchWindowByName("R Console",g_tempWindowHandle);
+    //setFocusToWindow();
+    //::generateKey(toVk("CONTROL"), true);
+    //::generateStroke(toVk("V"));
+    //::generateKey(toVk("CONTROL"), false);
+    //::generateStroke(VK_RETURN);
+    
     //HWND tempWindowHandle = ::FindWindowEx(g_tempWindowHandle, 0, TEXT("Edit"),0);
 
-
-
-
-    
+     
 
     ////testing generatekey and get other windows
     //HWND hwnd;
