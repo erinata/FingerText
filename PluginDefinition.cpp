@@ -902,6 +902,12 @@ bool dynamicHotspot(int &startingPos, char* tagSign, char* tagTail)
                             evaluateExpression(firstPos,hotSpotText+5);
 
                             limitCounter++;
+                        } else if (spotType == 6)
+                        {
+                            checkPoint = firstPos;
+                            webRequest(firstPos,hotSpotText+5);
+
+                            limitCounter++;
                         }
                     } else
                     {
@@ -980,9 +986,10 @@ void paramsInsertion(int &firstPos, char* hotSpot, int &checkPoint)
 
 void chainSnippet(int &firstPos, char* hotSpotText)
 {
+    //TODO: there should be a bug here. When the chain snippet contains content with CUT, the firstPos is not updated.
     int triggerPos = strlen(hotSpotText)+firstPos;
     ::SendScintilla(SCI_GOTOPOS,triggerPos,0);
-    triggerTag(triggerPos,false, strlen(hotSpotText));
+    triggerTag(triggerPos,false, strlen(hotSpotText)); //TODO: consider making chain snippet compatifble with params insertion, basically when the strlen is passed , params insertion wont work
 }
 
 ////Old implementation of executeCommand
@@ -1013,6 +1020,62 @@ void chainSnippet(int &firstPos, char* hotSpotText)
 //    }
 //    _pclose( pPipe );
 //}
+
+void webRequest(int &firstPos, char* hotSpotText)
+{
+    //TODO: should change the mouse cursor to waiting
+    int triggerPos = strlen(hotSpotText)+firstPos;
+
+    SendScintilla(SCI_GOTOPOS,firstPos,0);
+    int spot1 = searchNext("//");
+    int serverStart; 
+    if ((spot1<0) || (spot1>triggerPos))
+    {
+        serverStart = firstPos;
+    } else
+    {
+        serverStart = (SendScintilla(SCI_GETCURRENTPOS,0,0))+2;
+    }
+    SendScintilla(SCI_GOTOPOS,serverStart,0);
+
+
+    int spot2 = searchNext("/");
+
+    int serverEnd;
+    if ((spot2<0) || (spot1>triggerPos))
+    {
+        serverEnd = triggerPos;
+    } else
+    {
+        serverEnd = (SendScintilla(SCI_GETCURRENTPOS,0,0));
+    }
+    
+
+    char* server = new char[serverEnd-serverStart+1];
+    ::SendScintilla(SCI_SETSELECTION,serverStart,serverEnd);
+    ::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(server));
+
+    TCHAR* serverWide;
+    convertToWideChar(server, &serverWide);
+
+    TCHAR* requestWide;
+    convertToWideChar((hotSpotText + (serverEnd - firstPos)), &requestWide);
+    
+    
+    ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
+    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+    
+    //alertTCharArray(serverWide);
+    //alertTCharArray(requestWide);
+
+    //TODO: customizing type of request
+    httpToFile(serverWide,requestWide,TEXT("GET"));
+    
+
+    delete [] serverWide;
+    delete [] requestWide;
+    delete [] server;
+}
 
 void executeCommand(int &firstPos, char* hotSpotText)
 {
@@ -1773,7 +1836,7 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
         char* buffer;
 
         std::ifstream fileStream;
-        fileStream.open (g_currentFocusPath, std::ios::binary | std::ios::in);
+        fileStream.open(g_currentFocusPath, std::ios::binary | std::ios::in);
 
         if (fileStream.is_open())
         {
@@ -1798,7 +1861,7 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
         char* buffer;
         
         std::ifstream fileStream;
-        fileStream.open (g_fttempPath, std::ios::binary | std::ios::in);
+        fileStream.open(g_fttempPath, std::ios::binary | std::ios::in);
         if (fileStream.is_open())
         {
             fileStream.seekg (0, std::ios::end);
@@ -2074,17 +2137,17 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
     char *hotSpot;
 
     int tagSpot = searchNext(tagTail);    // Find the tail first so that nested snippets are triggered correctly
-	if (tagSpot>=0)
+	if (tagSpot >= 0)
 	{
-        if (g_preserveSteps==0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
+        if (g_preserveSteps == 0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
 
-        if (searchPrev(tagSign)>=0)
+        if (searchPrev(tagSign) >= 0)
         {
             int firstPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
             int secondPos = 0;
             grabHotSpotContent(&hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength, tagTail);
 
-            if (strncmp(hotSpotText,"(lis)",5)==0)
+            if (strncmp(hotSpotText,"(lis)",5) == 0)
             {
                 ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
 
@@ -2094,7 +2157,7 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
                 ::SendScintilla(SCI_AUTOCSHOW, 0, (LPARAM)(hotSpotText+5));
                 retVal = 3;
 
-            } else if (strncmp(hotSpotText,"(opt)",5)==0)
+            } else if (strncmp(hotSpotText,"(opt)",5) == 0)
             {
                 ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)hotSpotText);
                 ::SendScintilla(SCI_GOTOPOS,firstPos,0);
@@ -2104,12 +2167,12 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
                 char* optionDelimiter;
                 
                 
-                if (strncmp(hotSpotText+5,"DELIMIT'",8)==0)
+                if (strncmp(hotSpotText+5,"DELIMIT'",8) == 0)
                 {
                     ::SendScintilla(SCI_GOTOPOS,firstPos + 5 + 8,0);
                     int delimitEnd = searchNext("':");
                     
-                    if ((delimitEnd>=0) && (delimitEnd < secondPos - 4))
+                    if ((delimitEnd >= 0) && (delimitEnd < secondPos - 4))
                     {
                         ::SendScintilla(SCI_SETSELECTION,firstPos + 5 + 8,delimitEnd);
                         
@@ -2283,6 +2346,9 @@ int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &sec
     } else if (strncmp(*hotSpotText,"(eva)",5)==0) //TODO: should think more about this hotspot, It can be made into a more general (ask) hotspot....so keep this feature private for the moment
     {
         spotType = 5;
+    } else if ((strncmp(*hotSpotText,"(web)",5)==0) || (strncmp(*hotSpotText,"(www)",5)==0))
+    {
+        spotType = 6;
     }
 
     ::SendScintilla(SCI_SETSELECTION,firstPos,secondPos+3);
@@ -4690,12 +4756,110 @@ int toVk(char* input)
 
 }
 
+void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* path)
+{
+    
+    DWORD dwSize = 0;
+    DWORD dwDownloaded = 0;
+    LPSTR pszOutBuffer;
+    std::vector <std::string> vFileContent;
+    BOOL  bResults = false;
+    HINTERNET  hSession = NULL, 
+               hConnect = NULL,
+               hRequest = NULL;
+    
+    // Use WinHttpOpen to obtain a session handle.
+    hSession = WinHttpOpen( L"WinHTTP Example/1.0",  
+                            WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+                            WINHTTP_NO_PROXY_NAME, 
+                            WINHTTP_NO_PROXY_BYPASS, 0);
+    
+    // Specify an HTTP server.
+    if (hSession)
+        hConnect = WinHttpConnect( hSession, server,
+                                   INTERNET_DEFAULT_HTTP_PORT, 0);
+    
+    // Create an HTTP request handle.
+    if (hConnect)
+        hRequest = WinHttpOpenRequest( hConnect, requestType, request,
+                                       NULL, WINHTTP_NO_REFERER, NULL, 
+                                       NULL);
+    
+    // Send a request.
+    if (hRequest)
+        bResults = WinHttpSendRequest( hRequest,
+                                       WINHTTP_NO_ADDITIONAL_HEADERS,
+                                       0, WINHTTP_NO_REQUEST_DATA, 0, 
+                                       0, 0);
+    
+    
+    // End the request.
+    if (bResults) bResults = WinHttpReceiveResponse( hRequest, NULL);
+    
+    // Keep checking for data until there is nothing left.
+    if (bResults)
+        do 
+        {
+            // Check for available data.
+            dwSize = 0;
+            if (!WinHttpQueryDataAvailable( hRequest, &dwSize)) vFileContent.push_back("Error in WinHttpQueryDataAvailable.");
+    
+            // Allocate space for the buffer.
+            pszOutBuffer = new char[dwSize+1];
+            if (!pszOutBuffer)
+            {
+                vFileContent.push_back("Out of memory.");
+                dwSize=0;
+            }
+            else
+            {
+                // Read the Data.
+                ZeroMemory(pszOutBuffer, dwSize+1);
+    
+                if (!WinHttpReadData(hRequest, (LPVOID)pszOutBuffer, dwSize, &dwDownloaded))
+                {
+                    vFileContent.push_back("Error in WinHttpReadData.");
+                }
+                else
+                {
+                    // Data in vFileContent
+                    vFileContent.push_back(pszOutBuffer);
+                }
+    
+                // Free the memory allocated to the buffer.
+                delete [] pszOutBuffer;
+            }
+    
+        } while (dwSize>0);
+    
+    
+    // Report any errors.
+    if (!bResults) vFileContent.push_back("Error has occurred.");
+    
+    // Close any open handles.
+    if (hRequest) WinHttpCloseHandle(hRequest);
+    if (hConnect) WinHttpCloseHandle(hConnect);
+    if (hSession) WinHttpCloseHandle(hSession);
 
+    //// Write vFileContent to file
+    std::ofstream fileStream;
+    if (_tcslen(path) <= 0)
+    {
+        fileStream.open(g_fttempPath,std::ios::binary);
+    } else
+    {
+        fileStream.open(path,std::ios::binary);
+    }
+    if (fileStream.is_open())
+    {
+        for (int i = 0; i < (int) vFileContent.size();i++) fileStream << vFileContent[i];
+        fileStream.close();
+    } else
+    {
+        // TODO: Show error message
+    }
 
-
-
-
-
+}
 
 
 void testing2()
@@ -4703,7 +4867,7 @@ void testing2()
     //HWND curScintilla = getCurrentScintilla();
     ::MessageBox(nppData._nppHandle, TEXT("Testing2!"), NPP_PLUGIN_NAME, MB_OK);
 
-    alertCharArray(g_customClipBoard);
+    searchNext("//");
 }
 
 
@@ -4712,6 +4876,13 @@ void testing()
     
     //HWND curScintilla = getCurrentScintilla();
     alertCharArray("testing1");
+
+    
+    TCHAR* url1 = TEXT("dl.dropbox.com");
+    TCHAR* url2 = TEXT("/u/7429931/test.txt");
+
+    httpToFile(url1,url2,TEXT("GET"));
+
 
 
     ////Test calltip
@@ -4866,104 +5037,6 @@ void testing()
     //    DispatchMessage(&Msg);
     //}
   
-    ////Testing using winhttp to send request
-    //Variables 
-    //DWORD dwSize = 0;
-    //DWORD dwDownloaded = 0;
-    //LPSTR pszOutBuffer;
-    //std::vector <std::string>  vFileContent;
-    //BOOL  bResults = FALSE;
-    //HINTERNET  hSession = NULL, 
-    //           hConnect = NULL,
-    //           hRequest = NULL;
-    //
-    //// Use WinHttpOpen to obtain a session handle.
-    //hSession = WinHttpOpen( L"WinHTTP Example/1.0",  
-    //                        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
-    //                        WINHTTP_NO_PROXY_NAME, 
-    //                        WINHTTP_NO_PROXY_BYPASS, 0);
-    //
-    //// Specify an HTTP server.
-    //if (hSession)
-    //    hConnect = WinHttpConnect( hSession, L"dl.dropbox.com",
-    //                               INTERNET_DEFAULT_HTTP_PORT, 0);
-    //
-    //// Create an HTTP request handle.
-    //if (hConnect)
-    //    hRequest = WinHttpOpenRequest( hConnect, L"GET", L"/u/7429931/test.txt",
-    //                                   NULL, WINHTTP_NO_REFERER, 
-    //                                                           NULL, 
-    //                                   NULL);
-    //
-    //// Send a request.
-    //if (hRequest)
-    //    bResults = WinHttpSendRequest( hRequest,
-    //                                   WINHTTP_NO_ADDITIONAL_HEADERS,
-    //                                   0, WINHTTP_NO_REQUEST_DATA, 0, 
-    //                                   0, 0);
-    //
-    //
-    //// End the request.
-    //if (bResults)
-    //    bResults = WinHttpReceiveResponse( hRequest, NULL);
-    //
-    //// Keep checking for data until there is nothing left.
-    //if (bResults)
-    //    do 
-    //    {
-    //
-    //        // Check for available data.
-    //        dwSize = 0;
-    //        if (!WinHttpQueryDataAvailable( hRequest, &dwSize))
-    //            printf( "Error %u in WinHttpQueryDataAvailable.\n",
-    //                    GetLastError());
-    //
-    //        // Allocate space for the buffer.
-    //        pszOutBuffer = new char[dwSize+1];
-    //        if (!pszOutBuffer)
-    //        {
-    //            printf("Out of memory\n");
-    //            dwSize=0;
-    //        }
-    //        else
-    //        {
-    //            // Read the Data.
-    //            ZeroMemory(pszOutBuffer, dwSize+1);
-    //
-    //            if (!WinHttpReadData( hRequest, (LPVOID)pszOutBuffer, 
-    //                                  dwSize, &dwDownloaded))
-    //                {
-    //                printf( "Error %u in WinHttpReadData.\n", 
-    //                        GetLastError());
-    //                }
-    //            else
-    //                {
-    //                        printf("%s", pszOutBuffer);
-    //                            // Data in vFileContent
-    //                        vFileContent.push_back(pszOutBuffer);
-    //                }
-    //
-    //            // Free the memory allocated to the buffer.
-    //            delete [] pszOutBuffer;
-    //        }
-    //
-    //    } while (dwSize>0);
-    //
-    //
-    //// Report any errors.
-    //if (!bResults)
-    //    printf("Error %d has occurred.\n",GetLastError());
-    //
-    //// Close any open handles.
-    //if (hRequest) WinHttpCloseHandle(hRequest);
-    //if (hConnect) WinHttpCloseHandle(hConnect);
-    //if (hSession) WinHttpCloseHandle(hSession);
-    //
-    //// Write vFileContent to file
-    //std::ofstream out("d:\\test.txt",std::ios::binary);
-    //for (int i = 0; i < (int) vFileContent.size();i++)
-    //out << vFileContent[i];
-    //out.close();
 
     
     //Testing usage of cleanupstring()

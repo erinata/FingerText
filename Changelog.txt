@@ -1,5 +1,8 @@
 changelog (for developer use only, include unreleased versions)
 
+0.5.38
+****** Added: hotspot (web)
+
 0.5.37
 ****** Added: FTCUT and FTCOPY series, which is a copy of the CUT and COPY series but utilitize fingertext custom clipboard instead of the reguler clipboard
 ****** Added: FTPASTE to retrieve text from fingertext custom clipboard

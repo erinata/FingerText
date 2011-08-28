@@ -80,6 +80,7 @@ void paramsInsertion(int &firstPos, char* hotSpot, int &checkPoint);
 void addToCustomClipBoard(char* input);
 void textCopyCut(int sourceType, int operationType, int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint);
 void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint);
+void webRequest(int &firstPos, char* hotSpotText);
 void executeCommand(int &firstPos, char* hotSpotText);
 void launchMessageBox(int &firstPos, char* hotSpotText);
 void evaluateExpression(int &firstPos, char* hotSpotText);
@@ -128,6 +129,8 @@ bool exportSnippets();
 void importSnippets();
 void snippetHintUpdate();
 int promptSaveSnippet(TCHAR* message = NULL);
+
+void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* path = TEXT(""));
 
 void updateMode();
 void refreshAnnotation();
