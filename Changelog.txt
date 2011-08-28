@@ -2,6 +2,7 @@ changelog (for developer use only, include unreleased versions)
 
 0.5.38
 ****** Added: hotspot (web)
+****** Fixed: Params insertion is now compatible with chain snippet
 
 0.5.37
 ****** Added: FTCUT and FTCOPY series, which is a copy of the CUT and COPY series but utilitize fingertext custom clipboard instead of the reguler clipboard

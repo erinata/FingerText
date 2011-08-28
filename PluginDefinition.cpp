@@ -989,7 +989,7 @@ void chainSnippet(int &firstPos, char* hotSpotText)
     //TODO: there should be a bug here. When the chain snippet contains content with CUT, the firstPos is not updated.
     int triggerPos = strlen(hotSpotText)+firstPos;
     ::SendScintilla(SCI_GOTOPOS,triggerPos,0);
-    triggerTag(triggerPos,false, strlen(hotSpotText)); //TODO: consider making chain snippet compatifble with params insertion, basically when the strlen is passed , params insertion wont work
+    triggerTag(triggerPos,false, strlen(hotSpotText));
 }
 
 ////Old implementation of executeCommand
@@ -4083,10 +4083,13 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
         paramPos = ::SendScintilla(SCI_BRACEMATCH,posCurrent-1,0);
         if ((paramPos>=0) && (paramPos<posCurrent))
         {
+            triggerLength = triggerLength - (posCurrent - paramPos);
             posCurrent = paramPos;
             ::SendScintilla(SCI_GOTOPOS,paramPos,0);
+            
         }
     }
+
 
     bool tagFound = false;
     char *tag;
@@ -4103,7 +4106,7 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
     //::_itow_s(curLang, curLangNumber, 10, 10);
     //::wcscat(curLangText, curLangNumber);
 
-    if (((triggerLength==0) && (tag[0] == '_')) || (tagLength == 0))
+    if (((triggerLength<=0) && (tag[0] == '_')) || (tagLength == 0))
     {
         delete [] tag;
     } else if (tagLength > 0) //TODO: changing this to >0 fixed the problem of tag_tab_completion, but need to investigate more about the side effect
@@ -4758,7 +4761,7 @@ int toVk(char* input)
 
 void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* path)
 {
-    
+    //TODO: should report error as a return value   
     DWORD dwSize = 0;
     DWORD dwDownloaded = 0;
     LPSTR pszOutBuffer;
@@ -4867,7 +4870,15 @@ void testing2()
     //HWND curScintilla = getCurrentScintilla();
     ::MessageBox(nppData._nppHandle, TEXT("Testing2!"), NPP_PLUGIN_NAME, MB_OK);
 
-    searchNext("//");
+    //char buffer [100];
+    //sprintf(buffer, "0x%08x", (unsigned __int64) g_tempWindowHandle);
+    //alertCharArray(buffer);
+
+    long handle = reinterpret_cast<long>(g_tempWindowHandle);
+    alertNumber(handle);
+    //HWND newWin = reinterpret_cast<HWND>(handle);
+
+    
 }
 
 
