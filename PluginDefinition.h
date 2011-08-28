@@ -144,7 +144,7 @@ void convertToWideChar(char* orig, wchar_t **wideChar);
 void insertPath(TCHAR* path);
 void insertNppPath(int msg);
 
-void generateStroke(int vk);
+void generateStroke(int vk, int modifier = 0);
 void generateKey(int vk, bool keyDown);
 BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam);
 void setFocusToWindow();

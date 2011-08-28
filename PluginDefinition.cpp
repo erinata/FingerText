@@ -1563,23 +1563,27 @@ void textCopyCut(int sourceType, int operationType, int &firstPos, char* hotSpot
         } else if (sourceType == 4) 
         {
             int keywordLength;
-            if (operationType == 0) keywordLength = 4;
-            else if (operationType == 1) keywordLength = 5;
-            else if (operationType == 2) keywordLength = 6;
-            else if (operationType == 3) keywordLength = 7;
+            if (operationType == 0) keywordLength = 8;
+            else if (operationType == 1) keywordLength = 9;
+            else if (operationType == 2) keywordLength = 10;
+            else if (operationType == 3) keywordLength = 11;
 
-            int hotSpotTextLength = strlen(hotSpotText);
             int paramNumber = 0;
-            if (hotSpotTextLength - (keywordLength + 1) > 0)
-            {
-                char* param;
-                param = new char[hotSpotTextLength - (keywordLength + 1) + 1];
-                strncpy(param,hotSpotText+keywordLength,hotSpotTextLength - (keywordLength + 1));
-                param[hotSpotTextLength - (keywordLength + 1)] = '\0';
-                paramNumber = ::atoi(param);
-            }
 
-            if (paramNumber < 0) paramNumber = 0;
+            char* getTerm;
+            getTerm = new char[strlen(hotSpotText)];
+            strcpy(getTerm,hotSpotText+keywordLength);
+            
+            paramNumber = ::atoi(getTerm);
+
+            delete [] getTerm;
+
+            if (paramNumber > 0) 
+            {
+            } else 
+            {
+                paramNumber = 1;
+            }
             
             int targetLine = (::SendScintilla(SCI_LINEFROMPOSITION,firstPos-1,0)) - paramNumber + 1;
             if (targetLine<0) targetLine = 0;
@@ -1598,8 +1602,10 @@ void textCopyCut(int sourceType, int operationType, int &firstPos, char* hotSpot
             char* getTerm;
             getTerm = new char[strlen(hotSpotText)];
             strcpy(getTerm,hotSpotText+keywordLength);
+
             int scriptFound = -1;
             if (strlen(getTerm)>0) scriptFound = searchPrev(getTerm);
+
             delete [] getTerm;
             
             selectionEnd = firstPos-1; // -1 because the space before the snippet tag should not be included
@@ -1608,15 +1614,17 @@ void textCopyCut(int sourceType, int operationType, int &firstPos, char* hotSpot
             {
                 scriptStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
                 selectionStart = scriptStart + strlen(hotSpotText) - keywordLength;
+                if (selectionEnd < selectionStart) selectionStart = selectionEnd;
+                ::SendScintilla(SCI_SETSEL,selectionStart,selectionEnd);
             } else
             {
-                scriptStart = 0;
-                selectionStart = 0;
+
+                ::SendScintilla(SCI_WORDLEFTEXTEND,0,0);
+                scriptStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+                selectionStart = scriptStart;
             }
 
-            if (selectionEnd < selectionStart) selectionStart = selectionEnd;
             
-            ::SendScintilla(SCI_SETSEL,selectionStart,selectionEnd);
         }
 
         if (operationType == 0)
@@ -1695,10 +1703,10 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
     } else if (strcmp(hotSpotText,"COPYDOC")==0)
     {
         textCopyCut(3, 1, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if ((strncmp(hotSpotText,"CUT'",4)==0) && (strncmp(hotSpotText+hotSpotTextLength-1,"'",1)==0))
+    } else if (strncmp(hotSpotText,"CUTLINE:",8)==0)
     {
         textCopyCut(4, 0, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if ((strncmp(hotSpotText,"COPY'",5)==0) && (strncmp(hotSpotText+hotSpotTextLength-1,"'",1)==0))
+    } else if (strncmp(hotSpotText,"COPYLINE:",9)==0)
     {
         textCopyCut(4, 1, firstPos, hotSpotText, startingPos, checkPoint);
     } else if (strncmp(hotSpotText,"CUT:",4)==0) 
@@ -1725,10 +1733,10 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
     } else if (strcmp(hotSpotText,"FTCOPYDOC")==0)
     {
         textCopyCut(3, 3, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if ((strncmp(hotSpotText,"FTCUT'",6)==0) && (strncmp(hotSpotText+hotSpotTextLength-1,"'",1)==0))
+    } else if (strncmp(hotSpotText,"FTCUTLINE:",10)==0)
     {
         textCopyCut(4, 2, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if ((strncmp(hotSpotText,"FTCOPY'",7)==0) && (strncmp(hotSpotText+hotSpotTextLength-1,"'",1)==0))
+    } else if (strncmp(hotSpotText,"FTCOPYLINE:",11)==0)
     {
         textCopyCut(4, 3, firstPos, hotSpotText, startingPos, checkPoint);
     } else if (strncmp(hotSpotText,"FTCUT:",6)==0) 
@@ -3661,7 +3669,6 @@ void updateScintilla()
     pSciWndData = (sptr_t)SendMessage(curScintilla,SCI_GETDIRECTPOINTER, 0, 0);
 }
 
-
 void updateMode()
 {
     updateScintilla();
@@ -4061,8 +4068,6 @@ void selectionMonitor(int contentChange)
         g_selectionMonitor++;
         refreshAnnotation();  //TODO: consider only refresh annotation under some situation (for example only when an undo is done) to improve efficiency.
     }
-    
-    
 }
 
 void tagComplete()
@@ -4218,11 +4223,7 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
         delete [] tagType;
         delete [] expanded;
 		delete [] tag;
-        // return to the original path 
-        // ::SetCurrentDirectory(curPath);
-
         
-
         // return to the original position 
         if (tagFound)
         {
@@ -4292,10 +4293,13 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
 //    return tagFound;
 //}
 
-void generateStroke(int vk)
+void generateStroke(int vk, int modifier)
 {
+    //TODO: should be able to take an array of modifier
+    if (modifier !=0) generateKey(modifier,true);
     generateKey(vk,true);
     generateKey(vk,false);
+    if (modifier !=0) generateKey(modifier,false);
 }
 
 void generateKey(int vk, bool keyDown) 
@@ -4337,16 +4341,13 @@ BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam)
         return false;
     }
     return true;
-    
 }
 
 void searchWindowByName(std::string searchKey, HWND parentWindow)
 {
-
     if (searchKey == "")
     {
-        g_tempWindowHandle = nppData._nppHandle;
-        
+        g_tempWindowHandle = nppData._nppHandle;       
     } else
     {
         char* temp = new char [searchKey.size()+1];
@@ -4363,7 +4364,6 @@ void searchWindowByName(std::string searchKey, HWND parentWindow)
         delete [] temp;
         delete [] g_tempWindowKey;
     }
-
 }
 
 void setFocusToWindow()
@@ -4995,60 +4995,6 @@ void testing()
     //// For opening static dialog
     //openDummyStaticDlg();
 
-
-    ////Testing creating window using createwindowex
-    //WNDCLASSEX wc;
-    //HWND hwnd;
-    //MSG Msg;
-    //
-    ////Step 1: Registering the Window Class
-    //wc.cbSize        = sizeof(WNDCLASSEX);
-    //wc.style         = 0;
-    //wc.lpfnWndProc   = WndProc;
-    //wc.cbClsExtra    = 0;
-    //wc.cbWndExtra    = 0;
-    //wc.hInstance     = NULL;
-    //wc.hIcon         = LoadIcon(NULL, (LPCWSTR)IDI_APPLICATION);
-    //wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
-    //wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-    //wc.lpszMenuName  = NULL;
-    //wc.lpszClassName = TEXT("CLASS");
-    //wc.hIconSm       = LoadIcon(NULL, (LPCWSTR)IDI_APPLICATION);
-    //
-    //if(!RegisterClassEx(&wc))
-    //{
-    //    MessageBox(NULL, TEXT("Window Registration Failed!"), TEXT("Error!"),
-    //        MB_ICONEXCLAMATION | MB_OK);
-    //    return;
-    //}
-    //
-    //// Step 2: Creating the Window
-    //hwnd = CreateWindowEx(
-    //    WS_EX_CLIENTEDGE,
-    //    TEXT("CLASS"),
-    //    TEXT("The title of my window"),
-    //    WS_OVERLAPPEDWINDOW,
-    //    CW_USEDEFAULT, CW_USEDEFAULT, 240, 120,
-    //    NULL, NULL, NULL, NULL);
-    //
-    //if(hwnd == NULL)
-    //{
-    //    MessageBox(NULL, TEXT("Window Creation Failed!"), TEXT("Error!"),
-    //        MB_ICONEXCLAMATION | MB_OK);
-    //    return;
-    //}
-    //
-    //ShowWindow(hwnd, 5);
-    //UpdateWindow(hwnd);
-    //
-    //// Step 3: The Message Loop
-    //while(GetMessage(&Msg, NULL, 0, 0) > 0)
-    //{
-    //    TranslateMessage(&Msg);
-    //    DispatchMessage(&Msg);
-    //}
-  
-
     
     //Testing usage of cleanupstring()
     //char* test = new char[MAX_PATH];
@@ -5185,9 +5131,6 @@ void testing()
     //alertCharArray((char*)(*p));
     
 
-
-
-
     //setCommand(TRIGGER_SNIPPET_INDEX, TEXT("Trigger Snippet/Navigate to Hotspot"), fingerText, NULL, false);
     //::GenerateKey(VK_TAB, TRUE);
 
@@ -5285,37 +5228,7 @@ void testing()
     
 
     //::SendMessage(nppData._nppHandle, NPPM_ACTIVATEDOC, MAIN_VIEW, 1);
-    
-    //::SendMessage(curScintilla, SCI_SETSELECTION, 0, 44);
-    //
-    //char selText[45];
-    //::SendMessage(curScintilla, SCI_GETSELTEXT, 0, (LPARAM)&selText);
-    //
-    //char key[]="------ FingerText Snippet Editor View ------";
-    //
-    ////if (selText == "------ FingerText Snippet Editor View ------")
-    //if (::strcmp(selText,key))
-    //{
-    //    ::MessageBox(nppData._nppHandle, TEXT("true"), NPP_PLUGIN_NAME, MB_OK);
-    //} else
-    //{
-    //    ::MessageBox(nppData._nppHandle, TEXT("false"), NPP_PLUGIN_NAME, MB_OK);
-    //}
-    //
-
-
-        
-    //::SendMessage(curScintilla,SCI_GOTOPOS,0,0);
-    //::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
-    //::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)"FingerText Snippet Editor View");
-    //    
-    //if (::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0) == 7)
-    //{
-    //    ::MessageBox(nppData._nppHandle, TEXT("true"), NPP_PLUGIN_NAME, MB_OK);
-    //} else
-    //{
-    //    ::MessageBox(nppData._nppHandle, TEXT("false"), NPP_PLUGIN_NAME, MB_OK);
-    //}
+   
 
 }
 
@@ -5335,12 +5248,6 @@ void alertCharArray(char* input)
 {
     wchar_t* wcstring;
     convertToWideChar(input, &wcstring);
-    
-    //size_t origsize = strlen(input) + 1;
-    //const size_t newsize = 1000;
-    //size_t convertedChars = 0;
-    //wchar_t wcstring[newsize];
-    //mbstowcs_s(&convertedChars, wcstring, origsize, input, _TRUNCATE);
     ::MessageBox(nppData._nppHandle, wcstring, NPP_PLUGIN_NAME, MB_OK);
     delete [] wcstring;
 }
