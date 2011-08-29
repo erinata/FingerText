@@ -38,9 +38,14 @@ Expression::Expression(char *input)
     this->processExpression(input);        
 }
 
+Expression::Expression(std::string input) 
+{
+    isError = false;
+    this->processExpression(input);        
+}
 //TODO: make a class to centralize all the type conversion
 // convert char to string
-std::string Expression::charToString(const char &c)
+std::string Expression::toString(const char &c)
 {
     std::stringstream ss;
     ss << c;
@@ -48,7 +53,7 @@ std::string Expression::charToString(const char &c)
 }
 
 // convert double to string
-std::string Expression::doubleToString(const double &d) {
+std::string Expression::toString(const double &d) {
     std::stringstream ss;
     ss << d;
     return ss.str();
@@ -73,9 +78,10 @@ int Expression::checkOperator(const char &c)
         //TODO: C (p) - combination, P (P) - permutation, abs (a) - absolute value, exp (e) - exponential (don't use e as e is for the constant e)
         //TODO: r - round down, R - round up
         //TODO: round to nearest integer, truncate
-        //TODO: implementing = , which is a logical check on whether the left hand side is = to right hand side, 1 if equal, 0 if not
-        //TODO: Or more generally, implement == ,>= ,<= ,> ,< as checking
-        
+
+        case '$' : 
+        case '#' : return 9;
+        case 'n' : return 8;
         case 's' :
         case 'c' :
         case 't' :
@@ -84,13 +90,21 @@ int Expression::checkOperator(const char &c)
         case 'C' :
         case 'T' :
         case 'L' :
-        case '!' : return 5;
-        case '^' : return 4; 
+        case '!' : return 7;
+        case '^' : return 6; 
         case '%' : 
         case '*' :
-        case '/' : return 3;
+        case '/' : return 5;
         case '+' :
-        case '-' : return 2;
+        case '-' : return 4;
+        case '=' :
+        case 'N' : 
+        case 'G' :
+        case 'g' : 
+        case '>' :
+        case '<' : return 3;
+        case '&' :
+        case '|' : return 2;
         case '(' : 
         case ')' : return 1;
         default  : return 0;
@@ -122,8 +136,13 @@ std::string Expression::rephrasing(std::string input)
     int length = input.length();
     for (int j=0; j<length; ++j) input[j]=tolower(input[j]);
 
+    //TODO: need to fix the problem of negative number. solution can be find and replace all - by 0- if the char before - is not a digit
+
     //Operators
-    findAndReplace(input,"!","!0");
+    findAndReplace(input,"==","=");
+    findAndReplace(input,">=","G");
+    findAndReplace(input,"<=","g");
+    findAndReplace(input,"!=","N");
     findAndReplace(input,"ln","0l");
     findAndReplace(input,"log","0L");
     findAndReplace(input,"asin","0S");
@@ -132,9 +151,12 @@ std::string Expression::rephrasing(std::string input)
     findAndReplace(input,"cos","0c");
     findAndReplace(input,"atan","0T");
     findAndReplace(input,"tan","0t");
+    findAndReplace(input,"!","!0");
     // Constants
     findAndReplace(input,"pi","3.141592654");
     findAndReplace(input,"e","2.71828183");  // execute the find and replace after all others because other words may contain e
+
+    findAndReplace2(input,"-","0n");
 
     return input;
 }
@@ -142,7 +164,7 @@ std::string Expression::rephrasing(std::string input)
 // parse operand to operandStack
 void Expression::parseOperand(const double &operand) 
 {
-  postfix.push_back(make_pair(OPERAND, doubleToString(operand)));
+  postfix.push_back(make_pair(OPERAND, toString(operand)));
 }
 
 // parse operator to operatorStack
@@ -158,7 +180,7 @@ void Expression::parseOperator(const char &c)
         {
             while(operatorStack.top() != '(') 
             {
-                postfix.push_back(make_pair(OPERATOR, charToString(operatorStack.top())));
+                postfix.push_back(make_pair(OPERATOR, toString(operatorStack.top())));
                 operatorStack.pop();
                 
                 if (operandStack.empty()) 
@@ -180,7 +202,7 @@ void Expression::parseOperator(const char &c)
         { // not ')'
             while(checkOperator(c) <= checkOperator(operatorStack.top()) && !operatorStack.empty()) 
             {
-                postfix.push_back(make_pair(OPERATOR, charToString(operatorStack.top())));
+                postfix.push_back(make_pair(OPERATOR, toString(operatorStack.top())));
                 operatorStack.pop();
                 
                 if (operatorStack.empty()) 
@@ -193,7 +215,7 @@ void Expression::parseOperator(const char &c)
 
 void Expression::processExpression(std::string input)
 {
-    std::string infix = rephrasing(input);
+    std::string infix = rephrasing("0$"+input+"#0");
     this->toPostfix(infix);  // convert infix to postfix
 }
 
@@ -237,7 +259,6 @@ void Expression::toPostfix(std::string infix)
             } else
             {
                 operand.push_back(*p);
-
             }
         }
     }
@@ -248,7 +269,7 @@ void Expression::toPostfix(std::string infix)
     // If operatorStack is not empty, push it to postfix vector until operatorStack is empty.
     while(!operatorStack.empty()) 
     {
-        postfix.push_back(make_pair(OPERATOR,charToString(operatorStack.top())));
+        postfix.push_back(make_pair(OPERATOR,toString(operatorStack.top())));
         operatorStack.pop();
     }
 }
@@ -288,9 +309,78 @@ double Expression::operate(const std::string &operation, const double &operand1,
             return tan(operand1);
         case 'T':
             return atan(operand1);
+        case 'n':
+            return operand2 - operand1;
+        case '#':
+            return operand2;
+        case '$':
+            return operand1;
+        case '=':
+            return isEqual(operand1,operand2);
+        case 'N':
+            return isNotEqual(operand1,operand2);
+        case 'G':
+            return isGreaterOrEqual(operand1,operand2);
+        case 'g':
+            return isSmallerOrEqual(operand1,operand2);
+        case '>':
+            return isGreater(operand1,operand2);
+        case '<':
+            return isSmaller(operand1,operand2);
+        case '&':
+            return operateAnd(operand1,operand2);
+        case '|':
+            return operateOr(operand1,operand2);
         default:
             return 0;
     }
+}
+int Expression::operateAnd(double operand1, double operand2)
+{
+    if ((operand2 == 0) && (operand1 == 0)) return 0;
+    else return 1;
+}
+
+int Expression::operateOr(double operand1, double operand2)
+{
+    if ((operand2 == 0) || (operand1 == 0)) return 0;
+    else return 1;
+}
+
+int Expression::isGreater(double operand1, double operand2)
+{
+    if (operand2 > operand1) return 0;
+    else return 1;
+}
+
+int Expression::isSmaller(double operand1, double operand2)
+{
+    if (operand2 < operand1) return 0;
+    else return 1;
+}
+
+int Expression::isGreaterOrEqual(double operand1, double operand2)
+{
+    if (operand2 >= operand1) return 0;
+    else return 1;
+}
+
+int Expression::isSmallerOrEqual(double operand1, double operand2)
+{
+    if (operand2 <= operand1) return 0;
+    else return 1;
+}
+
+int Expression::isEqual(double operand1, double operand2)
+{
+    if (operand1 == operand2) return 0;
+    else return 1;
+}
+
+int Expression::isNotEqual(double operand1, double operand2)
+{
+    if (operand1 != operand2) return 0;
+    else return 1;
 }
 
 int Expression::factorial(int number)
@@ -301,7 +391,7 @@ int Expression::factorial(int number)
 }
 
 // get evaluation result
-double Expression::evaluate(void) 
+double Expression::compute(void) 
 {
     // The operandstack should be empty, if not, empty it label it an error
     while(!operandStack.empty()) 
@@ -335,31 +425,48 @@ double Expression::evaluate(void)
     return operandStack.top();
 }
 
+//TODO: try to refactor the 2 evaluate function, and set the return value to error message
 // Get result in string
-std::string Expression::evaluateToString(void) 
+//std::string Expression::evaluateToString(void) 
+//{
+//    std::string result;
+//    result = toString(evaluate());
+//    if (!isError)
+//    {
+//        return result;
+//    } else
+//    {
+//        return "err";
+//    }
+//}
+int Expression::evaluate(std::string& output) 
 {
-    std::string result;
-    result = doubleToString(evaluate());
-    if (!isError)
+    output = toString(compute());
+    if (isError)
     {
-        return result;
+        return 1;
     } else
     {
-        return "error";
+        return 0;
     }
 }
 // Get result in char array
-void Expression::evaluateToCharArray(char** output)
+int Expression::evaluate(char** output)
 {
     std::string temp;
-    temp = doubleToString(evaluate());
-    if (isError)
-    {
-        temp = "error";
-    }
-
+    temp = toString(compute());
     *output = new char [temp.size()+1];
     strcpy(*output,temp.c_str());
+
+    if (isError)
+    {
+        return 1;
+    } else
+    {
+        return 0;
+    }
+
+    
 }
 
 void Expression::findAndReplace(std::string& str, const std::string& oldStr, const std::string& newStr)
@@ -369,5 +476,29 @@ void Expression::findAndReplace(std::string& str, const std::string& oldStr, con
     {
        str.replace(pos, oldStr.length(), newStr);
        pos += newStr.length();
+    }
+}
+
+void Expression::findAndReplace2(std::string& str, const std::string& oldStr, const std::string& newStr)
+{
+    size_t pos = 0;
+    while((pos = str.find(oldStr, pos)) != std::string::npos)    // npos means "end of string"
+    {
+        
+        if (pos != 0)
+        {
+            if (!isDigit(str[pos-1]))
+            {
+                str.replace(pos, oldStr.length(), newStr);
+                pos += newStr.length();
+            } else
+            {
+                pos += 1;
+            }
+        } else
+        {
+            str.replace(pos, oldStr.length(), newStr);
+            pos += newStr.length();
+        }
     }
 }

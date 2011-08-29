@@ -6,7 +6,7 @@ changelog (for developer use only, include unreleased versions)
 ****** Fixed: Params insertion is now compatible with chain snippet
 ****** CUT'X' and COPY'X' (and alike) are changed to CUTLINE:X and COPYLINE:X for consistency
 ****** default value of CUT: COPY: (and alike) changed to CUT and COPY for consistency
-****** Fixed: bug in (eva) which make atan acos asin calculate wrong
+****** Major rewrite in (eva), fixed bugs and a lot more features
 
 0.5.37
 ****** Added: FTCUT and FTCOPY series, which is a copy of the CUT and COPY series but utilitize fingertext custom clipboard instead of the reguler clipboard

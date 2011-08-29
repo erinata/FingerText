@@ -46,9 +46,13 @@
 class Expression {
 public: 
     Expression(char*);
-    double evaluate();
-    std::string evaluateToString();
-    void evaluateToCharArray(char** output);
+    Expression(std::string input);
+    double compute();
+    //std::string evaluateToString();
+    int Expression::evaluate(std::string& output);
+    //void evaluateToCharArray(char** output);
+    int Expression::evaluate(char** output);
+
 
 private: 
     // implementation of shunting yard algorithm require a stack for operator and a stack for operand
@@ -61,8 +65,10 @@ private:
     bool isError;
 
 private:
-    std::string charToString(const char &);      
-    std::string doubleToString(const double &);     
+    //std::string charToString(const char &);      
+    //std::string doubleToString(const double &);    
+    std::string toString(const char &);      
+    std::string toString(const double &);     
     double stringToDouble(const std::string &); 
     bool isDigit(const char &c);
     int checkOperator(const char&); 
@@ -73,7 +79,17 @@ private:
     void toPostfix(std::string infix);        
     double operate(const std::string &, const double &, const double &); // calculate result by operator and operand
     void findAndReplace(std::string& str, const std::string& oldStr, const std::string& newStr);
+    void findAndReplace2(std::string& str, const std::string& oldStr, const std::string& newStr);
     int factorial(int number);
+    int Expression::isNotEqual(double operand1, double operand2);
+    int Expression::isEqual(double operand1, double operand2);
+    int Expression::isSmallerOrEqual(double operand1, double operand2);
+    int Expression::isGreaterOrEqual(double operand1, double operand2);
+    int Expression::isSmaller(double operand1, double operand2);
+    int Expression::isGreater(double operand1, double operand2);
+    int Expression::operateOr(double operand1, double operand2);
+    int Expression::operateAnd(double operand1, double operand2);
 };
+
 
 #endif

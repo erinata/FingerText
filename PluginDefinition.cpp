@@ -29,9 +29,9 @@
 
 #include "PluginDefinition.h"
 
-FuncItem funcItem[nbFunc];   // The plugin data that Notepad++ needs
-NppData nppData;  // The data for plugin command and sending message to notepad++
-HANDLE g_hModule; // the hModule from pluginInit for initializing dialogs
+FuncItem funcItem[nbFunc];      // The plugin data that Notepad++ needs
+NppData nppData;                // The data for plugin command and sending message to notepad++
+HANDLE g_hModule;               // the hModule from pluginInit for initializing dialogs
 
 SciFnDirect pSciMsg;  // For direct scintilla call
 sptr_t pSciWndData;   // For direct scintilla call
@@ -41,6 +41,7 @@ bool     g_dbOpen;
 
 struct SnipIndex 
 {
+    //TODO: should use String here
     char* triggerText;
     char* scope;
     char* content;    
@@ -53,6 +54,7 @@ TCHAR g_dataBasePath[MAX_PATH];
 TCHAR g_currentFocusPath[MAX_PATH];
 //TCHAR g_groupPath[MAX_PATH];
 
+// TODO: Should use vector here
 SnipIndex* g_snippetCache;
 //int g_snippetCacheSize;
 
@@ -78,7 +80,7 @@ int g_optionStartPosition;
 int g_optionEndPosition;
 int g_optionCurrent;
 int g_optionNumber;
-//char *g_optionArray[] = {"","","","","","","","","","","","","","","","","","","",""};
+// TODO: Should use vector here
 char *g_optionArray[] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 int g_optionArrayLength = 50;
 
@@ -775,7 +777,6 @@ int searchNextMatchedTail(char* tagSign, char* tagTail)
     // This function is tested to work when the position is at the end of tagSign
     // And this return the position at the END of tailsign, if found
    
-
     int signSpot = -1;
     int tailSpot = -1;
     int unmatchedSign = 0;
@@ -1276,16 +1277,116 @@ void executeCommand(int &firstPos, char* hotSpotText)
 
 void evaluateExpression(int &firstPos, char* hotSpotText)
 {
-    //TODO: Npp will freeze when the statement cannot be evaluated
+    //TODO: refactor the numeric comparison part
+    //TODO: should allow for a more elaborate comparison output
+    //TODO: can include the ? : syntax here
     int triggerPos = strlen(hotSpotText)+firstPos;
     ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
 
-    Expression y(hotSpotText);
-    char* result;
-    y.evaluateToCharArray(&result);
+    std::vector<std::string> expressions;
+    
+    expressions = split(hotSpotText,';');
+    bool stringComparison = false;
 
+    int i = 0;
+    int j = 0;
+    for (i = 0;i<expressions.size();i++)
+    {
+        
+        if (expressions[i].length()>1)
+        {
+            if ((expressions[i][0] != '"') || (expressions[i][expressions[i].length()-1] != '"'))
+            {
+                // This is math expression
+                Expression y(expressions[i]);
+                if ((y.evaluate(expressions[i])) == 0)
+                {
+                } else 
+                {
+                    //alertCharArray("error");
+                    expressions[i] = "error";
+                    stringComparison = true;
+                }
+            } 
+            else
+            {
+                // This is string
+                expressions[i] = expressions[i].substr(1,expressions[i].length()-2);
+                stringComparison = true;
+            }
+        } else if (expressions[i].length()>0)
+        {
+            // This is math expression
+            Expression y(expressions[i]);
+            if ((y.evaluate(expressions[i])) == 0)
+            {
+            } else 
+            {
+                //alertCharArray("error");
+                expressions[i] = "error";
+                stringComparison = true;   
+            }
+        } else
+        {
+            // This is string
+            expressions[i] = "";
+            stringComparison = true;
+        }
+    
+    }
+    
+    std::string evaluateResult = "";
+    int compareResult = 0;
+    int storedCompareResult = 0;
+    
+    if (expressions.size() == 1)
+    {
+        evaluateResult = expressions[0];
+    } else
+    {
+        //TODO: should have more comprehansive comparison, e.g. not onnly compare to the first element
+        if (stringComparison)
+        {
+            for (j = 1;j<expressions.size();j++)
+            {
+                for (i = j;i<expressions.size();i++)
+                {
+                    compareResult = expressions[i].compare(expressions[j-1]);
+                    if (::abs(compareResult) > ::abs(storedCompareResult)) storedCompareResult = compareResult;
+                }
+            }
+        
+        } else
+        {
+            for (j = 1;j<expressions.size();j++)
+            {
+                for (i = j;i<expressions.size();i++)
+                {
+                    std::stringstream ss0(expressions[j-1]);
+                    std::stringstream ss1(expressions[i]);
+                    double d0;
+                    double d1;
+                    ss0 >> d0;
+                    ss1 >> d1;
+
+                    compareResult = d0 - d1;
+                    if (::abs(compareResult) > ::abs(storedCompareResult)) storedCompareResult = compareResult;
+                }
+            }
+        }
+        
+        std::stringstream ss;
+        ss << ::abs(storedCompareResult);
+        evaluateResult = ss.str();
+    }
+
+    char* result;
+    result = new char[evaluateResult.length()+1];
+    strcpy(result,evaluateResult.c_str());
     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)result);
     delete [] result;
+
+
 }
 
 void launchMessageBox(int &firstPos, char* hotSpotText)
@@ -4521,17 +4622,20 @@ void tabActivate()
                 if (!tagFound) 
                 {
                     i = g_listLength-1;
-                    do
+                    if (posCurrent > g_lastTriggerPosition)
                     {
-
-                        if (searchPrev(g_tagSignList[i]) >= 0)
+                        do
                         {
-                            ::SendScintilla(SCI_GOTOPOS,g_lastTriggerPosition,0);
-                            posCurrent = g_lastTriggerPosition;
-                            break;   
-                        }
-                        i--;
-                    } while (i>=0);
+                            //TODO: limit the search to g_lastTriggerPosition ?       
+                            if (searchPrev(g_tagSignList[i]) >= 0)
+                            {
+                                ::SendScintilla(SCI_GOTOPOS,g_lastTriggerPosition,0);
+                                posCurrent = g_lastTriggerPosition;
+                                break;   
+                            }
+                            i--;
+                        } while (i>=0);
+                    }
 
                  
                     //if (searchNext("$[2[") < 0)
@@ -4549,7 +4653,6 @@ void tabActivate()
                     //   }
                     //}
                 }
-                //TODO: turn this into array and while loop
                 //TODO: cater more level of priority
                 //TODO: Params inertion will stop when navSpot is true, so it is not working properly under differnt level of priority
                 //      Or in other words it only work for the highest existing level of priority
@@ -4566,11 +4669,10 @@ void tabActivate()
                     }
                     ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
                     
-                     
                     navSpot = hotSpotNavigation(g_tagSignList[i],g_tagTailList[i]);
                     
                     i--;
-                } while ((navSpot == 0) && (i >= 0));
+                } while ((navSpot <= 0) && (i >= 0));
 
                 
                 //dynamicSpot = dynamicHotspot(posCurrent,"$[2[","]2]");
@@ -4811,11 +4913,6 @@ void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* pathWi
                             WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
                             WINHTTP_NO_PROXY_NAME, 
                             WINHTTP_NO_PROXY_BYPASS, 0);
-    
-    //TODO: investigate why this doesn't work
-    //const wchar_t* temp[MAX_PATH] = {NULL};
-    //temp[0] = TEXT("Application/OCTET-STREAM");
-    
 
     // Specify an HTTP server.
     if (hSession)
@@ -4835,14 +4932,13 @@ void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* pathWi
                                        WINHTTP_NO_ADDITIONAL_HEADERS,
                                        0, WINHTTP_NO_REQUEST_DATA, 0, 
                                        0, 0);
-    
-    
+
     // End the request.
     if (bResults) bResults = WinHttpReceiveResponse( hRequest, NULL);
 
     char* path;
     FILE * pFile;
-
+    //TODO: move this default value part to the snippet triggering function
     if (_tcslen(pathWide) <= 0)
     {
         path = new char[_tcslen(g_fttempPath)];
@@ -4882,28 +4978,24 @@ void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* pathWi
                     alertCharArray("Error in WinHttpReadData.");
                 } else
                 {
-                        fwrite(pszOutBuffer, (size_t)dwDownloaded, (size_t)1, pFile);
+                    fwrite(pszOutBuffer, (size_t)dwDownloaded, (size_t)1, pFile);
                 }
     
                 // Free the memory allocated to the buffer.
                 delete [] pszOutBuffer;
             }
-    
         } while (dwSize>0);
     }
-    
-    fclose (pFile); // NEW
+    fclose (pFile);
 
     delete [] path;
 
     // Report any errors.
-    //if (!bResults) vFileContent.push_back("Error has occurred.");
     if (!bResults) alertCharArray("Error has occurred.");
     // Close any open handles.
     if (hRequest) WinHttpCloseHandle(hRequest);
     if (hConnect) WinHttpCloseHandle(hConnect);
     if (hSession) WinHttpCloseHandle(hSession);
-
 }
 
 
@@ -4916,8 +5008,8 @@ void testing2()
     //sprintf(buffer, "0x%08x", (unsigned __int64) g_tempWindowHandle);
     //alertCharArray(buffer);
 
-    long handle = reinterpret_cast<long>(g_tempWindowHandle);
-    alertNumber(handle);
+    //long handle = reinterpret_cast<long>(g_tempWindowHandle);
+    //alertNumber(handle);
     //HWND newWin = reinterpret_cast<HWND>(handle);
 
     
@@ -4929,14 +5021,6 @@ void testing()
     
     //HWND curScintilla = getCurrentScintilla();
     alertCharArray("testing1");
-
-    
-    TCHAR* url1 = TEXT("dl.dropbox.com");
-    TCHAR* url2 = TEXT("/u/7429931/test.txt");
-
-    httpToFile(url1,url2,TEXT("GET"));
-
-
 
     ////Test calltip
     //::SendScintilla(SCI_CALLTIPSHOW,0,(LPARAM)"Hello World!");
@@ -4990,26 +5074,6 @@ void testing()
     //
     //findAndReplace(str1,str2,str3);
     //alertString(str1);
-
-    
-    ////testing evaluate
-    //Expression x1("1-2+3-4+5-6");
-    //alertString(x1.evaluateToString());
-    //
-    //Expression x2("1-(2+3)-(4+5)-6");
-    //alertString(x2.evaluateToString());
-
-    //Expression x3("1-(2+3)-(4+5)-6*2+1*3");
-    //alertString(x3.evaluateToString());
-    //
-    //Expression x5("1.1+2.32*3+5.2322231");
-    //alertString(x5.evaluateToString());
-
-    //Expression x4("1-(2+3)-(4+5)-6");
-    //char* output;
-    //x4.evaluateToCharArray(&output);
-    //alertCharArray(output);
-    //delete [] output;
 
     ////Testing vector<string>
     //int i;
@@ -5301,8 +5365,10 @@ void alertTCharArray(TCHAR* input)
 
 void alertString(std::string input)
 {
-    char* temp = new char [input.size()+1];
-    strcpy(temp, input.c_str());
+    char* temp;
+    stringToCharArray(input,&temp);
+    //char* temp = new char [input.size()+1];
+    //strcpy(temp, input.c_str());
     alertCharArray(temp);
     delete [] temp;
 }
@@ -5350,6 +5416,21 @@ void findAndReplace(std::string& str, const std::string& oldStr, const std::stri
 //
 //}
 
+void stringToCharArray(std::string source, char** dest)
+{
+    if (source.length()<=0) source = "";
+    *dest = new char [source.length()+1];
+    strcpy(*dest, source.c_str());
+}
+
+void charArrayToString(char* source, std::string* dest)
+{
+    std::stringstream ss;
+    ss << source;
+    *dest = ss.str();
+}
+
+
 std::vector<std::string> split(char* str, char c)
 {
     std::vector<std::string> result;
@@ -5357,15 +5438,11 @@ std::vector<std::string> split(char* str, char c)
     while(1)
     {
         char *begin = str;
-
         while (*str != c && *str) str++;
-
         result.push_back(std::string(begin, str));
-
         if (0 == *str++) break;
     }
 
     return result;
-
-
 }
+
