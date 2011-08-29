@@ -70,10 +70,11 @@ int Expression::checkOperator(const char &c)
 {
     switch(c) 
     {
-        //TODO: p - combination, P - permutation, a - absolute value, e - exponential
+        //TODO: C (p) - combination, P (P) - permutation, abs (a) - absolute value, exp (e) - exponential (don't use e as e is for the constant e)
         //TODO: r - round down, R - round up
         //TODO: round to nearest integer, truncate
-
+        //TODO: implementing = , which is a logical check on whether the left hand side is = to right hand side, 1 if equal, 0 if not
+        //TODO: Or more generally, implement == ,>= ,<= ,> ,< as checking
         
         case 's' :
         case 'c' :
@@ -114,6 +115,28 @@ bool Expression::isDigit(const char &c)
         case '9' : return true;
         default  : return false;
     }
+}
+
+std::string Expression::rephrasing(std::string input)
+{
+    int length = input.length();
+    for (int j=0; j<length; ++j) input[j]=tolower(input[j]);
+
+    //Operators
+    findAndReplace(input,"!","!0");
+    findAndReplace(input,"ln","0l");
+    findAndReplace(input,"log","0L");
+    findAndReplace(input,"asin","0S");
+    findAndReplace(input,"sin","0s");
+    findAndReplace(input,"acos","0C");
+    findAndReplace(input,"cos","0c");
+    findAndReplace(input,"atan","0T");
+    findAndReplace(input,"tan","0t");
+    // Constants
+    findAndReplace(input,"pi","3.141592654");
+    findAndReplace(input,"e","2.71828183");  // execute the find and replace after all others because other words may contain e
+
+    return input;
 }
 
 // parse operand to operandStack
@@ -174,27 +197,6 @@ void Expression::processExpression(std::string input)
     this->toPostfix(infix);  // convert infix to postfix
 }
 
-
-
-std::string Expression::rephrasing(std::string input)
-{
-    int length = input.length();
-    for (int j=0; j<length; ++j) input[j]=tolower(input[j]);
-
-    findAndReplace(input,"pi","3.141592654");
-    findAndReplace(input,"!","!0");
-    findAndReplace(input,"ln","0l");
-    findAndReplace(input,"log","0L");
-    findAndReplace(input,"sin","0s");
-    findAndReplace(input,"asin","0S");
-    findAndReplace(input,"cos","0c");
-    findAndReplace(input,"acos","0C");
-    findAndReplace(input,"tan","0t");
-    findAndReplace(input,"atan","0T");
-
-    return input;
-}
-
 // Convert infix to postfix
 // Algorithm : 
 // Read the infix string one char by one char. If char is operator, 
@@ -224,6 +226,7 @@ void Expression::toPostfix(std::string infix)
             parseOperator(*p);
             //}
         } else if (isDigit(*p))
+        {
             if (*p == '.') 
             {
                 if (!isDecimal) 
@@ -236,6 +239,7 @@ void Expression::toPostfix(std::string infix)
                 operand.push_back(*p);
 
             }
+        }
     }
     
     // If operand is not "", let operand to operandStack.
@@ -252,39 +256,41 @@ void Expression::toPostfix(std::string infix)
 // calculate result by operator and operand
 double Expression::operate(const std::string &operation, const double &operand1, const double &operand2) 
 {
-
-    if (operation == "+") 
-        return operand2 + operand1;
-    else if (operation == "-") 
-        return operand2 - operand1;
-    else if (operation == "*")
-        return operand2 * operand1;
-    else if (operation == "/")
-        return operand2 / operand1;
-    else if (operation == "%")
-        return static_cast<int>(operand2) % static_cast<int>(operand1);
-    else if (operation == "^")
-        return std::pow(operand2,operand1);
-    else if (operation == "!")
-        return factorial(static_cast<int>(operand2));
-    else if (operation == "l")
-        return log(operand1);
-    else if (operation == "L")
-        return log10(operand1);
-    else if (operation == "s")
-        return sin(operand1);
-    else if (operation == "S")
-        return asin(operand1);
-    else if (operation == "c")
-        return cos(operand1);
-    else if (operation == "C")
-        return acos(operand1);
-    else if (operation == "t")
-        return tan(operand1);
-    else if (operation == "T")
-        return atan(operand1);
-    else
-        return 0;
+    switch(operation[0])
+    {   
+        case '+':
+            return operand2 + operand1;
+        case '-':
+            return operand2 - operand1;
+        case '*':
+            return operand2 * operand1;
+        case '/':
+            return operand2 / operand1;
+        case '%':
+            return static_cast<int>(operand2) % static_cast<int>(operand1);
+        case '^':
+            return std::pow(operand2,operand1);
+        case '!':
+            return factorial(static_cast<int>(operand2));
+        case 'l':
+            return log(operand1);
+        case 'L':
+            return log10(operand1);
+        case 's':
+            return sin(operand1);
+        case 'S':
+            return asin(operand1);
+        case 'c':
+            return cos(operand1);
+        case 'C':
+            return acos(operand1);
+        case 't':
+            return tan(operand1);
+        case 'T':
+            return atan(operand1);
+        default:
+            return 0;
+    }
 }
 
 int Expression::factorial(int number)

@@ -6,6 +6,7 @@ changelog (for developer use only, include unreleased versions)
 ****** Fixed: Params insertion is now compatible with chain snippet
 ****** CUT'X' and COPY'X' (and alike) are changed to CUTLINE:X and COPYLINE:X for consistency
 ****** default value of CUT: COPY: (and alike) changed to CUT and COPY for consistency
+****** Fixed: bug in (eva) which make atan acos asin calculate wrong
 
 0.5.37
 ****** Added: FTCUT and FTCOPY series, which is a copy of the CUT and COPY series but utilitize fingertext custom clipboard instead of the reguler clipboard
@@ -15,7 +16,6 @@ changelog (for developer use only, include unreleased versions)
 ****** Changed: FINDWIN and FINDCHILD are changed to SETWIN SETCHILD WINFOCUS 
 ****** Changed: the old non-published GET series is axed
 ****** Fixed: import snippet character overflow problem
-
 
 0.5.36
 ****** Changed: CUT and COPY keyword are referencing the start of hotspot instead of startingPos.

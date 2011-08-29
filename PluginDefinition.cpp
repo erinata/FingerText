@@ -729,6 +729,7 @@ void restoreTab(int &posCurrent, int &posSelectionStart, int &posSelectionEnd)
     ::SendScintilla(SCI_TAB,0,0);	
 }
 
+//TODO: refactor searchPrevMatchedSign and searchNextMatchedTail
 int searchPrevMatchedSign(char* tagSign, char* tagTail)
 {
     //This function works when the caret is at the beginning of tagtail
@@ -815,7 +816,6 @@ int searchNextMatchedTail(char* tagSign, char* tagTail)
     return -1;
 }
 
-// TODO: refactor the dynamic hotspot functions
 bool dynamicHotspot(int &startingPos, char* tagSign, char* tagTail)
 {
     
@@ -1023,8 +1023,55 @@ void chainSnippet(int &firstPos, char* hotSpotText)
 
 void webRequest(int &firstPos, char* hotSpotText)
 {
+    TCHAR requestType[20];
+    int requestTypeLength = 0;
+
+    if (strncmp(hotSpotText,"GET:",4)==0)
+    {
+        _tcscpy(requestType,TEXT("GET"));
+        requestTypeLength = 4;
+    } else if (strncmp(hotSpotText,"POST:",5)==0)
+    {
+        _tcscpy(requestType,TEXT("POST"));
+        requestTypeLength = 5;
+    } else if (strncmp(hotSpotText,"OPTIONS:",8)==0)
+    {
+        _tcscpy(requestType,TEXT("OPTIONS"));
+        requestTypeLength = 8;
+    } else if (strncmp(hotSpotText,"PUT:",4)==0)
+    {
+        _tcscpy(requestType,TEXT("PUT"));
+        requestTypeLength = 5;
+    } else if (strncmp(hotSpotText,"HEAD:",5)==0)
+    {
+        _tcscpy(requestType,TEXT("HEAD"));
+        requestTypeLength = 5;
+    } else if (strncmp(hotSpotText,"DELETE:",7)==0)
+    {
+        _tcscpy(requestType,TEXT("DELETE"));
+        requestTypeLength = 7;
+    } else if (strncmp(hotSpotText,"TRACE:",6)==0)
+    {
+        _tcscpy(requestType,TEXT("TRACE"));
+        requestTypeLength = 6;
+    } else if (strncmp(hotSpotText,"CONNECT:",8)==0)
+    {
+        _tcscpy(requestType,TEXT("CONNECT"));
+        requestTypeLength = 8;
+    } else
+    {
+        _tcscpy(requestType,TEXT("GET"));
+        requestTypeLength = 0;
+    }
+
+    if (requestTypeLength>0)
+    {
+        SendScintilla(SCI_SETSEL,firstPos,firstPos+requestTypeLength);
+        SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+    }
+
     //TODO: should change the mouse cursor to waiting
-    int triggerPos = strlen(hotSpotText)+firstPos;
+    int triggerPos = strlen(hotSpotText)+firstPos-requestTypeLength;
 
     SendScintilla(SCI_GOTOPOS,firstPos,0);
     int spot1 = searchNext("//");
@@ -1050,7 +1097,6 @@ void webRequest(int &firstPos, char* hotSpotText)
         serverEnd = (SendScintilla(SCI_GETCURRENTPOS,0,0));
     }
     
-
     char* server = new char[serverEnd-serverStart+1];
     ::SendScintilla(SCI_SETSELECTION,serverStart,serverEnd);
     ::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(server));
@@ -1061,17 +1107,14 @@ void webRequest(int &firstPos, char* hotSpotText)
     TCHAR* requestWide;
     convertToWideChar((hotSpotText + (serverEnd - firstPos)), &requestWide);
     
-    
     ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-    
     //alertTCharArray(serverWide);
     //alertTCharArray(requestWide);
 
     //TODO: customizing type of request
-    httpToFile(serverWide,requestWide,TEXT("GET"));
+    httpToFile(serverWide,requestWide,requestType,g_currentFocusPath);
     
-
     delete [] serverWide;
     delete [] requestWide;
     delete [] server;
@@ -1120,11 +1163,6 @@ void executeCommand(int &firstPos, char* hotSpotText)
        //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->Stdin SetHandleInformation\n");
    }
 
-    //TCHAR CMD_LINE[bufSize];
-    //
-    //int len = MultiByteToWideChar ((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, hotSpotText, -1, NULL, 0);
-    //MultiByteToWideChar ((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, hotSpotText, -1, CMD_LINE, len);
-    
     TCHAR* cmdLine;
     convertToWideChar(hotSpotText,&cmdLine);
 
@@ -2339,19 +2377,16 @@ int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &sec
     if (strncmp(*hotSpotText,"(cha)",5)==0)
     {
         spotType = 1;
-        //alertCharArray("key");
     } else if (strncmp(*hotSpotText,"(key)",5)==0)
     {
         spotType = 2;
-        //alertCharArray("cha");
     } else if ((strncmp(*hotSpotText,"(run)",5)==0) || (strncmp(*hotSpotText,"(cmd)",5)==0))  //TODO: the command hotspot is renamed to (run) this line is for keeping backward compatibility
     {
         spotType = 3;
-        //alertCharArray("cmd");
     } else if (strncmp(*hotSpotText,"(msg)",5)==0) //TODO: should think more about this hotspot, It can be made into a more general (ask) hotspot....so keep this feature private for the moment
     {
         spotType = 4;
-    } else if (strncmp(*hotSpotText,"(eva)",5)==0) //TODO: should think more about this hotspot, It can be made into a more general (ask) hotspot....so keep this feature private for the moment
+    } else if (strncmp(*hotSpotText,"(eva)",5)==0)
     {
         spotType = 5;
     } else if ((strncmp(*hotSpotText,"(web)",5)==0) || (strncmp(*hotSpotText,"(www)",5)==0))
@@ -4759,7 +4794,7 @@ int toVk(char* input)
 
 }
 
-void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* path)
+void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* pathWide)
 {
     //TODO: should report error as a return value   
     DWORD dwSize = 0;
@@ -4772,16 +4807,22 @@ void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* path)
                hRequest = NULL;
     
     // Use WinHttpOpen to obtain a session handle.
-    hSession = WinHttpOpen( L"WinHTTP Example/1.0",  
+    hSession = WinHttpOpen( L"WinHTTP",  
                             WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
                             WINHTTP_NO_PROXY_NAME, 
                             WINHTTP_NO_PROXY_BYPASS, 0);
     
+    //TODO: investigate why this doesn't work
+    //const wchar_t* temp[MAX_PATH] = {NULL};
+    //temp[0] = TEXT("Application/OCTET-STREAM");
+    
+
     // Specify an HTTP server.
     if (hSession)
         hConnect = WinHttpConnect( hSession, server,
                                    INTERNET_DEFAULT_HTTP_PORT, 0);
     
+    alertTCharArray(requestType);
     // Create an HTTP request handle.
     if (hConnect)
         hRequest = WinHttpOpenRequest( hConnect, requestType, request,
@@ -4798,35 +4839,50 @@ void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* path)
     
     // End the request.
     if (bResults) bResults = WinHttpReceiveResponse( hRequest, NULL);
-    
-    // Keep checking for data until there is nothing left.
+
+    char* path;
+    FILE * pFile;
+
+    if (_tcslen(pathWide) <= 0)
+    {
+        path = new char[_tcslen(g_fttempPath)];
+        convertToUTF8(g_fttempPath, &path);
+    } else
+    {
+        path = new char[_tcslen(pathWide)];
+        convertToUTF8(pathWide, &path);
+    }
+    pFile = fopen(path, "w+b"); 
+        
     if (bResults)
+    {
         do 
         {
             // Check for available data.
             dwSize = 0;
-            if (!WinHttpQueryDataAvailable( hRequest, &dwSize)) vFileContent.push_back("Error in WinHttpQueryDataAvailable.");
+            if (!WinHttpQueryDataAvailable( hRequest, &dwSize))
+            {
+                alertCharArray( "Error in WinHttpQueryDataAvailable.");
+            }
     
             // Allocate space for the buffer.
             pszOutBuffer = new char[dwSize+1];
+    
             if (!pszOutBuffer)
             {
-                vFileContent.push_back("Out of memory.");
+                alertCharArray("Out of memory.");
                 dwSize=0;
-            }
-            else
+            } else
             {
                 // Read the Data.
                 ZeroMemory(pszOutBuffer, dwSize+1);
     
-                if (!WinHttpReadData(hRequest, (LPVOID)pszOutBuffer, dwSize, &dwDownloaded))
+                if (!WinHttpReadData( hRequest, (LPVOID)pszOutBuffer, dwSize, &dwDownloaded))
                 {
-                    vFileContent.push_back("Error in WinHttpReadData.");
-                }
-                else
+                    alertCharArray("Error in WinHttpReadData.");
+                } else
                 {
-                    // Data in vFileContent
-                    vFileContent.push_back(pszOutBuffer);
+                        fwrite(pszOutBuffer, (size_t)dwDownloaded, (size_t)1, pFile);
                 }
     
                 // Free the memory allocated to the buffer.
@@ -4834,33 +4890,19 @@ void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* path)
             }
     
         } while (dwSize>0);
+    }
     
-    
+    fclose (pFile); // NEW
+
+    delete [] path;
+
     // Report any errors.
-    if (!bResults) vFileContent.push_back("Error has occurred.");
-    
+    //if (!bResults) vFileContent.push_back("Error has occurred.");
+    if (!bResults) alertCharArray("Error has occurred.");
     // Close any open handles.
     if (hRequest) WinHttpCloseHandle(hRequest);
     if (hConnect) WinHttpCloseHandle(hConnect);
     if (hSession) WinHttpCloseHandle(hSession);
-
-    //// Write vFileContent to file
-    std::ofstream fileStream;
-    if (_tcslen(path) <= 0)
-    {
-        fileStream.open(g_fttempPath,std::ios::binary);
-    } else
-    {
-        fileStream.open(path,std::ios::binary);
-    }
-    if (fileStream.is_open())
-    {
-        for (int i = 0; i < (int) vFileContent.size();i++) fileStream << vFileContent[i];
-        fileStream.close();
-    } else
-    {
-        // TODO: Show error message
-    }
 
 }
 
