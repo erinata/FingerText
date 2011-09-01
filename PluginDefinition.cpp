@@ -359,13 +359,13 @@ void upgradeMessage()
         strcat(welcomeText, VERSION_TEXT_STAGE);
         strcat(welcomeText, "\r\n\
 Please read this document if you are upgrading from previous versions.\r\n\r\n\
-Upgrading from 0.5.21 or above\r\n\
+Upgrading from 0.5.37 or above\r\n\
 Everything is compatible.\r\n\r\n\
-Upgrading from 0.5.20\r\n\
+Upgrading from any version between 0.5.20 and 0.5.35\r\n\
 In version ");
         strcat(welcomeText, VERSION_TEXT);
-        strcat(welcomeText, " after you triggered a option hotspot, you can use right/down arrow to move to next option, left/up arrow to move to previous option. Hit tab to exit option mode.\r\n\
-\r\n\
+        strcat(welcomeText, " after you triggered a option hotspot, you can use right/down arrow to move to next option, left/up arrow to move to previous option. Hit tab confirm the choice.\r\n\r\n\
+ Also the option hotspot is not delimited by |~| anymore, it's using is simplier |. So $[![(opt)ABC|DEF|GHI]!] will define an hotspot with 3 options.\r\n\
 Upgrading from any version between 0.5.0 and 0.5.18\r\n\
 All hotspots are now triggered from inside to outside, left to right. Therefore dynamic snippets that is created before 0.5.20 can behave differently in this version.\r\n\
 \r\n\
@@ -900,7 +900,7 @@ bool dynamicHotspot(int &startingPos, char* tagSign, char* tagTail)
                         } else if (spotType == 5)
                         {
                             checkPoint = firstPos;
-                            evaluateExpression(firstPos,hotSpotText+5);
+                            evaluateHotSpot(firstPos,hotSpotText+5);
 
                             limitCounter++;
                         } else if (spotType == 6)
@@ -987,7 +987,7 @@ void paramsInsertion(int &firstPos, char* hotSpot, int &checkPoint)
 
 void chainSnippet(int &firstPos, char* hotSpotText)
 {
-    //TODO: there should be a bug here. When the chain snippet contains content with CUT, the firstPos is not updated.
+    //TODO: there may be a bug here. When the chain snippet contains content with CUT, the firstPos is not updated.
     int triggerPos = strlen(hotSpotText)+firstPos;
     ::SendScintilla(SCI_GOTOPOS,triggerPos,0);
     triggerTag(triggerPos,false, strlen(hotSpotText));
@@ -1075,50 +1075,54 @@ void webRequest(int &firstPos, char* hotSpotText)
     int triggerPos = strlen(hotSpotText)+firstPos-requestTypeLength;
 
     SendScintilla(SCI_GOTOPOS,firstPos,0);
-    int spot1 = searchNext("//");
+    int spot1 = searchNext("://");
     int serverStart; 
     if ((spot1<0) || (spot1>triggerPos))
     {
         serverStart = firstPos;
     } else
     {
-        serverStart = (SendScintilla(SCI_GETCURRENTPOS,0,0))+2;
+        serverStart = (SendScintilla(SCI_GETCURRENTPOS,0,0))+3;
     }
     SendScintilla(SCI_GOTOPOS,serverStart,0);
-
 
     int spot2 = searchNext("/");
 
     int serverEnd;
-    if ((spot2<0) || (spot1>triggerPos))
+    if (spot2<0 || spot1>triggerPos)
     {
         serverEnd = triggerPos;
     } else
     {
-        serverEnd = (SendScintilla(SCI_GETCURRENTPOS,0,0));
+        serverEnd = SendScintilla(SCI_GETCURRENTPOS,0,0);
     }
-    
-    char* server = new char[serverEnd-serverStart+1];
-    ::SendScintilla(SCI_SETSELECTION,serverStart,serverEnd);
-    ::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(server));
 
-    TCHAR* serverWide;
-    convertToWideChar(server, &serverWide);
+    if (serverEnd - serverStart > 0)
+    {
 
-    TCHAR* requestWide;
-    convertToWideChar((hotSpotText + (serverEnd - firstPos)), &requestWide);
-    
+        char* server = new char[serverEnd-serverStart+1];
+        ::SendScintilla(SCI_SETSELECTION,serverStart,serverEnd);
+        ::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(server));
+
+        TCHAR* serverWide;
+        convertToWideChar(server, &serverWide);
+
+        TCHAR* requestWide;
+        convertToWideChar(hotSpotText + serverEnd - firstPos, &requestWide);
+        
+        //alertTCharArray(serverWide);
+        //alertTCharArray(requestWide);
+
+        //TODO: customizing type of request
+        httpToFile(serverWide,requestWide,requestType,g_currentFocusPath);
+        
+        delete [] serverWide;
+        delete [] requestWide;
+        delete [] server;
+    }
+
     ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-    //alertTCharArray(serverWide);
-    //alertTCharArray(requestWide);
-
-    //TODO: customizing type of request
-    httpToFile(serverWide,requestWide,requestType,g_currentFocusPath);
-    
-    delete [] serverWide;
-    delete [] requestWide;
-    delete [] server;
 }
 
 void executeCommand(int &firstPos, char* hotSpotText)
@@ -1275,17 +1279,12 @@ void executeCommand(int &firstPos, char* hotSpotText)
 }
 
 
-void evaluateExpression(int &firstPos, char* hotSpotText)
+std::string evaluateCall(char* expression)
 {
     //TODO: refactor the numeric comparison part
-    //TODO: should allow for a more elaborate comparison output
-    //TODO: can include the ? : syntax here
-    int triggerPos = strlen(hotSpotText)+firstPos;
-    ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
-
     std::vector<std::string> expressions;
     
-    expressions = split(hotSpotText,';');
+    expressions = split(expression,';');
     bool stringComparison = false;
 
     int i = 0;
@@ -1379,14 +1378,96 @@ void evaluateExpression(int &firstPos, char* hotSpotText)
         ss << ::abs(storedCompareResult);
         evaluateResult = ss.str();
     }
+    return evaluateResult;
 
-    char* result;
-    result = new char[evaluateResult.length()+1];
-    strcpy(result,evaluateResult.c_str());
-    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)result);
-    delete [] result;
+}
 
+void evaluateHotSpot(int &firstPos, char* hotSpotText)
+{
 
+    //TODO: should allow for a more elaborate comparison output
+    
+    int triggerPos = strlen(hotSpotText)+firstPos;
+    SendScintilla(SCI_GOTOPOS,firstPos,0);
+    
+
+    int qMode = 0;
+    //int qlength = strlen(hotSpotText);
+    int qlength = 0;
+    int clength = 0;
+    
+    int oSpot;
+    int qSpot = searchNext(")?(");
+    if ((qSpot>=0) && (qSpot<=triggerPos) && (hotSpotText[0] == '(') && (hotSpotText[strlen(hotSpotText)-1] == ')'))
+    {
+        SendScintilla(SCI_GOTOPOS,qSpot,0);
+        qlength = qSpot - firstPos;
+        oSpot = searchNext("):(");
+        
+        if ((oSpot>=0) && (oSpot<=triggerPos) && (hotSpotText[qlength+2] == '(') && (hotSpotText[strlen(hotSpotText)-1] == ')'))
+        {
+            qMode = 1;
+            
+        }
+    }
+
+    std::string evaluateResult;
+    char* condition;
+    char* case0;
+    char* case1;
+   
+
+    if (qMode)
+    {
+        
+        condition = new char [qlength];
+        strncpy(condition, hotSpotText+1, qlength-1);
+        condition[qlength-1] = '\0';
+
+        case0 = new char [oSpot-firstPos-1-qlength-2 +1];
+        strncpy(case0, hotSpotText+1+qlength+2, oSpot-firstPos-1-qlength-2);
+        case0[oSpot-firstPos-1-qlength-2] = '\0';
+        
+        case1 = new char [strlen(hotSpotText)-(oSpot-firstPos+4)+1];
+        strncpy(case1, hotSpotText+3+oSpot-firstPos, strlen(hotSpotText)-(oSpot-firstPos+4));
+        case1[strlen(hotSpotText)-(oSpot-firstPos+4)] = '\0';
+
+        evaluateResult = evaluateCall(condition);
+
+        delete [] condition;
+    } else
+    {
+        evaluateResult = evaluateCall(hotSpotText);
+    }
+    
+    ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
+
+    if (qMode)
+    {
+        char* result;
+        //if (evaluateResult.compare("0") == 0)
+        if (evaluateResult == "0")
+        {
+            //alertNumber(0);
+            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)case0);
+        } else
+        {
+            //alertNumber(1);
+            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)case1);
+        }
+        delete [] case0;
+        delete [] case1;
+
+    } else 
+    {
+        char* result;
+        result = new char[evaluateResult.length()+1];
+        strcpy(result,evaluateResult.c_str());
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)result);
+        delete [] result;
+    }
+
+     
 }
 
 void launchMessageBox(int &firstPos, char* hotSpotText)
@@ -3489,7 +3570,8 @@ void importSnippets()
 
         //::MessageBox(nppData._nppHandle, (LPCWSTR)fileName, NPP_PLUGIN_NAME, MB_OK);
         std::ifstream file;
-        file.open((LPCWSTR)fileName, std::ios::binary | std::ios::in);   // TODO: This part may cause problem in chinese file names
+        //file.open((LPCWSTR)fileName, std::ios::binary | std::ios::in);     //TODO: verified why this doesn't work. Specifying the binary thing will cause redundant copy keeping when importing
+        file.open((LPCWSTR)fileName); // TODO: This part may cause problem in chinese file names
 
         file.seekg(0, std::ios::end);
         int fileLength = file.tellg();
@@ -4919,7 +5001,6 @@ void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* pathWi
         hConnect = WinHttpConnect( hSession, server,
                                    INTERNET_DEFAULT_HTTP_PORT, 0);
     
-    alertTCharArray(requestType);
     // Create an HTTP request handle.
     if (hConnect)
         hRequest = WinHttpOpenRequest( hConnect, requestType, request,
@@ -5015,18 +5096,138 @@ void testing2()
     
 }
 
+void testingSplit()
+{
+    char* temp = "foo bar hello world very good";
+    char* temp2;
+    std::string result;
+    
+    std::vector<std::string> v0;
+    v0 = split(temp,' ',0);
+       
+    for (int i = 0; i < v0.size(); i++)
+    {
+        result += v0[i];
+        result += " | ";
+    }
+    
+    result += "\r\n";
+    
+
+    std::vector<std::string> v1;
+    v1 = split(temp,' ',1);
+
+    for (int i = 0; i < v1.size(); i++)
+    {
+        result += v1[i];
+        result += " | ";
+    }
+
+    result += "\r\n";
+
+    std::vector<std::string> v2;
+    v2 = split(temp,' ',2);
+
+    for (int i = 0; i < v2.size(); i++)
+    {
+        result += v2[i];
+        result += " | ";
+    }
+
+    result += "\r\n";
+
+    std::vector<std::string> v3;
+    v3 = split(temp,' ',3);
+
+    for (int i = 0; i < v3.size(); i++)
+    {
+        result += v3[i];
+        result += " | ";
+    }
+
+    result += "\r\n";
+
+    stringToCharArray(result,&temp2);
+    SendScintilla(SCI_REPLACESEL,0,(LPARAM)temp2);
+    SendScintilla(SCI_REPLACESEL,0,(LPARAM)"\r\n\r\nfoo | bar | hello | world | very | good |\r\n\
+foo bar hello world very good | \r\n\
+foo | bar hello world very good | \r\n\
+foo | bar | hello world very good | ");
+
+
+}
+
+//void testingSplit3()
+//{
+//    char* temp = "foo!@#bar!@#hello!@#world!@#very!@#good";
+//    char* temp2;
+//    std::string result;
+//    
+//    std::vector<std::string> v0;
+//    v0 = split3(temp,"!@#",0);
+//       
+//    for (int i = 0; i < v0.size(); i++)
+//    {
+//        result += v0[i];
+//        result += " | ";
+//    }
+//    
+//    result += "\r\n";
+//    
+//
+//    std::vector<std::string> v1;
+//    v1 = split3(temp,"!@#",1);
+//
+//    for (int i = 0; i < v1.size(); i++)
+//    {
+//        result += v1[i];
+//        result += " | ";
+//    }
+//
+//    result += "\r\n";
+//
+//    std::vector<std::string> v2;
+//    v2 = split3(temp,"!@#",2);
+//
+//    for (int i = 0; i < v2.size(); i++)
+//    {
+//        result += v2[i];
+//        result += " | ";
+//    }
+//
+//    result += "\r\n";
+//
+//    std::vector<std::string> v3;
+//    v3 = split3(temp,"!@#",3);
+//
+//    for (int i = 0; i < v3.size(); i++)
+//    {
+//        result += v3[i];
+//        result += " | ";
+//    }
+//
+//    result += "\r\n";
+//
+//    stringToCharArray(result,&temp2);
+//    SendScintilla(SCI_REPLACESEL,0,(LPARAM)temp2);
+//    SendScintilla(SCI_REPLACESEL,0,(LPARAM)"\r\n\r\nfoo | bar | hello | world | very | good |\r\n\
+//foo bar hello world very good | \r\n\
+//foo | bar hello world very good | \r\n\
+//foo | bar | hello world very good | ");
+//
+//
+//}
+
 
 void testing()
 {
     
     //HWND curScintilla = getCurrentScintilla();
     alertCharArray("testing1");
-
+    searchNext("):(");
+   
     ////Test calltip
     //::SendScintilla(SCI_CALLTIPSHOW,0,(LPARAM)"Hello World!");
-
-
-
 
 
     //// test getting windows by enum windows
@@ -5431,18 +5632,70 @@ void charArrayToString(char* source, std::string* dest)
 }
 
 
-std::vector<std::string> split(char* str, char c)
+std::vector<std::string> split(char* str, char c, int parts)
 {
+    int i;;
+    if (parts == 0)
+    {
+        i = -1;
+    } else
+    {
+        i = 1;
+    }
+        
     std::vector<std::string> result;
 
     while(1)
     {
+        
         char *begin = str;
-        while (*str != c && *str) str++;
+        while ((*str != c && *str) || ((i >= parts) && *str)) str++;
         result.push_back(std::string(begin, str));
+        if (parts != 0) i++;
         if (0 == *str++) break;
     }
 
     return result;
 }
 
+
+//std::vector<std::string> split3(char* str, char* c, int parts)
+//{
+//    int i;;
+//    if (parts == 0)
+//    {
+//        i = -1;
+//    } else
+//    {
+//        i = 1;
+//    }
+//        
+//    std::vector<std::string> result;
+//
+//    while(1)
+//    {
+//        
+//        char *begin = str;
+//        while ((!(*str == c[0] && *str+1 == c[1] && *str+2 == c[2]) && *str && *str+1 && *str+2) || ((i >= parts) && *str)) str++;
+//        result.push_back(std::string(begin, str));
+//        if (parts != 0) i++;
+//
+//        int j=0;
+//        do
+//        {
+//            if (0 != *str)
+//            {
+//                *str++;
+//            } else 
+//            {
+//                break;
+//            }
+//            j++;
+//        } while (j<=2);
+//
+//
+//        //if (0 == *str++) break;
+//    }
+//
+//    return result;
+//}

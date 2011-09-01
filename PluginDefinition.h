@@ -83,7 +83,8 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
 void webRequest(int &firstPos, char* hotSpotText);
 void executeCommand(int &firstPos, char* hotSpotText);
 void launchMessageBox(int &firstPos, char* hotSpotText);
-void evaluateExpression(int &firstPos, char* hotSpotText);
+std::string evaluateCall(char* expression);
+void evaluateHotSpot(int &firstPos, char* hotSpotText);
 void chainSnippet(int &firstPos, char* hotSpotText);
 int hotSpotNavigation(char* tagSign = "$[![", char* tagTail = "]!]");
 int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, char* tagTail = "]!]");
@@ -176,7 +177,8 @@ void findAndReplace(std::string& str, const std::string& oldStr, const std::stri
 
 void charArrayToString(char* source, std::string* dest);
 void stringToCharArray(std::string source, char** dest);
-std::vector<std::string> split(char* str, char c = ' ');
+std::vector<std::string> split(char* str, char c = ' ', int parts = 0);
+//std::vector<std::string> split3(char* str, char* c, int parts);
 //std::vector<std::string> split2(char* str, char c1, char c2, char c3);
 
 #endif //PLUGINDEFINITION_H
