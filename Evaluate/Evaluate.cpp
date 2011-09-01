@@ -75,24 +75,29 @@ int Expression::checkOperator(const char &c)
 {
     switch(c) 
     {
-        //TODO: C (p) - combination, P (P) - permutation, abs (a) - absolute value, exp (e) - exponential (don't use e as e is for the constant e)
-        //TODO: r - round down, R - round up
-        //TODO: round to nearest integer, truncate
-
         case '$' : 
-        case '#' : return 9;
-        case 'n' : return 8;
+        case '#' : return 11;
+        case 'R' : return 10;
+        case 'n' :
+        case '%' : return 9;
+        case 'r' :
+        case 'f' :
+        case 'F' :
         case 's' :
-        case 'c' :
+        case 'o' :
         case 't' :
         case 'l' :
         case 'S' :
-        case 'C' :
+        case 'O' :
         case 'T' :
         case 'L' :
-        case '!' : return 7;
-        case '^' : return 6; 
-        case '%' : 
+        case 'X' :
+        case 'A' :
+        case '!' : return 8;
+        case '^' : return 7;
+        case 'P' :
+        case 'p' : return 6;
+        case 'M' : 
         case '*' :
         case '/' : return 5;
         case '+' :
@@ -139,23 +144,36 @@ std::string Expression::rephrasing(std::string input)
     //TODO: need to fix the problem of negative number. solution can be find and replace all - by 0- if the char before - is not a digit
 
     //Operators
+    
+
+    findAndReplace(input,"==","=");
     findAndReplace(input,"==","=");
     findAndReplace(input,">=","G");
     findAndReplace(input,"<=","g");
     findAndReplace(input,"!=","N");
+    findAndReplace(input,"mod","0M");
+    findAndReplace(input,"exp","0X");
+    findAndReplace(input,"ceil","0F");
+    findAndReplace(input,"rand","0R0");
+    findAndReplace(input,"floor","0f");
+    findAndReplace(input,"round","0r");
+    findAndReplace(input,"abs","0A");
     findAndReplace(input,"ln","0l");
     findAndReplace(input,"log","0L");
     findAndReplace(input,"asin","0S");
     findAndReplace(input,"sin","0s");
-    findAndReplace(input,"acos","0C");
-    findAndReplace(input,"cos","0c");
+    findAndReplace(input,"acos","0O");
+    findAndReplace(input,"cos","0o");
     findAndReplace(input,"atan","0T");
     findAndReplace(input,"tan","0t");
     findAndReplace(input,"!","!0");
+    findAndReplace(input,"%","%0");
     // Constants
     findAndReplace(input,"pi","3.141592654");
     findAndReplace(input,"e","2.71828183");  // execute the find and replace after all others because other words may contain e
-
+    findAndReplace(input,"p","P");
+    findAndReplace(input,"c","p");
+    
     findAndReplace2(input,"-","0n");
 
     return input;
@@ -287,12 +305,12 @@ double Expression::operate(const std::string &operation, const double &operand1,
             return operand2 * operand1;
         case '/':
             return operand2 / operand1;
-        case '%':
-            return static_cast<int>(operand2) % static_cast<int>(operand1);
+        case 'M':
+            return static_cast<long>(operand2) % static_cast<long>(operand1);
         case '^':
             return std::pow(operand2,operand1);
         case '!':
-            return factorial(static_cast<int>(operand2));
+            return factorial(static_cast<long>(operand2));
         case 'l':
             return log(operand1);
         case 'L':
@@ -301,9 +319,9 @@ double Expression::operate(const std::string &operation, const double &operand1,
             return sin(operand1);
         case 'S':
             return asin(operand1);
-        case 'c':
+        case 'o':
             return cos(operand1);
-        case 'C':
+        case 'O':
             return acos(operand1);
         case 't':
             return tan(operand1);
@@ -331,10 +349,41 @@ double Expression::operate(const std::string &operation, const double &operand1,
             return operateAnd(operand1,operand2);
         case '|':
             return operateOr(operand1,operand2);
+        case 'p':
+            return ncr(operand1,operand2);
+        case 'P':
+            return npr(operand1,operand2);
+        case 'r':
+            return floor(operand1+0.5);
+        case 'F':
+            return ceil(operand1);
+        case 'f':
+            return floor(operand1);
+        case 'X':
+            return exp(operand1);
+        case 'A':
+            return fabs(operand1);
+        case '%':
+            return operand2/100;
+        case 'R':
+            return randomNumber();
         default:
             return 0;
     }
 }
+
+
+long Expression::randomNumber()
+{
+
+    if (rand() > rand())
+    {
+        int s = static_cast<int>(time(0));
+        srand (rand()*s%32767);
+    }
+    return rand() % 100;
+}
+
 int Expression::operateAnd(double operand1, double operand2)
 {
     if ((operand2 == 0) && (operand1 == 0)) return 0;
@@ -383,10 +432,34 @@ int Expression::isNotEqual(double operand1, double operand2)
     else return 1;
 }
 
-int Expression::factorial(int number)
+long Expression::ncr(long operand1, long operand2)
 {
-    int result = 1;
-    for (int i = number; i>0; i--) result = result * i;
+    if (operand1 < 0 || operand2 < 0 || operand1 > operand2)
+    {
+        operand1 = 1;
+        operand2 = 1;
+        isError = 1;
+    }
+
+    return factorial(operand2)/(factorial(operand1)*factorial(operand2 - operand1));
+}
+
+long Expression::npr(long operand1, long operand2)
+{
+    if (operand1 < 0 || operand2 < 0 || operand1 > operand2)
+    {
+        operand1 = 1;
+        operand2 = 1;
+        isError = 1;
+    }
+    return factorial(operand2)/factorial(operand2 - operand1);
+}
+
+long Expression::factorial(long number)
+{
+    if (number < 0) isError = 1;
+    long result = 1;
+    for (long i = number; i>0; i--) result = result * i;
     return result;
 }
 

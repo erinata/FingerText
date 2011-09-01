@@ -38,6 +38,7 @@
 #include <stack>
 #include <vector>
 #include <cctype>
+#include <ctime>
 
 
 #define OPERATOR 0
@@ -80,7 +81,7 @@ private:
     double operate(const std::string &, const double &, const double &); // calculate result by operator and operand
     void findAndReplace(std::string& str, const std::string& oldStr, const std::string& newStr);
     void findAndReplace2(std::string& str, const std::string& oldStr, const std::string& newStr);
-    int factorial(int number);
+    long factorial(long number);
     int Expression::isNotEqual(double operand1, double operand2);
     int Expression::isEqual(double operand1, double operand2);
     int Expression::isSmallerOrEqual(double operand1, double operand2);
@@ -89,6 +90,9 @@ private:
     int Expression::isGreater(double operand1, double operand2);
     int Expression::operateOr(double operand1, double operand2);
     int Expression::operateAnd(double operand1, double operand2);
+    long Expression::ncr(long operand1, long operand2);
+    long Expression::npr(long operand1, long operand2);
+    long Expression::randomNumber();
 };
 
 

@@ -1,5 +1,10 @@
 changelog (for developer use only, include unreleased versions)
 
+0.5.39
+****** Fixed: keyword TEMP is not working
+****** Add back the keyword GET for temporary backward compatibility
+****** Add rounding, permutation and combination etc to (eva)
+
 
 0.5.38
 - Critical Fix of import error caused by changing the specification of file open type
@@ -10,11 +15,11 @@ changelog (for developer use only, include unreleased versions)
 ****** Major rewrite in (eva), fixed bugs and a lot more features
 
 0.5.37
-****** Added: FTCUT and FTCOPY series, which is a copy of the CUT and COPY series but utilitize fingertext custom clipboard instead of the reguler clipboard
-****** Added: FTPASTE to retrieve text from fingertext custom clipboard
 ****** Added: SETFILE, WRITE: and READ for writing and reading files
-****** Added: WRITETEMP and FTWRITETEMP for writing to the temp file
-****** READTEMP for reading tempfile
+****** Added: WRITETEMP READTEMP for reading and writing tempfile
+****** Added: FTCUT and FTCOPY series, which is a copy of the CUT and COPY series but utilitize fingertext custom clipboard instead of the reguler clipboard
+****** FTWRITETEMP for writing to the custom clipboard to the temp file
+****** Added: FTPASTE to retrieve text from fingertext custom clipboard
 ****** Changed: FINDWIN and FINDCHILD are changed to SETWIN SETCHILD WINFOCUS 
 - Changed: the old non-published GET series is axed
 - Fixed: import snippet character overflow problem

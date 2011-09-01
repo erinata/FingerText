@@ -1511,8 +1511,8 @@ void launchMessageBox(int &firstPos, char* hotSpotText)
         strcpy(getTerm,hotSpotText+12);
     } else
     {
-        delete [] getTerm;
-    //TODO: Confirm to use return here, it stops the msg box launching when the msgbox type is unknown
+        delete [] getTerm;    //TODO: probably should have some default behaviour here?
+        //TODO: Confirm to use return here, it stops the msg box launching when the msgbox type is unknown
         return;
     }
 
@@ -1897,83 +1897,84 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
     ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
     //TODO: At least I should rearrange the keyword a little bit for efficiency
     //TODO: refactor the logic of checking colon version, for example DATE and DATE: for efficiency
+    //TODO: remove the GET series
 
-    if (strcmp(hotSpotText,"PASTE")==0)
+    if (strcmp(hotSpotText,"PASTE") == 0)
     {
         ::SendScintilla(SCI_PASTE,0,0);
 	    
-    } else if (strcmp(hotSpotText,"FTPASTE")==0)
+    } else if (strcmp(hotSpotText,"FTPASTE") == 0)
     {
         ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)g_customClipBoard);
-    } else if ((strcmp(hotSpotText,"CUT")==0) || (strcmp(hotSpotText,"CUTWORD")==0))
+    } else if ((strcmp(hotSpotText,"CUT") == 0) || (strcmp(hotSpotText,"CUTWORD") == 0))
     {
         textCopyCut(1, 0, firstPos, hotSpotText, startingPos, checkPoint); 
-    } else if ((strcmp(hotSpotText,"COPY")==0) || (strcmp(hotSpotText,"COPYWORD")==0))
+    } else if ((strcmp(hotSpotText,"COPY") == 0) || (strcmp(hotSpotText,"COPYWORD") == 0) || (strcmp(hotSpotText,"GET") == 0))
     {
         textCopyCut(1, 1, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if (strcmp(hotSpotText,"CUTLINE")==0)
+    } else if (strcmp(hotSpotText,"CUTLINE") == 0)
     {
         textCopyCut(2, 0, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if (strcmp(hotSpotText,"COPYLINE")==0)
+    } else if ((strcmp(hotSpotText,"COPYLINE") == 0) || (strcmp(hotSpotText,"GETLINE") == 0))
     {
         textCopyCut(2, 1, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if (strcmp(hotSpotText,"CUTDOC")==0)
+    } else if ((strcmp(hotSpotText,"CUTDOC") == 0) || (strcmp(hotSpotText,"CUTALL") == 0))
     {
         textCopyCut(3, 0, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if (strcmp(hotSpotText,"COPYDOC")==0)
+    } else if ((strcmp(hotSpotText,"COPYDOC") == 0) || (strcmp(hotSpotText,"GETALL") == 0))
     {
         textCopyCut(3, 1, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if (strncmp(hotSpotText,"CUTLINE:",8)==0)
+    } else if (strncmp(hotSpotText,"CUTLINE:",8) == 0)
     {
         textCopyCut(4, 0, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if (strncmp(hotSpotText,"COPYLINE:",9)==0)
+    } else if (strncmp(hotSpotText,"COPYLINE:",9) == 0)
     {
         textCopyCut(4, 1, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if (strncmp(hotSpotText,"CUT:",4)==0) 
+    } else if (strncmp(hotSpotText,"CUT:",4) == 0) 
     {
         textCopyCut(5, 0, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if (strncmp(hotSpotText,"COPY:",5)==0) 
+    } else if (strncmp(hotSpotText,"COPY:",5) == 0) 
     {
         textCopyCut(5, 1, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if ((strcmp(hotSpotText,"FTCUT")==0) || (strcmp(hotSpotText,"FTCUTWORD")==0))
+    } else if ((strcmp(hotSpotText,"FTCUT") == 0) || (strcmp(hotSpotText,"FTCUTWORD") == 0))
     {
         textCopyCut(1, 2, firstPos, hotSpotText, startingPos, checkPoint); 
-    } else if ((strcmp(hotSpotText,"FTCOPY")==0) || (strcmp(hotSpotText,"FTCOPYWORD")==0))
+    } else if ((strcmp(hotSpotText,"FTCOPY") == 0) || (strcmp(hotSpotText,"FTCOPYWORD") == 0))
     {
         textCopyCut(1, 3, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if (strcmp(hotSpotText,"FTCUTLINE")==0)
+    } else if (strcmp(hotSpotText,"FTCUTLINE") == 0)
     {
         textCopyCut(2, 2, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if (strcmp(hotSpotText,"FTCOPYLINE")==0)
+    } else if (strcmp(hotSpotText,"FTCOPYLINE") == 0)
     {
         textCopyCut(2, 3, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if (strcmp(hotSpotText,"FTCUTDOC")==0)
+    } else if (strcmp(hotSpotText,"FTCUTDOC") == 0)
     {
         textCopyCut(3, 2, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if (strcmp(hotSpotText,"FTCOPYDOC")==0)
+    } else if (strcmp(hotSpotText,"FTCOPYDOC") == 0)
     {
         textCopyCut(3, 3, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if (strncmp(hotSpotText,"FTCUTLINE:",10)==0)
+    } else if (strncmp(hotSpotText,"FTCUTLINE:",10) == 0)
     {
         textCopyCut(4, 2, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if (strncmp(hotSpotText,"FTCOPYLINE:",11)==0)
+    } else if (strncmp(hotSpotText,"FTCOPYLINE:",11) == 0)
     {
         textCopyCut(4, 3, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if (strncmp(hotSpotText,"FTCUT:",6)==0) 
+    } else if (strncmp(hotSpotText,"FTCUT:",6) == 0) 
     {
         textCopyCut(5, 2, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if (strncmp(hotSpotText,"FTCOPY:",7)==0) 
+    } else if (strncmp(hotSpotText,"FTCOPY:",7) == 0) 
     {
         textCopyCut(5, 3, firstPos, hotSpotText, startingPos, checkPoint);
-    } else if ((strcmp(hotSpotText,"TEMP")==0) && (strcmp(hotSpotText,"TEMPFILE")==0))
+    } else if ((strcmp(hotSpotText,"TEMP") == 0) || (strcmp(hotSpotText,"TEMPFILE") == 0))
     {
         insertPath(g_fttempPath);
 
-    } else if (strcmp(hotSpotText,"FILEFOCUS")==0)
+    } else if (strcmp(hotSpotText,"FILEFOCUS") == 0)
     {
         insertPath(g_currentFocusPath);
 
-    } else if (strncmp(hotSpotText,"SETFILE:",8)==0)  //TODO: a lot of refactoring needed for the file series
+    } else if (strncmp(hotSpotText,"SETFILE:",8) == 0)  //TODO: a lot of refactoring needed for the file series
     {
         char* getTerm;
         TCHAR* getTermWide;
@@ -2465,14 +2466,13 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
                 g_optionStartPosition = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
                 g_optionEndPosition = g_optionStartPosition + strlen(g_optionArray[g_optionCurrent]);
                 ::SendScintilla(SCI_SETSELECTION,g_optionStartPosition,g_optionEndPosition);
-                if (i>1)
+                if (i > 1)
                 {
                     g_optionMode = true;
                     updateOptionCurrent(true);
                 }
                 //alertNumber(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
                 
-                    
                 //char* tempText;
                 //tempText = new char[secondPos - firstPos + 1];
                 //::SendMessage(curScintilla, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(tempText));

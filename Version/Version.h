@@ -39,14 +39,14 @@
 #define COPYRIGHT_TEXT "Copyright (C) 2011"
 #define DESCRIPTION_TEXT "A snippet plugin for notepad++"
 
-#define DATE_TEXT "August 2011"
+#define DATE_TEXT "September 2011"
 #define AUTHOR_TEXT "Author: Tom Lam\r\n"
 #define EMAIL_TEXT "Email: erinata@gmail.com\r\n"
-#define ABOUT_TEXT "Update to the lastest version:\r\n\
-     http://sourceforge.net/projects/fingertext/ \r\n\
+#define ABOUT_TEXT "\
+Update to the lastest version:\r\n\
+           http://sourceforge.net/projects/fingertext/ \r\n\
 Usage Guide and Source code:\r\n\
-     http://github.com/erinata/FingerText \r\n\r\n\
-(Snippets created using FingerText 0.3.5 or earlier versions are not compatible with this version)\
+           http://github.com/erinata/FingerText \r\n\r\n\
 "
 
-#define MENU_LENGTH 15
+#define MENU_LENGTH 19
