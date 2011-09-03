@@ -27,11 +27,11 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-#define VERSION_TEXT "0.5.38"
-#define VERSION_NUM 0,5,38,0
-#define VERSION_LINEAR 538
+#define VERSION_TEXT "0.5.39"
+#define VERSION_NUM 0,5,39,0
+#define VERSION_LINEAR 539
 #define VERSION_KEEP_CONFIG_START 500
-#define VERSION_KEEP_CONFIG_END 538
+#define VERSION_KEEP_CONFIG_END 539
 #define VERSION_TEXT_STAGE "(Alpha)"
 
 #define AUTHOR_NAME "erinata"
@@ -49,4 +49,4 @@ Usage Guide and Source code:\r\n\
            http://github.com/erinata/FingerText \r\n\r\n\
 "
 
-#define MENU_LENGTH 19
+#define MENU_LENGTH 15

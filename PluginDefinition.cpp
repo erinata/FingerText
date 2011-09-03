@@ -36,8 +36,8 @@ HANDLE g_hModule;               // the hModule from pluginInit for initializing 
 SciFnDirect pSciMsg;  // For direct scintilla call
 sptr_t pSciWndData;   // For direct scintilla call
 
-sqlite3 *g_db;
-bool     g_dbOpen;
+sqlite3 *g_db;        // For Sqlite3 
+bool     g_dbOpen;    // For Sqlite3 
 
 struct SnipIndex 
 {
@@ -168,6 +168,7 @@ DummyStaticDlg	dummyStaticDlg;
 // Initialize your plugin data here; called while plugin loading   
 void pluginInit(HANDLE hModule)
 {
+    srand(time(0)); // TODO: may be I can call that in the tab triggering process, so a seed is generated in each trigger
     g_hModule = hModule;
     g_customClipBoard = new char[1];
     strcpy(g_customClipBoard,"");
@@ -350,7 +351,8 @@ void upgradeMessage()
     {
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
 
-        char* welcomeText = new char[7000];
+
+        char welcomeText[10000];
         strcpy(welcomeText,"");
         strcat(welcomeText, "Thanks for Upgrading to ");
         strcat(welcomeText, PLUGIN_NAME);
@@ -390,19 +392,23 @@ FingerText 0.3.5 or below use a 'one snippet per file' system to store snippets,
 ");
 
         ::SendMessage(getCurrentScintilla(), SCI_INSERTTEXT, 0, (LPARAM)welcomeText);
-        delete [] welcomeText;
+        
     }
 }
 
-int searchNext(char* searchText)
+int searchNext(char* searchText, bool regExp)
 {
+    int searchFlags = 0;
+    if (regExp) searchFlags = SCFIND_REGEXP;
     ::SendScintilla(SCI_SEARCHANCHOR, 0,0);
-    return ::SendScintilla(SCI_SEARCHNEXT, 0,(LPARAM)searchText);
+    return ::SendScintilla(SCI_SEARCHNEXT, searchFlags,(LPARAM)searchText);
 }
-int searchPrev(char* searchText)
-{
+int searchPrev(char* searchText, bool regExp)
+{    
+    int searchFlags = 0;
+    if (regExp) searchFlags = SCFIND_REGEXP;
     ::SendScintilla(SCI_SEARCHANCHOR, 0,0); 
-    return ::SendScintilla(SCI_SEARCHPREV, 0,(LPARAM)searchText);
+    return ::SendScintilla(SCI_SEARCHPREV, searchFlags,(LPARAM)searchText);
 }
 
 void selectionToSnippet()
@@ -420,8 +426,10 @@ void selectionToSnippet()
     
     if (selectionEnd>selectionStart)
     {
-        selection = new char [selectionEnd - selectionStart +1];
-        ::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
+        
+        sciGetText(&selection,selectionStart,selectionEnd);
+        //selection = new char [selectionEnd - selectionStart +1];
+        //::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
         withSelection = true;
     } else
     {
@@ -599,9 +607,13 @@ bool getLineChecked(char **buffer, int lineNumber, TCHAR* errorText)
         }
     }
 
-    ::SendScintilla(SCI_SETSELECTION,tagPosStart,tagPosEnd);
-    *buffer = new char[tagPosEnd-tagPosStart + 1];
-    ::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(*buffer));
+
+
+    //::SendScintilla(SCI_SETSELECTION,tagPosStart,tagPosEnd);
+    //*buffer = new char[tagPosEnd-tagPosStart + 1];
+    //::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(*buffer));
+
+    sciGetText(&*buffer,tagPosStart,tagPosEnd);
 
     return problemSnippet;
 }
@@ -1100,9 +1112,12 @@ void webRequest(int &firstPos, char* hotSpotText)
     if (serverEnd - serverStart > 0)
     {
 
-        char* server = new char[serverEnd-serverStart+1];
-        ::SendScintilla(SCI_SETSELECTION,serverStart,serverEnd);
-        ::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(server));
+        //char* server = new char[serverEnd-serverStart+1];
+        //::SendScintilla(SCI_SETSELECTION,serverStart,serverEnd);
+        //::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(server));
+
+        char* server;
+        sciGetText(&server,serverStart,serverEnd);
 
         TCHAR* serverWide;
         convertToWideChar(server, &serverWide);
@@ -1125,8 +1140,11 @@ void webRequest(int &firstPos, char* hotSpotText)
     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
 }
 
+
+
 void executeCommand(int &firstPos, char* hotSpotText)
 {
+    //TODO: cater the problem that the path can have spaces..... as shown in the security remarks in http://msdn.microsoft.com/en-us/library/ms682425%28v=vs.85%29.aspx
 
     //HWND curScintilla = getCurrentScintilla();
 
@@ -1870,8 +1888,10 @@ void textCopyCut(int sourceType, int operationType, int &firstPos, char* hotSpot
             if (checkPoint > startingPos) checkPoint = startingPos;
             if (g_lastTriggerPosition > startingPos) g_lastTriggerPosition = startingPos;
             delete [] g_customClipBoard;
-            g_customClipBoard = new char [(::SendScintilla(SCI_GETSELECTIONEND,0,0)) - (::SendScintilla(SCI_GETSELECTIONSTART,0,0)) +1];
-            ::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(g_customClipBoard));
+            //g_customClipBoard = new char [(::SendScintilla(SCI_GETSELECTIONEND,0,0)) - (::SendScintilla(SCI_GETSELECTIONSTART,0,0)) +1];
+            //::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(g_customClipBoard));
+            sciGetText(&g_customClipBoard,(::SendScintilla(SCI_GETSELECTIONSTART,0,0)),(::SendScintilla(SCI_GETSELECTIONEND,0,0)));
+            
             ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
             if (sourceType == 5)
             {
@@ -1882,12 +1902,16 @@ void textCopyCut(int sourceType, int operationType, int &firstPos, char* hotSpot
         } else if (operationType == 3)
         {
             delete [] g_customClipBoard;
-            g_customClipBoard = new char [(::SendScintilla(SCI_GETSELECTIONEND,0,0)) - (::SendScintilla(SCI_GETSELECTIONSTART,0,0)) +1];
-            ::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(g_customClipBoard));
+            
+            //g_customClipBoard = new char [(::SendScintilla(SCI_GETSELECTIONEND,0,0)) - (::SendScintilla(SCI_GETSELECTIONSTART,0,0)) +1];
+            //::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(g_customClipBoard));
+            sciGetText(&g_customClipBoard,(::SendScintilla(SCI_GETSELECTIONSTART,0,0)),(::SendScintilla(SCI_GETSELECTIONEND,0,0)));
         }
     }
 
 }
+
+
 
 void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint)
 {
@@ -2351,6 +2375,31 @@ char* getDateTime(char *format, bool getDate, int flags)
 //    return spotFound;
 //}
 
+std::vector<int> splitPositions(int start, int end, char delimiter)
+{
+    std::vector<int> positions;
+    char* partToSplit;
+    sciGetText(&partToSplit, start, end);
+    
+    std::vector<std::string> tempString = split(partToSplit,delimiter);
+
+    int i = 0;
+    for (i = 0; i<tempString.size();i++)
+    {
+        positions.push_back(tempString[i].length());
+    }
+    for (i = 0; i<positions.size();i++)
+    {
+        alertNumber(positions[i]);
+    }
+
+
+    delete [] partToSplit;
+
+    return positions;
+
+}
+
 int hotSpotNavigation(char* tagSign, char* tagTail)
 {
     int retVal = 0;
@@ -2396,17 +2445,20 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
                 char* optionDelimiter;
                 
                 
-                if (strncmp(hotSpotText+5,"DELIMIT'",8) == 0)
+                if (strncmp(hotSpotText+5,"<DELIMIT'",9) == 0)
                 {
-                    ::SendScintilla(SCI_GOTOPOS,firstPos + 5 + 8,0);
-                    int delimitEnd = searchNext("':");
+                    ::SendScintilla(SCI_GOTOPOS,firstPos + 5 + 9,0);
+                    int delimitEnd = searchNext("'>");
                     
                     if ((delimitEnd >= 0) && (delimitEnd < secondPos - 4))
                     {
-                        ::SendScintilla(SCI_SETSELECTION,firstPos + 5 + 8,delimitEnd);
-                        
-                        optionDelimiter = new char[delimitEnd - (firstPos + 5 + 8) + 1];
-                        ::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(optionDelimiter));
+
+
+                        ::SendScintilla(SCI_SETSELECTION,firstPos + 5 + 9,delimitEnd);
+                        //optionDelimiter = new char[delimitEnd - (firstPos + 5 + 8) + 1];
+                        //::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(optionDelimiter));
+                        sciGetText(&optionDelimiter, firstPos + 5 + 9, delimitEnd);
+
                         ::SendScintilla(SCI_SETSELECTION,firstPos + 5,delimitEnd + 2);
                         ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
                         secondPos = secondPos - (delimitEnd + 2 - (firstPos + 5));
@@ -2420,7 +2472,7 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
                     optionDelimiter = new char[2];
                     strcpy(optionDelimiter,"|");
                 }
-                //char* optionDelimiter = "|";
+                
                 
                 cleanOptionItem();
                 tempOptionEnd = firstPos + 5 - strlen(optionDelimiter);
@@ -2436,8 +2488,9 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
                         tempOptionEnd = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
                         ::SendScintilla(SCI_SETSELECTION,tempOptionStart,tempOptionEnd);
                         char* optionText;
-                        optionText = new char[tempOptionEnd - tempOptionStart + 1];
-                        ::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(optionText));
+                        //optionText = new char[tempOptionEnd - tempOptionStart + 1];
+                        //::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(optionText));
+                        sciGetText(&optionText, tempOptionStart, tempOptionEnd);
                         addOptionItem(optionText);
                         i++;
                     } else
@@ -2445,8 +2498,9 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
                         tempOptionEnd = secondPos-4;
                         ::SendScintilla(SCI_SETSELECTION,tempOptionStart,tempOptionEnd);
                         char* optionText;
-                        optionText = new char[tempOptionEnd - tempOptionStart + 1];
-                        ::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(optionText));
+                        //optionText = new char[tempOptionEnd - tempOptionStart + 1];
+                        //::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(optionText));
+                        sciGetText(&optionText, tempOptionStart, tempOptionEnd);
                         addOptionItem(optionText);
                         i++;
                         
@@ -2551,10 +2605,10 @@ int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &sec
     searchNext(tagTail);
 	secondPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
 
-    ::SendScintilla(SCI_SETSELECTION,firstPos+signLength,secondPos);
-
-    *hotSpotText = new char[secondPos - (firstPos + signLength) + 1];
-    ::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(*hotSpotText));
+    //::SendScintilla(SCI_SETSELECTION,firstPos+signLength,secondPos);
+    //*hotSpotText = new char[secondPos - (firstPos + signLength) + 1];
+    //::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(*hotSpotText));
+    sciGetText(&*hotSpotText, (firstPos + signLength), secondPos);
 
     if (strncmp(*hotSpotText,"(cha)",5)==0)
     {
@@ -2576,12 +2630,12 @@ int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &sec
         spotType = 6;
     }
 
-    ::SendScintilla(SCI_SETSELECTION,firstPos,secondPos+3);
-    
-    *hotSpot = new char[secondPos+3 - firstPos + 1];
-    ::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(*hotSpot));
+    //::SendScintilla(SCI_SETSELECTION,firstPos,secondPos+3);
+    //*hotSpot = new char[secondPos+3 - firstPos + 1];
+    //::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(*hotSpot));
 
-    
+    sciGetText(&*hotSpot,firstPos,secondPos+3);
+    ::SendScintilla(SCI_SETSELECTION,firstPos,secondPos+3);
     return spotType;
     //return secondPos;  
 }
@@ -2780,10 +2834,14 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
 void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
 {   
     g_liveHintUpdate = 0;
+
     delete [] g_snippetCache;
-    delete [] g_customScope;
-    delete [] g_customEscapeChar;
-    delete [] g_paramsDelimiter;
+    if (!g_newUpdate)
+    {
+        delete [] g_customScope;
+        delete [] g_customEscapeChar;
+        delete [] g_paramsDelimiter;
+    }
     //if (g_newUpdate) writeConfig();
     if (g_dbOpen)
     {
@@ -2868,13 +2926,16 @@ void initialize()
 
     //::_tcscpy(g_groupPath,path);
     //::_tcscat(g_groupPath,TEXT("\\SnippetGroup.ini"));
-    
+    if (PathFileExists(g_iniPath) == false) emptyFile(g_iniPath);
+
     setupConfigFile();
 
     g_snippetCache = new SnipIndex [g_snippetListLength];
-    if (PathFileExists(g_ftbPath) == FALSE) emptyFile(g_ftbPath);
-    if (PathFileExists(g_fttempPath) == FALSE) emptyFile(g_fttempPath);
+    if (PathFileExists(g_ftbPath) == false) emptyFile(g_ftbPath);
+    if (PathFileExists(g_fttempPath) == false) emptyFile(g_fttempPath);
+    
 
+    
     //TODO: better arrangement for this multipaste setting
     if (g_forceMultiPaste) ::SendScintilla(SCI_SETMULTIPASTE,1,0); 
     //updateDockItems(false,false);
@@ -2908,9 +2969,14 @@ void resetDefaultSettings()
     g_forceMultiPaste = DEFAULT_FORCE_MULTI_PASTE;
     g_snippetDockState = DEFAULT_SNIPPET_DOCK_STATE;
 
-    g_customScope = DEFAULT_CUSTOM_SCOPE;
-    g_customEscapeChar = DEFAULT_CUSTOM_ESCAPE_CHAR;
-    g_paramsDelimiter = DEFAULT_PARAMS_DELIMITER;
+
+
+    _tcscpy(g_customScope,DEFAULT_CUSTOM_SCOPE);
+    _tcscpy(g_customEscapeChar,DEFAULT_CUSTOM_ESCAPE_CHAR);
+    _tcscpy(g_paramsDelimiter,DEFAULT_PARAMS_DELIMITER);
+    //g_customScope = DEFAULT_CUSTOM_SCOPE;
+    //g_customEscapeChar = DEFAULT_CUSTOM_ESCAPE_CHAR;
+    //g_paramsDelimiter = DEFAULT_PARAMS_DELIMITER;
 }
 
 //void saveCustomScope()
@@ -3055,13 +3121,17 @@ int getCurrentTag(int posCurrent, char **buffer, int triggerLength)
                 
     if (posCurrent - posBeforeTag < 100) // Max tag length 100
     {
-        *buffer = new char[(posCurrent - posBeforeTag) + 1];
-		Sci_TextRange tagRange;
-		tagRange.chrg.cpMin = posBeforeTag;
-		tagRange.chrg.cpMax = posCurrent;
-		tagRange.lpstrText = *buffer;
+        
 
-	    ::SendScintilla(SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&tagRange));
+        //*buffer = new char[(posCurrent - posBeforeTag) + 1];
+		//Sci_TextRange tagRange;
+		//tagRange.chrg.cpMin = posBeforeTag;
+		//tagRange.chrg.cpMax = posCurrent;
+		//tagRange.lpstrText = *buffer;
+        //
+	    //::SendScintilla(SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&tagRange));
+        sciGetText(&*buffer, posBeforeTag, posCurrent);
+
 		length = (posCurrent - posBeforeTag);
 	}
     
@@ -3493,16 +3563,6 @@ char* cleanupString(char *str, char key)
     return str;
 }
 
-//void cleanupString2(char* str, char key)
-//{
-//    char *from, *to;
-//    from=to=str;
-//
-//    while ((*from != key) && (*to++=*from),*from++);
-//    //return str;
-//}
-
-
 void convertToWideChar(char* orig, wchar_t **wideChar)
 {
     if (orig == NULL)
@@ -3611,6 +3671,7 @@ void importSnippets()
             bool notOverWrite;
             char* snippetTextOld;
             //char* snippetTextOldCleaned;
+            
             do
             {
                 //import snippet do not have the problem of " " in save snippet because of the space in  "!$[FingerTextData FingerTextData]@#"
@@ -3626,18 +3687,20 @@ void importSnippets()
             
                 searchNext("!$[FingerTextData FingerTextData]@#");
                 snippetPosEnd = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-                ::SendScintilla(SCI_SETSELECTION,snippetPosStart,snippetPosEnd);
-            
-                snippetText = new char[snippetPosEnd-snippetPosStart + 1];
-                ::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(snippetText));
-            
+                
+                //::SendScintilla(SCI_SETSELECTION,snippetPosStart,snippetPosEnd);
+                //snippetText = new char[snippetPosEnd-snippetPosStart + 1];
+                //::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(snippetText));
+                sciGetText(&snippetText,snippetPosStart,snippetPosEnd);
+
+
                 ::SendScintilla(SCI_SETSELECTION,0,snippetPosEnd+1); // This +1 corrupt the ! in !$[FingerTextData FingerTextData]@# so that the program know a snippet is finished importing
                 ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
 
                 sqlite3_stmt *stmt;
                 
                 notOverWrite = false;
-            
+                
                 if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
                 {
                     sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
@@ -3886,6 +3949,54 @@ void updateScintilla()
     pSciMsg = (SciFnDirect)SendMessage(curScintilla,SCI_GETDIRECTFUNCTION, 0, 0);
     pSciWndData = (sptr_t)SendMessage(curScintilla,SCI_GETDIRECTPOINTER, 0, 0);
 }
+
+
+unsigned int sciGetText(char **text, int start, int end)
+{
+    if (start == -1)
+    {
+        start = SendScintilla(SCI_GETSELECTIONSTART, 0, 0);
+        end = SendScintilla(SCI_GETSELECTIONEND, 0, 0);
+    }
+
+    *text = (LPSTR)new char[end - start + 1];
+
+    if (end > start)
+    {
+        TextRange tr;
+        tr.chrg.cpMin = start;
+        tr.chrg.cpMax = end;
+        tr.lpstrText  = *text;
+        return (int)SendScintilla(SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&tr));
+    } else
+    {
+        strcpy(*text,"");
+        return 0;
+    }
+}
+
+
+//unsigned int sciGetText(HWND hwnd, char **text, int start, int end)
+//{
+//    *text = (LPSTR)new char[end - start + 1];
+//    TextRange tr;
+//    tr.chrg.cpMin = start;
+//    tr.chrg.cpMax = end;
+//    tr.lpstrText  = *text;
+//    if (end > start)
+//    {
+//        return  (int)::SendMessage(hwnd, SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&tr));
+//    } else
+//    {
+//        strcpy(*text,"");
+//        return 0;
+//    }
+//
+//    // With this implementation we can specify the handle of the text to cut, for example,
+//    //ScintillaGetText(nppData._scintillaMainHandle, buffer, start, end);
+//    //ScintillaGetText(nppData._scintillaSecondHandle, buffer, start, end);
+//}
+//
 
 void updateMode()
 {
@@ -4451,9 +4562,13 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
 
                 int paramStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
                 int paramEnd = ::SendScintilla(SCI_BRACEMATCH,paramStart,0) + 1;
-                ::SendScintilla(SCI_SETSELECTION,paramStart + 1,paramEnd - 1);
-                char* paramsContent = new char[paramEnd - 1 - (paramStart + 1) + 1];
-                ::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(paramsContent));
+                
+                //::SendScintilla(SCI_SETSELECTION,paramStart + 1,paramEnd - 1);
+                //char* paramsContent = new char[paramEnd - 1 - (paramStart + 1) + 1];
+                //::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(paramsContent));
+                char* paramsContent;
+                sciGetText(&paramsContent,paramStart+1,paramEnd-1);
+
                 char paramsDelimiter = g_paramsDelimiter[0];
                 g_hotspotParams = split(paramsContent,paramsDelimiter);
                 ::SendScintilla(SCI_SETSELECTION,paramStart,paramEnd);
@@ -4859,44 +4974,6 @@ int toVk(char* input)
     }
     //TODO: cater lower case for other keywords
 
-
-    //if (strcmp(input,"1") == 0) return 0x31;
-    //else if (strcmp(input,"2") == 0) return 0x32;
-    //else if (strcmp(input,"3") == 0) return 0x33;
-    //else if (strcmp(input,"4") == 0) return 0x34;
-    //else if (strcmp(input,"5") == 0) return 0x35;
-    //else if (strcmp(input,"6") == 0) return 0x36;
-    //else if (strcmp(input,"7") == 0) return 0x37;
-    //else if (strcmp(input,"8") == 0) return 0x38;
-    //else if (strcmp(input,"9") == 0) return 0x39;
-    //else if (strcmp(input,"0") == 0) return 0x30;
-    //else if (strcmp(input,"A") == 0) return 0x41;
-    //else if (strcmp(input,"B") == 0) return 0x42;
-    //else if (strcmp(input,"C") == 0) return 0x43;
-    //else if (strcmp(input,"D") == 0) return 0x44;
-    //else if (strcmp(input,"E") == 0) return 0x45;
-    //else if (strcmp(input,"F") == 0) return 0x46;
-    //else if (strcmp(input,"G") == 0) return 0x47;
-    //else if (strcmp(input,"H") == 0) return 0x48;
-    //else if (strcmp(input,"I") == 0) return 0x49;
-    //else if (strcmp(input,"J") == 0) return 0x4A;
-    //else if (strcmp(input,"K") == 0) return 0x4B;
-    //else if (strcmp(input,"L") == 0) return 0x4C;
-    //else if (strcmp(input,"M") == 0) return 0x4D;
-    //else if (strcmp(input,"N") == 0) return 0x4E;
-    //else if (strcmp(input,"O") == 0) return 0x4F;
-    //else if (strcmp(input,"P") == 0) return 0x50;
-    //else if (strcmp(input,"Q") == 0) return 0x51;
-    //else if (strcmp(input,"R") == 0) return 0x52;
-    //else if (strcmp(input,"S") == 0) return 0x53;
-    //else if (strcmp(input,"T") == 0) return 0x54;
-    //else if (strcmp(input,"U") == 0) return 0x55;
-    //else if (strcmp(input,"V") == 0) return 0x56;
-    //else if (strcmp(input,"W") == 0) return 0x57;
-    //else if (strcmp(input,"X") == 0) return 0x58;
-    //else if (strcmp(input,"Y") == 0) return 0x59;
-    //else if (strcmp(input,"Z") == 0) return 0x5A;
-
     if (strcmp(input,"BACK") == 0) return 0x08;
     else if (strcmp(input,"TAB") == 0) return 0x09;
     else if (strcmp(input,"CLEAR") == 0) return 0x0C;
@@ -5079,83 +5156,66 @@ void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* pathWi
     if (hSession) WinHttpCloseHandle(hSession);
 }
 
-
-void testing2()
-{
-    //HWND curScintilla = getCurrentScintilla();
-    ::MessageBox(nppData._nppHandle, TEXT("Testing2!"), NPP_PLUGIN_NAME, MB_OK);
-
-    //char buffer [100];
-    //sprintf(buffer, "0x%08x", (unsigned __int64) g_tempWindowHandle);
-    //alertCharArray(buffer);
-
-    //long handle = reinterpret_cast<long>(g_tempWindowHandle);
-    //alertNumber(handle);
-    //HWND newWin = reinterpret_cast<HWND>(handle);
-
-    
-}
-
-void testingSplit()
-{
-    char* temp = "foo bar hello world very good";
-    char* temp2;
-    std::string result;
-    
-    std::vector<std::string> v0;
-    v0 = split(temp,' ',0);
-       
-    for (int i = 0; i < v0.size(); i++)
-    {
-        result += v0[i];
-        result += " | ";
-    }
-    
-    result += "\r\n";
-    
-
-    std::vector<std::string> v1;
-    v1 = split(temp,' ',1);
-
-    for (int i = 0; i < v1.size(); i++)
-    {
-        result += v1[i];
-        result += " | ";
-    }
-
-    result += "\r\n";
-
-    std::vector<std::string> v2;
-    v2 = split(temp,' ',2);
-
-    for (int i = 0; i < v2.size(); i++)
-    {
-        result += v2[i];
-        result += " | ";
-    }
-
-    result += "\r\n";
-
-    std::vector<std::string> v3;
-    v3 = split(temp,' ',3);
-
-    for (int i = 0; i < v3.size(); i++)
-    {
-        result += v3[i];
-        result += " | ";
-    }
-
-    result += "\r\n";
-
-    stringToCharArray(result,&temp2);
-    SendScintilla(SCI_REPLACESEL,0,(LPARAM)temp2);
-    SendScintilla(SCI_REPLACESEL,0,(LPARAM)"\r\n\r\nfoo | bar | hello | world | very | good |\r\n\
-foo bar hello world very good | \r\n\
-foo | bar hello world very good | \r\n\
-foo | bar | hello world very good | ");
-
-
-}
+//void testingSplit()
+//{
+//    char* temp = "foo bar hello world very good";
+//    char* temp2;
+//    std::string result;
+//    
+//    std::vector<std::string> v0;
+//    v0 = split(temp,' ',0);
+//       
+//    for (int i = 0; i < v0.size(); i++)
+//    {
+//        result += v0[i];
+//        result += " | ";
+//    }
+//    
+//    result += "\r\n";
+//    
+//
+//    std::vector<std::string> v1;
+//    v1 = split(temp,' ',1);
+//
+//    for (int i = 0; i < v1.size(); i++)
+//    {
+//        result += v1[i];
+//        result += " | ";
+//    }
+//
+//    result += "\r\n";
+//
+//    std::vector<std::string> v2;
+//    v2 = split(temp,' ',2);
+//
+//    for (int i = 0; i < v2.size(); i++)
+//    {
+//        result += v2[i];
+//        result += " | ";
+//    }
+//
+//    result += "\r\n";
+//
+//    std::vector<std::string> v3;
+//    v3 = split(temp,' ',3);
+//
+//    for (int i = 0; i < v3.size(); i++)
+//    {
+//        result += v3[i];
+//        result += " | ";
+//    }
+//
+//    result += "\r\n";
+//
+//    stringToCharArray(result,&temp2);
+//    SendScintilla(SCI_REPLACESEL,0,(LPARAM)temp2);
+//    SendScintilla(SCI_REPLACESEL,0,(LPARAM)"\r\n\r\nfoo | bar | hello | world | very | good |\r\n\
+//foo bar hello world very good | \r\n\
+//foo | bar hello world very good | \r\n\
+//foo | bar | hello world very good | ");
+//
+//
+//}
 
 //void testingSplit3()
 //{
@@ -5219,13 +5279,44 @@ foo | bar | hello world very good | ");
 //}
 
 
+void testing2()
+{
+    //HWND curScintilla = getCurrentScintilla();
+    ::MessageBox(nppData._nppHandle, TEXT("Testing2!"), NPP_PLUGIN_NAME, MB_OK);
+
+    //char buffer [100];
+    //sprintf(buffer, "0x%08x", (unsigned __int64) g_tempWindowHandle);
+    //alertCharArray(buffer);
+
+    //long handle = reinterpret_cast<long>(g_tempWindowHandle);
+    //alertNumber(handle);
+    //HWND newWin = reinterpret_cast<HWND>(handle);
+
+
+
+}
+
 void testing()
 {
     
     //HWND curScintilla = getCurrentScintilla();
     alertCharArray("testing1");
-    searchNext("):(");
-   
+    
+    alertNumber(searchNext("\\$\\[.\\[",true));
+
+
+
+    ////Testing SchintillaGetText
+    //char* temp;
+    //sciGetText(&temp,10,20);
+    //alertCharArray(temp);
+    //delete [] temp;
+    //char* temp2;
+    //sciGetText(&temp2,13,13);
+    //alertCharArray(temp2);
+    //delete [] temp2;
+
+
     ////Test calltip
     //::SendScintilla(SCI_CALLTIPSHOW,0,(LPARAM)"Hello World!");
 

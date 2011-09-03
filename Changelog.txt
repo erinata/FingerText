@@ -1,10 +1,12 @@
 changelog (for developer use only, include unreleased versions)
 
+
 0.5.39
-****** Fixed: keyword TEMP is not working
+- Fixed: a bug causing npp to freeze when updating fingertext and shutdown npp afterwards
+- Fixed: keyword TEMP is not working
 ****** Add back the keyword GET for temporary backward compatibility
 ****** Add rounding, permutation and combination etc to (eva)
-
+- Performance improvement by using GETTEXTRANGE instead of SETSELECTION and GETSELTEXT
 
 0.5.38
 - Critical Fix of import error caused by changing the specification of file open type
@@ -33,7 +35,7 @@ changelog (for developer use only, include unreleased versions)
 - Added: Customizable option delimiter of (opt), the default delimiter is set to be |
 - Changed: Increase the limit of total number of options to 50
 - Fixed: Pressing return key in the triggertext field of snippet editor cause annotation bug.
-****** Added: dynamic hotspot (lis), which is a drop down box version of (opt)
+- Added: dynamic hotspot (lis), which is a drop down box version of (opt)
 ****** Added: keyword KEYHIT, which is essentially the same as KEYDOWN + KEYUP
 ****** Total rewrite of CUT: COPY: CUTLINE COPYLINE CUTDOC COPYDOC CUT'X' and COPY'X'
 

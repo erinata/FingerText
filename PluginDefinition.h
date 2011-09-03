@@ -38,6 +38,7 @@
 #include <fstream>      // For file reading and writing
 #include <winhttp.h>    // For http requests, Add winhttp.lib to additional dependencies if there is external definition error
 #include <process.h>    // For thread
+#include <ctime>        // For the time seed used to generate random number
 
 #include "sqlite3.h"
 #include "DummyStaticDialog.h"
@@ -91,8 +92,8 @@ int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &sec
 void showPreview(bool top = false);
 void emptyFile(TCHAR* fileName);
 void writeDefaultGroupFile();
-int searchNext(char* searchText);
-int searchPrev(char* searchText);
+int searchNext(char* searchText, bool regExp = false);
+int searchPrev(char* searchText, bool regExp = false);
 void selectionToSnippet();
 void insertHotSpotSign();
 //void insertWarmSpotSign();
@@ -165,6 +166,8 @@ void optionNavigate(bool toNext);
 
 int toVk(char* input);
 
+std::vector<int> splitPositions(int start, int end, char delimiter);
+
 void testing();
 void testing2();
 void alert();
@@ -180,5 +183,8 @@ void stringToCharArray(std::string source, char** dest);
 std::vector<std::string> split(char* str, char c = ' ', int parts = 0);
 //std::vector<std::string> split3(char* str, char* c, int parts);
 //std::vector<std::string> split2(char* str, char c1, char c2, char c3);
+
+//unsigned int sciGetText(HWND hwnd, char **text, int start, int end)
+unsigned int sciGetText(char **text, int start = -1, int end = -1);
 
 #endif //PLUGINDEFINITION_H

@@ -52,9 +52,11 @@
 #ifndef SNIPPET_DOCK_H
 #define SNIPPET_DOCK_H
 
-#include "DockingDlgInterface.h"
+
 #include "Dialog.h"
+#include "DockingDlgInterface.h"
 #include <WindowsX.h>
+
 
 class DockingDlg : public DockingDlgInterface
 {

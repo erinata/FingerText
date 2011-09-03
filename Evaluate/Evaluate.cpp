@@ -31,6 +31,7 @@
 //DEALINGS IN THE SOFTWARE.
 
 #include "Evaluate.h"
+
 // constructor
 Expression::Expression(char *input) 
 {
@@ -375,13 +376,26 @@ double Expression::operate(const std::string &operation, const double &operand1,
 
 long Expression::randomNumber()
 {
+    //clock_t t1;
+    //t1 = clock();
+    //long clockSeed = t1 % 10;
+    //static long seed = time(NULL);            
+    //seed = (104729 + 7919 * (seed+clockSeed)) % 15485863;  
+    //return abs(seed)%100;
+    
 
-    if (rand() > rand())
-    {
-        int s = static_cast<int>(time(0));
-        srand (rand()*s%32767);
-    }
-    return rand() % 100;
+    //static long seed = time(NULL);            
+    //seed = (104729 + 7919 * seed) % 15485863;  
+    //return abs(seed)%100;
+    
+    //if (rand() > rand())
+    //{
+    //    int s = static_cast<int>(time(0));
+    //    srand (rand()*s%32767);
+    //}
+    //return rand() % 100;
+
+    return rand() % 100;  //TODO: this rely on the seed somewhere else
 }
 
 int Expression::operateAnd(double operand1, double operand2)

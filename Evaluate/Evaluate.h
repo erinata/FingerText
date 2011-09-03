@@ -38,8 +38,6 @@
 #include <stack>
 #include <vector>
 #include <cctype>
-#include <ctime>
-
 
 #define OPERATOR 0
 #define OPERAND 1
