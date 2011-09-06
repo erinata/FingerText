@@ -1,6 +1,12 @@
 changelog (for developer use only, include unreleased versions)
 
 
+
+0.5.40
+****** optionarray use vector of string instead of char**, the limit of option numbers is lifted
+****** (eva) and (opt) use smartsplit, which means hotspot can contain delimiters
+****** (eva) VERBOSE and TERNARY mode
+
 0.5.39
 - Fixed: a bug causing npp to freeze when updating fingertext and shutdown npp afterwards
 - Fixed: keyword TEMP is not working

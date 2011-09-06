@@ -78,7 +78,6 @@ int searchPrevMatchedSign(char* tagSign, char* tagTail);
 int searchPrevMatchedTail(char* tagSign, char* tagTail);
 bool dynamicHotspot(int &startingPos, char* tagSign = "$[![", char* tagTail = "]!]");
 void paramsInsertion(int &firstPos, char* hotSpot, int &checkPoint);
-void addToCustomClipBoard(char* input);
 void textCopyCut(int sourceType, int operationType, int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint);
 void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint);
 void webRequest(int &firstPos, char* hotSpotText);
@@ -119,7 +118,7 @@ void upgradeMessage();
 void saveSnippet();
 //void createSnippet();
 char* getLangTagType();
-char* cleanupString( char *str );
+char* cleanupString(char *str, char key);
 void clearCache();
 void editSnippet();
 void deleteSnippet();
@@ -159,14 +158,12 @@ void tagComplete();
 void tabActivate();
 
 void updateOptionCurrent(bool toNext);
-void addOptionItem(char* item);
 void cleanOptionItem();
 void turnOffOptionMode();
+void turnOnOptionMode();
 void optionNavigate(bool toNext);
 
 int toVk(char* input);
-
-std::vector<int> splitPositions(int start, int end, char delimiter);
 
 void testing();
 void testing2();
@@ -186,5 +183,5 @@ std::vector<std::string> split(char* str, char c = ' ', int parts = 0);
 
 //unsigned int sciGetText(HWND hwnd, char **text, int start, int end)
 unsigned int sciGetText(char **text, int start = -1, int end = -1);
-
+std::vector<std::string> smartSplit(int start, int end, char delimiter, int parts = 0);
 #endif //PLUGINDEFINITION_H

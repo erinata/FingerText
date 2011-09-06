@@ -70,8 +70,8 @@ bool g_rectSelection;
 int g_editorLineCount;
 
 int g_lastTriggerPosition;
-char* g_customClipBoard;
-
+//char* g_customClipBoard;
+std::string g_customClipBoard;
 
 // For option hotspot
 bool g_optionMode;
@@ -79,10 +79,11 @@ bool g_optionMode;
 int g_optionStartPosition;
 int g_optionEndPosition;
 int g_optionCurrent;
-int g_optionNumber;
+//int g_optionNumber;
 // TODO: Should use vector here
-char *g_optionArray[] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
-int g_optionArrayLength = 50;
+//char *g_optionArray[] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
+//int g_optionArrayLength = 50;
+std::vector<std::string> g_optionArray;
 
 char *g_tagSignList[] = {"$[![","$[1[","$[2[","$[3["};
 char *g_tagTailList[] = {"]!]","]1]","]2]","]3]"};
@@ -170,13 +171,14 @@ void pluginInit(HANDLE hModule)
 {
     srand(time(0)); // TODO: may be I can call that in the tab triggering process, so a seed is generated in each trigger
     g_hModule = hModule;
-    g_customClipBoard = new char[1];
-    strcpy(g_customClipBoard,"");
+    g_customClipBoard = "";
+    //g_customClipBoard = new char[1];
+    //strcpy(g_customClipBoard,"");
 }
 
 void pluginCleanUp()
 {
-    delete [] g_customClipBoard;
+    //delete [] g_customClipBoard;
     //TODO: think about how to save the parameters for the next session during clean up
     g_liveHintUpdate = 0;
     //saveCustomScope();
@@ -350,7 +352,6 @@ void upgradeMessage()
     if (g_newUpdate)
     {
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
-
 
         char welcomeText[10000];
         strcpy(welcomeText,"");
@@ -607,8 +608,6 @@ bool getLineChecked(char **buffer, int lineNumber, TCHAR* errorText)
         }
     }
 
-
-
     //::SendScintilla(SCI_SETSELECTION,tagPosStart,tagPosEnd);
     //*buffer = new char[tagPosEnd-tagPosStart + 1];
     //::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(*buffer));
@@ -786,6 +785,8 @@ int searchPrevMatchedSign(char* tagSign, char* tagTail)
 
 int searchNextMatchedTail(char* tagSign, char* tagTail)
 {
+
+    // TODO: this function is not returning the position correctly, but it stop at the place where is find the tail
     // This function is tested to work when the position is at the end of tagSign
     // And this return the position at the END of tailsign, if found
    
@@ -1299,6 +1300,7 @@ void executeCommand(int &firstPos, char* hotSpotText)
 
 std::string evaluateCall(char* expression)
 {
+    //TODO: can use smartsplit for string comparison (need to spply firstPos and TriggerPos instead of hotSpotExt for this function)
     //TODO: refactor the numeric comparison part
     std::vector<std::string> expressions;
     
@@ -1361,7 +1363,7 @@ std::string evaluateCall(char* expression)
         evaluateResult = expressions[0];
     } else
     {
-        //TODO: should have more comprehansive comparison, e.g. not onnly compare to the first element
+        
         if (stringComparison)
         {
             for (j = 1;j<expressions.size();j++)
@@ -1402,94 +1404,132 @@ std::string evaluateCall(char* expression)
 
 void evaluateHotSpot(int &firstPos, char* hotSpotText)
 {
-
+    std::string evaluateResult;
     //TODO: should allow for a more elaborate comparison output
     
     int triggerPos = strlen(hotSpotText)+firstPos;
     SendScintilla(SCI_GOTOPOS,firstPos,0);
     
-
-    int qMode = 0;
-    //int qlength = strlen(hotSpotText);
-    int qlength = 0;
-    int clength = 0;
+    int mode = 0;
+    char* preParam;
+    char delimiter1 = '?';
+    char delimiter2 = ':';
+    std::string verboseText = " => ";
+    int offset=0;
     
-    int oSpot;
-    int qSpot = searchNext(")?(");
-    if ((qSpot>=0) && (qSpot<=triggerPos) && (hotSpotText[0] == '(') && (hotSpotText[strlen(hotSpotText)-1] == ')'))
+    if (strncmp(hotSpotText,"VERBOSE'",8) == 0)
     {
-        SendScintilla(SCI_GOTOPOS,qSpot,0);
-        qlength = qSpot - firstPos;
-        oSpot = searchNext("):(");
+        mode = 1;
         
-        if ((oSpot>=0) && (oSpot<=triggerPos) && (hotSpotText[qlength+2] == '(') && (hotSpotText[strlen(hotSpotText)-1] == ')'))
+        ::SendScintilla(SCI_GOTOPOS,firstPos + 8,0);
+        int delimitEnd = searchNext("':");
+        
+        if ((delimitEnd >= 0) && (delimitEnd < firstPos+strlen(hotSpotText)))
         {
-            qMode = 1;
+        
+            ::SendScintilla(SCI_SETSELECTION,firstPos + 8,delimitEnd);
+            //optionDelimiter = new char[delimitEnd - (firstPos + 5 + 8) + 1];
+            //::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(optionDelimiter));
+            sciGetText(&preParam, firstPos + 8, delimitEnd);
+            charArrayToString(preParam,&verboseText);
+            delete [] preParam;
+            ::SendScintilla(SCI_SETSELECTION,firstPos ,delimitEnd + 2);
+            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+            offset = delimitEnd + 2 - firstPos;
+            //secondPos = secondPos - (delimitEnd + 2 - (firstPos + 5));
             
-        }
+        } 
+    } if (strncmp(hotSpotText,"TERNARY'",8) == 0)
+    {
+        mode = 0;
+        
+        ::SendScintilla(SCI_GOTOPOS,firstPos + 8,0);
+        int delimitEnd = searchNext("':");
+        
+        if ((delimitEnd >= 0) && (delimitEnd < firstPos+strlen(hotSpotText)))
+        {
+        
+            ::SendScintilla(SCI_SETSELECTION,firstPos + 8,delimitEnd);
+            //optionDelimiter = new char[delimitEnd - (firstPos + 5 + 8) + 1];
+            //::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(optionDelimiter));
+            sciGetText(&preParam, firstPos + 8, delimitEnd);
+            delimiter1 = preParam[0];
+            if (strlen(preParam)>=2)
+            {
+                delimiter2 = preParam[1];
+            } else
+            {
+                delimiter2 = preParam[0];
+            }
+            
+            delete [] preParam;
+            ::SendScintilla(SCI_SETSELECTION,firstPos ,delimitEnd + 2);
+            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+            offset = delimitEnd + 2 - firstPos;
+            //secondPos = secondPos - (delimitEnd + 2 - (firstPos + 5));
+            
+        } 
+    } else if (strncmp(hotSpotText,"TERNARY:",8) == 0)
+    {
+        ::SendScintilla(SCI_SETSELECTION,firstPos , firstPos+8);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        offset = 8;
+        mode = 0;
+    } else if (strncmp(hotSpotText,"VERBOSE:",8) == 0)
+    {
+        ::SendScintilla(SCI_SETSELECTION,firstPos, firstPos+8);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        offset = 8;
+        mode = 1;
     }
 
-    std::string evaluateResult;
-    char* condition;
-    char* case0;
-    char* case1;
-   
+    std::vector<std::string> firstSplit;
 
-    if (qMode)
+    firstSplit = smartSplit(firstPos,triggerPos-offset,delimiter1,2);
+
+    if (firstSplit.size()<=1)
     {
-        
-        condition = new char [qlength];
-        strncpy(condition, hotSpotText+1, qlength-1);
-        condition[qlength-1] = '\0';
+        // Simple statament
+        evaluateResult = evaluateCall(hotSpotText+offset);
 
-        case0 = new char [oSpot-firstPos-1-qlength-2 +1];
-        strncpy(case0, hotSpotText+1+qlength+2, oSpot-firstPos-1-qlength-2);
-        case0[oSpot-firstPos-1-qlength-2] = '\0';
-        
-        case1 = new char [strlen(hotSpotText)-(oSpot-firstPos+4)+1];
-        strncpy(case1, hotSpotText+3+oSpot-firstPos, strlen(hotSpotText)-(oSpot-firstPos+4));
-        case1[strlen(hotSpotText)-(oSpot-firstPos+4)] = '\0';
-
-        evaluateResult = evaluateCall(condition);
-
-        delete [] condition;
     } else
     {
-        evaluateResult = evaluateCall(hotSpotText);
-    }
-    
-    ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
+        // possible ternary statement
+        std::vector<std::string> secondSplit;
+        secondSplit = smartSplit(firstPos + firstSplit[0].length() + 1 ,triggerPos,delimiter2);  
+        
+        char* expression;
+        stringToCharArray(firstSplit[0],&expression);
+        evaluateResult = evaluateCall(expression);
 
-    if (qMode)
-    {
-        char* result;
-        //if (evaluateResult.compare("0") == 0)
-        if (evaluateResult == "0")
-        {
-            //alertNumber(0);
-            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)case0);
-        } else
-        {
-            //alertNumber(1);
-            ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)case1);
-        }
-        delete [] case0;
-        delete [] case1;
+        std::stringstream ss(evaluateResult);
+        double d;
+        ss>>d;
 
-    } else 
-    {
-        char* result;
-        result = new char[evaluateResult.length()+1];
-        strcpy(result,evaluateResult.c_str());
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)result);
-        delete [] result;
+        if (d > secondSplit.size()-1) d = secondSplit.size()-1;
+        else if (d < 0) d = 0;
+               
+        evaluateResult = secondSplit[d];
+
     }
 
-     
+    ::SendScintilla(SCI_SETSEL,firstPos,triggerPos-offset);
+    if (mode == 1)
+    {
+        std::stringstream ss;
+        ss << firstSplit[0] << verboseText << evaluateResult;
+        evaluateResult = ss.str();
+    } 
+
+    char* result;
+    stringToCharArray(evaluateResult,&result);
+    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)result);
+    delete [] result;
 }
 
 void launchMessageBox(int &firstPos, char* hotSpotText)
 {
+    //TODO: need to find a better way to organize different types of messageboxes, there is probably no need to include all of them
     int triggerPos = strlen(hotSpotText)+firstPos;
     ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
 
@@ -1765,12 +1805,6 @@ void launchMessageBox(int &firstPos, char* hotSpotText)
 //
 //}
 
-void addToCustomClipBoard(char* input)
-{
-    delete [] g_customClipBoard;
-    g_customClipBoard = new char[strlen(input)+1];
-    strcpy(g_customClipBoard, input);
-}
 
 
 void textCopyCut(int sourceType, int operationType, int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint)
@@ -1887,11 +1921,13 @@ void textCopyCut(int sourceType, int operationType, int &firstPos, char* hotSpot
             if (sourceType == 5) startingPos = scriptStart;
             if (checkPoint > startingPos) checkPoint = startingPos;
             if (g_lastTriggerPosition > startingPos) g_lastTriggerPosition = startingPos;
-            delete [] g_customClipBoard;
+            //delete [] g_customClipBoard;
             //g_customClipBoard = new char [(::SendScintilla(SCI_GETSELECTIONEND,0,0)) - (::SendScintilla(SCI_GETSELECTIONSTART,0,0)) +1];
             //::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(g_customClipBoard));
-            sciGetText(&g_customClipBoard,(::SendScintilla(SCI_GETSELECTIONSTART,0,0)),(::SendScintilla(SCI_GETSELECTIONEND,0,0)));
-            
+            char* tempCustomClipBoardText;
+            sciGetText(&tempCustomClipBoardText,(::SendScintilla(SCI_GETSELECTIONSTART,0,0)),(::SendScintilla(SCI_GETSELECTIONEND,0,0)));
+            charArrayToString(tempCustomClipBoardText,&g_customClipBoard);
+            delete [] tempCustomClipBoardText;
             ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
             if (sourceType == 5)
             {
@@ -1901,11 +1937,10 @@ void textCopyCut(int sourceType, int operationType, int &firstPos, char* hotSpot
 
         } else if (operationType == 3)
         {
-            delete [] g_customClipBoard;
-            
-            //g_customClipBoard = new char [(::SendScintilla(SCI_GETSELECTIONEND,0,0)) - (::SendScintilla(SCI_GETSELECTIONSTART,0,0)) +1];
-            //::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(g_customClipBoard));
-            sciGetText(&g_customClipBoard,(::SendScintilla(SCI_GETSELECTIONSTART,0,0)),(::SendScintilla(SCI_GETSELECTIONEND,0,0)));
+            char* tempCustomClipBoardText;
+            sciGetText(&tempCustomClipBoardText,(::SendScintilla(SCI_GETSELECTIONSTART,0,0)),(::SendScintilla(SCI_GETSELECTIONEND,0,0)));
+            charArrayToString(tempCustomClipBoardText,&g_customClipBoard);
+            delete [] tempCustomClipBoardText;
         }
     }
 
@@ -1929,7 +1964,10 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
 	    
     } else if (strcmp(hotSpotText,"FTPASTE") == 0)
     {
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)g_customClipBoard);
+        char* tempCustomClipBoardText;
+        stringToCharArray(g_customClipBoard,&tempCustomClipBoardText);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)tempCustomClipBoardText);
+        delete [] tempCustomClipBoardText;
     } else if ((strcmp(hotSpotText,"CUT") == 0) || (strcmp(hotSpotText,"CUTWORD") == 0))
     {
         textCopyCut(1, 0, firstPos, hotSpotText, startingPos, checkPoint); 
@@ -2375,30 +2413,7 @@ char* getDateTime(char *format, bool getDate, int flags)
 //    return spotFound;
 //}
 
-std::vector<int> splitPositions(int start, int end, char delimiter)
-{
-    std::vector<int> positions;
-    char* partToSplit;
-    sciGetText(&partToSplit, start, end);
-    
-    std::vector<std::string> tempString = split(partToSplit,delimiter);
 
-    int i = 0;
-    for (i = 0; i<tempString.size();i++)
-    {
-        positions.push_back(tempString[i].length());
-    }
-    for (i = 0; i<positions.size();i++)
-    {
-        alertNumber(positions[i]);
-    }
-
-
-    delete [] partToSplit;
-
-    return positions;
-
-}
 
 int hotSpotNavigation(char* tagSign, char* tagTail)
 {
@@ -2437,92 +2452,179 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
 
             } else if (strncmp(hotSpotText,"(opt)",5) == 0)
             {
+                
                 ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)hotSpotText);
                 ::SendScintilla(SCI_GOTOPOS,firstPos,0);
+                int triggerPos = firstPos + strlen(hotSpotText);
+                ::SendScintilla(SCI_SETSELECTION,firstPos,firstPos+5);
+                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+                triggerPos -= 5;
+
                 //TODO: refactor the option hotspot part to a function
-                int tempOptionStart = 0;
-                int tempOptionEnd = 0;
-                char* optionDelimiter;
+                int mode = 0;
+                char* preParam;
+                char delimiter = '|';
+                int offset=0;
                 
-                
-                if (strncmp(hotSpotText+5,"<DELIMIT'",9) == 0)
+                if (strncmp(hotSpotText+5,"DELIMIT'",8) == 0)   // TODO: the +5 is not necessary, should delete the (opt) first......
                 {
-                    ::SendScintilla(SCI_GOTOPOS,firstPos + 5 + 9,0);
-                    int delimitEnd = searchNext("'>");
+                    mode = 0;
+                    ::SendScintilla(SCI_GOTOPOS,firstPos + 8,0);
+                    int delimitEnd = searchNext("':");
                     
-                    if ((delimitEnd >= 0) && (delimitEnd < secondPos - 4))
+                    if ((delimitEnd >= 0) && (delimitEnd < triggerPos))
                     {
 
-
-                        ::SendScintilla(SCI_SETSELECTION,firstPos + 5 + 9,delimitEnd);
+                        ::SendScintilla(SCI_SETSELECTION,firstPos + 8,delimitEnd);
                         //optionDelimiter = new char[delimitEnd - (firstPos + 5 + 8) + 1];
                         //::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(optionDelimiter));
-                        sciGetText(&optionDelimiter, firstPos + 5 + 9, delimitEnd);
-
-                        ::SendScintilla(SCI_SETSELECTION,firstPos + 5,delimitEnd + 2);
+                        sciGetText(&preParam, firstPos + 8, delimitEnd);
+                        delimiter = preParam[0];
+                        
+                        delete [] preParam;
+                        ::SendScintilla(SCI_SETSELECTION,firstPos,delimitEnd + 2);
                         ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-                        secondPos = secondPos - (delimitEnd + 2 - (firstPos + 5));
+                        offset = delimitEnd + 2 - firstPos;
+                        //secondPos = secondPos - (delimitEnd + 2 - (firstPos + 5));
+                    } 
+                } else if (strncmp(hotSpotText+5,"DELIMIT:",8) == 0)
+                {
+                    mode = 0;
+                    ::SendScintilla(SCI_SETSELECTION,firstPos, firstPos + 8);  
+                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+                    offset = 8;
+                } else if (strncmp(hotSpotText+5,"RANGE:",6) == 0)
+                {
+                    //TODO: may allow for customizable delimiter for RANGE. but it shouldnt be necessary
+                    mode = 1;
+                    ::SendScintilla(SCI_SETSELECTION,firstPos, firstPos + 6);  
+                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+                    offset = 6;
+                } 
+                
+                cleanOptionItem();
+
+                if (mode == 1)
+                {
+                    char* getTerm;
+                    sciGetText(&getTerm, firstPos,triggerPos-offset);
+                    getTerm = cleanupString(getTerm,' ');
+                    getTerm = cleanupString(getTerm,'\r');
+                    getTerm = cleanupString(getTerm,'\n');
+                    getTerm = cleanupString(getTerm,'\t');
+                    std::vector<std::string> rangeString = split(getTerm,'-');
+                    delete [] getTerm;
+
+                    int numLength = 1;
+                    long rangeStart;
+                    long rangeEnd;
+                    
+                    if (rangeString.size()>1)
+                    {   
+                        if (rangeString[0].length()<=0) rangeString[0] = "0";
+                        if (rangeString[1].length()<=0) rangeString[1] = "0";
+                        
+                        numLength = rangeString[0].length();
+                        if (rangeString[1].length()<rangeString[0].length()) numLength = rangeString[1].length();
+                        
+                        std::stringstream ss1(rangeString[0]);
+                        ss1 >> rangeStart;
+                        
+                        std::stringstream ss2(rangeString[1]);
+                        ss2 >> rangeEnd;
+                        
+                        rangeStart = abs(rangeStart);
+                        rangeEnd = abs(rangeEnd);
+
+                        int length;
+                        if (rangeEnd>=rangeStart)
+                        {
+                            for (int i = rangeStart; i<=rangeEnd; i++)
+                            {
+                                std::stringstream ss;
+                                ss << i;
+                                std::string s = ss.str();
+                                
+                                length = s.length();
+	                            for (int j = 0; j < numLength - length; j++) s = "0" + s;
+                                g_optionArray.push_back(s);
+                            }
+                        } else
+                        {
+                            for (int i = rangeStart; i>=rangeEnd; i--)
+                            {
+                                std::stringstream ss;
+                                ss << i;
+                                std::string s = ss.str();
+
+                                length = s.length();
+	                            for (int j = 0; j < numLength - length; j++) s = "0" + s;
+                                g_optionArray.push_back(s);
+                            
+                            }
+                        }
                     } else
                     {
-                        optionDelimiter = new char[2];
-                        strcpy(optionDelimiter,"|");
+                        g_optionArray.push_back(rangeString[0]);
                     }
                 } else
                 {
-                    optionDelimiter = new char[2];
-                    strcpy(optionDelimiter,"|");
+                    g_optionArray = smartSplit(firstPos,triggerPos-offset,delimiter);
                 }
+                //g_optionNumber = g_optionNumber + g_optionArray.size();
                 
-                
-                cleanOptionItem();
-                tempOptionEnd = firstPos + 5 - strlen(optionDelimiter);
-                int i =0;
-                int optionFound = -1;
-                while (i<g_optionArrayLength)
-                {
-                    tempOptionStart = tempOptionEnd + strlen(optionDelimiter);
-                    ::SendScintilla(SCI_GOTOPOS,tempOptionStart,0);
-                    optionFound = searchNext(optionDelimiter);
-                    if ((optionFound>=0) && (::SendScintilla(SCI_GETCURRENTPOS,0,0)<secondPos))
-                    {
-                        tempOptionEnd = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-                        ::SendScintilla(SCI_SETSELECTION,tempOptionStart,tempOptionEnd);
-                        char* optionText;
-                        //optionText = new char[tempOptionEnd - tempOptionStart + 1];
-                        //::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(optionText));
-                        sciGetText(&optionText, tempOptionStart, tempOptionEnd);
-                        addOptionItem(optionText);
-                        i++;
-                    } else
-                    {
-                        tempOptionEnd = secondPos-4;
-                        ::SendScintilla(SCI_SETSELECTION,tempOptionStart,tempOptionEnd);
-                        char* optionText;
-                        //optionText = new char[tempOptionEnd - tempOptionStart + 1];
-                        //::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(optionText));
-                        sciGetText(&optionText, tempOptionStart, tempOptionEnd);
-                        addOptionItem(optionText);
-                        i++;
-                        
-                        break;
-                    }
-                };
+                //tempOptionEnd = firstPos + 5 - strlen(optionDelimiter);
+                //int i =0;
+                //int optionFound = -1;
+                ////while (i<g_optionArrayLength)
+                //while(1)
+                //{
+                //    tempOptionStart = tempOptionEnd + strlen(optionDelimiter);
+                //    ::SendScintilla(SCI_GOTOPOS,tempOptionStart,0);
+                //    optionFound = searchNext(optionDelimiter);
+                //    if ((optionFound>=0) && (::SendScintilla(SCI_GETCURRENTPOS,0,0)<secondPos))
+                //    {
+                //        tempOptionEnd = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+                //        ::SendScintilla(SCI_SETSELECTION,tempOptionStart,tempOptionEnd);
+                //        char* optionText;
+                //        //optionText = new char[tempOptionEnd - tempOptionStart + 1];
+                //        //::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(optionText));
+                //        sciGetText(&optionText, tempOptionStart, tempOptionEnd);
+                //        addOptionItem(optionText);
+                //        i++;
+                //    } else
+                //    {
+                //        tempOptionEnd = secondPos-4;
+                //        ::SendScintilla(SCI_SETSELECTION,tempOptionStart,tempOptionEnd);
+                //        char* optionText;
+                //        //optionText = new char[tempOptionEnd - tempOptionStart + 1];
+                //        //::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(optionText));
+                //        sciGetText(&optionText, tempOptionStart, tempOptionEnd);
+                //        addOptionItem(optionText);
+                //        i++;
+                //        
+                //        break;
+                //    }
+                //};
 
-                delete [] optionDelimiter;
 
                 //g_optionOperating = true; 
 
-                ::SendScintilla(SCI_SETSELECTION,firstPos,tempOptionEnd);
-                ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)g_optionArray[g_optionCurrent]);
+                ::SendScintilla(SCI_SETSELECTION,firstPos,triggerPos-offset);
+                char* option;
+                stringToCharArray(g_optionArray[g_optionCurrent],&option);
+                ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)option);
                 //g_optionOperating = false; 
-
+                delete [] option;
                 ::SendScintilla(SCI_GOTOPOS,firstPos,0);
                 g_optionStartPosition = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-                g_optionEndPosition = g_optionStartPosition + strlen(g_optionArray[g_optionCurrent]);
+                g_optionEndPosition = g_optionStartPosition + g_optionArray[g_optionCurrent].length();
                 ::SendScintilla(SCI_SETSELECTION,g_optionStartPosition,g_optionEndPosition);
-                if (i > 1)
+                //alertNumber(g_optionArray.size());
+                if (g_optionArray.size() > 1)
                 {
-                    g_optionMode = true;
+                    turnOnOptionMode();
+                    //g_optionMode = true;
                     updateOptionCurrent(true);
                 }
                 //alertNumber(::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0));
@@ -2543,7 +2645,6 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
                 int hotSpotFound=-1;
                 int tempPos[100];
                 int i=1;
-                //TODO: The hotspot with the same name cannot be next to each others. This will be fixed when scintilla updates and notepad++ adopt the changes.
                 //TODO: consider refactor this part to another function
                 for (i=1;i<=98;i++)
                 {
@@ -2862,12 +2963,13 @@ void initialize()
     g_rectSelection = false;
 
     // For option hotspot
-    g_optionMode = false;
+    turnOffOptionMode();
+    //g_optionMode = false;
     //g_optionOperating = false;
     g_optionStartPosition = 0;
     g_optionEndPosition = 0;
     g_optionCurrent = 0;
-    g_optionNumber = 0;
+    //g_optionNumber = 0;
 
     g_lastTriggerPosition = 0;
     
@@ -3552,8 +3654,19 @@ bool exportSnippets()
     return success;
 }
 
+void findAndReplace(std::string& str, const std::string& oldStr, const std::string& newStr)
+{
+  size_t pos = 0;
+  while((pos = str.find(oldStr, pos)) != std::string::npos)
+  {
+     str.replace(pos, oldStr.length(), newStr);
+     pos += newStr.length();
+  }
+}
+
 char* cleanupString(char *str, char key)
 {
+    //TODO:can be generalized to findAndReplace?
     if (str==NULL) return NULL;
 
     char *from, *to;
@@ -3963,6 +4076,7 @@ unsigned int sciGetText(char **text, int start, int end)
 
     if (end > start)
     {
+
         TextRange tr;
         tr.chrg.cpMin = start;
         tr.chrg.cpMax = end;
@@ -4210,26 +4324,19 @@ __________________________________________________________________________\r\n\r
 //For option dynamic hotspot
 void cleanOptionItem()
 {
-    int i = 0;
-    while (i<g_optionNumber)
-    {
-        //alertNumber(i);
-        delete [] g_optionArray[i];
-        i++;
-    };
-    g_optionMode = false;
-    g_optionNumber = 0;
+    g_optionArray.clear();
+    
+    //int i = 0;
+    //while (i<g_optionNumber)
+    //{
+    //    //alertNumber(i);
+    //    delete [] g_optionArray[i];
+    //    i++;
+    //};
+    turnOffOptionMode();
+    //g_optionMode = false;
+    //g_optionNumber = 0;
     g_optionCurrent = 0;
-}
-
-void addOptionItem(char* item)
-{
-    // TODO: should use stack?
-    if (g_optionNumber<g_optionArrayLength)
-    {
-        g_optionArray[g_optionNumber] = item;
-        g_optionNumber++;
-    }
 }
 
 //char* getOptionItem()
@@ -4241,7 +4348,7 @@ void updateOptionCurrent(bool toNext)
     //strcpy(item, g_optionArray[g_optionCurrent]);
     if (toNext)
     {
-        if (g_optionCurrent >= g_optionNumber-1) 
+        if (g_optionCurrent >= g_optionArray.size()-1) 
         {
             g_optionCurrent = 0;
         } else
@@ -4252,7 +4359,7 @@ void updateOptionCurrent(bool toNext)
     {
         if (g_optionCurrent <= 0) 
         {
-            g_optionCurrent = g_optionNumber-1;
+            g_optionCurrent = g_optionArray.size()-1;
         } else
         {
             g_optionCurrent--;
@@ -4264,17 +4371,25 @@ void updateOptionCurrent(bool toNext)
 
 void turnOffOptionMode()
 {
+    //if (g_optionMode) alert();
     g_optionMode = false;
 }
 
+void turnOnOptionMode()
+{
+    g_optionMode = true;
+}
 void optionNavigate(bool toNext)
 {
     
     ::SendScintilla(SCI_SETSELECTION,g_optionStartPosition,g_optionEndPosition);
     updateOptionCurrent(toNext);
-    ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)g_optionArray[g_optionCurrent]);
+    char* option;
+    stringToCharArray(g_optionArray[g_optionCurrent],&option);
+    ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)option);
+    delete [] option;
     ::SendScintilla(SCI_GOTOPOS,g_optionStartPosition,0);
-    g_optionEndPosition = g_optionStartPosition + strlen(g_optionArray[g_optionCurrent]);
+    g_optionEndPosition = g_optionStartPosition + g_optionArray[g_optionCurrent].length();
     ::SendScintilla(SCI_SETSELECTION,g_optionStartPosition,g_optionEndPosition);
 }
 
@@ -4312,11 +4427,13 @@ void selectionMonitor(int contentChange)
                 {
                     optionNavigate(true);
                     //optionTriggered = true;
-                    g_optionMode = true; // TODO: investigate why this line is necessary
+                    turnOnOptionMode();
+                    //g_optionMode = true; // TODO: investigate why this line is necessary
                 } else
                 {
                     optionNavigate(false);
-                    g_optionMode = true;
+                    turnOnOptionMode();
+                    //g_optionMode = true;
                 }
                 //else
                 //{
@@ -4942,7 +5059,8 @@ void tabActivate()
             {
                 if (g_optionMode == true)
                 {
-                    g_optionMode = false;
+                    //g_optionMode = false;
+                    turnOffOptionMode();
                     ::SendScintilla(SCI_GOTOPOS,g_optionEndPosition,0);
                     snippetHint = true;
                 } else
@@ -5292,8 +5410,8 @@ void testing2()
     //alertNumber(handle);
     //HWND newWin = reinterpret_cast<HWND>(handle);
 
-
-
+    alertNumber(searchNextMatchedTail("$[![","]!]"));
+    //searchNext("\\$\\[.\\[",true);
 }
 
 void testing()
@@ -5302,7 +5420,16 @@ void testing()
     //HWND curScintilla = getCurrentScintilla();
     alertCharArray("testing1");
     
-    alertNumber(searchNext("\\$\\[.\\[",true));
+    std::vector<std::string> temp;
+    temp = smartSplit(5,50,'|');
+    alertVector(temp);
+    //temp = smartSplit(5,50,';',2);
+    //alertVector(temp);
+
+
+
+    ////Test regexp
+    //alertNumber(searchNext("\\$\\[.\\[",true));
 
 
 
@@ -5623,11 +5750,7 @@ void testing()
     //TCHAR file2switch[]=TEXT("FingerTextEditor");
     //::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)file2switch);
 
-    
-
     //::SendMessage(nppData._nppHandle, NPPM_ACTIVATEDOC, MAIN_VIEW, 1);
-   
-
 }
 
 void alert()
@@ -5667,8 +5790,7 @@ void alertString(std::string input)
 
 void alertVector(std::vector<std::string> v)
 {
-    int i;
-    i = 0;
+    int i = 0;
     while (i<v.size())
     {
         alertString(v[i]);
@@ -5676,15 +5798,7 @@ void alertVector(std::vector<std::string> v)
     }
 }
 
-void findAndReplace(std::string& str, const std::string& oldStr, const std::string& newStr)
-{
-  size_t pos = 0;
-  while((pos = str.find(oldStr, pos)) != std::string::npos)
-  {
-     str.replace(pos, oldStr.length(), newStr);
-     pos += newStr.length();
-  }
-}
+
 
 //Super buggy implementation of a word delimiter splitter
 //std::vector<std::string> split2(char* str, char c1, char c2, char c3)
@@ -5749,6 +5863,74 @@ std::vector<std::string> split(char* str, char c, int parts)
     return result;
 }
 
+
+std::vector<std::string> smartSplit(int start, int end, char delimiter, int parts)
+{
+    char filler;
+    if (delimiter!=0)
+    {
+        filler = '1';
+    } else 
+    {
+        filler = '0';
+    }
+
+    std::vector<std::string> retVal;
+    std::vector<int> positions;
+    char* partToSplit;
+    sciGetText(&partToSplit, start, end);
+    int signSpot; 
+    int tailSpot;
+    char* tagSignGet;
+    char* tagTailGet;
+    
+    SendScintilla(SCI_GOTOPOS,start,0);
+    do
+    {
+        signSpot = searchNext("\\$\\[.\\[",true);
+        if ((signSpot>=start) && (signSpot < end))
+        {
+            
+            sciGetText(&tagSignGet);
+            tagTailGet = new char[4];
+            strcpy(tagTailGet,"]!]");
+            tagTailGet[1] = tagSignGet[2];
+            SendScintilla(SCI_GOTOPOS,signSpot+1,0);
+            //searchNextMatchedTail(tagSignGet,tagTailGet);
+            //tailSpot = SendScintilla(SCI_GETCURRENTPOS,0,0);
+            tailSpot = searchNextMatchedTail(tagSignGet,tagTailGet);
+            if (tailSpot <= end && tailSpot> start)
+            {
+                for (int i = signSpot - start; i<tailSpot-start;i++) partToSplit[i] = filler;
+            }
+            delete [] tagSignGet;
+            delete [] tagTailGet;
+        }
+    } while ((signSpot < end) && (signSpot > start));
+
+    //alertCharArray(partToSplit);
+    
+    retVal = split(partToSplit,delimiter,parts);
+    
+    int i = 0;
+    for (i = 0; i<retVal.size();i++)
+    {
+        positions.push_back(retVal[i].length());
+    }
+
+    int caret = start;
+    char* tempString;
+    for (i = 0; i<positions.size();i++)
+    {
+        //alertNumber(positions[i]);
+        sciGetText(&tempString, caret, caret + positions[i]);
+        charArrayToString(tempString,&retVal[i]);
+        delete [] tempString;
+        caret += positions[i]+1;
+    }
+    delete [] partToSplit;
+    return retVal;
+}
 
 //std::vector<std::string> split3(char* str, char* c, int parts)
 //{

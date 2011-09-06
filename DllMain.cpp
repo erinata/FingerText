@@ -125,7 +125,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             //refreshAnnotation();
             //break;   
             snippetHintUpdate();
-            turnOffOptionMode();
+            //turnOffOptionMode(); //TODO: verify that this is actually not needed
             //showPreview();
             break;
 
