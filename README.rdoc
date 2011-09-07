@@ -63,7 +63,7 @@ That's it. You can try triggering others snippets in the list. Snippet can be as
 
 You probably have already noticed, as you type, the SnippetDock is updated. When you type "lor"(without quotes), FingerText will show on the Dock that there is a snippet "lorem", in case you forget how to spell it.
 
-How about if you do not want to type the whole word? just type "lor" and go to Menu>Plugins>FingerText>Tag completion. The word lorem is completed and you can trigger the snippet by hitting [tab]. Assign the Tag completion to a hot key if you plan you use it frequently.
+How about if you do not want to type the whole word? just type "lor" and go to Menu>Plugins>FingerText>Tag completion. The word lorem is completed and you can trigger the snippet by hitting [tab]. Assigning the Tag completion to a hot key is highly recommended.
 
 You can trigger snippets anywhere in your document. the snippet will be inserted to the location where you type in the trigger text.
 
@@ -88,6 +88,12 @@ Some snippets contain hotspots. For example, open a new file and trigger the sni
   mit[tab]
 
 A sample of MIT license will appear in the editor. Notice that your caret is automatically moved to the "year" spot. Now type in 2011 and hit [Tab] again. The caret is now on the name spot and you can enter your name. Hit [Tab] after you enter you name will bring the caret to the end of the text. This is a very convenient way to fill in information while the snippet acts as a template file.
+
+Another way to insert text into hotspot is to pass the text as params. For example you can trigger the snippet "mit" by typing
+   
+  mit(2010,John Smith)[tab]
+
+Right after you hit tab you should see the same MIT license template with "2010" and "John Smith" automatically filled in to the correct place.
 
 Some of the snippets contain multiple hotspots with the same name. For example you can trigger the snippet "awesome". Your cursor is on all three spots and anything you type will change all of them simultaneously. You can also try the snippet "for" in a .cpp file. Trigger the snippet and press the letter "i" once to change all the iteration variable to "i".
 

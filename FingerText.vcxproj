@@ -48,7 +48,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.\Evaluate;.\NppApi;.\sqlite3;.\Dialog;.\;.\Version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\Utils;.\DuckEval;.\NppApi;.\sqlite3;.\DialogFeatures;.\Dialogs;.\;.\Config;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader>
@@ -72,7 +72,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>.\Evaluate;.\NppApi;.\sqlite3;.\Dialog;.\Version;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\Utils;.\DuckEval;.\NppApi;.\sqlite3;.\DialogFeatures;.\Dialogs;.\Config;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -98,35 +98,45 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Dialog\DummyStaticDialog.cpp" />
+    <ClCompile Include="Config\PluginConfig.cpp" />
+    <ClCompile Include="DialogFeatures\StaticDialog.cpp" />
+    <ClCompile Include="Dialogs\DummyStaticDialog.cpp" />
+    <ClCompile Include="Dialogs\SnippetDock.cpp" />
     <ClCompile Include="DllMain.cpp" />
-    <ClCompile Include="Dialog\SnippetDock.cpp" />
-    <ClCompile Include="Dialog\StaticDialog.cpp" />
-    <ClCompile Include="evaluate\Evaluate.cpp" />
+    <ClCompile Include="DuckEval\DuckEval.cpp" />
+    <ClCompile Include="NppApi\NppApiHelpers.cpp" />
     <ClCompile Include="PluginDefinition.cpp" />
     <ClCompile Include="Sqlite3\sqlite3.c" />
+    <ClCompile Include="Utils\ConversionUtils.cpp" />
+    <ClCompile Include="Utils\DebugUtils.cpp" />
+    <ClCompile Include="Utils\stringUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Dialog\Dialog.h" />
-    <ClInclude Include="Dialog\Docking.h" />
-    <ClInclude Include="Dialog\DockingDlgInterface.h" />
-    <ClInclude Include="Dialog\DockingResource.h" />
-    <ClInclude Include="Dialog\DummyStaticDialog.h" />
-    <ClInclude Include="Dialog\SnippetDock.h" />
-    <ClInclude Include="Dialog\StaticDialog.h" />
-    <ClInclude Include="Dialog\Window.h" />
-    <ClInclude Include="evaluate\Evaluate.h" />
+    <ClInclude Include="Config\PluginConfig.h" />
+    <ClInclude Include="Config\Version.h" />
+    <ClInclude Include="DialogFeatures\Docking.h" />
+    <ClInclude Include="DialogFeatures\DockingDlgInterface.h" />
+    <ClInclude Include="DialogFeatures\DockingResource.h" />
+    <ClInclude Include="DialogFeatures\StaticDialog.h" />
+    <ClInclude Include="DialogFeatures\Window.h" />
+    <ClInclude Include="Dialogs\Dialog.h" />
+    <ClInclude Include="Dialogs\DummyStaticDialog.h" />
+    <ClInclude Include="Dialogs\SnippetDock.h" />
+    <ClInclude Include="DuckEval\DuckEval.h" />
     <ClInclude Include="NppApi\menuCmdID.h" />
     <ClInclude Include="NppApi\Notepad_plus_msgs.h" />
+    <ClInclude Include="NppApi\NppApiHelpers.h" />
     <ClInclude Include="NppApi\Scintilla.h" />
     <ClInclude Include="PluginDefinition.h" />
     <ClInclude Include="PluginInterface.h" />
     <ClInclude Include="Sqlite3\sqlite3.h" />
-    <ClInclude Include="Version\Version.h" />
+    <ClInclude Include="Utils\ConversionUtils.h" />
+    <ClInclude Include="Utils\DebugUtils.h" />
+    <ClInclude Include="Utils\stringUtils.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Dialog\Dialog.rc" />
-    <ResourceCompile Include="Version\Version.rc" />
+    <ResourceCompile Include="Config\Version.rc" />
+    <ResourceCompile Include="Dialogs\Dialog.rc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Changelog.txt" />

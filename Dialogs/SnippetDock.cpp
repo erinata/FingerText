@@ -26,32 +26,12 @@
 //WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
-///////////////////////////////////////////////////////
-//
-//This file is modified from the NppPluginTemplate provided by Don Ho. 
-//The License of the template is shown below. 
-//
-//this file is part of notepad++
-//Copyright (C)2003 Don HO ( donho@altern.org )
-//
-//This program is free software; you can redistribute it and/or
-//modify it under the terms of the GNU General Public License
-//as published by the Free Software Foundation; either
-//version 2 of the License, or (at your option) any later version.
-//
-//This program is distributed in the hope that it will be useful,
-//but WITHOUT ANY WARRANTY; without even the implied warranty of
-//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//GNU General Public License for more details.
-//
-//You should have received a copy of the GNU General Public License
-//along with this program; if not, write to the Free Software
-//Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-#include "SnippetDock.h"
 #include "PluginDefinition.h"
+#include "SnippetDock.h"
 
-extern NppData nppData;
+
+//extern NppData nppData;
 
 // Function for all docking dialogs
 void DockingDlg::display(bool toShow) 
@@ -62,7 +42,7 @@ void DockingDlg::display(bool toShow)
 
 void DockingDlg::setParent(HWND parent2set)
 {
-		_hParent = parent2set;
+	_hParent = parent2set;
 }
 
 // Custom functions
@@ -106,10 +86,30 @@ int DockingDlg::getSelection()
 {
     int retVal;
     HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
-      retVal = SendMessage(hwndList, LB_GETCURSEL, 0, 0);
+    retVal = SendMessage(hwndList, LB_GETCURSEL, 0, 0);
     retVal = SendMessage(hwndList, LB_GETANCHORINDEX, 0, 0);
     
     return retVal;
+
+}
+
+void DockingDlg::getSelectText(TCHAR* &buffer, int index)
+{
+     
+    HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
+    if (index = -1) index = SendMessage(hwndList, LB_GETCURSEL, 0, 0);
+    if (index <= 0) index = 0;
+    int length = SendMessage(hwndList, LB_GETTEXTLEN, index, 0);
+    if (length >=  1)
+    {
+
+        buffer = new TCHAR[length+1];
+        SendMessage(hwndList, LB_GETTEXT, index, (LPARAM)buffer);
+    } else
+    {
+        buffer = new TCHAR[1];
+        buffer[0] = '\0';
+    }
 
 }
 
@@ -170,29 +170,29 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
                     editSnippet();
                     //editSnipShow();
                     //updateDockItems();
-					return TRUE;
+					return true;
 				}
 
                 case IDC_SAVE:
                 {
                     saveSnippet();
-                    return TRUE;
+                    return true;
                 }
 
                 case IDC_CREATE:
                 {
                     selectionToSnippet();
                     //createSnippet();
-                    return TRUE;
+                    return true;
                 }
 
                 case IDC_DELETE:
                 {
                     deleteSnippet();
-                    return TRUE;
+                    return true;
                 }
 			}
-			return FALSE;
+			return false;
 		}
 
 
@@ -210,14 +210,12 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
         
         case WM_INITDIALOG:
         {
-            updateMode();
-            setDlgText(ID_SNIPSHOW_EDIT,TEXT("Select an item in SnippetDock to view the snippet preview here."));
-            //setDlgText(IDC_LIST_TITLE, TEXT("Available Snippets"));
             
-            //::SetDlgItemInt(_hSelf,IDC_LENGTH,100, false);
-            //SendMessage(GetDlgItem(_hSelf, IDC_SNIPPET_LIST), LB_SETSEL , true, 1);
+            //updateMode();
+            //setDlgText(ID_SNIPSHOW_EDIT,TEXT("Select an item in SnippetDock to view the snippet preview here."));
             
-            return TRUE;
+            
+            //return true;
          
         } 
 

@@ -27,26 +27,40 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-#define VERSION_TEXT "0.5.40"
-#define VERSION_NUM 0,5,40,0
-#define VERSION_LINEAR 540
-#define VERSION_KEEP_CONFIG_START 500
-#define VERSION_KEEP_CONFIG_END 540
-#define VERSION_TEXT_STAGE "(Alpha)"
+#ifndef SNIPPET_DOCK_H
+#define SNIPPET_DOCK_H
 
-#define AUTHOR_NAME "erinata"
-#define PLUGIN_NAME "FingerText"
-#define COPYRIGHT_TEXT "Copyright (C) 2011"
-#define DESCRIPTION_TEXT "A snippet plugin for notepad++"
+#include "Dialog.h"
+#include "DockingDlgInterface.h"
+#include <WindowsX.h>
 
-#define DATE_TEXT "September 2011"
-#define AUTHOR_TEXT "Author: Tom Lam\r\n"
-#define EMAIL_TEXT "Email: erinata@gmail.com\r\n"
-#define ABOUT_TEXT "\
-Update to the lastest version:\r\n\
-           http://sourceforge.net/projects/fingertext/ \r\n\
-Usage Guide and Source code:\r\n\
-           http://github.com/erinata/FingerText \r\n\r\n\
-"
 
-#define MENU_LENGTH 19
+class DockingDlg : public DockingDlgInterface
+{
+    public :
+        DockingDlg() : DockingDlgInterface(IDD_SNIPPET_DOCK){};
+
+        // Function for all docking dialogs
+        virtual void display(bool toShow = true);
+    	void setParent(HWND parent2set);
+    
+        // Custom functions
+        void addDockItem(wchar_t *dockItem);
+        void resizeListBox(int height,int width);
+        void clearDock();
+        void setDlgText(int dlg, TCHAR* showText);
+        void toggleSave(bool buttonOn);
+        int getSelection();
+        void setSelction();
+        int getCount();
+        void DockingDlg::getSelectText(TCHAR* &buffer, int index = -1);
+
+    protected :
+        
+    	virtual BOOL CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
+    
+    private :
+
+};
+
+#endif //SNIPPET_DOCK_H

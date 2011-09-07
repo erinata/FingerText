@@ -21,22 +21,37 @@
     <ClCompile Include="PluginDefinition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Dialog\StaticDialog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Dialog\SnippetDock.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DllMain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Dialog\DummyStaticDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Sqlite3\sqlite3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="evaluate\Evaluate.cpp">
+    <ClCompile Include="DialogFeatures\StaticDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Dialogs\SnippetDock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Dialogs\DummyStaticDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\DebugUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\ConversionUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DuckEval\DuckEval.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\stringUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NppApi\NppApiHelpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Config\PluginConfig.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -47,34 +62,7 @@
     <ClInclude Include="PluginInterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Dialog\Docking.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Dialog\DockingDlgInterface.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Dialog\StaticDialog.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Dialog\Window.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Dialog\SnippetDock.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Dialog\Dialog.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Dialog\DockingResource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Dialog\DummyStaticDialog.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Sqlite3\sqlite3.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Version\Version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="NppApi\Notepad_plus_msgs.h">
@@ -86,15 +74,57 @@
     <ClInclude Include="NppApi\menuCmdID.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="evaluate\Evaluate.h">
+    <ClInclude Include="DialogFeatures\DockingDlgInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DialogFeatures\DockingResource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DialogFeatures\StaticDialog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DialogFeatures\Window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DialogFeatures\Docking.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Dialogs\Dialog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Dialogs\SnippetDock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Dialogs\DummyStaticDialog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\DebugUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\ConversionUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DuckEval\DuckEval.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\stringUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Config\Version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NppApi\NppApiHelpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Config\PluginConfig.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Dialog\Dialog.rc">
+    <ResourceCompile Include="Dialogs\Dialog.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-    <ResourceCompile Include="Version\Version.rc">
+    <ResourceCompile Include="Config\Version.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

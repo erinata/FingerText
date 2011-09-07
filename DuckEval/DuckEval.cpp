@@ -1,73 +1,58 @@
 ﻿//This file is part of FingerText, a notepad++ snippet plugin.
 //
-//This file is modified from the demo program eval.cpp
-//on http://oomusou.cnblogs.com
-//
-//FingerText is released under MIT License.
-//
-//MIT license
-//
-//Copyright (C) 2011 by Tom Lam
-//
-//Permission is hereby granted, free of charge, to any person 
-//obtaining a copy of this software and associated documentation 
-//files (the "Software"), to deal in the Software without 
-//restriction, including without limitation the rights to use, 
-//copy, modify, merge, publish, distribute, sublicense, and/or 
-//sell copies of the Software, and to permit persons to whom the 
-//Software is furnished to do so, subject to the following 
-//conditions:
-//
-//The above copyright notice and this permission notice shall be 
-//included in all copies or substantial portions of the Software.
-//
-//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-//EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES 
-//OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-//NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT 
-//HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
-//WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-//DEALINGS IN THE SOFTWARE.
+//DuckEval is currently not released but will be released as a separate project later. 
+//Currently it is part of the project Fingertext.
 
-#include "Evaluate.h"
+#include "DuckEval.h"
 
-// constructor
-Expression::Expression(char *input) 
+
+int execDuckEval(std::string& output)
 {
-    isError = false;
-    this->processExpression(input);        
+    static int check = 0;
+    if (check == 0)
+    {
+        check++;
+        srand(time(0));
+    }
+
+    Expression e(output);
+    return e.evaluate(output);
+
 }
 
+// constructor
 Expression::Expression(std::string input) 
 {
     isError = false;
     this->processExpression(input);        
 }
-//TODO: make a class to centralize all the type conversion
-// convert char to string
-std::string Expression::toString(const char &c)
-{
-    std::stringstream ss;
-    ss << c;
-    return ss.str();
-}
 
-// convert double to string
-std::string Expression::toString(const double &d) {
-    std::stringstream ss;
-    ss << d;
-    return ss.str();
-}
+// Implement the following conversion functions if not using together with ConversionUtils
+
+// convert char to string
+//std::string Expression::toString(const char &c)
+//{
+//    std::stringstream ss;
+//    ss << c;
+//    return ss.str();
+//}
+//
+//// convert double to string
+//std::string Expression::toString(const double &d) {
+//    std::stringstream ss;
+//    ss << d;
+//    return ss.str();
+//}
 
 // convert string to double
-double Expression::stringToDouble(const std::string &s)
-{
-    std::stringstream ss(s);
-    double d;
-    ss >> d;
-    return d;
-}
+//double Expression::toDouble(const std::string &s)
+//{
+//    std::stringstream ss(s);
+//    double d;
+//    ss >> d;
+//    return d;
+//}
+
 
 // return the priority of a given operator, if the char is not an
 // operator, return 0 so that this function can also be used to 
@@ -78,10 +63,11 @@ int Expression::checkOperator(const char &c)
     {
         case '$' : 
         case '#' : return 11;
-        case 'R' : return 10;
+        case 'R' : 
+        case 'r' : return 10;
         case 'n' :
         case '%' : return 9;
-        case 'r' :
+        case '@' :
         case 'f' :
         case 'F' :
         case 's' :
@@ -145,37 +131,35 @@ std::string Expression::rephrasing(std::string input)
     //TODO: need to fix the problem of negative number. solution can be find and replace all - by 0- if the char before - is not a digit
 
     //Operators
+    signReplace(input,"==","=");
+    signReplace(input,"==","=");
+    signReplace(input,">=","G");
+    signReplace(input,"<=","g");
+    signReplace(input,"!=","N");
+    signReplace(input,"mod","0M");
+    signReplace(input,"exp","0X");
+    signReplace(input,"ceil","0F");
+    signReplace(input,"dice","0R");
+    signReplace(input,"rand","0r");
+    signReplace(input,"floor","0f");
+    signReplace(input,"round","0@");
+    signReplace(input,"abs","0A");
+    signReplace(input,"ln","0l");
+    signReplace(input,"log","0L");
+    signReplace(input,"asin","0S");
+    signReplace(input,"sin","0s");
+    signReplace(input,"acos","0O");
+    signReplace(input,"cos","0o");
+    signReplace(input,"atan","0T");
+    signReplace(input,"tan","0t");
+    signReplace(input,"!","!0");
+    signReplace(input,"%","%0");
+    signReplace(input,"pi","3.141592654");
+    signReplace(input,"e","2.71828183");  // execute the find and replace after all others because other words may contain e
+    signReplace(input,"p","P");
+    signReplace(input,"c","p");
     
-
-    findAndReplace(input,"==","=");
-    findAndReplace(input,"==","=");
-    findAndReplace(input,">=","G");
-    findAndReplace(input,"<=","g");
-    findAndReplace(input,"!=","N");
-    findAndReplace(input,"mod","0M");
-    findAndReplace(input,"exp","0X");
-    findAndReplace(input,"ceil","0F");
-    findAndReplace(input,"rand","0R0");
-    findAndReplace(input,"floor","0f");
-    findAndReplace(input,"round","0r");
-    findAndReplace(input,"abs","0A");
-    findAndReplace(input,"ln","0l");
-    findAndReplace(input,"log","0L");
-    findAndReplace(input,"asin","0S");
-    findAndReplace(input,"sin","0s");
-    findAndReplace(input,"acos","0O");
-    findAndReplace(input,"cos","0o");
-    findAndReplace(input,"atan","0T");
-    findAndReplace(input,"tan","0t");
-    findAndReplace(input,"!","!0");
-    findAndReplace(input,"%","%0");
-    // Constants
-    findAndReplace(input,"pi","3.141592654");
-    findAndReplace(input,"e","2.71828183");  // execute the find and replace after all others because other words may contain e
-    findAndReplace(input,"p","P");
-    findAndReplace(input,"c","p");
-    
-    findAndReplace2(input,"-","0n");
+    signReplace(input,"-","0n",true);
 
     return input;
 }
@@ -257,7 +241,7 @@ void Expression::toPostfix(std::string infix)
         {
             if (operand != "") 
             {
-                parseOperand(stringToDouble(operand));
+                parseOperand(toDouble(operand));
                 operand.clear();
                 isDecimal = false;
                 //parseOperator(*p);
@@ -283,7 +267,7 @@ void Expression::toPostfix(std::string infix)
     }
     
     // If operand is not "", let operand to operandStack.
-    if (operand != "") parseOperand(stringToDouble(operand));
+    if (operand != "") parseOperand(toDouble(operand));
     
     // If operatorStack is not empty, push it to postfix vector until operatorStack is empty.
     while(!operatorStack.empty()) 
@@ -354,7 +338,7 @@ double Expression::operate(const std::string &operation, const double &operand1,
             return ncr(operand1,operand2);
         case 'P':
             return npr(operand1,operand2);
-        case 'r':
+        case '@':
             return floor(operand1+0.5);
         case 'F':
             return ceil(operand1);
@@ -367,35 +351,22 @@ double Expression::operate(const std::string &operation, const double &operand1,
         case '%':
             return operand2/100;
         case 'R':
-            return randomNumber();
+            return randomNumber(operand1);
+        case 'r':
+            return randomFraction(operand1);
         default:
             return 0;
     }
 }
-
-
-long Expression::randomNumber()
+long Expression::randomNumber(double operand1)
 {
-    //clock_t t1;
-    //t1 = clock();
-    //long clockSeed = t1 % 10;
-    //static long seed = time(NULL);            
-    //seed = (104729 + 7919 * (seed+clockSeed)) % 15485863;  
-    //return abs(seed)%100;
-    
+    if (operand1 <=1) operand1 = 1;
+    return rand() % (long)(operand1);
+}
 
-    //static long seed = time(NULL);            
-    //seed = (104729 + 7919 * seed) % 15485863;  
-    //return abs(seed)%100;
-    
-    //if (rand() > rand())
-    //{
-    //    int s = static_cast<int>(time(0));
-    //    srand (rand()*s%32767);
-    //}
-    //return rand() % 100;
-
-    return rand() % 100;  //TODO: this rely on the seed somewhere else
+double Expression::randomFraction(double operand1)
+{
+    return (operand1*(rand() % 10000)/10000.0);
 }
 
 int Expression::operateAnd(double operand1, double operand2)
@@ -506,26 +477,12 @@ double Expression::compute(void)
         }
         else if (iter->first == OPERAND) 
         {
-            operandStack.push(stringToDouble(iter->second));
+            operandStack.push(toDouble(iter->second));
         }
     }
     return operandStack.top();
 }
 
-//TODO: try to refactor the 2 evaluate function, and set the return value to error message
-// Get result in string
-//std::string Expression::evaluateToString(void) 
-//{
-//    std::string result;
-//    result = toString(evaluate());
-//    if (!isError)
-//    {
-//        return result;
-//    } else
-//    {
-//        return "err";
-//    }
-//}
 int Expression::evaluate(std::string& output) 
 {
     output = toString(compute());
@@ -537,42 +494,15 @@ int Expression::evaluate(std::string& output)
         return 0;
     }
 }
-// Get result in char array
-int Expression::evaluate(char** output)
-{
-    std::string temp;
-    temp = toString(compute());
-    *output = new char [temp.size()+1];
-    strcpy(*output,temp.c_str());
 
-    if (isError)
-    {
-        return 1;
-    } else
-    {
-        return 0;
-    }
 
-    
-}
-
-void Expression::findAndReplace(std::string& str, const std::string& oldStr, const std::string& newStr)
-{
-    size_t pos = 0;
-    while((pos = str.find(oldStr, pos)) != std::string::npos)
-    {
-       str.replace(pos, oldStr.length(), newStr);
-       pos += newStr.length();
-    }
-}
-
-void Expression::findAndReplace2(std::string& str, const std::string& oldStr, const std::string& newStr)
+void Expression::signReplace(std::string& str, const std::string& oldStr, const std::string& newStr,bool negative)
 {
     size_t pos = 0;
     while((pos = str.find(oldStr, pos)) != std::string::npos)    // npos means "end of string"
     {
         
-        if (pos != 0)
+        if ((negative) && (pos != 0))
         {
             if (!isDigit(str[pos-1]))
             {

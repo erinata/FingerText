@@ -29,10 +29,11 @@
 
 #include "PluginDefinition.h"
 
-extern FuncItem funcItem[nbFunc];
+extern FuncItem funcItem[MENU_LENGTH];
 extern NppData nppData;
 extern DockingDlg snippetDock;
 WNDPROC	wndProcNpp = NULL;
+int nppLoaded = 0;
 
 BOOL APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID lpReserved)
 {
@@ -72,25 +73,27 @@ LRESULT CALLBACK SubWndProcNpp(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
     return retVal;
 }
 
-//functions which are called by Notepad++ plugin manager
+//functions which are called by Notepad++
 extern "C" __declspec(dllexport) void setInfo(NppData nppDataInfo)
 {
 	nppData = nppDataInfo;
     wndProcNpp = (WNDPROC)::SetWindowLongPtr(nppData._nppHandle, GWL_WNDPROC, (LPARAM)SubWndProcNpp);
 	commandMenuInit();
     dialogsInit();
-    initialize();
-    
+    pathInit();
+    configInit();
+    dataBaseInit();
+    variablesInit();
 }
 
 extern "C" __declspec(dllexport) const TCHAR * getName()
 {
-	return NPP_PLUGIN_NAME;
+	return TEXT(PLUGIN_NAME);
 }
 
 extern "C" __declspec(dllexport) FuncItem * getFuncsArray(int *nbF)
 {
-	*nbF = nbFunc;
+	*nbF = MENU_LENGTH;
 	return funcItem;
 }
 
@@ -109,45 +112,42 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             //refreshAnnotation();
             // No break here because NPPN_BUFFERACTIVATED also trigger updateDockItems();
         case NPPN_LANGCHANGED:
+            
             //keyUpdate();
-            updateDockItems();
+            if (nppLoaded) updateDockItems();
             //cleanOptionItem(); //This is not necessary........but the memory will keep a list of options used in last option dynamic hotspor call
             break;
-            //TODO: Try to deal with repeated triggering of snippetHintUpdate and keyUpdate
-        //case SCN_KEY:
-        //    //alert();
-        //    break;
+            //TODO: Try to deal with repeated triggering of snippetHintUpdate and keyUpdateS
         case SCN_CHARADDED:
-            //switch(notifyCode->ch)
-            //{
-            //}
-            //keyUpdate();
+            
+            //alertNumber(notifyCode->ch);
+
             //refreshAnnotation();
-            //break;   
+            
             snippetHintUpdate();
             //turnOffOptionMode(); //TODO: verify that this is actually not needed
             //showPreview();
             break;
 
-        case SCN_MODIFIED:
-            //if (notifyCode->modificationType & SC_MOD_BEFOREINSERT)
+        case SCN_MODIFIED:         
+            // This can catch the to be inserted text, but it cannot catch tab as the text insert of tab is different in different situation
+            //if ((nppLoaded) && (notifyCode->modificationType & (SC_MOD_BEFOREINSERT)))
             //{
-            //    alert();
-            //    if (strlen(notifyCode->text)>1) alert();
-            //    
+            //    alertNumber(strcmp(notifyCode->text,"  "));
             //}
-            //if (notifyCode->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT))
-            
             //TODO: investigate better way to write this (may be use SC_MULTISTEPUNDOREDO and SC_LASTSTEPINUNDOREDO)
-            if ((notifyCode->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT | SC_LASTSTEPINUNDOREDO)) && (!(notifyCode->modificationType & (SC_PERFORMED_UNDO | SC_PERFORMED_REDO))))
+            if ((nppLoaded) & ((notifyCode->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT | SC_LASTSTEPINUNDOREDO)) && (!(notifyCode->modificationType & (SC_PERFORMED_UNDO | SC_PERFORMED_REDO)))))
             {
+                
                 turnOffOptionMode();
-                snippetHintUpdate();
+                if (!(notifyCode->modificationType & (SC_MOD_INSERTTEXT))) snippetHintUpdate();
                 refreshAnnotation();
+             
             }
             break;
-        case SCN_UPDATEUI:        
-            selectionMonitor(notifyCode->updated);
+        case SCN_UPDATEUI:  
+            
+            if (nppLoaded) selectionMonitor(notifyCode->updated);
             //if (notifyCode->updated & (SC_UPDATE_CONTENT))
             //{
             //    selectionMonitor(true);
@@ -167,15 +167,15 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 
         case NPPN_READY:
             //initialize();
-            upgradeMessage();
-            
+            nppLoaded = 1;
+            nppReady();
+
             break;
 
         case NPPN_SHUTDOWN:
             pluginShutdown();
             break;
         // TODO: consider using SC_MOD_CHANGEANNOTATION to shutdown use of annotation in snippet editing mode
-
     }
 }
 

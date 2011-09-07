@@ -34,45 +34,46 @@
 
 #include <string>       // For alertString()
 #include <vector>
-#include <tchar.h>      // For TEXT() and _tcscpy, _tcscat 
+#include <tchar.h>      // For _tcscpy, _tcscat 
 #include <fstream>      // For file reading and writing
 #include <winhttp.h>    // For http requests, Add winhttp.lib to additional dependencies if there is external definition error
 #include <process.h>    // For thread
-#include <ctime>        // For the time seed used to generate random number
 
+#include "PluginConfig.h"
 #include "sqlite3.h"
 #include "DummyStaticDialog.h"
 #include "SnippetDock.h"
 #include "Version.h"
-#include "Evaluate.h"
+#include "DuckEval.h"
+#include "NppApiHelpers.h"
+#include "StringUtils.h"
+#include "ConversionUtils.h"
+#include "DebugUtils.h"
 
-// 
-const TCHAR NPP_PLUGIN_NAME[] = TEXT(PLUGIN_NAME);   // Plugin name
-const int nbFunc = MENU_LENGTH;    // Number of your plugin commands
+// Functions that are loaded when notepad++ starts
+void pluginInit(HANDLE hModule);   // Initialization of your plugin data
+void commandMenuInit();            // Initialization of your plugin commands, setCommand is a function that helps initialization
+void dialogsInit();                // Initialization of dialogs instance
+void pathInit();                   // Setup paths (everything other than ini and database paths
+void configInit();                 // Setup config ini file
+void dataBaseInit();               // Setup Sqlite database
+void variablesInit();              // Initialization of other variables
+void nppReady();                   // Called when NPP_READY is fired
 
-// Functions in the plugin template(NppPluginTemplate) provided by Don Ho. 
-void pluginInit(HANDLE hModule);   // Initialization of your plugin data; called while plugin loading
-void pluginCleanUp();    // Cleaning of your plugin; called while plugin unloading
-void commandMenuInit();   //Initialization of your plugin commands, setCommand is a function that helps initialization
-void dialogsInit();
-bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk = NULL, bool check0nInit = false);
-void commandMenuCleanUp();  //Clean up plugin commands allocation
-void pluginShutdown();  // Called when Notepad++ shuts down
+// Functions that are loaded when notepad++ shutdown
+void commandMenuCleanUp();         //Clean up plugin commands allocation
+void pluginCleanUp();              // Cleaning of your plugin; called while plugin unloading
+void pluginShutdown();             // Called when Notepad++ shuts down
 
-// Connecting to Scintilla
-HWND getCurrentScintilla();
-sptr_t SendScintilla(unsigned int iMessage, uptr_t wParam, sptr_t lParam);
-void updateScintilla();
+// common Functions for a plugin
+void showSettings();
+void showHelp();
+void showAbout();
 
-// Functions for Fingertext
+// Custom functions for Fingertext
 char *findTagSQLite(char *tag, char *tagCompare, bool similar = false);
 void openDummyStaticDlg(void);
 void toggleDisable();
-void writeConfig();
-void saveCustomScope();
-void writeConfigTextChar(TCHAR* configChar, TCHAR* section);
-void resetDefaultSettings();
-void writeConfigText(int configInt, TCHAR* section);
 void restoreTab(int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
 int searchPrevMatchedSign(char* tagSign, char* tagTail);
 int searchPrevMatchedTail(char* tagSign, char* tagTail);
@@ -89,10 +90,7 @@ void chainSnippet(int &firstPos, char* hotSpotText);
 int hotSpotNavigation(char* tagSign = "$[![", char* tagTail = "]!]");
 int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, char* tagTail = "]!]");
 void showPreview(bool top = false);
-void emptyFile(TCHAR* fileName);
-void writeDefaultGroupFile();
-int searchNext(char* searchText, bool regExp = false);
-int searchPrev(char* searchText, bool regExp = false);
+
 void selectionToSnippet();
 void insertHotSpotSign();
 //void insertWarmSpotSign();
@@ -101,24 +99,21 @@ void insertHotSpotSign();
 //void insertChainSnippetSign();
 //void insertKeyWordSpotSign();
 //void insertCommandLineSign();
+void searchAndReplace(std::string key, std::string text, bool regExp = false);
 void insertTagSign(char * tagSign);
 bool getLineChecked(char **buffer, int lineNumber, TCHAR* errorText);
 bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag);
 void openDatabase();
 int getCurrentTag(int posCurrent, char **buffer, int triggerLength = 0);
-void pluginShutdown();
 
-void setupConfigFile();
-void convertToUTF8(TCHAR *orig, char **utf8);
 void showSnippetDock();
-void updateDockItems(bool withContent = false, bool withAll = false, char* tag = "%");
+void updateDockItems(bool withContent = false, bool withAll = false, char* tag = "%", bool populate = true);
 void populateDockItems();
-void initialize();
-void upgradeMessage();
+
 void saveSnippet();
-//void createSnippet();
 char* getLangTagType();
-char* cleanupString(char *str, char key);
+
+void deleteCache();
 void clearCache();
 void editSnippet();
 void deleteSnippet();
@@ -135,12 +130,9 @@ void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* path =
 
 void updateMode();
 void refreshAnnotation();
-void settings();
-void showHelp();
-void showAbout();
 void updateLineCount(int count = -1);
 char* getDateTime(char *format, bool getDate = true, int flags = 0);
-void convertToWideChar(char* orig, wchar_t **wideChar);
+
 //void insertDateTime(bool date,int type, HWND &curScintilla);
 void insertPath(TCHAR* path);
 void insertNppPath(int msg);
@@ -154,8 +146,9 @@ void searchWindowByName(std::string searchKey = "", HWND parentWindow = 0);
 void selectionMonitor(int contentChange);
 bool triggerTag(int &posCurrent,bool triggerTextComplete = false,int triggerLength = 0);
 void tagComplete();
-//bool snippetComplete();
 void tabActivate();
+
+std::vector<std::string> smartSplit(int start, int end, char delimiter, int parts = 0);
 
 void updateOptionCurrent(bool toNext);
 void cleanOptionItem();
@@ -163,25 +156,11 @@ void turnOffOptionMode();
 void turnOnOptionMode();
 void optionNavigate(bool toNext);
 
-int toVk(char* input);
-
 void testing();
 void testing2();
-void alert();
-void alertNumber(int input);
-void alertCharArray(char* input);
-void alertTCharArray(TCHAR* input);
-void alertString(std::string input);
-void alertVector(std::vector<std::string> v);
-void findAndReplace(std::string& str, const std::string& oldStr, const std::string& newStr);
 
-void charArrayToString(char* source, std::string* dest);
-void stringToCharArray(std::string source, char** dest);
-std::vector<std::string> split(char* str, char c = ' ', int parts = 0);
-//std::vector<std::string> split3(char* str, char* c, int parts);
-//std::vector<std::string> split2(char* str, char c1, char c2, char c3);
 
-//unsigned int sciGetText(HWND hwnd, char **text, int start, int end)
-unsigned int sciGetText(char **text, int start = -1, int end = -1);
-std::vector<std::string> smartSplit(int start, int end, char delimiter, int parts = 0);
+
+
+
 #endif //PLUGINDEFINITION_H

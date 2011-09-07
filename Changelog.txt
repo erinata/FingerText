@@ -1,11 +1,23 @@
 changelog (for developer use only, include unreleased versions)
 
-
+0.5.41
+****** restructure plugin init functions
+****** improve start up performance by removing redundant updateScintilla calls
+****** update the settings hint
 
 0.5.40
 ****** optionarray use vector of string instead of char**, the limit of option numbers is lifted
 ****** (eva) and (opt) use smartsplit, which means hotspot can contain delimiters
 ****** (eva) VERBOSE and TERNARY mode
+****** Added: SLEEP, REPLACE and REGEXREPLACE keyword
+****** Changed: Faster loading up, esp for users who save previous session
+****** Fixed: snippet dock not updating when previous session is loaded.
+****** Fixed: Notepad++ not registering state of snippet dock
+****** alert functions are moved to a separate file
+****** Changed: random seed generated within the evaluate.cpp file
+****** Fixed: FILENAME EXTNAME keyword insert paths with Chinese characters properly under ANSI
+****** Added: more instructions about params insertion method into the README. Try to trigger the snippet "mit" by typing "mit(2010,John Smith)" (without quote) and hit tab to see what it means.
+****** Partially Fixed: memory leakage caused by snippet live update and export snippets
 
 0.5.39
 - Fixed: a bug causing npp to freeze when updating fingertext and shutdown npp afterwards

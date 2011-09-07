@@ -29,38 +29,44 @@
 
 #include "PluginDefinition.h"
 
-FuncItem funcItem[nbFunc];      // The plugin data that Notepad++ needs
-NppData nppData;                // The data for plugin command and sending message to notepad++
-HANDLE g_hModule;               // the hModule from pluginInit for initializing dialogs
+// Notepad++ API stuffs
+FuncItem funcItem[MENU_LENGTH];     // The menu item data that Notepad++ needs
+NppData nppData;                    // The data for plugin command and sending message to notepad++
+HANDLE g_hModule;                   // the hModule from pluginInit for initializing dialogs
 
-SciFnDirect pSciMsg;  // For direct scintilla call
-sptr_t pSciWndData;   // For direct scintilla call
+// Sqlite3
+sqlite3 *g_db;                      // For Sqlite3 
+bool     g_dbOpen;                  // For Sqlite3 
 
-sqlite3 *g_db;        // For Sqlite3 
-bool     g_dbOpen;    // For Sqlite3 
 
+// Paths
+wchar_t g_basePath[MAX_PATH];
+TCHAR g_ftbPath[MAX_PATH];
+TCHAR g_fttempPath[MAX_PATH];
+TCHAR g_currentFocusPath[MAX_PATH];
+
+// Config object
+PluginConfig pc;
+
+// Dialogs
+DockingDlg snippetDock;
+DummyStaticDlg	dummyStaticDlg;
+
+// Need a record for all the cmdIndex that involve a dock or a shortkey
+int g_snippetDockIndex;
+int g_tabActivateIndex;
+
+
+//TODO: should use vector of String here
 struct SnipIndex 
 {
-    //TODO: should use String here
     char* triggerText;
     char* scope;
     char* content;    
 };
 
-TCHAR g_iniPath[MAX_PATH];
-TCHAR g_ftbPath[MAX_PATH];
-TCHAR g_fttempPath[MAX_PATH];
-TCHAR g_dataBasePath[MAX_PATH];
-TCHAR g_currentFocusPath[MAX_PATH];
-//TCHAR g_groupPath[MAX_PATH];
-
-// TODO: Should use vector here
 SnipIndex* g_snippetCache;
-//int g_snippetCacheSize;
 
-int g_version;
-
-bool g_newUpdate;
 bool g_modifyResponse;
 bool g_enable;
 bool g_editorView;
@@ -70,200 +76,211 @@ bool g_rectSelection;
 int g_editorLineCount;
 
 int g_lastTriggerPosition;
-//char* g_customClipBoard;
 std::string g_customClipBoard;
 
 // For option hotspot
 bool g_optionMode;
-//bool g_optionOperating;
 int g_optionStartPosition;
 int g_optionEndPosition;
 int g_optionCurrent;
-//int g_optionNumber;
-// TODO: Should use vector here
-//char *g_optionArray[] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
-//int g_optionArrayLength = 50;
 std::vector<std::string> g_optionArray;
 
+// List of acceptable tagSigns
 char *g_tagSignList[] = {"$[![","$[1[","$[2[","$[3["};
 char *g_tagTailList[] = {"]!]","]1]","]2]","]3]"};
 int g_listLength = 4;
 
-//For shorthand
+//For params insertion
 std::vector<std::string> g_hotspotParams;
 
+//For SETWIN
 HWND g_tempWindowHandle;
-//std::string g_tempWindowKey;
 wchar_t* g_tempWindowKey;
-
-// Config file content
-#define DEFAULT_SNIPPET_LIST_LENGTH 1000
-#define DEFAULT_SNIPPET_LIST_ORDER_TAG_TYPE 1
-#define DEFAULT_TAB_TAG_COMPLETION 0
-#define DEFAULT_LIVE_HINT_UPDATE 1
-#define DEFAULT_INDENT_REFERENCE 1
-#define DEFAULT_CHAIN_LIMIT 100
-#define DEFAULT_PRESERVE_STEPS 0
-#define DEFAULT_ESCAPE_CHAR 0
-#define DEFAULT_IMPORT_OVERWRITE_OPTION 0
-#define DEFAULT_IMPORT_OVERWRITE_CONFIRM 0
-#define DEFAULT_INCLUSIVE_TRIGGERTEXT_COMPLETION 0
-#define DEFAULT_LIVE_PREVIEW_BOX 1
-#define DEFAULT_EDITOR_CARET_BOUND 1
-#define DEFAULT_FORCE_MULTI_PASTE 1
-#define DEFAULT_SNIPPET_DOCK_STATE 1
-
-#define DEFAULT_CUSTOM_SCOPE TEXT("")
-#define DEFAULT_CUSTOM_ESCAPE_CHAR TEXT("")
-#define DEFAULT_PARAMS_DELIMITER TEXT(",")
-
-int g_snippetListLength;
-int g_snippetListOrderTagType;
-int g_tabTagCompletion;
-int g_liveHintUpdate;
-int g_indentReference;
-int g_chainLimit;
-int g_preserveSteps;
-//int g_escapeChar;
-//int g_importOverWriteOption;
-int g_importOverWriteConfirm;
-int g_inclusiveTriggerTextCompletion;
-int g_livePreviewBox;
-int g_editorCaretBound;
-int g_forceMultiPaste;
-int g_snippetDockState;
-
-TCHAR* g_customEscapeChar;
-TCHAR* g_customScope;
-TCHAR* g_paramsDelimiter;
-
-DockingDlg snippetDock;
-DummyStaticDlg	dummyStaticDlg;
-
-#define TRIGGER_SNIPPET_INDEX 0
-#define WARMSPOT_NAVIGATION_INDEX 1
-#define SNIPPET_DOCK_INDEX 2
-#define TOGGLE_ENABLE_INDEX 3
-#define SELECTION_TO_SNIPPETS_INDEX 4
-#define IMPORT_SNIPPETS_INDEX 5
-#define EXPORT_SNIPPETS_INDEX 6
-#define EXPORT_AND_CLEAR_INDEX 7
-//#define SEPARATOR_ONE_INDEX 8
-#define TAG_COMPLETE_INDEX 9
-//#define SEPARATOR_TWO_INDEX 10
-#define INSERT_HOTSPOT_SIGN_INDEX 11
-//#define INSERT_WARMSPOT_SIGN_INDEX 11
-//#define INSERT_CHAIN_SIGN_INDEX 10
-//#define INSERT_KEY_SIGN_INDEX 11
-//#define INSERT_COMMAND_SIGN_INDEX 12
-//#define SEPARATOR_THREE_INDEX 12
-#define SETTINGS_INDEX 12
-#define HELP_DIALOG_INDEX 13
-#define ABOUT_DIALOG_INDEX 14
-//#define SEPARATOR_FOUR_INDEX 16
-#define TESTING_INDEX 17
-#define TESTING2_INDEX 18
 
 //TODO: Add icon to messageboxes
 
-// Initialize your plugin data here; called while plugin loading   
+// Initialize your plugin data here. Called while plugin loading. This runs before setinfo.
 void pluginInit(HANDLE hModule)
 {
-    srand(time(0)); // TODO: may be I can call that in the tab triggering process, so a seed is generated in each trigger
-    g_hModule = hModule;
-    g_customClipBoard = "";
-    //g_customClipBoard = new char[1];
-    //strcpy(g_customClipBoard,"");
+    g_hModule = hModule;  // For dialogs initialization
 }
 
-void pluginCleanUp()
+// Initialization of plugin commands
+void commandMenuInit()
 {
-    //delete [] g_customClipBoard;
-    //TODO: think about how to save the parameters for the next session during clean up
-    g_liveHintUpdate = 0;
-    //saveCustomScope();
-    //writeConfig();
-    
+    ShortcutKey *shKey = setShortCutKey(false,false,false,VK_TAB);
+
+    g_tabActivateIndex = setCommand(TEXT("Trigger Snippet/Navigate to Hotspot"), tabActivate, shKey);
+    setCommand();
+    g_snippetDockIndex = setCommand(TEXT("Toggle On/off SnippetDock"), showSnippetDock);
+    setCommand(TEXT("Toggle On/Off FingerText"), toggleDisable);
+    setCommand(TEXT("Create Snippet from Selection"),  selectionToSnippet);
+    setCommand(TEXT("Import Snippets"), importSnippets);
+    setCommand(TEXT("Export Snippets"), exportSnippetsOnly);
+    setCommand(TEXT("Export and Delete All Snippets"), exportAndClearSnippets);
+    setCommand();
+    setCommand(TEXT("TriggerText Completion"), tagComplete);
+    setCommand(TEXT("Insert a hotspot"), insertHotSpotSign);
+    setCommand();
+    setCommand(TEXT("Settings"), showSettings);
+    setCommand(TEXT("Quick Guide"), showHelp);
+    setCommand(TEXT("About"), showAbout);
+    setCommand();
+    setCommand(TEXT("Testing"), testing);
+    setCommand(TEXT("Testing2"), testing2);
 }
+
+
 
 void dialogsInit()
 {
     snippetDock.init((HINSTANCE)g_hModule, NULL);
     dummyStaticDlg.init((HINSTANCE)g_hModule, nppData);
 }
-// Initialization of plugin commands
-void commandMenuInit()
-{
-    ShortcutKey *shKey = new ShortcutKey;
-	shKey->_isAlt = false;
-	shKey->_isCtrl = false;
-	shKey->_isShift = false;
-	shKey->_key = VK_TAB;
 
-    setCommand(TRIGGER_SNIPPET_INDEX, TEXT("Trigger Snippet/Navigate to Hotspot"), tabActivate, shKey, false);
+void pathInit()
+{
+    // Get the config folder of notepad++ and append the plugin name to form the root of all config files
+    ::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH, reinterpret_cast<LPARAM>(g_basePath));
+    ::_tcscat_s(g_basePath,TEXT("\\"));
+    ::_tcscat_s(g_basePath,TEXT(PLUGIN_NAME));
+    if (PathFileExists(g_basePath) == false) ::CreateDirectory(g_basePath, NULL);
     
-    //setCommand(WARMSPOT_NAVIGATION_INDEX, TEXT("Navigate to Warmspot"), goToWarmSpot, shKey2, false);
-    setCommand(SNIPPET_DOCK_INDEX, TEXT("Toggle On/off SnippetDock"), showSnippetDock, NULL, false);
-    setCommand(TOGGLE_ENABLE_INDEX, TEXT("Toggle On/Off FingerText"), toggleDisable, NULL, false);
-    setCommand(SELECTION_TO_SNIPPETS_INDEX, TEXT("Create Snippet from Selection"),  selectionToSnippet, NULL, false);
-    setCommand(IMPORT_SNIPPETS_INDEX, TEXT("Import Snippets"), importSnippets, NULL, false);
-    setCommand(EXPORT_SNIPPETS_INDEX, TEXT("Export Snippets"), exportSnippetsOnly, NULL, false);
-    setCommand(EXPORT_AND_CLEAR_INDEX, TEXT("Export and Delete All Snippets"), exportAndClearSnippets, NULL, false);
-    //setCommand(SEPARATOR_ONE_INDEX, TEXT("---"), NULL, NULL, false);
-    setCommand(TAG_COMPLETE_INDEX, TEXT("TriggerText Completion"), tagComplete, NULL, false);
-    //setCommand(SEPARATOR_TWO_INDEX, TEXT("---"), NULL, NULL, false);
-    setCommand(INSERT_HOTSPOT_SIGN_INDEX, TEXT("Insert a hotspot"), insertHotSpotSign, NULL, false);
-    //setCommand(INSERT_WARMSPOT_SIGN_INDEX, TEXT("Insert a warmspot"), insertWarmSpotSign, NULL, false);
-    //setCommand(INSERT_CHAIN_SIGN_INDEX, TEXT("Insert a dynamic hotspot (Chain snippet)"), insertChainSnippetSign, NULL, false);
-    //setCommand(INSERT_KEY_SIGN_INDEX, TEXT("Insert a dynamic hotspot (Keyword Spot)"), insertKeyWordSpotSign, NULL, false);
-    //setCommand(INSERT_COMMAND_SIGN_INDEX, TEXT("Insert a dynamic hotspot (Command)"), insertCommandLineSign, NULL, false);
-    //setCommand(SEPARATOR_THREE_INDEX, TEXT("---"), NULL, NULL, false);
-    setCommand(SETTINGS_INDEX, TEXT("Settings"), settings, NULL, false);
-    setCommand(HELP_DIALOG_INDEX, TEXT("Quick Guide"), showHelp, NULL, false);
-    setCommand(ABOUT_DIALOG_INDEX, TEXT("About"), showAbout, NULL, false);
-    //setCommand(SEPARATOR_FOUR_INDEX, TEXT("---"), NULL, NULL, false);
-    setCommand(TESTING_INDEX, TEXT("Testing"), testing, NULL, false);
-    setCommand(TESTING2_INDEX, TEXT("Testing2"), testing2, NULL, false);
+    // Initialize the files needed (ini and database paths are initalized in configInit and databaseInit)
+    ::_tcscpy_s(g_fttempPath,g_basePath);
+    ::_tcscat_s(g_fttempPath,TEXT("\\"));
+    ::_tcscat_s(g_fttempPath,TEXT(PLUGIN_NAME));
+    ::_tcscat_s(g_fttempPath,TEXT(".fttemp"));
+    if (PathFileExists(g_fttempPath) == false) emptyFile(g_fttempPath);
+
+    ::_tcscpy_s(g_ftbPath,g_basePath);
+    ::_tcscat_s(g_ftbPath,TEXT("\\SnippetEditor.ftb"));
+    if (PathFileExists(g_ftbPath) == false) emptyFile(g_ftbPath);
+    
 }
 
-bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk, bool check0nInit) 
+void configInit()
 {
-    // setCommand(int index,                      // zero based number to indicate the order of command
-    //            TCHAR *commandName,             // the command name that you want to see in plugin menu
-    //            PFUNCPLUGINCMD functionPointer, // the symbol of function (function pointer) associated with this command. The body should be defined below. See Step 4.
-    //            ShortcutKey *shortcut,          // optional. Define a shortcut to trigger this command
-    //            bool check0nInit                // optional. Make this menu item be checked visually
-    //            );
+    ::_tcscpy_s(pc.iniPath,g_basePath);
+    ::_tcscat_s(pc.iniPath,TEXT("\\"));
+    ::_tcscat_s(pc.iniPath,TEXT(PLUGIN_NAME));
+    ::_tcscat_s(pc.iniPath,TEXT(".ini"));
+    if (PathFileExists(pc.iniPath) == false) emptyFile(pc.iniPath);
 
-    if (index >= nbFunc) return false;
-    if (!pFunc) return false;
+    pc.configSetUp();
+}
 
-    lstrcpy(funcItem[index]._itemName, cmdName);
-    funcItem[index]._pFunc = pFunc;
-    funcItem[index]._init2Check = check0nInit;
-    funcItem[index]._pShKey = sk;
 
-    return true;
+void dataBaseInit()
+{
+    char* dataBasePath = new char[MAX_PATH];
+    char* basePath = toCharArray(g_basePath);
+    strcpy(dataBasePath,basePath);
+    strcat(dataBasePath,"\\");
+    strcat(dataBasePath,PLUGIN_NAME);
+    strcat(dataBasePath,".db3");
+    delete [] basePath;
+
+    if (sqlite3_open(dataBasePath, &g_db))
+    {
+        g_dbOpen = false;
+        showMessageBox(TEXT("Cannot find or open database file in config folder"));
+    } else
+    {
+        g_dbOpen = true;
+    }
+
+    sqlite3_stmt *stmt;
+
+    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, 
+    "CREATE TABLE snippets (tag TEXT, tagType TEXT, snippet TEXT)"
+    , -1, &stmt, NULL))
+    
+    sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+
+    delete [] dataBasePath; 
+}
+
+
+
+
+void variablesInit()
+{
+    g_customClipBoard = "";   
+
+    g_modifyResponse = true;
+    g_enable = true;
+
+    g_selectionMonitor = 1;
+    g_rectSelection = false;
+
+    // For option hotspot
+    turnOffOptionMode();
+    g_optionStartPosition = 0;
+    g_optionEndPosition = 0;
+    g_optionCurrent = 0;
+    
+    g_lastTriggerPosition = 0;
+    
+    g_snippetCache = new SnipIndex [pc.configInt[SNIPPET_LIST_LENGTH]];
+
+}
+
+
+void nppReady()
+{
+    pc.upgradeMessage();
+
+    if (pc.configInt[FORCE_MULTI_PASTE]) ::SendScintilla(SCI_SETMULTIPASTE,1,0); 
+
+    if (snippetDock.isVisible()) updateDockItems(); //snippetHintUpdate();
+}
+
+
+
+void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires  
+{
+    
+    pc.configCleanUp();
+
+    delete [] g_snippetCache;
+    
+    if (g_dbOpen)
+    {
+        sqlite3_close(g_db);  // This close the database when the plugin shutdown.
+        g_dbOpen = false;
+    }
 }
 
 // command shortcut clean up
 void commandMenuCleanUp()
 {
-    //delete [] snippetEditTemplate;
-    delete funcItem[0]._pShKey;
+    delete funcItem[g_tabActivateIndex]._pShKey;
 	// Don't forget to deallocate your shortcut here
 }
+
+void pluginCleanUp()
+{
+    //TODO: think about how to save the parameters for the next session during clean up    
+}
+
+
+
 
 // Functions for Fingertext
 void toggleDisable()
 {
     if (g_enable)
     {
-        ::MessageBox(nppData._nppHandle, TEXT("FingerText is disabled"), NPP_PLUGIN_NAME, MB_OK);
+        // TODO: refactor all the message boxes to a separate function
+        showMessageBox(TEXT("FingerText is disabled"));
+        //::MessageBox(nppData._nppHandle, TEXT("FingerText is disabled"), TEXT(PLUGIN_NAME), MB_OK);
         g_enable = false;
     } else
     {
-        ::MessageBox(nppData._nppHandle, TEXT("FingerText is enabled"), NPP_PLUGIN_NAME, MB_OK);
+        showMessageBox(TEXT("FingerText is enabled"));
+        //::MessageBox(nppData._nppHandle, TEXT("FingerText is enabled"), TEXT(PLUGIN_NAME), MB_OK);
         g_enable = true;
     }
     updateMode();
@@ -273,27 +290,6 @@ void openDummyStaticDlg(void)
 {
 	dummyStaticDlg.doDialog();
 }
-
-//char *getGroupScope(TCHAR* group, int position)
-//{
-//    char *scope = NULL;
-//    char *scopeListConverted = NULL;
-//    TCHAR *scopeList = new TCHAR[MAX_PATH];
-//
-//    GetPrivateProfileString(TEXT("Snippet Group"), group,NULL,scopeList,MAX_PATH,g_groupPath);
-//    convertToUTF8(scopeList,&scopeListConverted);
-//
-//    scope = strtok(scopeListConverted, "|");
-//    while (position>0 && scope!=NULL) 
-//    {
-//        scope = strtok(NULL, "|");
-//        position--;
-//    } 
-//    
-//    delete [] scopeList;
-//    return scope;
-//
-//}
 
 char *findTagSQLite(char *tag, char *tagCompare, bool similar)
 {
@@ -319,7 +315,7 @@ char *findTagSQLite(char *tag, char *tagCompare, bool similar)
         if (similar)
         {
             char similarTag[MAX_PATH]="";
-            if (g_inclusiveTriggerTextCompletion==1) strcat(similarTag,"%");
+            if (pc.configInt[INCLUSIVE_TRIGGERTEXT_COMPLETION]==1) strcat(similarTag,"%");
             strcat(similarTag,tag);
             strcat(similarTag,"%");
             //::SendMessage(getCurrentScintilla(),SCI_INSERTTEXT,0,(LPARAM)similarTag);
@@ -344,79 +340,13 @@ char *findTagSQLite(char *tag, char *tagCompare, bool similar)
 	return expanded; //remember to delete the returned expanded after use.
 }
 
-void upgradeMessage()
-{
-    //TODO: make better structure for welcometext. like one piece of string per version.
-    //TODO: dynamic upgrade message
 
-    if (g_newUpdate)
-    {
-        ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
-
-        char welcomeText[10000];
-        strcpy(welcomeText,"");
-        strcat(welcomeText, "Thanks for Upgrading to ");
-        strcat(welcomeText, PLUGIN_NAME);
-        strcat(welcomeText, VERSION_TEXT);
-        strcat(welcomeText, " ");
-        strcat(welcomeText, VERSION_TEXT_STAGE);
-        strcat(welcomeText, "\r\n\
-Please read this document if you are upgrading from previous versions.\r\n\r\n\
-Upgrading from 0.5.37 or above\r\n\
-Everything is compatible.\r\n\r\n\
-Upgrading from any version between 0.5.20 and 0.5.35\r\n\
-In version ");
-        strcat(welcomeText, VERSION_TEXT);
-        strcat(welcomeText, " after you triggered a option hotspot, you can use right/down arrow to move to next option, left/up arrow to move to previous option. Hit tab confirm the choice.\r\n\r\n\
- Also the option hotspot is not delimited by |~| anymore, it's using is simplier |. So $[![(opt)ABC|DEF|GHI]!] will define an hotspot with 3 options.\r\n\
-Upgrading from any version between 0.5.0 and 0.5.18\r\n\
-All hotspots are now triggered from inside to outside, left to right. Therefore dynamic snippets that is created before 0.5.20 can behave differently in this version.\r\n\
-\r\n\
-Upgrading from 0.4.15 or 0.4.16\r\n\
-If you want to use your snippets after you upgrade to ");
-        strcat(welcomeText, VERSION_TEXT);
-        strcat(welcomeText, ", you can go to the config folder and move the FingerText.db3 file to the config\\FingerText folder after update.\r\n\
-chain snippet is indicated by $[![(cha)]!] instead of $[![(chain)]!]\r\n\
-\r\n\
-Upgrading from 0.4.4 or 0.4.11\r\n\
-If you want to use your snippets after you upgrade to ");
-        strcat(welcomeText, VERSION_TEXT);
-        strcat(welcomeText, ", you can go to the config folder and move the FingerText.db3 file to the config\\FingerText folder after update.\r\n\
-\r\n\
-Upgrading from 0.4.1\r\n\
-If you want to use your snippets after you upgrade to ");
-        strcat(welcomeText, VERSION_TEXT);
-        strcat(welcomeText, ", you can go to the %Notepad++ folder%\\plugins\\FingerText and get the old database file Snippets.db3. Rename is to FingerText.db3 and move it to the config\\FingerText folder after update.\r\n\
-\r\n\
-Upgrading from 0.3.5 or below\r\n\
-FingerText 0.3.5 or below use a 'one snippet per file' system to store snippets, which is not compatibile with current version. If you really have a lot of snippets created using these early version, please send your snippets to erinata@gmail.com. I will try my best to import them into the database in the current version.\r\n\
-");
-
-        ::SendMessage(getCurrentScintilla(), SCI_INSERTTEXT, 0, (LPARAM)welcomeText);
-        
-    }
-}
-
-int searchNext(char* searchText, bool regExp)
-{
-    int searchFlags = 0;
-    if (regExp) searchFlags = SCFIND_REGEXP;
-    ::SendScintilla(SCI_SEARCHANCHOR, 0,0);
-    return ::SendScintilla(SCI_SEARCHNEXT, searchFlags,(LPARAM)searchText);
-}
-int searchPrev(char* searchText, bool regExp)
-{    
-    int searchFlags = 0;
-    if (regExp) searchFlags = SCFIND_REGEXP;
-    ::SendScintilla(SCI_SEARCHANCHOR, 0,0); 
-    return ::SendScintilla(SCI_SEARCHPREV, searchFlags,(LPARAM)searchText);
-}
 
 void selectionToSnippet()
 {
     g_selectionMonitor--;
     
-    //g_editorCaretBound--;
+    //pc.configInt[EDITOR_CARET_BOUND]--;
     
     //HWND curScintilla = getCurrentScintilla();
     int selectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
@@ -468,21 +398,31 @@ void selectionToSnippet()
     if (withSelection) delete [] selection;
     ::SendScintilla(SCI_EMPTYUNDOBUFFER,0,0);
     
-    //g_editorCaretBound++;
+    //pc.configInt[EDITOR_CARET_BOUND]++;
     g_selectionMonitor++;
 }
 
 void editSnippet()
 {
-    int index = snippetDock.getCount() - snippetDock.getSelection()-1;
-    char* tempTriggerText;
-    char* tempScope;
+    TCHAR* bufferWide;
+    snippetDock.getSelectText(bufferWide);
+    char* buffer = toCharArray(bufferWide);
+    buffer = quickStrip(buffer, ' ');
 
-    tempTriggerText = g_snippetCache[index].triggerText;
-    tempScope = g_snippetCache[index].scope;
+    int scopeLength = ::strchr(buffer,'>') - buffer - 1;
+    int triggerTextLength = strlen(buffer)-scopeLength - 2;
+    char* tempTriggerText = new char [ triggerTextLength+1];
+    char* tempScope = new char[scopeLength+1];
+    
+    strncpy(tempScope,buffer+1,scopeLength);
+    tempScope[scopeLength] = '\0';
+    strncpy(tempTriggerText,buffer+1+scopeLength+1,triggerTextLength);
+    tempTriggerText[triggerTextLength] = '\0';
+    
+    delete [] buffer;
 
     sqlite3_stmt *stmt;
-
+    
     if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType = ? AND tag = ?", -1, &stmt, NULL))
 	{
 		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
@@ -492,7 +432,7 @@ void editSnippet()
 		if(SQLITE_ROW == sqlite3_step(stmt))  // SQLITE_ROW 100 sqlite3_step() has another row ready
 		{
 			const char* snippetText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
-
+    
             // After loading the content, switch to the editor buffer and promput for saving if needed
             if (!::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
             {
@@ -508,44 +448,57 @@ void editSnippet()
             ::SendScintilla(SCI_INSERTTEXT, ::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)"\r\n");
             ::SendScintilla(SCI_INSERTTEXT, ::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)tempScope);
             ::SendScintilla(SCI_INSERTTEXT, ::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)"\r\n");
-
+    
             ::SendScintilla(SCI_INSERTTEXT, ::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)snippetText);
-
+    
             g_editorView = true;
             refreshAnnotation();
 		}
 	}
     
 	sqlite3_finalize(stmt);
-
-    //HWND curScintilla = getCurrentScintilla();
+    
     ::SendScintilla(SCI_SETSAVEPOINT,0,0);
     ::SendScintilla(SCI_EMPTYUNDOBUFFER,0,0);
-
-    //if (tempTriggerText)
-    //{
-        //delete [] tempTriggerText; // deleting them cause error
-    //}
-    //if (tempScope) delete [] tempScope;
+    delete [] tempTriggerText;
+    delete [] tempScope;
+    delete [] bufferWide;
 }
 
 void deleteSnippet()
 {
-    //TODO: should scroll back to original position after delete
-    //HWND curScintilla = getCurrentScintilla();
-    int index = snippetDock.getCount() - snippetDock.getSelection()-1;
+    TCHAR* bufferWide;
+    snippetDock.getSelectText(bufferWide);
+    char* buffer = toCharArray(bufferWide);
+    buffer = quickStrip(buffer, ' ');
+
+    int scopeLength = ::strchr(buffer,'>') - buffer - 1;
+    int triggerTextLength = strlen(buffer)-scopeLength - 2;
+    char* tempTriggerText = new char [ triggerTextLength+1];
+    char* tempScope = new char[scopeLength+1];
+    
+    strncpy(tempScope,buffer+1,scopeLength);
+    tempScope[scopeLength] = '\0';
+    strncpy(tempTriggerText,buffer+1+scopeLength+1,triggerTextLength);
+    tempTriggerText[triggerTextLength] = '\0';
+    
+    delete [] buffer;
 
     sqlite3_stmt *stmt;
     
     if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
     {
-        sqlite3_bind_text(stmt, 1, g_snippetCache[index].scope, -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 2, g_snippetCache[index].triggerText, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 1, tempScope, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 2, tempTriggerText, -1, SQLITE_STATIC);
         sqlite3_step(stmt);
     }
     sqlite3_finalize(stmt);
     
     updateDockItems(false,false);
+
+    delete [] tempTriggerText;
+    delete [] tempScope;
+    delete [] bufferWide;
 }
 
 bool getLineChecked(char **buffer, int lineNumber, TCHAR* errorText)
@@ -585,14 +538,16 @@ bool getLineChecked(char **buffer, int lineNumber, TCHAR* errorText)
         {
             //blank
             ::SendScintilla(SCI_GOTOLINE,lineNumber,0);
-            ::MessageBox(nppData._nppHandle, errorText, NPP_PLUGIN_NAME, MB_OK);
+            showMessageBox(errorText);
+            //::MessageBox(nppData._nppHandle, errorText, TEXT(PLUGIN_NAME), MB_OK);
             problemSnippet = true;
             
         } else if (tagPosEnd<tagPosLineEnd)
         {
             // multi
             ::SendScintilla(SCI_GOTOLINE,lineNumber,0);
-            ::MessageBox(nppData._nppHandle, errorText, NPP_PLUGIN_NAME, MB_OK);
+            showMessageBox(errorText);
+            //::MessageBox(nppData._nppHandle, errorText, TEXT(PLUGIN_NAME), MB_OK);
             problemSnippet = true;
         }
     }
@@ -603,7 +558,8 @@ bool getLineChecked(char **buffer, int lineNumber, TCHAR* errorText)
         int spot = searchNext("[>END<]");
         if (spot<0)
         {
-            ::MessageBox(nppData._nppHandle, TEXT("You should put an \"[>END<]\" (without quotes) at the end of your snippet content."), NPP_PLUGIN_NAME, MB_OK);
+            showMessageBox(TEXT("You should put an \"[>END<]\" (without quotes) at the end of your snippet content."));
+            //::MessageBox(nppData._nppHandle, TEXT("You should put an \"[>END<]\" (without quotes) at the end of your snippet content."), TEXT(PLUGIN_NAME), MB_OK);
             problemSnippet = true;
         }
     }
@@ -652,14 +608,16 @@ void saveSnippet()
             if(SQLITE_ROW == sqlite3_step(stmt))
             {
                 sqlite3_finalize(stmt);
-                int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Snippet exists, overwrite?"), NPP_PLUGIN_NAME, MB_YESNO);
+                int messageReturn = showMessageBox(TEXT("Snippet exists, overwrite?"),MB_YESNO);
+                //int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Snippet exists, overwrite?"), TEXT(PLUGIN_NAME), MB_YESNO);
                 if (messageReturn==IDNO)
                 {
                     delete [] tagText;
                     delete [] tagTypeText;
                     delete [] snippetText;
                     // not overwrite
-                    ::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), NPP_PLUGIN_NAME, MB_OK);
+                    showMessageBox(TEXT("The Snippet is not saved."));
+                    //::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), TEXT(PLUGIN_NAME), MB_OK);
                     //::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
                     //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)" ");
                     ::SendScintilla(SCI_SETSELECTION, 0, 1);
@@ -679,7 +637,8 @@ void saveSnippet()
                     
                     } else
                     {
-                        ::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), NPP_PLUGIN_NAME, MB_OK);
+                        showMessageBox(TEXT("Cannot write into database."));
+                        //::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT(PLUGIN_NAME), MB_OK);
                     }
                 
                 }
@@ -699,7 +658,8 @@ void saveSnippet()
     
 		    // Run the query with sqlite3_step
 		    sqlite3_step(stmt); // SQLITE_ROW 100 sqlite3_step() has another row ready
-            ::MessageBox(nppData._nppHandle, TEXT("The Snippet is saved."), NPP_PLUGIN_NAME, MB_OK);
+            showMessageBox(TEXT("The Snippet is saved."));
+            //::MessageBox(nppData._nppHandle, TEXT("The Snippet is saved."), TEXT(PLUGIN_NAME), MB_OK);
 	    }
         sqlite3_finalize(stmt);
         ::SendScintilla(SCI_SETSAVEPOINT,0,0);
@@ -710,28 +670,6 @@ void saveSnippet()
     
     updateDockItems(false,false);
     g_selectionMonitor++;
-}
-
-
-sptr_t SendScintilla(unsigned int iMessage, uptr_t wParam, sptr_t lParam)
-{
-    return pSciMsg(pSciWndData, iMessage, wParam, lParam);
-}
-
-HWND getCurrentScintilla()
-{
-    int which = -1;
-    ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
-    if (which == -1)
-        return NULL;
-    if (which == 0)
-    {
-        return nppData._scintillaMainHandle;
-    } else
-    {
-        return nppData._scintillaSecondHandle;
-    }
-    return nppData._scintillaMainHandle;
 }
 
 void restoreTab(int &posCurrent, int &posSelectionStart, int &posSelectionEnd)
@@ -943,10 +881,11 @@ bool dynamicHotspot(int &startingPos, char* tagSign, char* tagTail)
             }
         }
         
-    } while ((spotComplete>=0) && (spot>0) && (limitCounter<g_chainLimit) && !((g_hotspotParams.empty()) && (normalSpotTriggered))  );  // && (spotType!=0)
+    } while ((spotComplete>=0) && (spot>0) && (limitCounter<pc.configInt[CHAIN_LIMIT]) && !((g_hotspotParams.empty()) && (normalSpotTriggered))  );  // && (spotType!=0)
 
     //TODO: loosen the limit to the limit of special spot, and ++limit for every search so that less frezze will happen
-    if (limitCounter>=g_chainLimit) ::MessageBox(nppData._nppHandle, TEXT("Dynamic hotspots triggering limit exceeded."), NPP_PLUGIN_NAME, MB_OK);
+    if (limitCounter>=pc.configInt[CHAIN_LIMIT]) showMessageBox(TEXT("Dynamic hotspots triggering limit exceeded."));
+    //if (limitCounter>=pc.configInt[CHAIN_LIMIT]) ::MessageBox(nppData._nppHandle, TEXT("Dynamic hotspots triggering limit exceeded."), TEXT(PLUGIN_NAME), MB_OK);
     
     if (limitCounter>0)
     {
@@ -1084,9 +1023,9 @@ void webRequest(int &firstPos, char* hotSpotText)
         SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
     }
 
-    //TODO: should change the mouse cursor to waiting
+    
     int triggerPos = strlen(hotSpotText)+firstPos-requestTypeLength;
-
+    //TODO: rewrite this part so that it doesn't rely on searchNext, and separate it out to another function to prepare for the implementation of "web snippet import"
     SendScintilla(SCI_GOTOPOS,firstPos,0);
     int spot1 = searchNext("://");
     int serverStart; 
@@ -1120,11 +1059,9 @@ void webRequest(int &firstPos, char* hotSpotText)
         char* server;
         sciGetText(&server,serverStart,serverEnd);
 
-        TCHAR* serverWide;
-        convertToWideChar(server, &serverWide);
+        TCHAR* serverWide = toWideChar(server);
 
-        TCHAR* requestWide;
-        convertToWideChar(hotSpotText + serverEnd - firstPos, &requestWide);
+        TCHAR* requestWide = toWideChar(hotSpotText + serverEnd - firstPos);
         
         //alertTCharArray(serverWide);
         //alertTCharArray(requestWide);
@@ -1147,14 +1084,19 @@ void executeCommand(int &firstPos, char* hotSpotText)
 {
     //TODO: cater the problem that the path can have spaces..... as shown in the security remarks in http://msdn.microsoft.com/en-us/library/ms682425%28v=vs.85%29.aspx
 
-    //HWND curScintilla = getCurrentScintilla();
-
     int triggerPos = strlen(hotSpotText)+firstPos;
     ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-    //::SendMessage(curScintilla, SCI_SETSEL,firstPos,triggerPos);
-    //::SendMessage(curScintilla, SCI_REPLACESEL,0,(LPARAM)"");
-    
+
+    bool silent = false;
+    int offset = 0;
+    if (strncmp(hotSpotText,"SILENT:",7)==0)
+    {
+        silent = true;
+        offset = 7;
+    }
+
+
     HANDLE processStdinRead = NULL;
     HANDLE processStdinWrite = NULL;
 
@@ -1187,8 +1129,7 @@ void executeCommand(int &firstPos, char* hotSpotText)
        //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->Stdin SetHandleInformation\n");
    }
 
-    TCHAR* cmdLine;
-    convertToWideChar(hotSpotText,&cmdLine);
+    TCHAR* cmdLine = toWideChar(hotSpotText+offset);
 
     PROCESS_INFORMATION pi;
     STARTUPINFO si;
@@ -1224,10 +1165,9 @@ void executeCommand(int &firstPos, char* hotSpotText)
         //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->Error in CreateProcess\n");
         char* hotSpotTextCmd = new char[strlen(hotSpotText)+8];
         strcpy(hotSpotTextCmd, "cmd /c ");
-        strcat(hotSpotTextCmd,hotSpotText);
+        strcat(hotSpotTextCmd,hotSpotText+offset);
         //strcpy(hotSpotTextCmd, hotSpotText);
-        TCHAR* cmdLine2;
-        convertToWideChar(hotSpotTextCmd,&cmdLine2);
+        TCHAR* cmdLine2 = toWideChar(hotSpotTextCmd);
 
         processSuccess = CreateProcess(
         NULL,
@@ -1265,33 +1205,38 @@ void executeCommand(int &firstPos, char* hotSpotText)
     
     delete [] cmdLine;
     
-    //TODO: option to skip the output part (so that we can run a program that didn't return immediately but still not freezing up npp)
-    const int bufSize = 100;
-    DWORD read;
-    char buffer[bufSize];
-    bool readSuccess = false;
-
-    if (!CloseHandle(processStdoutWrite))
+    
+    //TODO: investigate the possibility to delay reading this part. So the process will keep giving output but I paste it into the editor when I see fit.
+    if (!silent)
     {
-        //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->StdOutWr CloseHandle\n");
-    }
+        const int bufSize = 100;
+        DWORD read;
+        char buffer[bufSize];
+        bool readSuccess = false;
 
-    //::Sleep(100);  //this is temporary solution to the incorrectly written output to npp.....
+        if (!CloseHandle(processStdoutWrite))
+        {
+            //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->StdOutWr CloseHandle\n");
+        }
 
-    //HWND curScintilla = getCurrentScintilla();
-    while (1)
-    {   
-        readSuccess = ReadFile(processStdoutRead, buffer, bufSize - 1, &read, NULL);
+        //::Sleep(100);  //this is temporary solution to the incorrectly written output to npp.....
+
+        //HWND curScintilla = getCurrentScintilla();
+        while (1)
+        {   
+            readSuccess = ReadFile(processStdoutRead, buffer, bufSize - 1, &read, NULL);
+            
+            if (!readSuccess || read == 0 ) break;
+
+            buffer[read] = '\0';
+            
+            //::SendMessage(curScintilla, SCI_REPLACESEL, bufSize - 1, (LPARAM)Buffer);
+            ::SendScintilla(SCI_REPLACESEL, bufSize - 1, (LPARAM)buffer);
+            //::SendScintilla(SCI_INSERTTEXT, firstPos, (LPARAM)Buffer);
+
+            if (!readSuccess ) break;
         
-        if (!readSuccess || read == 0 ) break;
-
-        buffer[read] = '\0';
-        
-        //::SendMessage(curScintilla, SCI_REPLACESEL, bufSize - 1, (LPARAM)Buffer);
-        ::SendScintilla(SCI_REPLACESEL, bufSize - 1, (LPARAM)buffer);
-        //::SendScintilla(SCI_INSERTTEXT, firstPos, (LPARAM)Buffer);
-
-        if (!readSuccess ) break;
+        }
     }
 
    //::SendScintilla(SCI_INSERTTEXT, 0, (LPARAM)"->End of process execution.\n");
@@ -1304,7 +1249,7 @@ std::string evaluateCall(char* expression)
     //TODO: refactor the numeric comparison part
     std::vector<std::string> expressions;
     
-    expressions = split(expression,';');
+    expressions = toVectorString(expression,';');
     bool stringComparison = false;
 
     int i = 0;
@@ -1317,8 +1262,10 @@ std::string evaluateCall(char* expression)
             if ((expressions[i][0] != '"') || (expressions[i][expressions[i].length()-1] != '"'))
             {
                 // This is math expression
-                Expression y(expressions[i]);
-                if ((y.evaluate(expressions[i])) == 0)
+                //Expression y(expressions[i]);
+                //if ((y.evaluate(expressions[i])) == 0)
+                //{
+                if (execDuckEval(expressions[i]) == 0)
                 {
                 } else 
                 {
@@ -1336,8 +1283,11 @@ std::string evaluateCall(char* expression)
         } else if (expressions[i].length()>0)
         {
             // This is math expression
-            Expression y(expressions[i]);
-            if ((y.evaluate(expressions[i])) == 0)
+            //Expression y(expressions[i]);
+            //if ((y.evaluate(expressions[i])) == 0)
+            //{
+            
+            if (execDuckEval(expressions[i]) == 0)
             {
             } else 
             {
@@ -1355,8 +1305,8 @@ std::string evaluateCall(char* expression)
     }
     
     std::string evaluateResult = "";
-    int compareResult = 0;
-    int storedCompareResult = 0;
+    double compareResult = 0;
+    double storedCompareResult = 0;
     
     if (expressions.size() == 1)
     {
@@ -1381,12 +1331,14 @@ std::string evaluateCall(char* expression)
             {
                 for (i = j;i<expressions.size();i++)
                 {
-                    std::stringstream ss0(expressions[j-1]);
-                    std::stringstream ss1(expressions[i]);
-                    double d0;
-                    double d1;
-                    ss0 >> d0;
-                    ss1 >> d1;
+                    //std::stringstream ss0(expressions[j-1]);
+                    //std::stringstream ss1(expressions[i]);
+                    //double d0;
+                    //double d1;
+                    //ss0 >> d0;
+                    //ss1 >> d1;
+                    double d0 = toDouble(expressions[j-1]);
+                    double d1 = toDouble(expressions[i]);
 
                     compareResult = d0 - d1;
                     if (::abs(compareResult) > ::abs(storedCompareResult)) storedCompareResult = compareResult;
@@ -1394,9 +1346,10 @@ std::string evaluateCall(char* expression)
             }
         }
         
-        std::stringstream ss;
-        ss << ::abs(storedCompareResult);
-        evaluateResult = ss.str();
+        //std::stringstream ss;
+        //ss << ::abs(storedCompareResult);
+        //evaluateResult = ss.str();
+        evaluateResult = toString((double)::abs(storedCompareResult));
     }
     return evaluateResult;
 
@@ -1431,7 +1384,7 @@ void evaluateHotSpot(int &firstPos, char* hotSpotText)
             //optionDelimiter = new char[delimitEnd - (firstPos + 5 + 8) + 1];
             //::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(optionDelimiter));
             sciGetText(&preParam, firstPos + 8, delimitEnd);
-            charArrayToString(preParam,&verboseText);
+            verboseText = toString(preParam);
             delete [] preParam;
             ::SendScintilla(SCI_SETSELECTION,firstPos ,delimitEnd + 2);
             ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
@@ -1498,14 +1451,15 @@ void evaluateHotSpot(int &firstPos, char* hotSpotText)
         std::vector<std::string> secondSplit;
         secondSplit = smartSplit(firstPos + firstSplit[0].length() + 1 ,triggerPos,delimiter2);  
         
-        char* expression;
-        stringToCharArray(firstSplit[0],&expression);
+        char* expression = toCharArray(firstSplit[0]);
         evaluateResult = evaluateCall(expression);
 
-        std::stringstream ss(evaluateResult);
-        double d;
-        ss>>d;
+        //std::stringstream ss(evaluateResult);
+        //double d;
+        //ss>>d;
 
+        double d = toDouble(evaluateResult);
+        
         if (d > secondSplit.size()-1) d = secondSplit.size()-1;
         else if (d < 0) d = 0;
                
@@ -1521,8 +1475,7 @@ void evaluateHotSpot(int &firstPos, char* hotSpotText)
         evaluateResult = ss.str();
     } 
 
-    char* result;
-    stringToCharArray(evaluateResult,&result);
+    char* result = toCharArray(evaluateResult);
     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)result);
     delete [] result;
 }
@@ -1575,10 +1528,10 @@ void launchMessageBox(int &firstPos, char* hotSpotText)
     }
 
     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-    TCHAR* getTermWide;
-    convertToWideChar(getTerm,&getTermWide);
+    TCHAR* getTermWide = toWideChar(getTerm);
     int retVal = 0;
-    retVal = ::MessageBox(nppData._nppHandle, getTermWide, NPP_PLUGIN_NAME, messageType);
+    retVal = showMessageBox(getTermWide,messageType);
+    //retVal = ::MessageBox(nppData._nppHandle, getTermWide, TEXT(PLUGIN_NAME), messageType);
     char countText[10];
     ::_itoa(retVal, countText, 10);
     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)countText);
@@ -1926,7 +1879,7 @@ void textCopyCut(int sourceType, int operationType, int &firstPos, char* hotSpot
             //::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(g_customClipBoard));
             char* tempCustomClipBoardText;
             sciGetText(&tempCustomClipBoardText,(::SendScintilla(SCI_GETSELECTIONSTART,0,0)),(::SendScintilla(SCI_GETSELECTIONEND,0,0)));
-            charArrayToString(tempCustomClipBoardText,&g_customClipBoard);
+            g_customClipBoard = toString(tempCustomClipBoardText);
             delete [] tempCustomClipBoardText;
             ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
             if (sourceType == 5)
@@ -1939,13 +1892,12 @@ void textCopyCut(int sourceType, int operationType, int &firstPos, char* hotSpot
         {
             char* tempCustomClipBoardText;
             sciGetText(&tempCustomClipBoardText,(::SendScintilla(SCI_GETSELECTIONSTART,0,0)),(::SendScintilla(SCI_GETSELECTIONEND,0,0)));
-            charArrayToString(tempCustomClipBoardText,&g_customClipBoard);
+            g_customClipBoard = toString(tempCustomClipBoardText);
             delete [] tempCustomClipBoardText;
         }
     }
 
 }
-
 
 
 void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint)
@@ -1957,6 +1909,7 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
     //TODO: At least I should rearrange the keyword a little bit for efficiency
     //TODO: refactor the logic of checking colon version, for example DATE and DATE: for efficiency
     //TODO: remove the GET series
+    //TODO: all keywords should have a "no colon" version and show error message of "params needed"
 
     if (strcmp(hotSpotText,"PASTE") == 0)
     {
@@ -1964,8 +1917,7 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
 	    
     } else if (strcmp(hotSpotText,"FTPASTE") == 0)
     {
-        char* tempCustomClipBoardText;
-        stringToCharArray(g_customClipBoard,&tempCustomClipBoardText);
+        char* tempCustomClipBoardText = toCharArray(g_customClipBoard);
         ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)tempCustomClipBoardText);
         delete [] tempCustomClipBoardText;
     } else if ((strcmp(hotSpotText,"CUT") == 0) || (strcmp(hotSpotText,"CUTWORD") == 0))
@@ -2039,10 +1991,10 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
     } else if (strncmp(hotSpotText,"SETFILE:",8) == 0)  //TODO: a lot of refactoring needed for the file series
     {
         char* getTerm;
-        TCHAR* getTermWide;
+        
         getTerm = new char[hotSpotTextLength];
         strcpy(getTerm,hotSpotText+8);
-        convertToWideChar(getTerm, &getTermWide);
+        TCHAR* getTermWide = toWideChar(getTerm);
         if (strlen(getTerm) < MAX_PATH)
         {
             ::_tcscpy_s(g_currentFocusPath,getTermWide);
@@ -2188,6 +2140,11 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
     {
         ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
         setFocusToWindow();
+    } else if (strcmp(hotSpotText,"SETWIN")==0)
+    {
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        ::searchWindowByName("");
+        
     } else if (strncmp(hotSpotText,"SETWIN:",7)==0)
     {
         char* getTerm;
@@ -2240,8 +2197,8 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
         getTerm = new char[hotSpotTextLength];
         strcpy(getTerm,hotSpotText+6);
         //TCHAR* scopeWide = new TCHAR[strlen(getTerm)*4+!];
-        convertToWideChar(getTerm, &g_customScope);
-        writeConfigTextChar(g_customScope,TEXT("custom_scope"));
+        pc.configText[CUSTOM_SCOPE] = toWideChar(getTerm);  //TODO: memory leak here?
+        pc.callWriteConfigText(CUSTOM_SCOPE);
         ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
         updateDockItems(false,false);
         //snippetHintUpdate();
@@ -2277,6 +2234,34 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
         ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)timeReturn);
         delete [] timeReturn;
         delete [] getTerm;
+    } else if (strncmp(hotSpotText,"REPLACE:",8)==0)
+    {
+        //TODO: cater backward search (need to investigate how to set the checkpoint, firstpos and starting pos
+        //TODO: allow custom separator
+        std::vector<std::string> params = smartSplit(firstPos + 8, triggerPos,',');
+        SendScintilla(SCI_SETSEL,firstPos,triggerPos);
+        SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        if (params.size() > 1)
+        {
+            searchAndReplace(params[0],params[1]);
+        } else
+        {
+            //TODO: error message of not enough params
+        }
+        
+    }  else if (strncmp(hotSpotText,"REGEXREPLACE:",13)==0)
+    {
+        std::vector<std::string> params = smartSplit(firstPos + 13, triggerPos,',');
+        SendScintilla(SCI_SETSEL,firstPos,triggerPos);
+        SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        if (params.size() > 1)
+        {
+            searchAndReplace(params[0],params[1],true);
+        } else
+        {
+            //TODO: error message of not enough params
+        }
+        
     } else if (strcmp(hotSpotText,"FILENAME")==0)
     {
         insertNppPath(NPPM_GETNAMEPART);
@@ -2288,7 +2273,17 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
     } else if (strcmp(hotSpotText,"DIRECTORY")==0)
     {
         insertNppPath(NPPM_GETCURRENTDIRECTORY);
-    //} else if (strcmp(hotSpotText,"GETSCRIPT")==0) 
+    } else if (strncmp(hotSpotText,"SLEEP:",6)==0)
+    {
+        char* getTerm;
+        getTerm = new char[hotSpotTextLength];
+        strcpy(getTerm,hotSpotText+6);
+        
+        int sleepLength = ::atoi(getTerm);
+        ::Sleep(sleepLength);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+        delete [] getTerm;
+        
     } else if ((strncmp(hotSpotText,"CLEAN_",6)==0) && (strncmp(hotSpotText+7,":",1)==0))
     {
         // TODO: fill in content for this CLEAN keyword
@@ -2331,23 +2326,46 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
     //} 
 }
 
+void searchAndReplace(std::string key, std::string text, bool regexp)
+{
+    
+    char* searchKey = new char[key.length()+1];
+    char* replaceText = new char[text.length()+1];
+    strcpy(searchKey,key.c_str());
+    strcpy(replaceText,text.c_str());
+    int keySpot = -1;
+    keySpot = searchNext(searchKey,regexp);
+
+    while (keySpot >= 0)
+    {
+        if (keySpot>=0)
+        {
+            SendScintilla(SCI_REPLACESEL,0,(LPARAM)replaceText);
+        }
+        keySpot = searchNext(searchKey,regexp);
+    }
+}
+
 //TODO: insertpath and insertnpppath (and/or other insert function) need refactoring
 void insertPath(TCHAR* path)
 {
-    char pathText[MAX_PATH];
-	WideCharToMultiByte((int)::SendScintilla(SCI_GETCODEPAGE, 0, 0), 0, path, -1, pathText, MAX_PATH, NULL, NULL);
+    char* pathText = toCharArray(path,(int)::SendScintilla(SCI_GETCODEPAGE, 0, 0));
+	//WideCharToMultiByte((int)::SendScintilla(SCI_GETCODEPAGE, 0, 0), 0, path, -1, pathText, MAX_PATH, NULL, NULL);
     ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)pathText);
+    delete [] pathText;
 }
 
 void insertNppPath(int msg)
 {
-    //TODO: use converttowidechar() ?
 	TCHAR path[MAX_PATH];
 	::SendMessage(nppData._nppHandle, msg, 0, (LPARAM)path);
 
-	char pathText[MAX_PATH];
-	WideCharToMultiByte((int)::SendScintilla(SCI_GETCODEPAGE, 0, 0), 0, path, -1, pathText, MAX_PATH, NULL, NULL);
+    char* pathText = toCharArray(path,(int)::SendScintilla(SCI_GETCODEPAGE, 0, 0));
+	//char pathText[MAX_PATH];
+	//WideCharToMultiByte((int)::SendScintilla(SCI_GETCODEPAGE, 0, 0), 0, path, -1, pathText, MAX_PATH, NULL, NULL);
 	::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)pathText);
+
+    delete [] pathText;
 }
 
 //void insertDateTime(bool date,int type, HWND &curScintilla)
@@ -2377,8 +2395,14 @@ char* getDateTime(char *format, bool getDate, int flags)
 	::GetLocalTime(&formatTime);
     
     wchar_t* formatWide;
-    convertToWideChar(format, &formatWide);
-
+    if (format)
+    {
+        formatWide = toWideChar(format);
+    } else
+    {
+        formatWide = NULL;
+    }
+    
     if (getDate)
     {
         ::GetDateFormat(LOCALE_USER_DEFAULT, flags, &formatTime, formatWide, result, 128);
@@ -2389,8 +2413,7 @@ char* getDateTime(char *format, bool getDate, int flags)
     
     if (format) delete [] formatWide;
     
-    char* resultText;// = new char[MAX_PATH];
-    convertToUTF8(result,&resultText);
+    char* resultText = toCharArray(result,(int)::SendScintilla(SCI_GETCODEPAGE, 0, 0));
 	//WideCharToMultiByte((int)::SendMessage(curScintilla, SCI_GETCODEPAGE, 0, 0), 0, result, -1, resultText, MAX_PATH, NULL, NULL);
     return resultText;
 }
@@ -2432,7 +2455,7 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
     int tagSpot = searchNext(tagTail);    // Find the tail first so that nested snippets are triggered correctly
 	if (tagSpot >= 0)
 	{
-        if (g_preserveSteps == 0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
+        if (pc.configInt[PRESERVE_STEPS] == 0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
 
         if (searchPrev(tagSign) >= 0)
         {
@@ -2508,11 +2531,11 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
                 {
                     char* getTerm;
                     sciGetText(&getTerm, firstPos,triggerPos-offset);
-                    getTerm = cleanupString(getTerm,' ');
-                    getTerm = cleanupString(getTerm,'\r');
-                    getTerm = cleanupString(getTerm,'\n');
-                    getTerm = cleanupString(getTerm,'\t');
-                    std::vector<std::string> rangeString = split(getTerm,'-');
+                    getTerm = quickStrip(getTerm,' ');
+                    getTerm = quickStrip(getTerm,'\r');
+                    getTerm = quickStrip(getTerm,'\n');
+                    getTerm = quickStrip(getTerm,'\t');
+                    std::vector<std::string> rangeString = toVectorString(getTerm,'-');
                     delete [] getTerm;
 
                     int numLength = 1;
@@ -2527,12 +2550,14 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
                         numLength = rangeString[0].length();
                         if (rangeString[1].length()<rangeString[0].length()) numLength = rangeString[1].length();
                         
-                        std::stringstream ss1(rangeString[0]);
-                        ss1 >> rangeStart;
-                        
-                        std::stringstream ss2(rangeString[1]);
-                        ss2 >> rangeEnd;
-                        
+                        rangeStart = toLong(rangeString[0]);
+                        rangeEnd = toLong(rangeString[1]);
+                        //std::stringstream ss1(rangeString[0]);
+                        //ss1 >> rangeStart;
+                        //
+                        //std::stringstream ss2(rangeString[1]);
+                        //ss2 >> rangeEnd;
+                        //
                         rangeStart = abs(rangeStart);
                         rangeEnd = abs(rangeEnd);
 
@@ -2541,9 +2566,10 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
                         {
                             for (int i = rangeStart; i<=rangeEnd; i++)
                             {
-                                std::stringstream ss;
-                                ss << i;
-                                std::string s = ss.str();
+                                std::string s = toString(i);
+                                //std::stringstream ss;
+                                //ss << i;
+                                //std::string s = ss.str();
                                 
                                 length = s.length();
 	                            for (int j = 0; j < numLength - length; j++) s = "0" + s;
@@ -2553,9 +2579,10 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
                         {
                             for (int i = rangeStart; i>=rangeEnd; i--)
                             {
-                                std::stringstream ss;
-                                ss << i;
-                                std::string s = ss.str();
+                                std::string s = toString(i);
+                                //std::stringstream ss;
+                                //ss << i;
+                                //std::string s = ss.str();
 
                                 length = s.length();
 	                            for (int j = 0; j < numLength - length; j++) s = "0" + s;
@@ -2611,8 +2638,7 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
                 //g_optionOperating = true; 
 
                 ::SendScintilla(SCI_SETSELECTION,firstPos,triggerPos-offset);
-                char* option;
-                stringToCharArray(g_optionArray[g_optionCurrent],&option);
+                char* option = toCharArray(g_optionArray[g_optionCurrent]);
                 ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)option);
                 //g_optionOperating = false; 
                 delete [] option;
@@ -2687,7 +2713,7 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
             delete [] hotSpot;
             delete [] hotSpotText;
 
-            if (g_preserveSteps==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
+            if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
             
         }
 	} else
@@ -2743,32 +2769,44 @@ int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &sec
 
 void showPreview(bool top)
 {
-    //TODO: Testing using LB_SETANCHORINDEX LB_GETANCHORINDEX LB_SETCARETINDEX LB_GETCARETINDEX to change the selection in list box 
-    sqlite3_stmt *stmt;
-    int index = 0;
-
-    //HWND curScintilla = getCurrentScintilla();
-    int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-
+    
+    TCHAR* bufferWide;
     if (top)
     {
-        index = snippetDock.getCount()-1;
+        snippetDock.getSelectText(bufferWide,0);
     } else
     {
-        index = snippetDock.getCount() - snippetDock.getSelection()-1;
+        snippetDock.getSelectText(bufferWide);
     }
 
-    //else
-    //{
-    //    index = snippetDock.getCount()-1;
-    //}
-    if (index >= 1)
+    if (::_tcslen(bufferWide)>0)
     {
+
+        char* buffer = toCharArray(bufferWide);
+        buffer = quickStrip(buffer, ' ');
+
+        int scopeLength = ::strchr(buffer,'>') - buffer - 1;
+        int triggerTextLength = strlen(buffer)-scopeLength - 2;
+        char* tempTriggerText = new char [ triggerTextLength+1];
+        char* tempScope = new char[scopeLength+1];
+        
+        strncpy(tempScope,buffer+1,scopeLength);
+        tempScope[scopeLength] = '\0';
+        strncpy(tempTriggerText,buffer+1+scopeLength+1,triggerTextLength);
+        tempTriggerText[triggerTextLength] = '\0';
+        
+        delete [] buffer;
+
+
+        sqlite3_stmt *stmt;
+
+        
+        
         if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
 	    {
 	    	// Then bind the two ? parameters in the SQLite SQL to the real parameter values
-	    	sqlite3_bind_text(stmt, 1, g_snippetCache[index].scope , -1, SQLITE_STATIC);
-	    	sqlite3_bind_text(stmt, 2, g_snippetCache[index].triggerText, -1, SQLITE_STATIC);
+	    	sqlite3_bind_text(stmt, 1, tempScope , -1, SQLITE_STATIC);
+	    	sqlite3_bind_text(stmt, 2, tempTriggerText, -1, SQLITE_STATIC);
 
 	    	// Run the query with sqlite3_step
 	    	if(SQLITE_ROW == sqlite3_step(stmt))  // SQLITE_ROW 100 sqlite3_step() has another row ready
@@ -2777,7 +2815,7 @@ void showPreview(bool top)
                 
                 char* previewText = new char[500];
                 strcpy(previewText,"[");
-                strcat(previewText, g_snippetCache[index].triggerText);//TODO: showing the triggertext on the title "snippet preview" instead
+                strcat(previewText, tempTriggerText);//TODO: showing the triggertext on the title "snippet preview" instead
                 strcat(previewText,"]:\r\n");
                 char* contentTruncated = new char[155];
                 strncpy(contentTruncated, snippetText, 154);
@@ -2786,8 +2824,7 @@ void showPreview(bool top)
                 strcat(previewText,contentTruncated);
                 if (strlen(contentTruncated)>=153) strcat(previewText, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . "); 
                 
-                TCHAR* previewTextWide;
-                convertToWideChar(previewText,&previewTextWide);
+                TCHAR* previewTextWide = toWideChar(previewText);
                 //TODO: investigate why all eol are messed up in preview box
 
                 //size_t origsize = strlen(snippetText) + 1; 
@@ -2809,7 +2846,7 @@ void showPreview(bool top)
 
                 //wchar_t countText[10];
                 //::_itow_s(convertedChars, countText, 10, 10); 
-                //::MessageBox(nppData._nppHandle, countText, NPP_PLUGIN_NAME, MB_OK);
+                //::MessageBox(nppData._nppHandle, countText, TEXT(PLUGIN_NAME), MB_OK);
 	    	}	
 	    }
 	    sqlite3_finalize(stmt);
@@ -2818,6 +2855,7 @@ void showPreview(bool top)
         
         snippetDock.setDlgText(ID_SNIPSHOW_EDIT,TEXT("Select an item in SnippetDock to view the snippet preview here."));
     }
+    delete [] bufferWide;
     //::SendMessage(curScintilla,SCI_GRABFOCUS,0,0); 
 }
 
@@ -2860,7 +2898,7 @@ void insertTagSign(char * tagSign)
         ////::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent+strlen(tagSign)-3,0);
     //} else
     //{
-    //    ::MessageBox(nppData._nppHandle, TEXT("Hotspots can be inserted only when you are editing snippets."), NPP_PLUGIN_NAME, MB_OK);
+    //    ::MessageBox(nppData._nppHandle, TEXT("Hotspots can be inserted only when you are editing snippets."), TEXT(PLUGIN_NAME), MB_OK);
     //}
 }
 
@@ -2869,35 +2907,12 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
 {
     
     //TODO: can use ::SendMessage(curScintilla, SCI_ENSUREVISIBLE, line-1, 0); to make sure that caret is visible after long snippet substitution.
-
-    //::MessageBox(nppData._nppHandle, TEXT("replace tag"), NPP_PLUGIN_NAME, MB_OK); 
-    //std::streamoff sniplength;
+    //TODO: should abandon this `[SnippetInserting] method
     int lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION, posCurrent, 0);
     int initialIndent = ::SendScintilla(SCI_GETLINEINDENTATION, lineCurrent, 0);
 
     ::SendScintilla(SCI_INSERTTEXT, posCurrent, (LPARAM)"____`[SnippetInserting]");
 
-        // Failed attempt to cater unicode snippets
-        //if (::IsTextUnicode(snip,sniplength,0))
-        //{
-        //  ::MessageBox(nppData._nppHandle, TEXT("ANSI"), NPP_PLUGIN_NAME, MB_OK);
-        //} else
-        //{
-        //  ::MessageBox(nppData._nppHandle, TEXT("not ANSI"), NPP_PLUGIN_NAME, MB_OK);
-        //}
-
-        // Just assume that all snippets are in ANSI, and convert to UTF-8 when needed.
-        // This is not needed for sqlite system as sqlite database is in utf-8
-        //if (::SendMessage(curScintilla,SCI_GETCODEPAGE,0,0)==65001)
-        //{
-        //    //::MessageBox(nppData._nppHandle, TEXT("65001"), NPP_PLUGIN_NAME, MB_OK);
-		//	int snipLength = strlen(expanded);
-        //    WCHAR *w=new WCHAR[snipLength*4+1];
-        //    MultiByteToWideChar(CP_ACP, 0, expanded, -1, w, snipLength*4+1); // ANSI to UNICODE
-        //    WideCharToMultiByte(CP_UTF8, 0, w, -1, expanded, snipLength*4+1, 0, 0); // UNICODE to UTF-8
-        //    delete [] w;
-        //}
-  
 	::SendScintilla(SCI_SETTARGETSTART, posBeforeTag, 0);
 	::SendScintilla(SCI_SETTARGETEND, posCurrent, 0);
     ::SendScintilla(SCI_REPLACETARGET, strlen(expanded), reinterpret_cast<LPARAM>(expanded));
@@ -2906,7 +2921,7 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
     int posEndOfInsertedText = ::SendScintilla(SCI_GETCURRENTPOS,0,0)+19;
 
     // adjust indentation according to initial indentation
-    if (g_indentReference==1)
+    if (pc.configInt[INDENT_REFERENCE]==1)
     {
         int lineInsertedSnippet = ::SendScintilla(SCI_LINEFROMPOSITION, posEndOfInsertedText, 0);
 
@@ -2932,261 +2947,6 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
 }
 
 
-void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires.
-{   
-    g_liveHintUpdate = 0;
-
-    delete [] g_snippetCache;
-    if (!g_newUpdate)
-    {
-        delete [] g_customScope;
-        delete [] g_customEscapeChar;
-        delete [] g_paramsDelimiter;
-    }
-    //if (g_newUpdate) writeConfig();
-    if (g_dbOpen)
-    {
-        sqlite3_close(g_db);  // This close the database when the plugin shutdown.
-        g_dbOpen = false;
-    }
-}
-
-void initialize()
-{
-    
-    g_modifyResponse = true;
-    g_enable = true;
-    g_customScope = new TCHAR[MAX_PATH];
-    g_customEscapeChar = new TCHAR[MAX_PATH];
-    g_paramsDelimiter = new TCHAR[2];
-    g_selectionMonitor = 1;
-    g_rectSelection = false;
-
-    // For option hotspot
-    turnOffOptionMode();
-    //g_optionMode = false;
-    //g_optionOperating = false;
-    g_optionStartPosition = 0;
-    g_optionEndPosition = 0;
-    g_optionCurrent = 0;
-    //g_optionNumber = 0;
-
-    g_lastTriggerPosition = 0;
-    
-    //g_customScope = "";
-    //g_display=false;
-    updateMode();
-    
-    TCHAR path[MAX_PATH];
-    //char dataBasePath[MAX_PATH*2];
-    char* dataBasePath;
-    ::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH, reinterpret_cast<LPARAM>(path));
-    ::_tcscat_s(path,TEXT("\\"));
-    ::_tcscat_s(path,NPP_PLUGIN_NAME);
-
-    if (PathFileExists(path) == FALSE) ::CreateDirectory(path, NULL);
-    
-    ::_tcscpy_s(g_dataBasePath,path);
-    ::_tcscat_s(g_dataBasePath,TEXT("\\"));
-    ::_tcscat_s(g_dataBasePath,NPP_PLUGIN_NAME);
-    ::_tcscat_s(g_dataBasePath,TEXT(".db3"));
-
-    convertToUTF8(g_dataBasePath, &dataBasePath);
-    
-    int rc = sqlite3_open(dataBasePath, &g_db);
-
-    delete [] dataBasePath; 
-
-    if (rc)
-    {
-        g_dbOpen = false;
-        MessageBox(nppData._nppHandle, TEXT("Cannot find or open database file in config folder"), NPP_PLUGIN_NAME, MB_ICONERROR);
-    } else
-    {
-        g_dbOpen = true;
-    }
-
-    sqlite3_stmt *stmt;
-
-    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "CREATE TABLE snippets (tag TEXT, tagType TEXT, snippet TEXT)", -1, &stmt, NULL))
-    
-    sqlite3_step(stmt);
-    sqlite3_finalize(stmt);
-
-    ::_tcscpy_s(g_iniPath,path);
-    ::_tcscat_s(g_iniPath,TEXT("\\"));
-    ::_tcscat_s(g_iniPath,NPP_PLUGIN_NAME);
-    ::_tcscat_s(g_iniPath,TEXT(".ini"));
-
-    ::_tcscpy_s(g_fttempPath,path);
-    ::_tcscat_s(g_fttempPath,TEXT("\\"));
-    ::_tcscat_s(g_fttempPath,NPP_PLUGIN_NAME);
-    ::_tcscat_s(g_fttempPath,TEXT(".fttemp"));
-    
-    ::_tcscpy_s(g_ftbPath,path);
-    ::_tcscat_s(g_ftbPath,TEXT("\\SnippetEditor.ftb"));
-
-    //::_tcscpy(g_groupPath,path);
-    //::_tcscat(g_groupPath,TEXT("\\SnippetGroup.ini"));
-    if (PathFileExists(g_iniPath) == false) emptyFile(g_iniPath);
-
-    setupConfigFile();
-
-    g_snippetCache = new SnipIndex [g_snippetListLength];
-    if (PathFileExists(g_ftbPath) == false) emptyFile(g_ftbPath);
-    if (PathFileExists(g_fttempPath) == false) emptyFile(g_fttempPath);
-    
-
-    
-    //TODO: better arrangement for this multipaste setting
-    if (g_forceMultiPaste) ::SendScintilla(SCI_SETMULTIPASTE,1,0); 
-    //updateDockItems(false,false);
-    //if (PathFileExists(g_groupPath) == FALSE) writeDefaultGroupFile(); 
-}
-
-void emptyFile(TCHAR* fileName)
-{
-    //	if (PathFileExists(g_consolePath) == FALSE) emptyFile(g_consolePath);
-    //if (PathFileExists(g_switcherPath) == FALSE) emptyFile(g_switcherPath);
-    std::ofstream File;
-    File.open(fileName,std::ios::out|std::ios::trunc);
-    File.close();
-}
-
-void resetDefaultSettings()
-{   
-    g_snippetListLength = DEFAULT_SNIPPET_LIST_LENGTH;
-    g_snippetListOrderTagType = DEFAULT_SNIPPET_LIST_ORDER_TAG_TYPE;
-    g_tabTagCompletion = DEFAULT_TAB_TAG_COMPLETION;
-    g_liveHintUpdate = DEFAULT_LIVE_HINT_UPDATE;
-    g_indentReference = DEFAULT_INDENT_REFERENCE;
-    g_chainLimit = DEFAULT_CHAIN_LIMIT;
-    g_preserveSteps = DEFAULT_PRESERVE_STEPS;
-    //g_escapeChar = DEFAULT_ESCAPE_CHAR;
-    //g_importOverWriteOption = DEFAULT_IMPORT_OVERWRITE_OPTION;
-    g_importOverWriteConfirm = DEFAULT_IMPORT_OVERWRITE_CONFIRM;
-    g_inclusiveTriggerTextCompletion = DEFAULT_INCLUSIVE_TRIGGERTEXT_COMPLETION;
-    g_livePreviewBox = DEFAULT_LIVE_PREVIEW_BOX;
-    g_editorCaretBound = DEFAULT_EDITOR_CARET_BOUND;
-    g_forceMultiPaste = DEFAULT_FORCE_MULTI_PASTE;
-    g_snippetDockState = DEFAULT_SNIPPET_DOCK_STATE;
-
-
-
-    _tcscpy(g_customScope,DEFAULT_CUSTOM_SCOPE);
-    _tcscpy(g_customEscapeChar,DEFAULT_CUSTOM_ESCAPE_CHAR);
-    _tcscpy(g_paramsDelimiter,DEFAULT_PARAMS_DELIMITER);
-    //g_customScope = DEFAULT_CUSTOM_SCOPE;
-    //g_customEscapeChar = DEFAULT_CUSTOM_ESCAPE_CHAR;
-    //g_paramsDelimiter = DEFAULT_PARAMS_DELIMITER;
-}
-
-//void saveCustomScope()
-//{
-//    writeConfigTextChar(g_customScope,TEXT("custom_scope"));
-//}
-
-void writeConfig()
-{
-    writeConfigText(g_snippetListLength,TEXT("snippet_list_length"));
-    writeConfigText(g_snippetListOrderTagType,TEXT("snippet_list_order_tagtype"));
-    writeConfigText(g_tabTagCompletion,TEXT("tab_tag_completion"));
-    writeConfigText(g_liveHintUpdate,TEXT("live_hint_update"));
-    writeConfigText(g_indentReference,TEXT("indent_reference"));
-    writeConfigText(g_chainLimit,TEXT("chain_limit"));
-    writeConfigText(g_preserveSteps,TEXT("preserve_steps"));
-    //writeConfigText(g_escapeChar,TEXT("escape_char_level"));
-    //writeConfigText(g_importOverWriteOption,TEXT("import_overwrite_option"));
-    writeConfigText(g_importOverWriteConfirm,TEXT("import_overwrite_confirm"));
-    writeConfigText(g_inclusiveTriggerTextCompletion,TEXT("inclusive_triggertext_completion"));
-    writeConfigText(g_livePreviewBox,TEXT("live_preview_box"));
-    writeConfigText(g_editorCaretBound,TEXT("editor_caret_bound"));
-    writeConfigText(g_forceMultiPaste,TEXT("force_multipaste"));
-    writeConfigText(g_snippetDockState,TEXT("snippetdock_state"));
-    
-    writeConfigTextChar(g_customEscapeChar,TEXT("escape_char"));
-    writeConfigTextChar(g_customScope,TEXT("custom_scope"));
-    writeConfigTextChar(g_paramsDelimiter,TEXT("params_delimiter"));
-    
-}
-
-void loadConfig()
-{
-    g_snippetListLength = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("snippet_list_length"), DEFAULT_SNIPPET_LIST_LENGTH, g_iniPath);
-    g_snippetListOrderTagType = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("snippet_list_order_tagtype"), DEFAULT_SNIPPET_LIST_ORDER_TAG_TYPE, g_iniPath);
-    g_tabTagCompletion = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("tab_tag_completion"), DEFAULT_TAB_TAG_COMPLETION, g_iniPath);
-    g_liveHintUpdate = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("live_hint_update"), DEFAULT_LIVE_HINT_UPDATE, g_iniPath);
-    g_indentReference = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("indent_reference"), DEFAULT_INDENT_REFERENCE, g_iniPath);
-    g_chainLimit = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("chain_limit"), DEFAULT_CHAIN_LIMIT, g_iniPath);
-    g_preserveSteps = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("preserve_steps"), DEFAULT_PRESERVE_STEPS, g_iniPath);
-    //g_escapeChar = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("escape_char_level"), DEFAULT_ESCAPE_CHAR, g_iniPath);
-    //g_importOverWriteOption = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("import_overwrite_option"), DEFAULT_IMPORT_OVERWRITE_OPTION, g_iniPath);
-    g_importOverWriteConfirm = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("import_overwrite_confirm"), DEFAULT_IMPORT_OVERWRITE_CONFIRM, g_iniPath);
-    g_inclusiveTriggerTextCompletion = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("inclusive_triggertext_completion"), DEFAULT_INCLUSIVE_TRIGGERTEXT_COMPLETION, g_iniPath);
-    g_livePreviewBox = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("live_preview_box"), DEFAULT_LIVE_PREVIEW_BOX, g_iniPath);
-    g_editorCaretBound = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("editor_caret_bound"), DEFAULT_EDITOR_CARET_BOUND, g_iniPath);
-    g_forceMultiPaste = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("force_multipaste"), DEFAULT_FORCE_MULTI_PASTE, g_iniPath);
-    g_snippetDockState = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("snippetdock_state"), DEFAULT_SNIPPET_DOCK_STATE, g_iniPath);
-
-    GetPrivateProfileString(NPP_PLUGIN_NAME, TEXT("escape_char"),DEFAULT_CUSTOM_ESCAPE_CHAR,g_customEscapeChar,MAX_PATH,g_iniPath);
-    GetPrivateProfileString(NPP_PLUGIN_NAME, TEXT("custom_scope"),DEFAULT_CUSTOM_SCOPE,g_customScope,MAX_PATH,g_iniPath);
-    GetPrivateProfileString(NPP_PLUGIN_NAME, TEXT("params_delimiter"),DEFAULT_PARAMS_DELIMITER,g_paramsDelimiter,MAX_PATH,g_iniPath);
-}
-
-void setupConfigFile()
-{
-    //TODO: lazy loading of config.....
-    g_version = ::GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("version"), 0, g_iniPath);
-    
-    if (g_version == VERSION_LINEAR)  // current version
-    {
-        loadConfig();
-        //writeConfig();// TODO: Confirm that this line is not needed
-        g_newUpdate = false;
-        
-    } else if ((g_version >= VERSION_KEEP_CONFIG_START) && (g_version <= VERSION_KEEP_CONFIG_END))// for version changes that do not want to reset database
-    {
-        g_version = VERSION_LINEAR;
-        writeConfigText(g_version,TEXT("version"));
-                
-        loadConfig(); 
-        writeConfig(); 
-        g_newUpdate = true;
-    } else // for version that need database reset
-    {
-        g_version = VERSION_LINEAR;
-        writeConfigText(g_version,TEXT("version"));
-        resetDefaultSettings();
-        
-        writeConfig();
-        //saveCustomScope();
-        g_newUpdate = true;
-    }   
-}
-
-void writeConfigText(int configInt, TCHAR* section)
-{
-    wchar_t configText[32];
-    _itow_s(configInt,configText, 10,10);
-    ::WritePrivateProfileString(NPP_PLUGIN_NAME, section, configText, g_iniPath);
-}
-
-void writeConfigTextChar(TCHAR* configChar, TCHAR* section)
-{
-    ::WritePrivateProfileString(NPP_PLUGIN_NAME, section, configChar, g_iniPath);
-}
-
-//void writeDefaultGroupFile()
-//{
-//    ::WritePrivateProfileString(TEXT("Snippet Group"), TEXT("LANG_0"), TEXT(".txt|.ini|.log"), g_groupPath);
-//    ::WritePrivateProfileString(TEXT("Snippet Group"), TEXT("LANG_1"), TEXT(".php"), g_groupPath);
-//    ::WritePrivateProfileString(TEXT("Snippet Group"), TEXT("LANG_2"), TEXT(".c|.h"), g_groupPath);
-//    ::WritePrivateProfileString(TEXT("Snippet Group"), TEXT("LANG_3"), TEXT(".cpp|.hpp"), g_groupPath);
-//
-//    //::WritePrivateProfileString(TEXT("Snippet Group"), TEXT("GROUP.rb"), TEXT(".rb"), g_groupPath);
-// 
-//}
-
 int getCurrentTag(int posCurrent, char **buffer, int triggerLength)
 {
 	int length = -1;
@@ -3197,16 +2957,15 @@ int getCurrentTag(int posCurrent, char **buffer, int triggerLength)
         //TODO: global variable for word Char?
         char wordChar[MAX_PATH]="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
 
-        //alertNumber(wcslen(g_customEscapeChar));
+        //alertNumber(wcslen(pc.configText[CUSTOM_ESCAPE_CHAR]));
         //TODO: potential performance improvement by forming the wordchar with escape char that the initialization
-        if (wcslen(g_customEscapeChar)>0)
+        if (wcslen(pc.configText[CUSTOM_ESCAPE_CHAR])>0)
         {
-            char *customEscapeChar = NULL;
-            customEscapeChar = new char[MAX_PATH];
-            convertToUTF8(g_customEscapeChar, &customEscapeChar);
+            char *customEscapeChar = toCharArray(pc.configText[CUSTOM_ESCAPE_CHAR]);
             strcat(wordChar,customEscapeChar);
             delete [] customEscapeChar;
         }
+        
 
         //if (g_escapeChar == 1)
         //{
@@ -3240,18 +2999,7 @@ int getCurrentTag(int posCurrent, char **buffer, int triggerLength)
 	return length;
 }
 
-void convertToUTF8(TCHAR *orig, char **utf8)
-{
-    if (orig == NULL)
-    {
-        *utf8 = NULL;
-    } else
-    {
-	    int multibyteLength = WideCharToMultiByte(CP_UTF8, 0, orig, -1, NULL, 0, 0, 0);
-	    *utf8 = new char[multibyteLength + 1];
-	    WideCharToMultiByte(CP_UTF8, 0, orig, -1, *utf8, multibyteLength, 0, 0);
-    }
-}
+
 
 void showSnippetDock()
 {
@@ -3267,40 +3015,33 @@ void showSnippetDock()
 		data.pszModuleName = snippetDock.getPluginFileName();
 
 		// the dlgDlg should be the index of funcItem where the current function pointer is
-		data.dlgID = SNIPPET_DOCK_INDEX;
+		data.dlgID = g_snippetDockIndex;
 		::SendMessage(nppData._nppHandle, NPPM_DMMREGASDCKDLG, 0, (LPARAM)&data);
 
         //This determine the initial state of the snippetdock.
-        //snippetDock.display();
-        snippetDock.display(g_snippetDockState);
+        snippetDock.display();
 	} else
     {
         snippetDock.display(!snippetDock.isVisible());
     }
-
-    if (snippetDock.isVisible())
-    {
-        g_snippetDockState = 1;
-    } else
-    {
-        g_snippetDockState = 0;
-    }
-    writeConfigText(g_snippetDockState,TEXT("snippetdock_state"));
-
-    snippetHintUpdate();
+    updateDockItems();
+    //snippetHintUpdate();
+    
 }
 
 
 void snippetHintUpdate()
 {     
-    if ((!g_editorView) && (g_liveHintUpdate==1) && (g_rectSelection==false))
+    if ((!g_editorView) && (pc.configInt[LIVE_HINT_UPDATE]==1) && (g_rectSelection==false))
     {
         if (snippetDock.isVisible())
         {
-            g_liveHintUpdate=0;
+            pc.configInt[LIVE_HINT_UPDATE]=0;
             //HWND curScintilla = getCurrentScintilla();
-            if ((::SendScintilla(SCI_GETMODIFY,0,0)!=0) && (::SendScintilla(SCI_SELECTIONISRECTANGLE,0,0)==0))
+            //if ((::SendScintilla(SCI_GETMODIFY,0,0)!=0) && (::SendScintilla(SCI_SELECTIONISRECTANGLE,0,0)==0))
+            if (::SendScintilla(SCI_SELECTIONISRECTANGLE,0,0) == 0)
             {
+                
                 int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
                 char *partialTag;
 	            int tagLength = getCurrentTag(posCurrent, &partialTag);
@@ -3312,7 +3053,7 @@ void snippetHintUpdate()
                 {
                     //alertNumber(tagLength);
                     char similarTag[MAX_PATH]="";
-                    if (g_inclusiveTriggerTextCompletion==1) strcat(similarTag,"%");
+                    if (pc.configInt[INCLUSIVE_TRIGGERTEXT_COMPLETION]==1) strcat(similarTag,"%");
                     strcat(similarTag,partialTag);
                     strcat(similarTag,"%");
             
@@ -3321,15 +3062,15 @@ void snippetHintUpdate()
                 
                 if (tagLength>=0) delete [] partialTag;   
             }
-            g_liveHintUpdate=1;
+            pc.configInt[LIVE_HINT_UPDATE]=1;
         }
     }
     //if (g_modifyResponse) refreshAnnotation();
 }
 
-void updateDockItems(bool withContent, bool withAll, char* tag)
+void updateDockItems(bool withContent, bool withAll, char* tag, bool populate)
 {   
-    g_liveHintUpdate--;
+    pc.configInt[LIVE_HINT_UPDATE]--;
 
     int scopeLength=0;
     int triggerLength=0;
@@ -3347,11 +3088,11 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
     
 
     if (g_editorView) withAll = true;
-    //TODO: there is a bug in the withAll option. The list is limited by the g_snippetlistlength, which is not a desirable effect
+    //TODO: there is a bug in the withAll option. The list is limited by the pc.configInt[SNIPPET_LIST_LENGTH], which is not a desirable effect
 
     // TODO: Use strcat instead of just nested if 
     int sqlitePrepare;
-    if (g_snippetListOrderTagType==1)
+    if (pc.configInt[SNIPPET_LIST_ORDER_TAG_TYPE]==1)
     {
         if (withAll)
         {
@@ -3384,19 +3125,19 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
         if (withAll)
         {
             char snippetCacheSizeText[10];
-            ::_itoa(g_snippetListLength, snippetCacheSizeText, 10); 
+            ::_itoa(pc.configInt[SNIPPET_LIST_LENGTH], snippetCacheSizeText, 10); 
             sqlite3_bind_text(stmt, 1, snippetCacheSizeText, -1, SQLITE_STATIC);
         } else
         {   
-            convertToUTF8(g_customScope, &customScope);
+            customScope = toCharArray(pc.configText[CUSTOM_SCOPE]);
             sqlite3_bind_text(stmt, 1, customScope, -1, SQLITE_STATIC);
             
             ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType1);
-            convertToUTF8(fileType1, &tagType1);
+            tagType1 = toCharArray(fileType1);
             sqlite3_bind_text(stmt, 2, tagType1, -1, SQLITE_STATIC);
 
             ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType2);
-            convertToUTF8(fileType2, &tagType2);
+            tagType2 = toCharArray(fileType2);
             sqlite3_bind_text(stmt, 3, tagType2, -1, SQLITE_STATIC);
 
             sqlite3_bind_text(stmt, 4, getLangTagType(), -1, SQLITE_STATIC);
@@ -3407,7 +3148,7 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
 
             //TODO: potential performance improvement by just setting 100
             char snippetCacheSizeText[10];
-            ::_itoa(g_snippetListLength, snippetCacheSizeText, 10); 
+            ::_itoa(pc.configInt[SNIPPET_LIST_LENGTH], snippetCacheSizeText, 10); 
             sqlite3_bind_text(stmt, 7, snippetCacheSizeText, -1, SQLITE_STATIC);
         }
         
@@ -3451,6 +3192,8 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
                         strcpy(g_snippetCache[row].content, tempContent);
                     }
                     row++;
+
+
                 }
             }
             else
@@ -3466,19 +3209,32 @@ void updateDockItems(bool withContent, bool withAll, char* tag)
         delete [] fileType2;
     }
     sqlite3_finalize(stmt);
-    populateDockItems();
+    if (populate) populateDockItems();
     
-    if (g_livePreviewBox==1) showPreview(true);
+    if (pc.configInt[LIVE_PREVIEW_BOX]==1) showPreview(true);
 
-    g_liveHintUpdate++;
+    pc.configInt[LIVE_HINT_UPDATE]++;
     //::SendMessage(getCurrentScintilla(),SCI_GRABFOCUS,0,0);   
     
+}
+
+void deleteCache()
+{   
+
+    
+    for (int i=0;i<pc.configInt[SNIPPET_LIST_LENGTH];i++)
+    {
+        delete [] g_snippetCache[i].triggerText;
+        delete [] g_snippetCache[i].scope;
+        delete [] g_snippetCache[i].content;
+        
+    }
 }
 
 void populateDockItems()
 {
     //TODO: Use 2 columns of list box, or list control
-    for (int j=0;j<g_snippetListLength;j++)
+    for (int j=0;j<pc.configInt[SNIPPET_LIST_LENGTH];j++)
     {
         if (g_snippetCache[j].scope !=NULL)
         {
@@ -3516,26 +3272,36 @@ void populateDockItems()
             //wchar_t convertedTagText[newsize];
             //mbstowcs_s(&convertedChars, convertedTagText, origsize, newText, _TRUNCATE);
 
-            wchar_t* convertedTagText;
-            convertToWideChar(newText,&convertedTagText);
+            wchar_t* convertedTagText = toWideChar(newText);
 
             snippetDock.addDockItem(convertedTagText);
             delete [] convertedTagText;
+
+
         }
     }
+    deleteCache();
 }
 
 void clearCache()
 {   
+
+    
     //TODO: fix update dockitems memoryleak
-    //g_snippetCacheSize=g_snippetListLength;
-        
-    for (int i=0;i<g_snippetListLength;i++)
+    //g_snippetCacheSize=pc.configInt[SNIPPET_LIST_LENGTH];
+    
+    for (int i=0;i<pc.configInt[SNIPPET_LIST_LENGTH];i++)
     {
+        //delete [] g_snippetCache[i].triggerText;
+        //delete [] g_snippetCache[i].scope;
+        //delete [] g_snippetCache[i].content;
         g_snippetCache[i].triggerText=NULL;
         g_snippetCache[i].scope=NULL;
         g_snippetCache[i].content=NULL;
     }
+    
+    
+
 }
 
 void exportAndClearSnippets()
@@ -3543,14 +3309,17 @@ void exportAndClearSnippets()
     //TODO: move the snippet export counting message out of the export snippets function so that it can be shown together with the clear snippet message
     if (exportSnippets())
     {
-        int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Are you sure that you want to clear the whole snippet database?"), NPP_PLUGIN_NAME, MB_YESNO);
+        int messageReturn = showMessageBox(TEXT("Are you sure that you want to clear the whole snippet database?"),MB_YESNO);
+        //int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Are you sure that you want to clear the whole snippet database?"), TEXT(PLUGIN_NAME), MB_YESNO);
         if (messageReturn == IDYES)
         {
             clearAllSnippets();
-            ::MessageBox(nppData._nppHandle, TEXT("All snippets are deleted."), NPP_PLUGIN_NAME, MB_OK);
+            showMessageBox(TEXT("All snippets are deleted."));
+            //::MessageBox(nppData._nppHandle, TEXT("All snippets are deleted."), TEXT(PLUGIN_NAME), MB_OK);
         } else 
         {
-            ::MessageBox(nppData._nppHandle, TEXT("Snippet clearing is aborted."), NPP_PLUGIN_NAME, MB_OK);
+            showMessageBox(TEXT("Snippet clearing is aborted."));
+            //::MessageBox(nppData._nppHandle, TEXT("Snippet clearing is aborted."), TEXT(PLUGIN_NAME), MB_OK);
         }
     }
 }
@@ -3583,7 +3352,7 @@ bool exportSnippets()
 {
     //TODO: Can actually add some informtiaon at the end of the exported snippets......can be useful information like version number or just describing the package
 
-    g_liveHintUpdate--;  // Temporary turn off live update as it disturb exporting
+    pc.configInt[LIVE_HINT_UPDATE]--;  // Temporary turn off live update as it disturb exporting
 
     bool success = false;
 
@@ -3606,12 +3375,12 @@ bool exportSnippets()
         ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
 
         ::SendScintilla(SCI_SETCURSOR, SC_CURSORWAIT, 0);
-        g_snippetListLength = 100000;
-        g_snippetCache = new SnipIndex [g_snippetListLength];
-        updateDockItems(true,true,"%");
+        pc.configInt[SNIPPET_LIST_LENGTH] = 100000;
+        g_snippetCache = new SnipIndex [pc.configInt[SNIPPET_LIST_LENGTH]];
+        updateDockItems(true,true,"%", false);
         
         int exportCount = 0;
-        for (int j=0;j<g_snippetListLength;j++)
+        for (int j=0;j<pc.configInt[SNIPPET_LIST_LENGTH];j++)
         {
             if (g_snippetCache[j].scope !=NULL)
             {
@@ -3644,50 +3413,15 @@ bool exportSnippets()
         
         ::SendScintilla(SCI_SETSAVEPOINT,0,0);
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
-        ::MessageBox(nppData._nppHandle, exportCountText, NPP_PLUGIN_NAME, MB_OK);
+        showMessageBox(exportCountText);
+        //::MessageBox(nppData._nppHandle, exportCountText, TEXT(PLUGIN_NAME), MB_OK);
     }
-    g_snippetListLength = GetPrivateProfileInt(NPP_PLUGIN_NAME, TEXT("snippet_list_length"), DEFAULT_SNIPPET_LIST_LENGTH, g_iniPath);
-    g_snippetCache = new SnipIndex [g_snippetListLength];
+    pc.configInt[SNIPPET_LIST_LENGTH] = GetPrivateProfileInt(TEXT(PLUGIN_NAME), TEXT("snippet_list_length"), 1000 , pc.iniPath); // TODO: This hard coding of DEFAULT_SNIPPET_LIST_LENGTH is temporary and can cause problem.
+    g_snippetCache = new SnipIndex [pc.configInt[SNIPPET_LIST_LENGTH]];
     updateDockItems(true,true,"%");
-    g_liveHintUpdate++;
+    pc.configInt[LIVE_HINT_UPDATE]++;
 
     return success;
-}
-
-void findAndReplace(std::string& str, const std::string& oldStr, const std::string& newStr)
-{
-  size_t pos = 0;
-  while((pos = str.find(oldStr, pos)) != std::string::npos)
-  {
-     str.replace(pos, oldStr.length(), newStr);
-     pos += newStr.length();
-  }
-}
-
-char* cleanupString(char *str, char key)
-{
-    //TODO:can be generalized to findAndReplace?
-    if (str==NULL) return NULL;
-
-    char *from, *to;
-    from=to=str;
-
-    while ((*from != key) && (*to++=*from),*from++);
-    return str;
-}
-
-void convertToWideChar(char* orig, wchar_t **wideChar)
-{
-    if (orig == NULL)
-    {
-        *wideChar = NULL;
-    } else
-    {
-        size_t origsize = strlen(orig) + 1;
-        size_t convertedChars = 0;
-        *wideChar = new wchar_t[origsize*4+1];
-        mbstowcs_s(&convertedChars, *wideChar, origsize, orig, _TRUNCATE);
-    }
 }
 
 //TODO: importsnippet and savesnippets need refactoring sooooo badly
@@ -3699,7 +3433,8 @@ void importSnippets()
     if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
     {
         //TODO: prompt for closing tab instead of just warning
-        ::MessageBox(nppData._nppHandle, TEXT("Please close all the snippet editing tabs (SnippetEditor.ftb) before importing any snippet pack."), NPP_PLUGIN_NAME, MB_OK);
+        showMessageBox(TEXT("Please close all the snippet editing tabs (SnippetEditor.ftb) before importing any snippet pack."));
+        //::MessageBox(nppData._nppHandle, TEXT("Please close all the snippet editing tabs (SnippetEditor.ftb) before importing any snippet pack."), TEXT(PLUGIN_NAME), MB_OK);
         return;
     }
 
@@ -3709,7 +3444,7 @@ void importSnippets()
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
     }   
 
-    g_liveHintUpdate--;
+    pc.configInt[LIVE_HINT_UPDATE]--;
     
     OPENFILENAME ofn;
     char fileName[MAX_PATH] = "";
@@ -3729,19 +3464,21 @@ void importSnippets()
         //int conflictOverwrite = IDNO;
         //if (g_importOverWriteOption==1)
         //{
-        //   conflictOverwrite = ::MessageBox(nppData._nppHandle, TEXT("Do you want to overwrite the database when the imported snippets has conflicts with existing snippets? Press Yes if you want to overwrite, No if you want to keep both versions."), NPP_PLUGIN_NAME, MB_YESNO);
+        //   conflictOverwrite = ::MessageBox(nppData._nppHandle, TEXT("Do you want to overwrite the database when the imported snippets has conflicts with existing snippets? Press Yes if you want to overwrite, No if you want to keep both versions."), TEXT(PLUGIN_NAME), MB_YESNO);
         //}
         int conflictKeepCopy = IDNO;
-        conflictKeepCopy = ::MessageBox(nppData._nppHandle, TEXT("Do you want to keep both versions if the imported snippets are conflicting with existing one?\r\n\r\nYes - Keep both versions\r\nNo - Overwrite existing version\r\nCancel - Stop importing"), NPP_PLUGIN_NAME, MB_YESNOCANCEL);
+        conflictKeepCopy = showMessageBox(TEXT("Do you want to keep both versions if the imported snippets are conflicting with existing one?\r\n\r\nYes - Keep both versions\r\nNo - Overwrite existing version\r\nCancel - Stop importing"),MB_YESNOCANCEL);
+        //conflictKeepCopy = ::MessageBox(nppData._nppHandle, TEXT("Do you want to keep both versions if the imported snippets are conflicting with existing one?\r\n\r\nYes - Keep both versions\r\nNo - Overwrite existing version\r\nCancel - Stop importing"), TEXT(PLUGIN_NAME), MB_YESNOCANCEL);
 
         if (conflictKeepCopy == IDCANCEL)
         {
-            ::MessageBox(nppData._nppHandle, TEXT("Snippet importing aborted."), NPP_PLUGIN_NAME, MB_OK);
+            showMessageBox(TEXT("Snippet importing aborted."));
+            //::MessageBox(nppData._nppHandle, TEXT("Snippet importing aborted."), TEXT(PLUGIN_NAME), MB_OK);
             return;
         }
 
 
-        //::MessageBox(nppData._nppHandle, (LPCWSTR)fileName, NPP_PLUGIN_NAME, MB_OK);
+        //::MessageBox(nppData._nppHandle, (LPCWSTR)fileName, TEXT(PLUGIN_NAME), MB_OK);
         std::ifstream file;
         //file.open((LPCWSTR)fileName, std::ios::binary | std::ios::in);     //TODO: verified why this doesn't work. Specifying the binary thing will cause redundant copy keeping when importing
         file.open((LPCWSTR)fileName); // TODO: This part may cause problem in chinese file names
@@ -3829,8 +3566,8 @@ void importSnippets()
                         //snippetTextOldCleaned = new char[strlen(snippetTextOld)];
                         //ZeroMemory(snippetTextOldCleaned,sizeof(snippetTextOldCleaned));
                         
-                        //snippetTextOldCleaned = cleanupString(snippetTextOld,'\r');
-                        snippetTextOld = cleanupString(snippetTextOld,'\r');
+                        //snippetTextOldCleaned = quickStrip(snippetTextOld,'\r');
+                        snippetTextOld = quickStrip(snippetTextOld,'\r');
 
                         //if (strlen(snippetTextNew) == strlen(snippetText)) alert();
                         //if (strcmp(snippetText,snippetTextOldCleaned) == 0)
@@ -3845,7 +3582,7 @@ void importSnippets()
                         //    sqlite3_finalize(stmt);
                             if (conflictKeepCopy==IDNO)
                             {
-                                if (g_importOverWriteConfirm == 1)
+                                if (pc.configInt[IMPORT_OVERWRITE_CONFIRM] == 1)
                                 {
                                     // TODO: may be moving the message to earlier location so that the text editor will be showing the message that is about to be overwriting into the database
                                     // TODO: try showing the conflict message on the editor
@@ -3862,14 +3599,15 @@ void importSnippets()
                                     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"---------- [ Pending Imports ] ---------\r\n");
                                     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"----------------------------------------\r\n");
                         
-                                    int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("A snippet already exists, overwrite?"), NPP_PLUGIN_NAME, MB_YESNO);
+                                    int messageReturn = showMessageBox(TEXT("A snippet already exists, overwrite?"),MB_YESNO);
+                                    //int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("A snippet already exists, overwrite?"), TEXT(PLUGIN_NAME), MB_YESNO);
                                     if (messageReturn==IDNO)
                                     {
                                         //delete [] tagText;
                                         //delete [] tagTypeText;
                                         //delete [] snippetText;
                                         // not overwrite
-                                        //::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), NPP_PLUGIN_NAME, MB_OK);
+                                        //::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), TEXT(PLUGIN_NAME), MB_OK);
                                         notOverWrite = true;
                                     } else
                                     {
@@ -3881,7 +3619,8 @@ void importSnippets()
                                             sqlite3_step(stmt);
                                         } else
                                         {
-                                            ::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), NPP_PLUGIN_NAME, MB_OK);
+                                            showMessageBox(TEXT("Cannot write into database."));
+                                            //::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT(PLUGIN_NAME), MB_OK);
                                         }
                         
                                     }
@@ -3899,7 +3638,8 @@ void importSnippets()
                                         sqlite3_step(stmt);
                                     } else
                                     {
-                                        ::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), NPP_PLUGIN_NAME, MB_OK);
+                                        showMessageBox(TEXT("Cannot write into database."));
+                                        //::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT(PLUGIN_NAME), MB_OK);
                                     }
                                 }
                             } else
@@ -3973,7 +3713,7 @@ void importSnippets()
             
                     // Run the query with sqlite3_step
                     sqlite3_step(stmt); // SQLITE_ROW 100 sqlite3_step() has another row ready
-                    //::MessageBox(nppData._nppHandle, TEXT("The Snippet is saved."), NPP_PLUGIN_NAME, MB_OK);
+                    //::MessageBox(nppData._nppHandle, TEXT("The Snippet is saved."), TEXT(PLUGIN_NAME), MB_OK);
                 }
                 sqlite3_finalize(stmt);
                 //delete [] tagText;
@@ -4008,8 +3748,9 @@ void importSnippets()
                 //TODO: more detail messages and count the number of conflict or problematic snippets
                 wcscat_s(importCountText,TEXT("\r\n\r\nThere are some conflicts between the imported and existing snippets. You may go to the snippet editor to clean them up."));
             }
-            //::MessageBox(nppData._nppHandle, TEXT("Complete importing snippets"), NPP_PLUGIN_NAME, MB_OK);
-            ::MessageBox(nppData._nppHandle, importCountText, NPP_PLUGIN_NAME, MB_OK);
+            //::MessageBox(nppData._nppHandle, TEXT("Complete importing snippets"), TEXT(PLUGIN_NAME), MB_OK);
+            showMessageBox(importCountText);
+            //::MessageBox(nppData._nppHandle, importCountText, TEXT(PLUGIN_NAME), MB_OK);
             
             ::SendScintilla(SCI_SETSAVEPOINT,0,0);
             ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
@@ -4019,7 +3760,7 @@ void importSnippets()
         }
         //delete [] fileText;
     }
-    g_liveHintUpdate++;
+    pc.configInt[LIVE_HINT_UPDATE]++;
 
 }
 
@@ -4035,7 +3776,8 @@ int promptSaveSnippet(TCHAR* message)
             saveSnippet();
         } else if (::SendScintilla(SCI_GETMODIFY,0,0)!=0)
         {
-            messageReturn=::MessageBox(nppData._nppHandle, message, NPP_PLUGIN_NAME, MB_YESNO);
+            messageReturn = showMessageBox(message,MB_YESNO);
+            //messageReturn=::MessageBox(nppData._nppHandle, message, TEXT(PLUGIN_NAME), MB_YESNO);
             if (messageReturn==IDYES)
             {
                 saveSnippet();
@@ -4056,61 +3798,6 @@ void updateLineCount(int count)
     }
 }
 
-void updateScintilla()
-{
-    HWND curScintilla = getCurrentScintilla();
-    pSciMsg = (SciFnDirect)SendMessage(curScintilla,SCI_GETDIRECTFUNCTION, 0, 0);
-    pSciWndData = (sptr_t)SendMessage(curScintilla,SCI_GETDIRECTPOINTER, 0, 0);
-}
-
-
-unsigned int sciGetText(char **text, int start, int end)
-{
-    if (start == -1)
-    {
-        start = SendScintilla(SCI_GETSELECTIONSTART, 0, 0);
-        end = SendScintilla(SCI_GETSELECTIONEND, 0, 0);
-    }
-
-    *text = (LPSTR)new char[end - start + 1];
-
-    if (end > start)
-    {
-
-        TextRange tr;
-        tr.chrg.cpMin = start;
-        tr.chrg.cpMax = end;
-        tr.lpstrText  = *text;
-        return (int)SendScintilla(SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&tr));
-    } else
-    {
-        strcpy(*text,"");
-        return 0;
-    }
-}
-
-
-//unsigned int sciGetText(HWND hwnd, char **text, int start, int end)
-//{
-//    *text = (LPSTR)new char[end - start + 1];
-//    TextRange tr;
-//    tr.chrg.cpMin = start;
-//    tr.chrg.cpMax = end;
-//    tr.lpstrText  = *text;
-//    if (end > start)
-//    {
-//        return  (int)::SendMessage(hwnd, SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&tr));
-//    } else
-//    {
-//        strcpy(*text,"");
-//        return 0;
-//    }
-//
-//    // With this implementation we can specify the handle of the text to cut, for example,
-//    //ScintillaGetText(nppData._scintillaMainHandle, buffer, start, end);
-//    //ScintillaGetText(nppData._scintillaSecondHandle, buffer, start, end);
-//}
-//
 
 void updateMode()
 {
@@ -4140,118 +3827,19 @@ void updateMode()
     }
 }
 
-void settings()
+void showSettings()
 {
-    // TODO: try putting settings into the ini files instead of just using annotation
-    if (::MessageBox(nppData._nppHandle, TEXT("Change the settings only when you know what you are doing. Messing up the ini can cause FingerText to stop working.\r\n\r\n Do you wish to continue?"), NPP_PLUGIN_NAME, MB_YESNO) == IDYES)
-    {
-        writeConfig();
-
-        if (!::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_iniPath))
-        {
-            ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_iniPath);
-        }
-        //HWND curScintilla = getCurrentScintilla();
-        int lineCount = ::SendScintilla(SCI_GETLINECOUNT, 0, 0)-1;
-        ::SendScintilla(SCI_ANNOTATIONCLEARALL, 0, 0);
-        //TODO: move this part (and other text) to const char in another file.
-        ::SendScintilla(SCI_ANNOTATIONSETTEXT, lineCount, (LPARAM)"\
- ; \r\n\
- ; This is the config file of FingerText.    \r\n\
- ; Do NOT mess up with the settings unless you know what you are doing \r\n\
- ; You need to restart Notepad++ to apply the changes\r\n\
- ; \r\n\
- ; \r\n\
- ; version                    --  Don't change this\r\n\
- ; snippet_list_order_tagtype --            0: The SnippetDock will order the snippets by trigger text\r\n\
- ;                                (default) 1: The SnippetDock will order the snippets by scope\r\n\
- ; indent_reference           --            0: The snippnet content will be inserted without any change in\r\n\
- ;                                             indentation\r\n\
- ;                                (default) 1: The snippnet content will be inserted at the same indentation\r\n\
- ;                                             level as the trigger text\r\n\
- ; chain_limit                --  This is the maximum number dynamic hotspots that can be triggered in one \r\n\
- ;                                snippet. Default is 20\r\n\
- ; snippet_list_length        --  The maximum number of items that can be displayed in the SnippetDock. Default\r\n\
- ;                                is 100 \r\n\
- ; tab_tag_completion         --  (default) 0: When a snippet is not found when the user hit [tab] key, FingerText\r\n\
- ;                                             will just send a tab\r\n\
- ;                                          1: When a snippet is not found when the user hit [tab] key, FingerText\r\n\
- ;                                             will try to find the closest match snippet name\r\n\
- ; live_hint_update           --            0: Turn off SnippetDock live update\r\n\
- ;                                (default) 1: Turn on SnippetDock live update\r\n\
- ; preserve_steps             --  Default is 0 and don't change it. It's for debugging purpose\r\n\
- ; escape_char_level          --  This entry is not in use anymore. Please use the 'escape_char' instead.\r\n\
- ; import_overwrite_confirm   --  (default) 0: A pop up confirmation message box everytime you overwrite a snippet.\r\n\
- ;                                          1: No confirmation message box when you overwrite a snippet.\r\n\
- ; import_overwrite_option    --  This entry is not in use anymore. \r\n\
- ; inclusive_triggertext_completion --            0: Tiggertext completion will only include triggertext which starts\r\n\
- ;                                                   with the characters you are typing.\r\n\
- ;                                      (default) 1: Tiggertext completion will only include triggertext which\r\n\
- ;                                                   includes the characters you are typing.\r\n\
- ; custom_scope               --  A user defined custom scope. For example if you put .rb here, you can use all the\r\n\
- ;                                .rb snippets in any files.\r\n\
- ; escape_char                --  Any text entered after this character will not be view as snippet. For example\r\n\
- ;                                if put <> here then you cannot trigger the snippet 'npp' by typing either '<npp'\r\n\
- ;                                or '>npp' and hit tab\r\n\
- ; live_preview_box           --            0: Turn off preview box live update\r\n\
- ;                                (default) 1: Turn on preview box live update\r\n\
- ; editor_caret_bound         --            0: Fingertext will not restrict caret movement in snippet editing mode.\r\n\
- ;                                             Do not set this to 0 unless you are very sure that you won't mess up\r\n\
- ;                                             the snippet editor format.\r\n\
- ;                            --  (default) 1: Fingertext will restrict caret movement in snippet editing mode.\r\n\
- ; force_multipaste           --            0: Use notepad++ settings to determine whether you can paste text into\r\n\
- ;                                             multiple hotspots simultaneously.\r\n\
- ;                            --  (default) 1: Force notepad++ to turn on multipasting feature.\r\n\
-        ");
-        ::SendScintilla(SCI_ANNOTATIONSETSTYLE, lineCount, STYLE_INDENTGUIDE);
-        ::SendScintilla(SCI_ANNOTATIONSETVISIBLE, lineCount, 0);
-    }
+    pc.settings();
 }
 
 void showHelp()
 {
-  TCHAR* helpText = TEXT("\
-FingerText Quick Guide:\r\n\r\n\
-Insert Snippet --- Type in TriggerText and Hit the tab key\r\n\
-Navigate to next Hotspot --- Hit the tab key\r\n\
-Show SnippetDock --- Menu>Plugins>FingerText>Toggle On/Off SnippetDock\r\n\
-AutoComplete TriggerText --- Menu>Plugins>FingerText>TriggerText Completion\r\n\
-Goto Snippet Editor --- Double click a snippet in the SnippetDock\r\n\
-Create New Snippet --- Click Create button on the SnippetDock\r\n\
-Create snippet from selection -- Select some text and click create button\r\n\
-Save Snippet --- In the Snippet Editor View, Click Save Button or Ctrl+S\r\n\
-Delete Snippet --- Select a snippet on SnippetDock and Click Delete Button\r\n\
-Export Snippets --- Menu>Plugins>FingerText>Export Snippets\r\n\
-Delete All Snippets --- Menu>Plugins>FingerText>Export and Delete All Snippets\r\n\
-Import Snippets --- Menu>Plugins>FingerText>Import Snippets\r\n\
-About FingerText --- Menu>Plugins>FingerText>About\r\n\r\n\
-For step by step usage guide, please visit http://github.com/erinata/FingerText \
-");
-
-    ::MessageBox(nppData._nppHandle, helpText, NPP_PLUGIN_NAME, MB_OK);
-     //ShellExecute(NULL, TEXT("open"), TEXT("https://github.com/erinata/FingerText"), NULL, NULL, SW_SHOWNORMAL);
+    pc.help();
 }
 
 void showAbout()
 {
-    TCHAR versionText[1000];
-    _tcscpy_s(versionText,TEXT(""));
-    _tcscat_s(versionText, NPP_PLUGIN_NAME);
-    _tcscat_s(versionText, TEXT(" "));
-    _tcscat_s(versionText, TEXT(VERSION_TEXT));
-    _tcscat_s(versionText, TEXT(VERSION_TEXT_STAGE));
-    _tcscat_s(versionText,TEXT("\r\n"));
-    _tcscat_s(versionText,TEXT(DATE_TEXT));
-
-    _tcscat_s(versionText,TEXT("\r\n\r\n"));
-    _tcscat_s(versionText,TEXT(AUTHOR_TEXT));
-    _tcscat_s(versionText,TEXT(EMAIL_TEXT));
-
-    _tcscat_s(versionText,TEXT("\r\n"));
-
-    _tcscat_s(versionText,TEXT(ABOUT_TEXT));
-
-    ::MessageBox(nppData._nppHandle, versionText, NPP_PLUGIN_NAME, MB_OK);
+    pc.about();
 }
 
 void refreshAnnotation()
@@ -4384,8 +3972,7 @@ void optionNavigate(bool toNext)
     
     ::SendScintilla(SCI_SETSELECTION,g_optionStartPosition,g_optionEndPosition);
     updateOptionCurrent(toNext);
-    char* option;
-    stringToCharArray(g_optionArray[g_optionCurrent],&option);
+    char* option = toCharArray(g_optionArray[g_optionCurrent]);
     ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)option);
     delete [] option;
     ::SendScintilla(SCI_GOTOPOS,g_optionStartPosition,0);
@@ -4441,7 +4028,7 @@ void selectionMonitor(int contentChange)
                 //    g_optionMode = false;
                 //}
             }
-        } else if (g_editorCaretBound == 1)
+        } else if (pc.configInt[EDITOR_CARET_BOUND] == 1)
         {
             int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
             int lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION,posCurrent,0);
@@ -4469,13 +4056,15 @@ void selectionMonitor(int contentChange)
                     
                 } else if (::SendScintilla(SCI_LINELENGTH,1,0)>=41)
                 {
-                    ::MessageBox(nppData._nppHandle, TEXT("The TriggerText length limit is 40 characters."), NPP_PLUGIN_NAME, MB_OK);
+                    showMessageBox(TEXT("The TriggerText length limit is 40 characters."));
+                    //::MessageBox(nppData._nppHandle, TEXT("The TriggerText length limit is 40 characters."), TEXT(PLUGIN_NAME), MB_OK);
                     ::SendScintilla(SCI_UNDO,0,0);
                     updateLineCount();
                 
                 } else if (::SendScintilla(SCI_LINELENGTH,2,0)>=251)
                 {
-                    ::MessageBox(nppData._nppHandle, TEXT("The Scope length limit is 250 characters."), NPP_PLUGIN_NAME, MB_OK);
+                    showMessageBox(TEXT("The Scope length limit is 250 characters."));
+                    //::MessageBox(nppData._nppHandle, TEXT("The Scope length limit is 250 characters."), TEXT(PLUGIN_NAME), MB_OK);
                     ::SendScintilla(SCI_UNDO,0,0);
                     updateLineCount();
                 } 
@@ -4572,21 +4161,21 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
         fileType = new TCHAR[MAX_PATH];
 
         // Check for custom scope
-        convertToUTF8(g_customScope, &tagType);
+        tagType = toCharArray(pc.configText[CUSTOM_SCOPE]);
         expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
         
         // Check for snippets which matches ext part
         if (!expanded)
         {
             ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-            convertToUTF8(fileType, &tagType);
+            tagType = toCharArray(fileType);
             expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
             
             // Check for snippets which matches name part
             if (!expanded)
             {
                 ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-                convertToUTF8(fileType, &tagType);
+                tagType = toCharArray(fileType);
                 expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
                 // Check for language specific snippets
                 if (!expanded)
@@ -4686,8 +4275,8 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
                 char* paramsContent;
                 sciGetText(&paramsContent,paramStart+1,paramEnd-1);
 
-                char paramsDelimiter = g_paramsDelimiter[0];
-                g_hotspotParams = split(paramsContent,paramsDelimiter);
+                char paramsDelimiter = pc.configText[PARAMS_DELIMITER][0];
+                g_hotspotParams = toVectorString(paramsContent,paramsDelimiter);
                 ::SendScintilla(SCI_SETSELECTION,paramStart,paramEnd);
                 ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
                 delete [] paramsContent;
@@ -4802,7 +4391,7 @@ void searchWindowByName(std::string searchKey, HWND parentWindow)
     {
         char* temp = new char [searchKey.size()+1];
         strcpy(temp, searchKey.c_str());
-        convertToWideChar(temp, &g_tempWindowKey);
+        g_tempWindowKey = toWideChar(temp);
         
         if (parentWindow != 0)
         {
@@ -4844,6 +4433,181 @@ char* getLangTagType()
     return s[curLang];
     //return "";
 }
+
+
+
+void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* pathWide)
+{
+    //TODO: should change the mouse cursor to waiting
+    //TODO: should report error as a return value   
+    DWORD dwSize = 0;
+    DWORD dwDownloaded = 0;
+    LPSTR pszOutBuffer;
+    std::vector <std::string> vFileContent;
+    BOOL  bResults = false;
+    HINTERNET  hSession = NULL, 
+               hConnect = NULL,
+               hRequest = NULL;
+    
+    // Use WinHttpOpen to obtain a session handle.
+    hSession = WinHttpOpen( L"WinHTTP",  
+                            WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+                            WINHTTP_NO_PROXY_NAME, 
+                            WINHTTP_NO_PROXY_BYPASS, 0);
+
+    // Specify an HTTP server.
+    if (hSession)
+        hConnect = WinHttpConnect( hSession, server,
+                                   INTERNET_DEFAULT_HTTP_PORT, 0);
+    
+    // Create an HTTP request handle.
+    if (hConnect)
+        hRequest = WinHttpOpenRequest( hConnect, requestType, request,
+                                       NULL, WINHTTP_NO_REFERER, NULL, 
+                                       NULL);
+    
+    // Send a request.
+    if (hRequest)
+        bResults = WinHttpSendRequest( hRequest,
+                                       WINHTTP_NO_ADDITIONAL_HEADERS,
+                                       0, WINHTTP_NO_REQUEST_DATA, 0, 
+                                       0, 0);
+
+    // End the request.
+    if (bResults) bResults = WinHttpReceiveResponse( hRequest, NULL);
+
+    char* path;
+    FILE * pFile;
+    //TODO: move this default value part to the snippet triggering function
+    if (_tcslen(pathWide) <= 0)
+    {
+        
+        path = toCharArray(g_fttempPath);
+    } else
+    {
+        path = toCharArray(pathWide);
+    }
+    pFile = fopen(path, "w+b"); 
+        
+    if (bResults)
+    {
+        do 
+        {
+            // Check for available data.
+            dwSize = 0;
+            if (!WinHttpQueryDataAvailable( hRequest, &dwSize))
+            {
+                showMessageBox(TEXT("Error in WinHttpQueryDataAvailable."));
+            }
+    
+            // Allocate space for the buffer.
+            pszOutBuffer = new char[dwSize+1];
+    
+            if (!pszOutBuffer)
+            {
+                showMessageBox(TEXT("Out of memory."));
+                dwSize=0;
+            } else
+            {
+                // Read the Data.
+                ZeroMemory(pszOutBuffer, dwSize+1);
+    
+                if (!WinHttpReadData( hRequest, (LPVOID)pszOutBuffer, dwSize, &dwDownloaded))
+                {
+                    showMessageBox(TEXT("Error in WinHttpReadData."));
+                } else
+                {
+                    fwrite(pszOutBuffer, (size_t)dwDownloaded, (size_t)1, pFile);
+                }
+    
+                // Free the memory allocated to the buffer.
+                delete [] pszOutBuffer;
+            }
+        } while (dwSize>0);
+    }
+    fclose (pFile);
+
+    delete [] path;
+
+    // Report any errors.
+    if (!bResults) showMessageBox(TEXT("Error has occurred."));
+    // Close any open handles.
+    if (hRequest) WinHttpCloseHandle(hRequest);
+    if (hConnect) WinHttpCloseHandle(hConnect);
+    if (hSession) WinHttpCloseHandle(hSession);
+}
+
+
+
+std::vector<std::string> smartSplit(int start, int end, char delimiter, int parts)
+{
+    char filler;
+    if (delimiter!=0)
+    {
+        filler = '1';
+    } else 
+    {
+        filler = '0';
+    }
+
+    std::vector<std::string> retVal;
+    std::vector<int> positions;
+    char* partToSplit;
+    sciGetText(&partToSplit, start, end);
+    int signSpot; 
+    int tailSpot;
+    char* tagSignGet;
+    char* tagTailGet;
+    
+    SendScintilla(SCI_GOTOPOS,start,0);
+    do
+    {
+        signSpot = searchNext("\\$\\[.\\[",true);
+        if ((signSpot>=start) && (signSpot < end))
+        {
+            
+            sciGetText(&tagSignGet);
+            tagTailGet = new char[4];
+            strcpy(tagTailGet,"]!]");
+            tagTailGet[1] = tagSignGet[2];
+            SendScintilla(SCI_GOTOPOS,signSpot+1,0);
+            //searchNextMatchedTail(tagSignGet,tagTailGet);
+            //tailSpot = SendScintilla(SCI_GETCURRENTPOS,0,0);
+            tailSpot = searchNextMatchedTail(tagSignGet,tagTailGet);
+            if (tailSpot <= end && tailSpot> start)
+            {
+                for (int i = signSpot - start; i<tailSpot-start;i++) partToSplit[i] = filler;
+            }
+            delete [] tagSignGet;
+            delete [] tagTailGet;
+        }
+    } while ((signSpot < end) && (signSpot > start));
+
+    //alert(partToSplit);
+    
+    retVal = toVectorString(partToSplit,delimiter,parts);
+    
+    int i = 0;
+    for (i = 0; i<retVal.size();i++)
+    {
+        positions.push_back(retVal[i].length());
+    }
+
+    int caret = start;
+    char* tempString;
+    for (i = 0; i<positions.size();i++)
+    {
+        //alertNumber(positions[i]);
+        sciGetText(&tempString, caret, caret + positions[i]);
+        retVal[i] = toString(tempString);
+        delete [] tempString;
+        caret += positions[i]+1;
+    }
+    delete [] partToSplit;
+    return retVal;
+}
+
+
 
 void tabActivate()
 {
@@ -4902,13 +4666,13 @@ void tabActivate()
         //{
             g_hotspotParams.clear();
             
-            g_liveHintUpdate--;
+            pc.configInt[LIVE_HINT_UPDATE]--;
             g_selectionMonitor--;
             
             int posSelectionStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
             int posSelectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
 
-            if (g_preserveSteps==0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
+            if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
             bool tagFound = false;
             if (posSelectionStart==posSelectionEnd)
             {
@@ -5023,7 +4787,7 @@ void tabActivate()
                 //TODO: this line is position here so the priority spot can be implement, but this cause the 
                 //      1st hotspot not undoable when the snippet is triggered. More investigation on how to
                 //      manipulate the undo list is required to make these 2 features compatible
-                if (g_preserveSteps==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
+                if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
 
                 if (navSpot != 3)
                 {
@@ -5032,13 +4796,13 @@ void tabActivate()
                 //}
             } else
             {
-                if (g_preserveSteps==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
+                if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
             }
 
             bool snippetHint = false;
 
             bool completeFound = false;
-            if (g_tabTagCompletion == 1)
+            if (pc.configInt[TAB_TAG_COMPLETION] == 1)
             {
                 if ((navSpot == 0) && (tagFound == false) && (dynamicSpot==false)) 
 	    	    {
@@ -5065,11 +4829,15 @@ void tabActivate()
                     snippetHint = true;
                 } else
                 {
+                    //g_tempWindowHandle = (HWND)::SendMessage(nppData._nppHandle,NPPM_DMMGETPLUGINHWNDBYNAME ,(WPARAM)TEXT("SherloXplorer"),(LPARAM)TEXT("SherloXplorer.dll"));
+                    //setFocusToWindow();
+                    //generateKey(toVk("TAB"),true);
+                    //generateKey(toVk("TAB"),false);
                     restoreTab(posCurrent, posSelectionStart, posSelectionEnd);
                 }
             }
 
-            g_liveHintUpdate++;
+            pc.configInt[LIVE_HINT_UPDATE]++;
             if (snippetHint) snippetHintUpdate();
             g_selectionMonitor++;
         //}
@@ -5077,331 +4845,68 @@ void tabActivate()
     }
 }
 
-//void Thread( void* pParams )
-//{ 
-//    system("npp -multiInst");
-//    
-//}
 
-int toVk(char* input)
-{
-    if (strlen(input) == 1)
+
+void testThread( void* pParams )
+{ 
+    //system("npp -multiInst");
+    for (int i = 0; i<10;i++)
     {
-        char i = toupper(input[0]);
-        return (int)i;
+        SendScintilla(SCI_REPLACESEL,0,(LPARAM)"ABC");
+        Sleep(1000);
     }
-    //TODO: cater lower case for other keywords
-
-    if (strcmp(input,"BACK") == 0) return 0x08;
-    else if (strcmp(input,"TAB") == 0) return 0x09;
-    else if (strcmp(input,"CLEAR") == 0) return 0x0C;
-    else if (strcmp(input,"RETURN") == 0) return 0x0D;
-    else if (strcmp(input,"SHIFT") == 0) return 0x10;
-    else if (strcmp(input,"CONTROL") == 0) return 0x11;
-    else if (strcmp(input,"MENU") == 0) return 0x12;
-    else if (strcmp(input,"PAUSE") == 0) return 0x13;
-    else if (strcmp(input,"CAPITAL") == 0) return 0x14;
-    else if (strcmp(input,"ESCAPE") == 0) return 0x1B;
-    else if (strcmp(input,"SPACE") == 0) return 0x20;
-    else if (strcmp(input,"PRIOR") == 0) return 0x21;
-    else if (strcmp(input,"NEXT") == 0) return 0x22;
-    else if (strcmp(input,"END") == 0) return 0x23;
-    else if (strcmp(input,"HOME") == 0) return 0x24;
-    else if (strcmp(input,"LEFT") == 0) return 0x25;
-    else if (strcmp(input,"UP") == 0) return 0x26;
-    else if (strcmp(input,"RIGHT") == 0) return 0x27;
-    else if (strcmp(input,"DOWN") == 0) return 0x28;
-    else if (strcmp(input,"SELECT") == 0) return 0x29;
-    else if (strcmp(input,"EXECUTE") == 0) return 0x2B;
-    else if (strcmp(input,"SNAPSHOT") == 0) return 0x2C;
-    else if (strcmp(input,"INSERT") == 0) return 0x2D;
-    else if (strcmp(input,"DELETE") == 0) return 0x2E;
-    else if (strcmp(input,"HELP") == 0) return 0x2F;
-    else if (strcmp(input,"LWIN") == 0) return 0x5B;
-    else if (strcmp(input,"RWIN") == 0) return 0x5C;
-    else if (strcmp(input,"APPS") == 0) return 0x5D;
-    else if (strcmp(input,"NUMPAD0") == 0) return 0x60;
-    else if (strcmp(input,"NUMPAD1") == 0) return 0x61;
-    else if (strcmp(input,"NUMPAD2") == 0) return 0x62;
-    else if (strcmp(input,"NUMPAD3") == 0) return 0x63;
-    else if (strcmp(input,"NUMPAD4") == 0) return 0x64;
-    else if (strcmp(input,"NUMPAD5") == 0) return 0x65;
-    else if (strcmp(input,"NUMPAD6") == 0) return 0x66;
-    else if (strcmp(input,"NUMPAD7") == 0) return 0x67;
-    else if (strcmp(input,"NUMPAD8") == 0) return 0x68;
-    else if (strcmp(input,"NUMPAD9") == 0) return 0x69;
-    else if (strcmp(input,"MULTIPLY") == 0) return 0x6A;
-    else if (strcmp(input,"ADD") == 0) return 0x6B;
-    else if (strcmp(input,"SEPARATOR") == 0) return 0x6C;
-    else if (strcmp(input,"SUBTRACT") == 0) return 0x6D;
-    else if (strcmp(input,"DECIMAL") == 0) return 0x6E;
-    else if (strcmp(input,"DIVIDE") == 0) return 0x6F;
-    else if (strcmp(input,"F1") == 0) return 0x70;
-    else if (strcmp(input,"F2") == 0) return 0x71;
-    else if (strcmp(input,"F3") == 0) return 0x72;
-    else if (strcmp(input,"F4") == 0) return 0x73;
-    else if (strcmp(input,"F5") == 0) return 0x74;
-    else if (strcmp(input,"F6") == 0) return 0x75;
-    else if (strcmp(input,"F7") == 0) return 0x76;
-    else if (strcmp(input,"F8") == 0) return 0x77;
-    else if (strcmp(input,"F9") == 0) return 0x78;
-    else if (strcmp(input,"F10") == 0) return 0x79;
-    else if (strcmp(input,"F11") == 0) return 0x7A;
-    else if (strcmp(input,"F12") == 0) return 0x7B;
-    else if (strcmp(input,"F13") == 0) return 0x7C;
-    else if (strcmp(input,"F14") == 0) return 0x7D;
-    else if (strcmp(input,"F15") == 0) return 0x7E;
-    else if (strcmp(input,"F16") == 0) return 0x7F;
-    else if (strcmp(input,"F17") == 0) return 0x80;
-    else if (strcmp(input,"F18") == 0) return 0x81;
-    else if (strcmp(input,"F19") == 0) return 0x82;
-    else if (strcmp(input,"F20") == 0) return 0x83;
-    else if (strcmp(input,"F21") == 0) return 0x84;
-    else if (strcmp(input,"F22") == 0) return 0x85;
-    else if (strcmp(input,"F23") == 0) return 0x86;
-    else if (strcmp(input,"F24") == 0) return 0x87;
-    else if (strcmp(input,"NUMLOCK") == 0) return 0x90;
-    else if (strcmp(input,"SCROLL") == 0) return 0x91;
-    else if (strcmp(input,"LSHIFT") == 0) return 0xA0;
-    else if (strcmp(input,"RSHIFT") == 0) return 0xA1;
-    else if (strcmp(input,"LCONTROL") == 0) return 0xA2;
-    else if (strcmp(input,"RCONTROL") == 0) return 0xA3;
-    else if (strcmp(input,"LMENU") == 0) return 0xA4;
-    else if (strcmp(input,"RMENU") == 0) return 0xA5;
-    else return 0;
-    //TODO: complete this list
-
+    
 }
-
-void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* pathWide)
-{
-    //TODO: should report error as a return value   
-    DWORD dwSize = 0;
-    DWORD dwDownloaded = 0;
-    LPSTR pszOutBuffer;
-    std::vector <std::string> vFileContent;
-    BOOL  bResults = false;
-    HINTERNET  hSession = NULL, 
-               hConnect = NULL,
-               hRequest = NULL;
-    
-    // Use WinHttpOpen to obtain a session handle.
-    hSession = WinHttpOpen( L"WinHTTP",  
-                            WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
-                            WINHTTP_NO_PROXY_NAME, 
-                            WINHTTP_NO_PROXY_BYPASS, 0);
-
-    // Specify an HTTP server.
-    if (hSession)
-        hConnect = WinHttpConnect( hSession, server,
-                                   INTERNET_DEFAULT_HTTP_PORT, 0);
-    
-    // Create an HTTP request handle.
-    if (hConnect)
-        hRequest = WinHttpOpenRequest( hConnect, requestType, request,
-                                       NULL, WINHTTP_NO_REFERER, NULL, 
-                                       NULL);
-    
-    // Send a request.
-    if (hRequest)
-        bResults = WinHttpSendRequest( hRequest,
-                                       WINHTTP_NO_ADDITIONAL_HEADERS,
-                                       0, WINHTTP_NO_REQUEST_DATA, 0, 
-                                       0, 0);
-
-    // End the request.
-    if (bResults) bResults = WinHttpReceiveResponse( hRequest, NULL);
-
-    char* path;
-    FILE * pFile;
-    //TODO: move this default value part to the snippet triggering function
-    if (_tcslen(pathWide) <= 0)
-    {
-        path = new char[_tcslen(g_fttempPath)];
-        convertToUTF8(g_fttempPath, &path);
-    } else
-    {
-        path = new char[_tcslen(pathWide)];
-        convertToUTF8(pathWide, &path);
-    }
-    pFile = fopen(path, "w+b"); 
-        
-    if (bResults)
-    {
-        do 
-        {
-            // Check for available data.
-            dwSize = 0;
-            if (!WinHttpQueryDataAvailable( hRequest, &dwSize))
-            {
-                alertCharArray( "Error in WinHttpQueryDataAvailable.");
-            }
-    
-            // Allocate space for the buffer.
-            pszOutBuffer = new char[dwSize+1];
-    
-            if (!pszOutBuffer)
-            {
-                alertCharArray("Out of memory.");
-                dwSize=0;
-            } else
-            {
-                // Read the Data.
-                ZeroMemory(pszOutBuffer, dwSize+1);
-    
-                if (!WinHttpReadData( hRequest, (LPVOID)pszOutBuffer, dwSize, &dwDownloaded))
-                {
-                    alertCharArray("Error in WinHttpReadData.");
-                } else
-                {
-                    fwrite(pszOutBuffer, (size_t)dwDownloaded, (size_t)1, pFile);
-                }
-    
-                // Free the memory allocated to the buffer.
-                delete [] pszOutBuffer;
-            }
-        } while (dwSize>0);
-    }
-    fclose (pFile);
-
-    delete [] path;
-
-    // Report any errors.
-    if (!bResults) alertCharArray("Error has occurred.");
-    // Close any open handles.
-    if (hRequest) WinHttpCloseHandle(hRequest);
-    if (hConnect) WinHttpCloseHandle(hConnect);
-    if (hSession) WinHttpCloseHandle(hSession);
-}
-
-//void testingSplit()
-//{
-//    char* temp = "foo bar hello world very good";
-//    char* temp2;
-//    std::string result;
-//    
-//    std::vector<std::string> v0;
-//    v0 = split(temp,' ',0);
-//       
-//    for (int i = 0; i < v0.size(); i++)
-//    {
-//        result += v0[i];
-//        result += " | ";
-//    }
-//    
-//    result += "\r\n";
-//    
-//
-//    std::vector<std::string> v1;
-//    v1 = split(temp,' ',1);
-//
-//    for (int i = 0; i < v1.size(); i++)
-//    {
-//        result += v1[i];
-//        result += " | ";
-//    }
-//
-//    result += "\r\n";
-//
-//    std::vector<std::string> v2;
-//    v2 = split(temp,' ',2);
-//
-//    for (int i = 0; i < v2.size(); i++)
-//    {
-//        result += v2[i];
-//        result += " | ";
-//    }
-//
-//    result += "\r\n";
-//
-//    std::vector<std::string> v3;
-//    v3 = split(temp,' ',3);
-//
-//    for (int i = 0; i < v3.size(); i++)
-//    {
-//        result += v3[i];
-//        result += " | ";
-//    }
-//
-//    result += "\r\n";
-//
-//    stringToCharArray(result,&temp2);
-//    SendScintilla(SCI_REPLACESEL,0,(LPARAM)temp2);
-//    SendScintilla(SCI_REPLACESEL,0,(LPARAM)"\r\n\r\nfoo | bar | hello | world | very | good |\r\n\
-//foo bar hello world very good | \r\n\
-//foo | bar hello world very good | \r\n\
-//foo | bar | hello world very good | ");
-//
-//
-//}
-
-//void testingSplit3()
-//{
-//    char* temp = "foo!@#bar!@#hello!@#world!@#very!@#good";
-//    char* temp2;
-//    std::string result;
-//    
-//    std::vector<std::string> v0;
-//    v0 = split3(temp,"!@#",0);
-//       
-//    for (int i = 0; i < v0.size(); i++)
-//    {
-//        result += v0[i];
-//        result += " | ";
-//    }
-//    
-//    result += "\r\n";
-//    
-//
-//    std::vector<std::string> v1;
-//    v1 = split3(temp,"!@#",1);
-//
-//    for (int i = 0; i < v1.size(); i++)
-//    {
-//        result += v1[i];
-//        result += " | ";
-//    }
-//
-//    result += "\r\n";
-//
-//    std::vector<std::string> v2;
-//    v2 = split3(temp,"!@#",2);
-//
-//    for (int i = 0; i < v2.size(); i++)
-//    {
-//        result += v2[i];
-//        result += " | ";
-//    }
-//
-//    result += "\r\n";
-//
-//    std::vector<std::string> v3;
-//    v3 = split3(temp,"!@#",3);
-//
-//    for (int i = 0; i < v3.size(); i++)
-//    {
-//        result += v3[i];
-//        result += " | ";
-//    }
-//
-//    result += "\r\n";
-//
-//    stringToCharArray(result,&temp2);
-//    SendScintilla(SCI_REPLACESEL,0,(LPARAM)temp2);
-//    SendScintilla(SCI_REPLACESEL,0,(LPARAM)"\r\n\r\nfoo | bar | hello | world | very | good |\r\n\
-//foo bar hello world very good | \r\n\
-//foo | bar hello world very good | \r\n\
-//foo | bar | hello world very good | ");
-//
-//
-//}
-
 
 void testing2()
 {
-    //HWND curScintilla = getCurrentScintilla();
-    ::MessageBox(nppData._nppHandle, TEXT("Testing2!"), NPP_PLUGIN_NAME, MB_OK);
+    alert("testing2");
 
+
+}
+
+void testing()
+{
+    alert("testing1");
+
+    alert(pc.configText[2]);
+    alert(pc.configText[1]);
+    alert(pc.configText[CUSTOM_SCOPE]);
+    //// Testing thread
+    //_beginthread( testThread, 0, NULL );
+
+    //// Testing sorting
+    //std::vector<std::string> test = toVectorString("BAR|DOOR|CAT_1|KING|CAT|CUP",'|');
+    //alert(test);
+    //alert(toSortedVectorString(test));
+    //
+
+    //// Testing alert()
+    //alert();
+    //alert(5);
+    //alert(0.375);
+    //alert('I');
+    //alert("Hello");
+    //alert(TEXT("World"));
+    //std::string testing = "FOO";
+    //alert(testing);
+    //std::vector<std::string> testing2 = toVectorString("BAR|DOOR|CAT_1|KING|CAT|CUP",'|');
+    //alert(testing2);
+    //std::vector<int> testing3;
+    //testing3.push_back(3);
+    //testing3.push_back(2);
+    //testing3.push_back(1);
+    //alert(testing3);
+    //alert(nppData._nppHandle);
+    //
+    //
+
+    //// Testing disable item
+    // HMENU hMenu = (HMENU)::SendMessage(nppData._nppHandle, NPPM_GETMENUHANDLE, 0, 0);
+    //::EnableMenuItem(hMenu, funcItem[0]._cmdID, MF_BYCOMMAND | (false?0:MF_GRAYED));
+    //::ModifyMenu(hMenu, funcItem[1]._cmdID, MF_BYCOMMAND | MF_SEPARATOR, 0, 0);
+
+    ////Manipulate windows handle
     //char buffer [100];
     //sprintf(buffer, "0x%08x", (unsigned __int64) g_tempWindowHandle);
     //alertCharArray(buffer);
@@ -5410,28 +4915,12 @@ void testing2()
     //alertNumber(handle);
     //HWND newWin = reinterpret_cast<HWND>(handle);
 
-    alertNumber(searchNextMatchedTail("$[![","]!]"));
-    //searchNext("\\$\\[.\\[",true);
-}
-
-void testing()
-{
-    
-    //HWND curScintilla = getCurrentScintilla();
-    alertCharArray("testing1");
-    
-    std::vector<std::string> temp;
-    temp = smartSplit(5,50,'|');
-    alertVector(temp);
-    //temp = smartSplit(5,50,';',2);
-    //alertVector(temp);
-
-
 
     ////Test regexp
     //alertNumber(searchNext("\\$\\[.\\[",true));
 
 
+    
 
     ////Testing SchintillaGetText
     //char* temp;
@@ -5502,7 +4991,7 @@ void testing()
     //
     //std::vector<std::string> v;
     //    
-    //v = split(teststr,' ');
+    //v = toVectorString(teststr,' ');
     //delete [] teststr;
     //i = 0;
     //while (i<v.size())
@@ -5521,11 +5010,11 @@ void testing()
     //openDummyStaticDlg();
 
     
-    //Testing usage of cleanupstring()
+    //Testing usage of quickStrip()
     //char* test = new char[MAX_PATH];
-    //strcpy(test,"To test the cleanupstring.");
+    //strcpy(test,"To test the quickStrip.");
     //alertCharArray(test);
-    //test = cleanupString(test,'t');
+    //test = quickStrip(test,'t');
     //alertCharArray(test);
     //delete [] test;
     //alertCharArray(test);
@@ -5582,7 +5071,7 @@ void testing()
     //delete [] str;
 
 
-    //alertNumber(g_snippetListLength);
+    //alertNumber(pc.snippetListLength);
     //alertCharArray(getLangTagType());
 
     //char* testScope = NULL;
@@ -5605,7 +5094,7 @@ void testing()
 
     
 
-    //g_customScope = TEXT(".cpp");
+    //pc.configText[CUSTOM_SCOPE] = TEXT(".cpp");
     //saveCustomScope();
 
     
@@ -5680,7 +5169,7 @@ void testing()
     //Console::ReadLine();
 
 
-    //_beginthread( Thread, 0, NULL );
+    
 
     //::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
     //selectionToSnippet();
@@ -5691,12 +5180,12 @@ void testing()
     
 
     //
-    //if (g_newUpdate)
+    //if (newUpdate)
     //{
-    //    ::MessageBox(nppData._nppHandle, TEXT("New!"), NPP_PLUGIN_NAME, MB_OK);
+    //    ::MessageBox(nppData._nppHandle, TEXT("New!"), TEXT(PLUGIN_NAME), MB_OK);
     //} else
     //{
-    //    ::MessageBox(nppData._nppHandle, TEXT("Old!"), NPP_PLUGIN_NAME, MB_OK);
+    //    ::MessageBox(nppData._nppHandle, TEXT("Old!"), TEXT(PLUGIN_NAME), MB_OK);
     //}
     //
     //
@@ -5708,28 +5197,28 @@ void testing()
     //int enc = ::SendMessage(curScintilla, SCI_GETLINEINDENTATION, 0, 0);
     //wchar_t countText[10];
     //::_itow_s(enc, countText, 10, 10); 
-    //::MessageBox(nppData._nppHandle, countText, NPP_PLUGIN_NAME, MB_OK);
+    //::MessageBox(nppData._nppHandle, countText, TEXT(PLUGIN_NAME), MB_OK);
 
     //    
     ////char *tagType1 = NULL;
     //TCHAR fileType1[5];
     //::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType1);
-    ////convertToUTF8(fileType1, &tagType1);
-    //::MessageBox(nppData._nppHandle, fileType1, NPP_PLUGIN_NAME, MB_OK);
+    ////toCharArray(fileType1, &tagType1);
+    //::MessageBox(nppData._nppHandle, fileType1, TEXT(PLUGIN_NAME), MB_OK);
     //
     //TCHAR key[MAX_PATH];
     //::swprintf(key,fileType1);
-    //::MessageBox(nppData._nppHandle, key, NPP_PLUGIN_NAME, MB_OK);
+    //::MessageBox(nppData._nppHandle, key, TEXT(PLUGIN_NAME), MB_OK);
     //
     //const TCHAR* key2 = (TCHAR*)".txt";
     //
     //if (key==key2)
     //{
-    //    ::MessageBox(nppData._nppHandle, TEXT("txt!"), NPP_PLUGIN_NAME, MB_OK);
+    //    ::MessageBox(nppData._nppHandle, TEXT("txt!"), TEXT(PLUGIN_NAME), MB_OK);
     //
     //} else
     //{
-    //   ::MessageBox(nppData._nppHandle, TEXT("not txt!"), NPP_PLUGIN_NAME, MB_OK);
+    //   ::MessageBox(nppData._nppHandle, TEXT("not txt!"), TEXT(PLUGIN_NAME), MB_OK);
     //}
     //
     //::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"Hello!");
@@ -5740,10 +5229,10 @@ void testing()
     // messagebox shows the current buffer encoding id
     //int enc = ::SendMessage(nppData._nppHandle, NPPM_GETBUFFERENCODING, (LPARAM)::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0), 0);
 
-    //int enc = g_snippetListLength;
+    //int enc = pc.snippetListLength;
     //wchar_t countText[10];
     //::_itow_s(enc, countText, 10, 10); 
-    //::MessageBox(nppData._nppHandle, countText, NPP_PLUGIN_NAME, MB_OK);
+    //::MessageBox(nppData._nppHandle, countText, TEXT(PLUGIN_NAME), MB_OK);
 
 
     //TCHAR file2switch[]=TEXT("C:\\Users\\tomtom\\Desktop\\FingerTextEditor");
@@ -5752,223 +5241,3 @@ void testing()
 
     //::SendMessage(nppData._nppHandle, NPPM_ACTIVATEDOC, MAIN_VIEW, 1);
 }
-
-void alert()
-{
-    alertCharArray("Alert!");
-}
-
-void alertNumber(int input)
-{
-    wchar_t countText[10];
-    ::_itow_s(input, countText, 10, 10);
-    ::MessageBox(nppData._nppHandle, countText, NPP_PLUGIN_NAME, MB_OK);
-
-}
-void alertCharArray(char* input)
-{
-    wchar_t* wcstring;
-    convertToWideChar(input, &wcstring);
-    ::MessageBox(nppData._nppHandle, wcstring, NPP_PLUGIN_NAME, MB_OK);
-    delete [] wcstring;
-}
-
-void alertTCharArray(TCHAR* input)
-{
-    ::MessageBox(nppData._nppHandle, input, NPP_PLUGIN_NAME, MB_OK);
-}
-
-void alertString(std::string input)
-{
-    char* temp;
-    stringToCharArray(input,&temp);
-    //char* temp = new char [input.size()+1];
-    //strcpy(temp, input.c_str());
-    alertCharArray(temp);
-    delete [] temp;
-}
-
-void alertVector(std::vector<std::string> v)
-{
-    int i = 0;
-    while (i<v.size())
-    {
-        alertString(v[i]);
-        i++;
-    }
-}
-
-
-
-//Super buggy implementation of a word delimiter splitter
-//std::vector<std::string> split2(char* str, char c1, char c2, char c3)
-//{
-//    std::vector<std::string> result;
-//
-//    while(1)
-//    {
-//        char *begin = str;
-//
-//        while (((*str != c1) || (*(str+1) != c2) || (*(str+2) != c3)) && *str) str++;
-//
-//        result.push_back(std::string(begin, str));
-//        str = str + 2;
-//
-//        if (0 == *str++) break;
-//    }
-//
-//    return result;
-//
-//
-//}
-
-void stringToCharArray(std::string source, char** dest)
-{
-    if (source.length()<=0) source = "";
-    *dest = new char [source.length()+1];
-    strcpy(*dest, source.c_str());
-}
-
-void charArrayToString(char* source, std::string* dest)
-{
-    std::stringstream ss;
-    ss << source;
-    *dest = ss.str();
-}
-
-
-std::vector<std::string> split(char* str, char c, int parts)
-{
-    int i;;
-    if (parts == 0)
-    {
-        i = -1;
-    } else
-    {
-        i = 1;
-    }
-        
-    std::vector<std::string> result;
-
-    while(1)
-    {
-        
-        char *begin = str;
-        while ((*str != c && *str) || ((i >= parts) && *str)) str++;
-        result.push_back(std::string(begin, str));
-        if (parts != 0) i++;
-        if (0 == *str++) break;
-    }
-
-    return result;
-}
-
-
-std::vector<std::string> smartSplit(int start, int end, char delimiter, int parts)
-{
-    char filler;
-    if (delimiter!=0)
-    {
-        filler = '1';
-    } else 
-    {
-        filler = '0';
-    }
-
-    std::vector<std::string> retVal;
-    std::vector<int> positions;
-    char* partToSplit;
-    sciGetText(&partToSplit, start, end);
-    int signSpot; 
-    int tailSpot;
-    char* tagSignGet;
-    char* tagTailGet;
-    
-    SendScintilla(SCI_GOTOPOS,start,0);
-    do
-    {
-        signSpot = searchNext("\\$\\[.\\[",true);
-        if ((signSpot>=start) && (signSpot < end))
-        {
-            
-            sciGetText(&tagSignGet);
-            tagTailGet = new char[4];
-            strcpy(tagTailGet,"]!]");
-            tagTailGet[1] = tagSignGet[2];
-            SendScintilla(SCI_GOTOPOS,signSpot+1,0);
-            //searchNextMatchedTail(tagSignGet,tagTailGet);
-            //tailSpot = SendScintilla(SCI_GETCURRENTPOS,0,0);
-            tailSpot = searchNextMatchedTail(tagSignGet,tagTailGet);
-            if (tailSpot <= end && tailSpot> start)
-            {
-                for (int i = signSpot - start; i<tailSpot-start;i++) partToSplit[i] = filler;
-            }
-            delete [] tagSignGet;
-            delete [] tagTailGet;
-        }
-    } while ((signSpot < end) && (signSpot > start));
-
-    //alertCharArray(partToSplit);
-    
-    retVal = split(partToSplit,delimiter,parts);
-    
-    int i = 0;
-    for (i = 0; i<retVal.size();i++)
-    {
-        positions.push_back(retVal[i].length());
-    }
-
-    int caret = start;
-    char* tempString;
-    for (i = 0; i<positions.size();i++)
-    {
-        //alertNumber(positions[i]);
-        sciGetText(&tempString, caret, caret + positions[i]);
-        charArrayToString(tempString,&retVal[i]);
-        delete [] tempString;
-        caret += positions[i]+1;
-    }
-    delete [] partToSplit;
-    return retVal;
-}
-
-//std::vector<std::string> split3(char* str, char* c, int parts)
-//{
-//    int i;;
-//    if (parts == 0)
-//    {
-//        i = -1;
-//    } else
-//    {
-//        i = 1;
-//    }
-//        
-//    std::vector<std::string> result;
-//
-//    while(1)
-//    {
-//        
-//        char *begin = str;
-//        while ((!(*str == c[0] && *str+1 == c[1] && *str+2 == c[2]) && *str && *str+1 && *str+2) || ((i >= parts) && *str)) str++;
-//        result.push_back(std::string(begin, str));
-//        if (parts != 0) i++;
-//
-//        int j=0;
-//        do
-//        {
-//            if (0 != *str)
-//            {
-//                *str++;
-//            } else 
-//            {
-//                break;
-//            }
-//            j++;
-//        } while (j<=2);
-//
-//
-//        //if (0 == *str++) break;
-//    }
-//
-//    return result;
-//}
