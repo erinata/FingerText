@@ -33,10 +33,11 @@ extern FuncItem funcItem[MENU_LENGTH];
 extern NppData nppData;
 extern DockingDlg snippetDock;
 WNDPROC	wndProcNpp = NULL;
-int nppLoaded = 0;
+extern int nppLoaded;
+extern int sciFocus;
+
 HINSTANCE hinstance = NULL;
 HHOOK hook = NULL;
-HWND hwnd = NULL;
 
 BOOL APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID lpReserved)
 {
@@ -67,6 +68,16 @@ LRESULT CALLBACK SubWndProcNpp(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
     LRESULT	retVal = 0;
     switch (message)
     {
+        case WM_COMMAND:
+            if ((HIWORD(wParam) == SCEN_KILLFOCUS) && nppLoaded == 1)
+            {
+                sciFocus = 0;
+            } else if ((HIWORD(wParam) == SCEN_SETFOCUS) && nppLoaded == 1)
+            {
+                sciFocus = 1;
+            }
+            retVal = ::CallWindowProc(wndProcNpp, hWnd, message, wParam, lParam);
+            break;
         case WM_CLOSE:
             retVal = ::CallWindowProc(wndProcNpp, hWnd, message, wParam, lParam);
             updateMode();  //Need to Do this because when a user attempt to close npp and the buffer shift to a file that's not saved, The bufferactivated message is not activated.
@@ -80,16 +91,17 @@ LRESULT CALLBACK SubWndProcNpp(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 
 
 
-
 LRESULT CALLBACK hookproc(int ncode,WPARAM wparam,LPARAM lparam)
 {
 	if(ncode>=0)
 	{
-		if((lparam & 0x80000000) == 0x00000000)//Check whether key was pressed(not released).
+		//if((lparam & 0x80000000) == 0x00000000)//Check whether key was pressed(not released).
+        if((lparam & 0x80000000) != 0x00000000)//Check whether key was released.
 		{
-            alert();
-			//hwnd = FindWindow("#32770","Keylogger Exe");//Find application window handle
-			//PostMessage(hwnd,WM_USER+755,wparam,lparam);//Send info to app Window.
+            if (wparam == VK_TAB)
+            {
+                if (sciFocus ==1) undoAndTabActivate();
+            }
 		}
 	}
 	return ( CallNextHookEx(hook,ncode,wparam,lparam) );//pass control to next hook in the hook chain.
@@ -97,13 +109,9 @@ LRESULT CALLBACK hookproc(int ncode,WPARAM wparam,LPARAM lparam)
 
 
 
-void installhook(HWND h)
+void installhook()
 {
-	hook = NULL;
-	hwnd = h;
-	hook = SetWindowsHookEx(WH_KEYBOARD,hookproc,hinstance,NULL);
-	if(hook==NULL)
-		MessageBox(NULL,TEXT("Unable to install hook"),TEXT("Error!"),MB_OK);
+	hook = SetWindowsHookEx(WH_KEYBOARD,hookproc,hinstance,::GetCurrentThreadId());
 }
 
 void removehook()
@@ -125,7 +133,7 @@ extern "C" __declspec(dllexport) void setInfo(NppData nppDataInfo)
     configInit();
     dataBaseInit();
     variablesInit();
-    installhook(nppData._nppHandle);
+    installhook();
 }
 
 extern "C" __declspec(dllexport) const TCHAR * getName()
@@ -217,6 +225,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 
         case NPPN_SHUTDOWN:
             pluginShutdown();
+            UnhookWindowsHookEx(hook);
             break;
         // TODO: consider using SC_MOD_CHANGEANNOTATION to shutdown use of annotation in snippet editing mode
     }

@@ -38,6 +38,8 @@ HANDLE g_hModule;                   // the hModule from pluginInit for initializ
 sqlite3 *g_db;                      // For Sqlite3 
 bool     g_dbOpen;                  // For Sqlite3 
 
+int sciFocus = 0;
+int nppLoaded = 0;
 
 // Paths
 wchar_t g_basePath[MAX_PATH];
@@ -108,7 +110,8 @@ void pluginInit(HANDLE hModule)
 // Initialization of plugin commands
 void commandMenuInit()
 {
-    ShortcutKey *shKey = setShortCutKey(false,false,false,VK_TAB);
+    //ShortcutKey *shKey = setShortCutKey(false,false,false,VK_TAB);
+    ShortcutKey *shKey = setShortCutKey(false,false,false,'a');
 
     g_tabActivateIndex = setCommand(TEXT("Trigger Snippet/Navigate to Hotspot"), tabActivate, shKey);
     setCommand();
@@ -4606,6 +4609,11 @@ std::vector<std::string> smartSplit(int start, int end, char delimiter, int part
     return retVal;
 }
 
+void undoAndTabActivate()
+{
+    SendScintilla(SCI_UNDO,0,0);
+    tabActivate();
+}
 
 
 void tabActivate()
@@ -4872,7 +4880,7 @@ void testing2()
 void testing()
 {
     alert("testing1");
-
+    
     alert(pc.configText[2]);
     alert(pc.configText[1]);
     alert(pc.configText[CUSTOM_SCOPE]);

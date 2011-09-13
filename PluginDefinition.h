@@ -149,6 +149,9 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete = false,int triggerLeng
 void tagComplete();
 void tabActivate();
 
+void undoAndTabActivate();
+
+
 std::vector<std::string> smartSplit(int start, int end, char delimiter, int parts = 0);
 
 void updateOptionCurrent(bool toNext);
