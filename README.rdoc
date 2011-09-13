@@ -395,9 +395,11 @@ Many thanks to..........
 
 == License
 
-This plugin is built using the NppPluginTemplate provided by Don Ho. The license of the template is included in the source.
+This plugin is built using the ErinataNppPluginTemplate. Some files of the template involve files from the NppPluginTemplate written by Don Ho and FunctionList Plugin written by Jens Lorenz. The licenses of these files are included in the source.
 
-The plugin is released under MIT license.
+The sqlite3 files and DuckEval files also have their own licenses. The licenses of these files are included in the source.
+
+The Fingertext specific files are released under MIT license.
 
 MIT license
 

