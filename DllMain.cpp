@@ -33,7 +33,8 @@ extern FuncItem funcItem[MENU_LENGTH];
 extern NppData nppData;
 extern DockingDlg snippetDock;
 WNDPROC	wndProcNpp = NULL;
-int nppLoaded = 0;
+extern int nppLoaded;
+extern int sciFocus;
 
 BOOL APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID lpReserved)
 {
@@ -63,6 +64,17 @@ LRESULT CALLBACK SubWndProcNpp(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
     LRESULT	retVal = 0;
     switch (message)
     {
+        case WM_COMMAND:
+             if ((HIWORD(wParam) == SCEN_KILLFOCUS) && nppLoaded == 1)
+             {
+                 sciFocus = 0;
+             } else if ((HIWORD(wParam) == SCEN_SETFOCUS) && nppLoaded == 1)
+             {
+                 
+                 sciFocus = 1;
+             }
+             retVal = ::CallWindowProc(wndProcNpp, hWnd, message, wParam, lParam);
+             break;
         case WM_CLOSE:
             retVal = ::CallWindowProc(wndProcNpp, hWnd, message, wParam, lParam);
             updateMode();  //Need to Do this because when a user attempt to close npp and the buffer shift to a file that's not saved, The bufferactivated message is not activated.

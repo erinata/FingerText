@@ -34,10 +34,13 @@ FuncItem funcItem[MENU_LENGTH];     // The menu item data that Notepad++ needs
 NppData nppData;                    // The data for plugin command and sending message to notepad++
 HANDLE g_hModule;                   // the hModule from pluginInit for initializing dialogs
 
+// Status dummies 
+int nppLoaded = 0;    // Indicates NPP_READY has triggered
+int sciFocus = 0;     // Indicates the current focus is on the editor
+
 // Sqlite3
 sqlite3 *g_db;                      // For Sqlite3 
 bool     g_dbOpen;                  // For Sqlite3 
-
 
 // Paths
 wchar_t g_basePath[MAX_PATH];
@@ -228,6 +231,7 @@ void variablesInit()
 
 void nppReady()
 {
+
     updateMode();
     pc.upgradeMessage();
 
@@ -4827,9 +4831,9 @@ void tabActivate()
 void testThread( void* pParams )
 { 
     //system("npp -multiInst");
-    for (int i = 0; i<10;i++)
+    for (int i = 0; i<100;i++)
     {
-        SendScintilla(SCI_REPLACESEL,0,(LPARAM)"ABC");
+        SendScintilla(SCI_REPLACESEL,0,(LPARAM)toCharArray(toString((double)sciFocus)));
         Sleep(1000);
     }
     
@@ -4846,9 +4850,7 @@ void testing()
 {
     alert("testing1");
 
-    alert(pc.configText[2]);
-    alert(pc.configText[1]);
-    alert(pc.configText[CUSTOM_SCOPE]);
+
     //// Testing thread
     //_beginthread( testThread, 0, NULL );
 
