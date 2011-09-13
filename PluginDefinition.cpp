@@ -189,7 +189,7 @@ void commandMenuInit()
     if (!(pc.configInt[USE_NPP_SHORTKEY]))
     {
         shKey = NULL;
-        tabActivateText = TEXT("Trigger Snippet/Navigate to Hotspot     Tab");
+        tabActivateText = TEXT("Hotkey remapping disabled (use TAB to trigger snippet)");
     } else
     {
         shKey = setShortCutKey(false,false,false,VK_TAB);
@@ -244,9 +244,10 @@ void variablesInit()
 
 void nppReady()
 {
-    
     if (!(pc.configInt[USE_NPP_SHORTKEY]))
     {
+        HMENU hMenu = (HMENU)::SendMessage(nppData._nppHandle, NPPM_GETMENUHANDLE, 0, 0);  // For compatibility mode
+        ::EnableMenuItem(hMenu, funcItem[g_tabActivateIndex]._cmdID, MF_BYCOMMAND | MF_GRAYED);   // For compatibility mode
         installhook();     // For compatibility mode
         SendScintilla(SCI_ASSIGNCMDKEY,SCK_TAB,SCI_NULL);   // For compatibility mode
     }
@@ -291,6 +292,20 @@ void pluginCleanUp()
 
 
 // Functions for Fingertext
+
+void shortCutRemapped()
+{
+
+        
+    if (!(pc.configInt[USE_NPP_SHORTKEY]))
+    {
+        HMENU hMenu = (HMENU)::SendMessage(nppData._nppHandle, NPPM_GETMENUHANDLE, 0, 0);             // For compatibility mode
+        ::EnableMenuItem(hMenu, funcItem[g_tabActivateIndex]._cmdID, MF_BYCOMMAND | MF_GRAYED);       // For compatibility mode
+    }
+
+}
+
+
 void toggleDisable()
 {
     if (g_enable)
@@ -3777,8 +3792,6 @@ void importSnippets()
             ::SendScintilla(SCI_SETSAVEPOINT,0,0);
             ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
 
-                //updateMode();
-                //updateDockItems();
         }
         //delete [] fileText;
     }
@@ -4054,12 +4067,29 @@ void selectionMonitor(int contentChange)
         {
             int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
             int lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION,posCurrent,0);
-            int firstlineEnd = ::SendScintilla(SCI_GETLINEENDPOSITION,0,0);
-            int currentLineCount = ::SendScintilla(SCI_GETLINECOUNT,0,0);
             int selectionStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
             int selectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
             int selectionStartLine = ::SendScintilla(SCI_LINEFROMPOSITION,selectionStart,0);
             int selectionEndLine = ::SendScintilla(SCI_LINEFROMPOSITION,selectionEnd,0);
+            
+            //// Failed attempt to use SCI_KEY to restrict caret movement
+            //SendScintilla(SCI_ASSIGNCMDKEY,SCK_UP,SCI_LINEUP); 
+            //SendScintilla(SCI_ASSIGNCMDKEY,SCK_DOWN,SCI_LINEDOWN); 
+            //if ((lineCurrent == 2) || (lineCurrent == 1) || (selectionStartLine==2) || (selectionStartLine==1) || (selectionEndLine==2)|| (selectionEndLine==1))
+            //{
+            //    SendScintilla(SCI_ASSIGNCMDKEY,SCK_UP,SCI_NULL); 
+            //    SendScintilla(SCI_ASSIGNCMDKEY,SCK_DOWN,SCI_NULL); 
+            //} else if ((lineCurrent == 3)|| (selectionStartLine==3) || (selectionEndLine==3))
+            //{
+            //    alert();
+            //    SendScintilla(SCI_ASSIGNCMDKEY,SCK_UP,SCI_NULL); 
+            //} else if ((lineCurrent == 0)|| (selectionStartLine==0) || (selectionEndLine==0))
+            //{
+            //    ::SendScintilla(SCI_GOTOLINE,1,0);
+            //} 
+            //
+            int firstlineEnd = ::SendScintilla(SCI_GETLINEENDPOSITION,0,0);
+            int currentLineCount = ::SendScintilla(SCI_GETLINECOUNT,0,0);
             
             //alertNumber(lineCurrent);
             //if (contentChange)
@@ -4091,9 +4121,9 @@ void selectionMonitor(int contentChange)
                     updateLineCount();
                 } 
             }
-
+            
             if (lineCurrent <= 0) ::SendScintilla(SCI_GOTOLINE,1,0);
-
+            
             if ((selectionStartLine != selectionEndLine) && ((selectionStartLine <= 2) || (selectionEndLine <=2)))
             {
                 if (selectionEndLine>0)
@@ -4606,10 +4636,6 @@ std::vector<std::string> smartSplit(int start, int end, char delimiter, int part
 
 void tabActivate()
 {
-
-    //HWND curScintilla = getCurrentScintilla();
-
-    //if ((g_enable==false) || (::SendScintilla(SCI_SELECTIONISRECTANGLE,0,0)==1))
     if (sciFocus)
     {
         if ((g_enable==false) || (g_rectSelection==true))
@@ -4635,32 +4661,6 @@ void tabActivate()
 
             } else
             {
-
-
-            //bool optionTriggered = false;
-            //if (g_optionMode == true)
-            //{
-            //    if (posCurrent == g_optionStartPosition)
-            //    {
-            //        optionNavigate(curScintilla);
-            //        optionTriggered = true;
-            //        g_optionMode = true; // TODO: investigate why this line is necessary
-            //    } else
-            //    {
-            //        cleanOptionItem();
-            //        g_optionMode = false;
-            //    }
-            //}
-            //
-            //if (optionTriggered == false)
-
-            //if (g_optionMode == true)
-            //{
-            //    g_optionMode = false;
-            //    ::SendMessage(curScintilla,SCI_GOTOPOS,g_optionEndPosition,0);
-            //    snippetHintUpdate();
-            //} else
-            //{
                 g_hotspotParams.clear();
                 
                 pc.configInt[LIVE_HINT_UPDATE]--;
@@ -4685,9 +4685,6 @@ void tabActivate()
                 
 
                 int navSpot = 0;
-                //bool dynamicSpot0 = false;
-                //bool dynamicSpot1 = false;
-                //bool dynamicSpot2 = false;
                 bool dynamicSpotTemp = false;
                 bool dynamicSpot = false;
 
@@ -4712,21 +4709,6 @@ void tabActivate()
                             } while (i>=0);
                         }
 
-                     
-                        //if (searchNext("$[2[") < 0)
-                        //{
-                        //    if (searchNext("$[1[")<0)
-                        //    {
-                        //        if (searchNext("$[![")<0)
-                        //        {
-                                    //if ((searchPrev("$[2[") >= 0) || (searchPrev("$[1[")>=0) || (searchPrev("$[![")>=0))
-                                    //{
-                                    //    ::SendScintilla(SCI_GOTOPOS,g_lastTriggerPosition,0);
-                                    //    posCurrent = g_lastTriggerPosition;
-                                    //}
-                        //       }
-                        //   }
-                        //}
                     }
                     //TODO: cater more level of priority
                     //TODO: Params inertion will stop when navSpot is true, so it is not working properly under differnt level of priority
@@ -4748,38 +4730,6 @@ void tabActivate()
                         
                         i--;
                     } while ((navSpot <= 0) && (i >= 0));
-
-                    
-                    //dynamicSpot = dynamicHotspot(posCurrent,"$[2[","]2]");
-                    //::SendScintilla(SCI_GOTOPOS,posCurrent,0);
-                    //navSpot = hotSpotNavigation("$[2[","]2]");
-                    //
-                    //if (navSpot == false)
-                    //{
-                    //    if (dynamicSpot)
-                    //    {
-                    //        dynamicHotspot(posCurrent,"$[1[","]1]");
-                    //    } else
-                    //    {
-                    //        dynamicSpot = dynamicHotspot(posCurrent,"$[1[","]1]");
-                    //    }
-                    //    ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
-                    //    navSpot = hotSpotNavigation("$[1[","]1]");
-                    //}
-                    //if (navSpot == false)
-                    //{
-                    //    if (dynamicSpot)
-                    //    {
-                    //        dynamicHotspot(posCurrent); //TODO: May still consider do some checking before going into dynamic hotspot for performance improvement
-                    //    } else
-                    //    {
-                    //        dynamicSpot = dynamicHotspot(posCurrent);
-                    //    }
-                    //    ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
-                    //    navSpot = hotSpotNavigation();
-                    //}
-
-                    //if ((dynamicSpot2) || (dynamicSpot1) || (dynamicSpot0)) dynamicSpot = true;
                     
                     //TODO: this line is position here so the priority spot can be implement, but this cause the 
                     //      1st hotspot not undoable when the snippet is triggered. More investigation on how to
@@ -4790,7 +4740,6 @@ void tabActivate()
                     {
                         if ((navSpot > 0) || (dynamicSpot)) ::SendScintilla(SCI_AUTOCCANCEL,0,0);
                     }
-                    //}
                 } else
                 {
                     if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
@@ -4825,7 +4774,6 @@ void tabActivate()
                 {
                     if (g_optionMode == true)
                     {
-                        //g_optionMode = false;
                         turnOffOptionMode();
                         ::SendScintilla(SCI_GOTOPOS,g_optionEndPosition,0);
                         snippetHint = true;
@@ -4842,7 +4790,6 @@ void tabActivate()
                 pc.configInt[LIVE_HINT_UPDATE]++;
                 if (snippetHint) snippetHintUpdate();
                 g_selectionMonitor++;
-            //}
             }
         }
     }
@@ -4854,11 +4801,15 @@ LRESULT CALLBACK KeyboardProc(int ncode,WPARAM wparam,LPARAM lparam)
 {
 	if(ncode==0)
 	{
-		if((lparam & 0x80000000) == 0x00000000)//Check whether key was pressed(not released).
+		if((lparam & 0x80000000) == 0x00000000)
 		{
-            if (wparam == VK_TAB)
+            if ((sciFocus == 1) && (wparam == VK_TAB))
             {
-                if (sciFocus == 1) tabActivate(); 
+                if( !(GetKeyState(VK_SHIFT)&0x8000) && !(GetKeyState(VK_CONTROL)&0x8000) && !(GetKeyState(VK_MENU)&0x8000) )
+                {
+
+                    tabActivate(); 
+                }
             }
             
 		}

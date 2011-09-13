@@ -395,9 +395,11 @@ Many thanks to..........
 
 == License
 
-This plugin is built using the NppPluginTemplate provided by Don Ho. The license of the template is included in the source.
+This plugin is built using the ErinataNppPluginTemplate. It invloves some files from the NppPluginTemplate released by Don Ho, the Function List plugin released by Jens Lorenz. The licenses of those files are included in the source.
 
-The plugin is released under MIT license.
+DuckEval and sqlite3 also have their own licenses. The licenses are included in the source.
+
+Other parts are released under MIT license.
 
 MIT license
 

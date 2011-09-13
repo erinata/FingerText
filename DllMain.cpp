@@ -185,6 +185,9 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             
 
             break;
+        case NPPN_SHORTCUTREMAPPED:
+            shortCutRemapped();
+            break;
 
         case NPPN_SHUTDOWN:
             pluginShutdown();

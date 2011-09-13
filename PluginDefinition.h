@@ -72,6 +72,7 @@ void showHelp();
 void showAbout();
 
 // Custom functions for Fingertext
+void shortCutRemapped();
 char *findTagSQLite(char *tag, char *tagCompare, bool similar = false);
 void openDummyStaticDlg(void);
 void toggleDisable();
