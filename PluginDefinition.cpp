@@ -130,8 +130,6 @@ void commandMenuInit()
     setCommand(TEXT("Testing2"), testing2);
 }
 
-
-
 void dialogsInit()
 {
     snippetDock.init((HINSTANCE)g_hModule, NULL);
@@ -230,6 +228,7 @@ void variablesInit()
 
 void nppReady()
 {
+    updateMode();
     pc.upgradeMessage();
 
     if (pc.configInt[FORCE_MULTI_PASTE]) ::SendScintilla(SCI_SETMULTIPASTE,1,0); 
@@ -4809,8 +4808,13 @@ void tabActivate()
                     
                     ::SendScintilla(SCI_GOTOPOS, posSelectionStart, 0);
                     posCurrent = posSelectionStart;
+                    ::SendScintilla(SCI_TAB, 0, 0);
+                    ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
+                    ::SendScintilla(SCI_SETSELECTION, posSelectionStart, ::SendScintilla(SCI_GETCURRENTPOS, 0, 0));
+                    ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
                     //completeFound = snippetComplete();
                     completeFound = triggerTag(posCurrent,true);
+                    ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
                     if (completeFound)
                     {
                         ::SendScintilla(SCI_AUTOCCANCEL,0,0);

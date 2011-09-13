@@ -59,6 +59,7 @@ Expression::Expression(std::string input)
 // perform operator check
 int Expression::checkOperator(const char &c) 
 {
+    // TODO: to radian and to degree
     switch(c) 
     {
         case '$' : 
@@ -127,8 +128,6 @@ std::string Expression::rephrasing(std::string input)
 {
     int length = input.length();
     for (int j=0; j<length; ++j) input[j]=tolower(input[j]);
-
-    //TODO: need to fix the problem of negative number. solution can be find and replace all - by 0- if the char before - is not a digit
 
     //Operators
     signReplace(input,"==","=");

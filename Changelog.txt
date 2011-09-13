@@ -4,6 +4,7 @@ changelog (for developer use only, include unreleased versions)
 ****** restructure plugin init functions
 ****** improve start up performance by removing redundant updateScintilla calls
 ****** update the settings hint
+****** undo after a tab triggertext completetion will become a regular tab
 
 0.5.40
 ****** optionarray use vector of string instead of char**, the limit of option numbers is lifted

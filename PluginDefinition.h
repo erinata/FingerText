@@ -30,6 +30,7 @@
 #ifndef PLUGINDEFINITION_H
 #define PLUGINDEFINITION_H
 
+
 #include "PluginInterface.h"
 
 #include <string>       // For alertString()

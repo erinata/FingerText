@@ -59,6 +59,7 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID lpReserved)
 
 LRESULT CALLBACK SubWndProcNpp(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+
     LRESULT	retVal = 0;
     switch (message)
     {
@@ -169,6 +170,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             //initialize();
             nppLoaded = 1;
             nppReady();
+            
 
             break;
 

@@ -100,5 +100,7 @@ extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam
 extern "C" __declspec(dllexport) BOOL isUnicode();
 #endif //UNICODE
 
+
+
 #endif //PLUGININTERFACE_H
 

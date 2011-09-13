@@ -1,4 +1,4 @@
-= FingerText (current version 0.5.39)
+= FingerText (current version 0.5.39(Alpha))
 
 Tab triggered snippet plugin for Notepad++.
 
