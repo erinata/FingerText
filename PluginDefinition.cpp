@@ -4216,52 +4216,6 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
         // Only if a tag is found in the above process, a replace tag or trigger text completion action will be done.
         if (expanded)
         {
-            if (triggerTextComplete)
-            {
-                ::SendScintilla(SCI_SETSEL,posBeforeTag,posCurrent);
-                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)expanded);
-                posBeforeTag = posBeforeTag+strlen(expanded);
-            } else
-            {
-                replaceTag(expanded, posCurrent, posBeforeTag);
-            }
-                
-		    tagFound = true;
-        }
-
-
-        //int level=1;
-        //do
-        //{
-        //    expanded = findTagSQLite(tag,level,triggerTextComplete); 
-        //    
-		//	if (expanded)
-        //    {
-        //        if (triggerTextComplete)
-        //        {
-        //            ::SendMessage(curScintilla,SCI_SETSEL,posBeforeTag,posCurrent);
-        //            ::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)expanded);
-        //            posBeforeTag = posBeforeTag+strlen(expanded);
-        //        } else
-        //        {
-        //            replaceTag(curScintilla, expanded, posCurrent, posBeforeTag);
-        //        }
-        //        
-		//		tagFound = true;
-        //        break;
-        //    } 
-        //    level++;
-        //} while (level<=3);
-        delete [] fileType;
-        //if (!groupChecked) delete [] tagType;
-        delete [] tagType;
-        delete [] expanded;
-		delete [] tag;
-        
-        // return to the original position 
-        if (tagFound)
-        {
-            
             if (paramPos>=0)
             {
 
@@ -4284,9 +4238,28 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
 
                 
             }
-            ::SendScintilla(SCI_GOTOPOS,posBeforeTag,0);
 
+            if (triggerTextComplete)
+            {
+                ::SendScintilla(SCI_SETSEL,posBeforeTag,posCurrent);
+                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)expanded);
+                posBeforeTag = posBeforeTag+strlen(expanded);
+            } else
+            {
+                replaceTag(expanded, posCurrent, posBeforeTag);
+            }
+                
+		    tagFound = true;
         }
+
+        delete [] fileType;
+        //if (!groupChecked) delete [] tagType;
+        delete [] tagType;
+        delete [] expanded;
+		delete [] tag;
+        
+        // return to the original position 
+        if (tagFound) ::SendScintilla(SCI_GOTOPOS,posBeforeTag,0);
             
     } 
     return tagFound;
