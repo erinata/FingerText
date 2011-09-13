@@ -35,7 +35,7 @@
 //#include "Version.h"
 
 // Config file content
-#define CONFIG_INT_COUNT 12
+#define CONFIG_INT_COUNT 13
 #define CONFIG_TEXT_COUNT 3
 
 #define SNIPPET_LIST_LENGTH 0
@@ -50,6 +50,7 @@
 #define LIVE_PREVIEW_BOX 9
 #define EDITOR_CARET_BOUND 10
 #define FORCE_MULTI_PASTE 11
+#define USE_NPP_SHORTKEY 12
 
 #define CUSTOM_SCOPE 0
 #define CUSTOM_ESCAPE_CHAR 1
@@ -68,7 +69,8 @@ const int configIntDefault[CONFIG_INT_COUNT] =
     0,               // INCLUSIVE_TRIGGERTEXT_COMPLETION
     1,               // LIVE_PREVIEW_BOX
     1,               // EDITOR_CARET_BOUND
-    1                // FORCE_MULTI_PASTE
+    1,               // FORCE_MULTI_PASTE
+    1
 };                   
 
 const TCHAR configIntNames[CONFIG_INT_COUNT][MAX_PATH] = 
@@ -84,7 +86,8 @@ const TCHAR configIntNames[CONFIG_INT_COUNT][MAX_PATH] =
     TEXT("inclusive_triggertext_completion"),
     TEXT("live_preview_box"),
     TEXT("editor_caret_bound"),
-    TEXT("force_multipaste")
+    TEXT("force_multipaste"),
+    TEXT("use_npp_shortkey")
 };
 
 const TCHAR configTextDefault[CONFIG_TEXT_COUNT][MAX_PATH] = 

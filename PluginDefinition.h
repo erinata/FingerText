@@ -151,6 +151,9 @@ void tabActivate();
 
 std::vector<std::string> smartSplit(int start, int end, char delimiter, int parts = 0);
 
+void removehook();
+void installhook();
+
 void updateOptionCurrent(bool toNext);
 void cleanOptionItem();
 void turnOffOptionMode();

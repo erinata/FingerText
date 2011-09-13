@@ -59,6 +59,8 @@ DummyStaticDlg	dummyStaticDlg;
 int g_snippetDockIndex;
 int g_tabActivateIndex;
 
+// For compatibility mode
+HHOOK hook = NULL;
 
 //TODO: should use vector of String here
 struct SnipIndex 
@@ -106,31 +108,6 @@ wchar_t* g_tempWindowKey;
 void pluginInit(HANDLE hModule)
 {
     g_hModule = hModule;  // For dialogs initialization
-}
-
-// Initialization of plugin commands
-void commandMenuInit()
-{
-    ShortcutKey *shKey = setShortCutKey(false,false,false,VK_TAB);
-
-    g_tabActivateIndex = setCommand(TEXT("Trigger Snippet/Navigate to Hotspot"), tabActivate, shKey);
-    setCommand();
-    g_snippetDockIndex = setCommand(TEXT("Toggle On/off SnippetDock"), showSnippetDock);
-    setCommand(TEXT("Toggle On/Off FingerText"), toggleDisable);
-    setCommand(TEXT("Create Snippet from Selection"),  selectionToSnippet);
-    setCommand(TEXT("Import Snippets"), importSnippets);
-    setCommand(TEXT("Export Snippets"), exportSnippetsOnly);
-    setCommand(TEXT("Export and Delete All Snippets"), exportAndClearSnippets);
-    setCommand();
-    setCommand(TEXT("TriggerText Completion"), tagComplete);
-    setCommand(TEXT("Insert a hotspot"), insertHotSpotSign);
-    setCommand();
-    setCommand(TEXT("Settings"), showSettings);
-    setCommand(TEXT("Quick Guide"), showHelp);
-    setCommand(TEXT("About"), showAbout);
-    setCommand();
-    setCommand(TEXT("Testing"), testing);
-    setCommand(TEXT("Testing2"), testing2);
 }
 
 void dialogsInit()
@@ -203,11 +180,47 @@ void dataBaseInit()
     delete [] dataBasePath; 
 }
 
+// Initialization of plugin commands
+void commandMenuInit()
+{
+    
+    ShortcutKey *shKey;
+    TCHAR* tabActivateText;
+    if (!(pc.configInt[USE_NPP_SHORTKEY]))
+    {
+        shKey = NULL;
+        tabActivateText = TEXT("Trigger Snippet/Navigate to Hotspot     Tab");
+    } else
+    {
+        shKey = setShortCutKey(false,false,false,VK_TAB);
+        tabActivateText = TEXT("Trigger Snippet/Navigate to Hotspot");
+    }
 
+
+    g_tabActivateIndex = setCommand(tabActivateText, tabActivate, shKey);
+    setCommand();
+    g_snippetDockIndex = setCommand(TEXT("Toggle On/off SnippetDock"), showSnippetDock);
+    setCommand(TEXT("Toggle On/Off FingerText"), toggleDisable);
+    setCommand(TEXT("Create Snippet from Selection"),  selectionToSnippet);
+    setCommand(TEXT("Import Snippets"), importSnippets);
+    setCommand(TEXT("Export Snippets"), exportSnippetsOnly);
+    setCommand(TEXT("Export and Delete All Snippets"), exportAndClearSnippets);
+    setCommand();
+    setCommand(TEXT("TriggerText Completion"), tagComplete);
+    setCommand(TEXT("Insert a hotspot"), insertHotSpotSign);
+    setCommand();
+    setCommand(TEXT("Settings"), showSettings);
+    setCommand(TEXT("Quick Guide"), showHelp);
+    setCommand(TEXT("About"), showAbout);
+    setCommand();
+    setCommand(TEXT("Testing"), testing);
+    setCommand(TEXT("Testing2"), testing2);
+}
 
 
 void variablesInit()
 {
+    
     g_customClipBoard = "";   
 
     g_modifyResponse = true;
@@ -231,6 +244,12 @@ void variablesInit()
 
 void nppReady()
 {
+    
+    if (!(pc.configInt[USE_NPP_SHORTKEY]))
+    {
+        installhook();     // For compatibility mode
+        SendScintilla(SCI_ASSIGNCMDKEY,SCK_TAB,SCI_NULL);   // For compatibility mode
+    }
 
     updateMode();
     pc.upgradeMessage();
@@ -240,13 +259,10 @@ void nppReady()
     if (snippetDock.isVisible()) updateDockItems(); //snippetHintUpdate();
 }
 
-
-
 void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires  
-{
+{   
+    if (!(pc.configInt[USE_NPP_SHORTKEY])) removehook();  // For compatibility mode
     
-    pc.configCleanUp();
-
     delete [] g_snippetCache;
     
     if (g_dbOpen)
@@ -254,6 +270,9 @@ void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires
         sqlite3_close(g_db);  // This close the database when the plugin shutdown.
         g_dbOpen = false;
     }
+
+    pc.configCleanUp();
+    
 }
 
 // command shortcut clean up
@@ -4591,240 +4610,275 @@ void tabActivate()
     //HWND curScintilla = getCurrentScintilla();
 
     //if ((g_enable==false) || (::SendScintilla(SCI_SELECTIONISRECTANGLE,0,0)==1))
-    if ((g_enable==false) || (g_rectSelection==true))
-    {        
-        ::SendScintilla(SCI_TAB,0,0);   
-    } else
+    if (sciFocus)
     {
-        int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-        //int posTriggerStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-        int lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION,posCurrent,0);
-
-        if ((g_editorView == true) && (lineCurrent <=2))
-        {
-            if (lineCurrent == 1)
-            {
-                //TODO: can make the Tab select the whole field instead of just GOTOLINE
-                //::SendMessage(curScintilla,SCI_SETSEL,::SendMessage(curScintilla,SCI_POSITIONFROMLINE,2,0),::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,2,0));
-                ::SendScintilla(SCI_GOTOLINE,2,0);
-            } else if (lineCurrent == 2)
-            {
-                ::SendScintilla(SCI_GOTOLINE,3,0);
-            }
-
+        if ((g_enable==false) || (g_rectSelection==true))
+        {        
+            ::SendScintilla(SCI_TAB,0,0);   
         } else
         {
+            int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+            //int posTriggerStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+            int lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION,posCurrent,0);
 
-
-        //bool optionTriggered = false;
-        //if (g_optionMode == true)
-        //{
-        //    if (posCurrent == g_optionStartPosition)
-        //    {
-        //        optionNavigate(curScintilla);
-        //        optionTriggered = true;
-        //        g_optionMode = true; // TODO: investigate why this line is necessary
-        //    } else
-        //    {
-        //        cleanOptionItem();
-        //        g_optionMode = false;
-        //    }
-        //}
-        //
-        //if (optionTriggered == false)
-
-        //if (g_optionMode == true)
-        //{
-        //    g_optionMode = false;
-        //    ::SendMessage(curScintilla,SCI_GOTOPOS,g_optionEndPosition,0);
-        //    snippetHintUpdate();
-        //} else
-        //{
-            g_hotspotParams.clear();
-            
-            pc.configInt[LIVE_HINT_UPDATE]--;
-            g_selectionMonitor--;
-            
-            int posSelectionStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
-            int posSelectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
-
-            if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
-            bool tagFound = false;
-            if (posSelectionStart==posSelectionEnd)
+            if ((g_editorView == true) && (lineCurrent <=2))
             {
-                tagFound = triggerTag(posCurrent);
-            }
-
-            if (tagFound)
-            {
-                ::SendScintilla(SCI_AUTOCCANCEL,0,0);
-                posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-                g_lastTriggerPosition = posCurrent;
-            } 
-            
-
-            int navSpot = 0;
-            //bool dynamicSpot0 = false;
-            //bool dynamicSpot1 = false;
-            //bool dynamicSpot2 = false;
-            bool dynamicSpotTemp = false;
-            bool dynamicSpot = false;
-
-            if (g_editorView == false)
-            {
-                int i;
-                if (!tagFound) 
+                if (lineCurrent == 1)
                 {
-                    i = g_listLength-1;
-                    if (posCurrent > g_lastTriggerPosition)
-                    {
-                        do
-                        {
-                            //TODO: limit the search to g_lastTriggerPosition ?       
-                            if (searchPrev(g_tagSignList[i]) >= 0)
-                            {
-                                ::SendScintilla(SCI_GOTOPOS,g_lastTriggerPosition,0);
-                                posCurrent = g_lastTriggerPosition;
-                                break;   
-                            }
-                            i--;
-                        } while (i>=0);
-                    }
-
-                 
-                    //if (searchNext("$[2[") < 0)
-                    //{
-                    //    if (searchNext("$[1[")<0)
-                    //    {
-                    //        if (searchNext("$[![")<0)
-                    //        {
-                                //if ((searchPrev("$[2[") >= 0) || (searchPrev("$[1[")>=0) || (searchPrev("$[![")>=0))
-                                //{
-                                //    ::SendScintilla(SCI_GOTOPOS,g_lastTriggerPosition,0);
-                                //    posCurrent = g_lastTriggerPosition;
-                                //}
-                    //       }
-                    //   }
-                    //}
+                    //TODO: can make the Tab select the whole field instead of just GOTOLINE
+                    //::SendMessage(curScintilla,SCI_SETSEL,::SendMessage(curScintilla,SCI_POSITIONFROMLINE,2,0),::SendMessage(curScintilla,SCI_GETLINEENDPOSITION,2,0));
+                    ::SendScintilla(SCI_GOTOLINE,2,0);
+                } else if (lineCurrent == 2)
+                {
+                    ::SendScintilla(SCI_GOTOLINE,3,0);
                 }
-                //TODO: cater more level of priority
-                //TODO: Params inertion will stop when navSpot is true, so it is not working properly under differnt level of priority
-                //      Or in other words it only work for the highest existing level of priority
-                i = g_listLength - 1;
-                
-                do
-                {
-                    if (dynamicSpot)
-                    {
-                        dynamicHotspot(posCurrent,g_tagSignList[i],g_tagTailList[i]);
-                    } else
-                    {
-                        dynamicSpot = dynamicHotspot(posCurrent,g_tagSignList[i],g_tagTailList[i]);
-                    }
-                    ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
-                    
-                    navSpot = hotSpotNavigation(g_tagSignList[i],g_tagTailList[i]);
-                    
-                    i--;
-                } while ((navSpot <= 0) && (i >= 0));
 
-                
-                //dynamicSpot = dynamicHotspot(posCurrent,"$[2[","]2]");
-                //::SendScintilla(SCI_GOTOPOS,posCurrent,0);
-                //navSpot = hotSpotNavigation("$[2[","]2]");
-                //
-                //if (navSpot == false)
-                //{
-                //    if (dynamicSpot)
-                //    {
-                //        dynamicHotspot(posCurrent,"$[1[","]1]");
-                //    } else
-                //    {
-                //        dynamicSpot = dynamicHotspot(posCurrent,"$[1[","]1]");
-                //    }
-                //    ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
-                //    navSpot = hotSpotNavigation("$[1[","]1]");
-                //}
-                //if (navSpot == false)
-                //{
-                //    if (dynamicSpot)
-                //    {
-                //        dynamicHotspot(posCurrent); //TODO: May still consider do some checking before going into dynamic hotspot for performance improvement
-                //    } else
-                //    {
-                //        dynamicSpot = dynamicHotspot(posCurrent);
-                //    }
-                //    ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
-                //    navSpot = hotSpotNavigation();
-                //}
-
-                //if ((dynamicSpot2) || (dynamicSpot1) || (dynamicSpot0)) dynamicSpot = true;
-                
-                //TODO: this line is position here so the priority spot can be implement, but this cause the 
-                //      1st hotspot not undoable when the snippet is triggered. More investigation on how to
-                //      manipulate the undo list is required to make these 2 features compatible
-                if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
-
-                if (navSpot != 3)
-                {
-                    if ((navSpot > 0) || (dynamicSpot)) ::SendScintilla(SCI_AUTOCCANCEL,0,0);
-                }
-                //}
             } else
             {
-                if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
-            }
 
-            bool snippetHint = false;
 
-            bool completeFound = false;
-            if (pc.configInt[TAB_TAG_COMPLETION] == 1)
-            {
-                if ((navSpot == 0) && (tagFound == false) && (dynamicSpot==false)) 
-	    	    {
-                    
-                    ::SendScintilla(SCI_GOTOPOS, posSelectionStart, 0);
-                    posCurrent = posSelectionStart;
-                    ::SendScintilla(SCI_TAB, 0, 0);
-                    ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
-                    ::SendScintilla(SCI_SETSELECTION, posSelectionStart, ::SendScintilla(SCI_GETCURRENTPOS, 0, 0));
-                    ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
-                    //completeFound = snippetComplete();
-                    completeFound = triggerTag(posCurrent,true);
-                    ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
-                    if (completeFound)
-                    {
-                        ::SendScintilla(SCI_AUTOCCANCEL,0,0);
-                        snippetHint = true;
-                    }
-	    	    }
-            }
-            
-            if ((navSpot == 0) && (tagFound == false) && (completeFound==false) && (dynamicSpot==false)) 
-            {
-                if (g_optionMode == true)
+            //bool optionTriggered = false;
+            //if (g_optionMode == true)
+            //{
+            //    if (posCurrent == g_optionStartPosition)
+            //    {
+            //        optionNavigate(curScintilla);
+            //        optionTriggered = true;
+            //        g_optionMode = true; // TODO: investigate why this line is necessary
+            //    } else
+            //    {
+            //        cleanOptionItem();
+            //        g_optionMode = false;
+            //    }
+            //}
+            //
+            //if (optionTriggered == false)
+
+            //if (g_optionMode == true)
+            //{
+            //    g_optionMode = false;
+            //    ::SendMessage(curScintilla,SCI_GOTOPOS,g_optionEndPosition,0);
+            //    snippetHintUpdate();
+            //} else
+            //{
+                g_hotspotParams.clear();
+                
+                pc.configInt[LIVE_HINT_UPDATE]--;
+                g_selectionMonitor--;
+                
+                int posSelectionStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
+                int posSelectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
+
+                if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
+                bool tagFound = false;
+                if (posSelectionStart==posSelectionEnd)
                 {
-                    //g_optionMode = false;
-                    turnOffOptionMode();
-                    ::SendScintilla(SCI_GOTOPOS,g_optionEndPosition,0);
-                    snippetHint = true;
+                    tagFound = triggerTag(posCurrent);
+                }
+
+                if (tagFound)
+                {
+                    ::SendScintilla(SCI_AUTOCCANCEL,0,0);
+                    posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+                    g_lastTriggerPosition = posCurrent;
+                } 
+                
+
+                int navSpot = 0;
+                //bool dynamicSpot0 = false;
+                //bool dynamicSpot1 = false;
+                //bool dynamicSpot2 = false;
+                bool dynamicSpotTemp = false;
+                bool dynamicSpot = false;
+
+                if (g_editorView == false)
+                {
+                    int i;
+                    if (!tagFound) 
+                    {
+                        i = g_listLength-1;
+                        if (posCurrent > g_lastTriggerPosition)
+                        {
+                            do
+                            {
+                                //TODO: limit the search to g_lastTriggerPosition ?       
+                                if (searchPrev(g_tagSignList[i]) >= 0)
+                                {
+                                    ::SendScintilla(SCI_GOTOPOS,g_lastTriggerPosition,0);
+                                    posCurrent = g_lastTriggerPosition;
+                                    break;   
+                                }
+                                i--;
+                            } while (i>=0);
+                        }
+
+                     
+                        //if (searchNext("$[2[") < 0)
+                        //{
+                        //    if (searchNext("$[1[")<0)
+                        //    {
+                        //        if (searchNext("$[![")<0)
+                        //        {
+                                    //if ((searchPrev("$[2[") >= 0) || (searchPrev("$[1[")>=0) || (searchPrev("$[![")>=0))
+                                    //{
+                                    //    ::SendScintilla(SCI_GOTOPOS,g_lastTriggerPosition,0);
+                                    //    posCurrent = g_lastTriggerPosition;
+                                    //}
+                        //       }
+                        //   }
+                        //}
+                    }
+                    //TODO: cater more level of priority
+                    //TODO: Params inertion will stop when navSpot is true, so it is not working properly under differnt level of priority
+                    //      Or in other words it only work for the highest existing level of priority
+                    i = g_listLength - 1;
+                    
+                    do
+                    {
+                        if (dynamicSpot)
+                        {
+                            dynamicHotspot(posCurrent,g_tagSignList[i],g_tagTailList[i]);
+                        } else
+                        {
+                            dynamicSpot = dynamicHotspot(posCurrent,g_tagSignList[i],g_tagTailList[i]);
+                        }
+                        ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
+                        
+                        navSpot = hotSpotNavigation(g_tagSignList[i],g_tagTailList[i]);
+                        
+                        i--;
+                    } while ((navSpot <= 0) && (i >= 0));
+
+                    
+                    //dynamicSpot = dynamicHotspot(posCurrent,"$[2[","]2]");
+                    //::SendScintilla(SCI_GOTOPOS,posCurrent,0);
+                    //navSpot = hotSpotNavigation("$[2[","]2]");
+                    //
+                    //if (navSpot == false)
+                    //{
+                    //    if (dynamicSpot)
+                    //    {
+                    //        dynamicHotspot(posCurrent,"$[1[","]1]");
+                    //    } else
+                    //    {
+                    //        dynamicSpot = dynamicHotspot(posCurrent,"$[1[","]1]");
+                    //    }
+                    //    ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
+                    //    navSpot = hotSpotNavigation("$[1[","]1]");
+                    //}
+                    //if (navSpot == false)
+                    //{
+                    //    if (dynamicSpot)
+                    //    {
+                    //        dynamicHotspot(posCurrent); //TODO: May still consider do some checking before going into dynamic hotspot for performance improvement
+                    //    } else
+                    //    {
+                    //        dynamicSpot = dynamicHotspot(posCurrent);
+                    //    }
+                    //    ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
+                    //    navSpot = hotSpotNavigation();
+                    //}
+
+                    //if ((dynamicSpot2) || (dynamicSpot1) || (dynamicSpot0)) dynamicSpot = true;
+                    
+                    //TODO: this line is position here so the priority spot can be implement, but this cause the 
+                    //      1st hotspot not undoable when the snippet is triggered. More investigation on how to
+                    //      manipulate the undo list is required to make these 2 features compatible
+                    if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
+
+                    if (navSpot != 3)
+                    {
+                        if ((navSpot > 0) || (dynamicSpot)) ::SendScintilla(SCI_AUTOCCANCEL,0,0);
+                    }
+                    //}
                 } else
                 {
-                    //g_tempWindowHandle = (HWND)::SendMessage(nppData._nppHandle,NPPM_DMMGETPLUGINHWNDBYNAME ,(WPARAM)TEXT("SherloXplorer"),(LPARAM)TEXT("SherloXplorer.dll"));
-                    //setFocusToWindow();
-                    //generateKey(toVk("TAB"),true);
-                    //generateKey(toVk("TAB"),false);
-                    restoreTab(posCurrent, posSelectionStart, posSelectionEnd);
+                    if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
                 }
-            }
 
-            pc.configInt[LIVE_HINT_UPDATE]++;
-            if (snippetHint) snippetHintUpdate();
-            g_selectionMonitor++;
-        //}
+                bool snippetHint = false;
+
+                bool completeFound = false;
+                if (pc.configInt[TAB_TAG_COMPLETION] == 1)
+                {
+                    if ((navSpot == 0) && (tagFound == false) && (dynamicSpot==false)) 
+	        	    {
+                        
+                        ::SendScintilla(SCI_GOTOPOS, posSelectionStart, 0);
+                        posCurrent = posSelectionStart;
+                        ::SendScintilla(SCI_TAB, 0, 0);
+                        ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
+                        ::SendScintilla(SCI_SETSELECTION, posSelectionStart, ::SendScintilla(SCI_GETCURRENTPOS, 0, 0));
+                        ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
+                        //completeFound = snippetComplete();
+                        completeFound = triggerTag(posCurrent,true);
+                        ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
+                        if (completeFound)
+                        {
+                            ::SendScintilla(SCI_AUTOCCANCEL,0,0);
+                            snippetHint = true;
+                        }
+	        	    }
+                }
+                
+                if ((navSpot == 0) && (tagFound == false) && (completeFound==false) && (dynamicSpot==false)) 
+                {
+                    if (g_optionMode == true)
+                    {
+                        //g_optionMode = false;
+                        turnOffOptionMode();
+                        ::SendScintilla(SCI_GOTOPOS,g_optionEndPosition,0);
+                        snippetHint = true;
+                    } else
+                    {
+                        //g_tempWindowHandle = (HWND)::SendMessage(nppData._nppHandle,NPPM_DMMGETPLUGINHWNDBYNAME ,(WPARAM)TEXT("SherloXplorer"),(LPARAM)TEXT("SherloXplorer.dll"));
+                        //setFocusToWindow();
+                        //generateKey(toVk("TAB"),true);
+                        //generateKey(toVk("TAB"),false);
+                        restoreTab(posCurrent, posSelectionStart, posSelectionEnd);
+                    }
+                }
+
+                pc.configInt[LIVE_HINT_UPDATE]++;
+                if (snippetHint) snippetHintUpdate();
+                g_selectionMonitor++;
+            //}
+            }
         }
     }
 }
+
+
+
+LRESULT CALLBACK KeyboardProc(int ncode,WPARAM wparam,LPARAM lparam)
+{
+	if(ncode==0)
+	{
+		if((lparam & 0x80000000) == 0x00000000)//Check whether key was pressed(not released).
+		{
+            if (wparam == VK_TAB)
+            {
+                if (sciFocus == 1) tabActivate(); 
+            }
+            
+		}
+	}
+	return ( CallNextHookEx(hook,ncode,wparam,lparam) );//pass control to next hook in the hook chain.
+}
+
+
+void installhook()
+{
+	hook = NULL;
+	hook = SetWindowsHookEx(WH_KEYBOARD,KeyboardProc,(HINSTANCE)g_hModule,::GetCurrentThreadId());
+}
+
+void removehook()
+{
+	UnhookWindowsHookEx(hook);
+}
+
+
 
 
 
@@ -4849,6 +4903,11 @@ void testing2()
 void testing()
 {
     alert("testing1");
+
+
+    //// Disable tab key in scintilla
+    //SendScintilla(SCI_ASSIGNCMDKEY,SCK_TAB,SCI_NULL);
+
 
 
     //// Testing thread

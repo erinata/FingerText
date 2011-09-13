@@ -91,11 +91,11 @@ extern "C" __declspec(dllexport) void setInfo(NppData nppDataInfo)
 {
 	nppData = nppDataInfo;
     wndProcNpp = (WNDPROC)::SetWindowLongPtr(nppData._nppHandle, GWL_WNDPROC, (LPARAM)SubWndProcNpp);
-	commandMenuInit();
     dialogsInit();
     pathInit();
     configInit();
     dataBaseInit();
+    commandMenuInit();
     variablesInit();
 }
 
