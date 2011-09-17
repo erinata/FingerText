@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by D:\Dropbox\WorkSpaces\VSSpace\Projects\NppPluginProjects\FingerText\Dialog.rc
+// Used by Dialog.rc
 //
 #define SW_HIDE                         0
 #define HIDE_WINDOW                     0
@@ -1159,6 +1159,7 @@
 #define WM_PENWINLAST                   0x038F
 #define WM_DDE_FIRST                    0x03E0
 #define IDC_SNIPPET_LIST                1000
+#define IDC_EDIT1                       1001
 #define IDC_SAVE                        1002
 #define IDC_TRIGGER_TEXT                1003
 #define IDC_SCOPE                       1004
@@ -1388,8 +1389,10 @@
 #define TCS_RAGGEDRIGHT                 0x0800
 #define IDD_SNIPPET_DOCK                2100
 #define ID_SNIPSHOW_EDIT                2101
+#define IDC_PREVIEW_EDIT                2102
 #define ID_UGO_STATIC                   2105
 #define ID_UGO_STATIC2                  2106
+#define IDD_DUMMY_STATIC_DLG            2200
 #define LVS_ALIGNMASK                   0x0c00
 #define CS_BYTEALIGNCLIENT              0x1000
 #define HDS_OVERFLOW                    0x1000
@@ -1515,7 +1518,6 @@
 #define LVS_TYPESTYLEMASK               0xfc00
 #define SPVERSION_MASK                  0x0000FF00
 #define UNICODE_NOCHAR                  0xFFFF
-#define IDD_DUMMY_STATIC_DLG            2200
 
 // Next default values for new objects
 // 
@@ -1523,7 +1525,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        101
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1001
+#define _APS_NEXT_CONTROL_VALUE         1002
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

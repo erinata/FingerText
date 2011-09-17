@@ -325,8 +325,6 @@ void PluginConfig::settings()
 ;                                  level as the trigger text\r\n\
 ; chain_limit                -- This is the maximum number dynamic hotspots that can be triggered in one\r\n\
 ;                               snippet. Default is 100\r\n\
-; snippet_list_length        -- The maximum number of items that can be displayed in the SnippetDock.\r\n\
-;                               Default is 1000 \r\n\
 ; tab_tag_completion         -- 0: When a snippet is not found when the user hit [tab] key, FingerText\r\n\
 ;                                  will just send a tab\r\n\
 ;                               1: When a snippet is not found when the user hit [tab] key, FingerText\r\n\

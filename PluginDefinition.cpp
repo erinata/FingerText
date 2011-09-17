@@ -62,21 +62,20 @@ int g_tabActivateIndex;
 // For compatibility mode
 HHOOK hook = NULL;
 
-//TODO: should use vector of String here
 struct SnipIndex 
 {
-    char* triggerText;
-    char* scope;
-    char* content;    
+    std::string triggerText;
+    std::string scope;
+    std::string content;    
 };
-
-SnipIndex* g_snippetCache;
+std::vector<SnipIndex> g_snippetCache;
 
 bool g_modifyResponse;
 bool g_enable;
 bool g_editorView;
 int g_selectionMonitor;
 bool g_rectSelection;
+bool g_freezeDock;
 
 int g_editorLineCount;
 
@@ -168,16 +167,28 @@ void dataBaseInit()
         g_dbOpen = true;
     }
 
+    delete [] dataBasePath; 
+    if (!g_dbOpen) return;
+
     sqlite3_stmt *stmt;
 
-    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, 
+    if (SQLITE_OK == sqlite3_prepare_v2(g_db, 
     "CREATE TABLE snippets (tag TEXT, tagType TEXT, snippet TEXT)"
     , -1, &stmt, NULL))
-    
-    sqlite3_step(stmt);
+    {
+        sqlite3_step(stmt);
+    }
     sqlite3_finalize(stmt);
 
-    delete [] dataBasePath; 
+    if (SQLITE_OK == sqlite3_prepare_v2(g_db, 
+    "ALTER TABLE snippets ADD COLUMN package TEXT"
+    , -1, &stmt, NULL))
+    {
+        sqlite3_step(stmt);
+    }
+    sqlite3_finalize(stmt);
+
+    
 }
 
 // Initialization of plugin commands
@@ -206,7 +217,7 @@ void commandMenuInit()
     setCommand(TEXT("Export Snippets"), exportSnippetsOnly);
     setCommand(TEXT("Export and Delete All Snippets"), exportAndClearSnippets);
     setCommand();
-    setCommand(TEXT("TriggerText Completion"), tagComplete);
+    setCommand(TEXT("TriggerText Completion"), doTagComplete);
     setCommand(TEXT("Insert a hotspot"), insertHotSpotSign);
     setCommand();
     setCommand(TEXT("Settings"), showSettings);
@@ -224,11 +235,13 @@ void variablesInit()
     g_customClipBoard = "";   
 
     g_modifyResponse = true;
-    g_enable = true;
+    if (g_dbOpen) g_enable = true;
+    else g_enable = false; //TODO: need to check database problem when setting g_enable to true elsewhere
 
     g_selectionMonitor = 1;
     g_rectSelection = false;
 
+    g_freezeDock = false;
     // For option hotspot
     turnOffOptionMode();
     g_optionStartPosition = 0;
@@ -237,7 +250,7 @@ void variablesInit()
     
     g_lastTriggerPosition = 0;
     
-    g_snippetCache = new SnipIndex [pc.configInt[SNIPPET_LIST_LENGTH]];
+    //g_snippetCache = new SnipIndex [pc.configInt[SNIPPET_LIST_LENGTH]];
 
 }
 
@@ -264,7 +277,7 @@ void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires
 {   
     if (!(pc.configInt[USE_NPP_SHORTKEY])) removehook();  // For compatibility mode
     
-    delete [] g_snippetCache;
+    //delete [] g_snippetCache;
     
     if (g_dbOpen)
     {
@@ -295,14 +308,11 @@ void pluginCleanUp()
 
 void shortCutRemapped()
 {
-
-        
     if (!(pc.configInt[USE_NPP_SHORTKEY]))
     {
         HMENU hMenu = (HMENU)::SendMessage(nppData._nppHandle, NPPM_GETMENUHANDLE, 0, 0);             // For compatibility mode
         ::EnableMenuItem(hMenu, funcItem[g_tabActivateIndex]._cmdID, MF_BYCOMMAND | MF_GRAYED);       // For compatibility mode
     }
-
 }
 
 
@@ -328,7 +338,7 @@ void openDummyStaticDlg(void)
 	dummyStaticDlg.doDialog();
 }
 
-char *findTagSQLite(char *tag, char *tagCompare, bool similar)
+char *findTagSQLite(char *tag, const char *tagCompare)
 {
     //alertCharArray(tagCompare);
 	char *expanded = NULL;
@@ -336,37 +346,21 @@ char *findTagSQLite(char *tag, char *tagCompare, bool similar)
 
     // First create the SQLite SQL statement ("prepare" it for running)
     char *sqlitePrepareStatement;
-    if (similar)
-    {
-        sqlitePrepareStatement = "SELECT tag FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY tag";
-    } else
- 
-    {
-        sqlitePrepareStatement = "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY tag";
-    }
     
-    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, sqlitePrepareStatement, -1, &stmt, NULL))
+    sqlitePrepareStatement = "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ? ORDER BY tag";
+        
+    if (SQLITE_OK == sqlite3_prepare_v2(g_db, sqlitePrepareStatement, -1, &stmt, NULL))
 	{
         sqlite3_bind_text(stmt, 1, tagCompare, -1, SQLITE_STATIC);
 
-        if (similar)
-        {
-            char similarTag[MAX_PATH]="";
-            if (pc.configInt[INCLUSIVE_TRIGGERTEXT_COMPLETION]==1) strcat(similarTag,"%");
-            strcat(similarTag,tag);
-            strcat(similarTag,"%");
-            //::SendMessage(getCurrentScintilla(),SCI_INSERTTEXT,0,(LPARAM)similarTag);
-            sqlite3_bind_text(stmt, 2, similarTag, -1, SQLITE_STATIC);
-        } else
-        {
-		    sqlite3_bind_text(stmt, 2, tag, -1, SQLITE_STATIC);
-        }
+	    sqlite3_bind_text(stmt, 2, tag, -1, SQLITE_STATIC);
 
 		// Run the query with sqlite3_step
 		if(SQLITE_ROW == sqlite3_step(stmt))  // SQLITE_ROW 100 sqlite3_step() has another row ready
 		{
 			const char* expandedSQL = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
-			expanded = new char[strlen(expandedSQL)*4 + 1];
+			//expanded = new char[strlen(expandedSQL)*4 + 1];
+            expanded = new char[strlen(expandedSQL) + 1];
 			strcpy(expanded, expandedSQL);
 		}
 	}
@@ -460,7 +454,7 @@ void editSnippet()
 
     sqlite3_stmt *stmt;
     
-    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType = ? AND tag = ?", -1, &stmt, NULL))
+    if (SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType = ? AND tag = ?", -1, &stmt, NULL))
 	{
 		// Then bind the two ? parameters in the SQLite SQL to the real parameter values
 		sqlite3_bind_text(stmt, 1, tempScope , -1, SQLITE_STATIC);
@@ -523,14 +517,14 @@ void deleteSnippet()
 
     sqlite3_stmt *stmt;
     
-    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
+    if (SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
     {
         sqlite3_bind_text(stmt, 1, tempScope, -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, tempTriggerText, -1, SQLITE_STATIC);
         sqlite3_step(stmt);
     }
     sqlite3_finalize(stmt);
-    
+    //TODO: can use the sqlite3 return message to show error message when the delete is not successful
     updateDockItems(false,false);
 
     delete [] tempTriggerText;
@@ -638,13 +632,13 @@ void saveSnippet()
         // checking for existing snippet 
         sqlite3_stmt *stmt;
 
-        if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
+        if (SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
         {
             sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
 		    sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
             if(SQLITE_ROW == sqlite3_step(stmt))
             {
-                sqlite3_finalize(stmt);
+                
                 int messageReturn = showMessageBox(TEXT("Snippet exists, overwrite?"),MB_YESNO);
                 //int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Snippet exists, overwrite?"), TEXT(PLUGIN_NAME), MB_YESNO);
                 if (messageReturn==IDNO)
@@ -660,38 +654,38 @@ void saveSnippet()
                     ::SendScintilla(SCI_SETSELECTION, 0, 1);
                     ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"-");
                     ::SendScintilla(SCI_GOTOPOS, 0, 0);
-                
+                    sqlite3_finalize(stmt);
                     return;
 
                 } else
                 {
+                    sqlite3_stmt *stmt2;
                     // delete existing entry
-                    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
+                    if (SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt2, NULL))
                     {
-                        sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
-		                sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
-                        sqlite3_step(stmt);
+                        sqlite3_bind_text(stmt2, 1, tagTypeText, -1, SQLITE_STATIC);
+		                sqlite3_bind_text(stmt2, 2, tagText, -1, SQLITE_STATIC);
+                        sqlite3_step(stmt2);
                     
                     } else
                     {
                         showMessageBox(TEXT("Cannot write into database."));
                         //::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT(PLUGIN_NAME), MB_OK);
                     }
+                    sqlite3_finalize(stmt2);
                 
                 }
-
-            } else
-            {
-                sqlite3_finalize(stmt);
             }
         }
-    
-        if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "INSERT INTO snippets VALUES(?,?,?)", -1, &stmt, NULL))
+        sqlite3_finalize(stmt);
+
+        if (SQLITE_OK == sqlite3_prepare_v2(g_db, "INSERT INTO snippets VALUES(?,?,?,?)", -1, &stmt, NULL))
 	    {
 		    // Then bind the two ? parameters in the SQLite SQL to the real parameter values
 		    sqlite3_bind_text(stmt, 1, tagText, -1, SQLITE_STATIC);
 		    sqlite3_bind_text(stmt, 2, tagTypeText, -1, SQLITE_STATIC);
             sqlite3_bind_text(stmt, 3, snippetText, -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 4, "", -1, SQLITE_STATIC);
     
 		    // Run the query with sqlite3_step
 		    sqlite3_step(stmt); // SQLITE_ROW 100 sqlite3_step() has another row ready
@@ -979,7 +973,7 @@ void chainSnippet(int &firstPos, char* hotSpotText)
     //TODO: there may be a bug here. When the chain snippet contains content with CUT, the firstPos is not updated.
     int triggerPos = strlen(hotSpotText)+firstPos;
     ::SendScintilla(SCI_GOTOPOS,triggerPos,0);
-    triggerTag(triggerPos,false, strlen(hotSpotText));
+    triggerTag(triggerPos,strlen(hotSpotText));
 }
 
 ////Old implementation of executeCommand
@@ -1306,7 +1300,6 @@ std::string evaluateCall(char* expression)
                 {
                 } else 
                 {
-                    //alertCharArray("error");
                     expressions[i] = "error";
                     stringComparison = true;
                 }
@@ -1328,7 +1321,6 @@ std::string evaluateCall(char* expression)
             {
             } else 
             {
-                //alertCharArray("error");
                 expressions[i] = "error";
                 stringComparison = true;   
             }
@@ -1527,7 +1519,7 @@ void launchMessageBox(int &firstPos, char* hotSpotText)
     getTerm = new char[strlen(hotSpotText)];
     strcpy(getTerm,"");
     
-    // TODO: probably can just translate the text like "MB_OK" to the corresponding number and send it to the messagebox message directly. In this case people can just follow microsofe documentation.   
+    // TODO: probably can just translate the text like "MB_OK" to the corresponding number and send it to the messagebox message directly. In this case people can just follow microsoft documentation.   
     int messageType = MB_OK;
     if (strncmp(hotSpotText,"OK:",3)==0) 
     {
@@ -2365,7 +2357,6 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
 
 void searchAndReplace(std::string key, std::string text, bool regexp)
 {
-    
     char* searchKey = new char[key.length()+1];
     char* replaceText = new char[text.length()+1];
     strcpy(searchKey,key.c_str());
@@ -2375,7 +2366,7 @@ void searchAndReplace(std::string key, std::string text, bool regexp)
 
     while (keySpot >= 0)
     {
-        if (keySpot>=0)
+        if (keySpot >= 0)
         {
             SendScintilla(SCI_REPLACESEL,0,(LPARAM)replaceText);
         }
@@ -2798,8 +2789,9 @@ int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &sec
     //*hotSpot = new char[secondPos+3 - firstPos + 1];
     //::SendScintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(*hotSpot));
 
-    sciGetText(&*hotSpot,firstPos,secondPos+3);
     ::SendScintilla(SCI_SETSELECTION,firstPos,secondPos+3);
+    sciGetText(&*hotSpot,firstPos,secondPos+3);
+    
     return spotType;
     //return secondPos;  
 }
@@ -2815,6 +2807,8 @@ void showPreview(bool top)
     {
         snippetDock.getSelectText(bufferWide);
     }
+    
+    snippetDock.setDlgText(IDC_PREVIEW_EDIT,bufferWide);
 
     if (::_tcslen(bufferWide)>0)
     {
@@ -2839,7 +2833,7 @@ void showPreview(bool top)
 
         
         
-        if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
+        if (SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
 	    {
 	    	// Then bind the two ? parameters in the SQLite SQL to the real parameter values
 	    	sqlite3_bind_text(stmt, 1, tempScope , -1, SQLITE_STATIC);
@@ -2850,19 +2844,50 @@ void showPreview(bool top)
 	    	{
                 const char* snippetText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
                 
-                char* previewText = new char[500];
-                strcpy(previewText,"[");
-                strcat(previewText, tempTriggerText);//TODO: showing the triggertext on the title "snippet preview" instead
-                strcat(previewText,"]:\r\n");
-                char* contentTruncated = new char[155];
-                strncpy(contentTruncated, snippetText, 154);
-                contentTruncated[154]='\0';
-                //strcat(contentTruncated,"\0");
-                strcat(previewText,contentTruncated);
-                if (strlen(contentTruncated)>=153) strcat(previewText, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . "); 
+                char* previewText = new char[300];
+                strcpy(previewText,"");
+
+                char* tempSnippetText = new char[strlen(snippetText)+1];
+                strcpy(tempSnippetText,snippetText);
+                std::vector<std::string> vs = toVectorString(tempSnippetText,'\n');
+                
+                
+                int i = 0;
+                do
+                {
+                    char* line = new char[40];
+                    if (vs[i].length()>35) 
+                    {
+                        strncat(previewText,vs[i].c_str(),31);
+                        strcat(previewText, "......");
+                    } else
+                    {
+                        strcat(previewText,vs[i].c_str());
+                    }
+                    //strcat(previewText,vs[i].c_str());
+                    strcat(previewText,"\r\n");
+                    delete [] line;
+                    i++;
+                    
+                } while (i<vs.size() && i<6);
+
+                if (vs.size()>7) strcat(previewText,"......");
+                else if (vs.size()==7) strcat(previewText,vs[6].c_str());
+                
+
+
+                //strcat(previewText,"[");
+                //strcat(previewText, tempTriggerText);//TODO: showing the triggertext on the title "snippet preview" instead
+                //strcat(previewText,"]:\r\n");
+
+                //char* contentTruncated = new char[155];
+                //strncpy(contentTruncated, snippetText, 154);
+                //contentTruncated[154]='\0';
+                ////strcat(contentTruncated,"\0");
+                //strcat(previewText,contentTruncated);
+                //if (strlen(contentTruncated)>=153) strcat(previewText, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . "); 
                 
                 TCHAR* previewTextWide = toWideChar(previewText);
-                //TODO: investigate why all eol are messed up in preview box
 
                 //size_t origsize = strlen(snippetText) + 1; 
                 //size_t convertedChars = 0; 
@@ -2876,9 +2901,9 @@ void showPreview(bool top)
                 //}
                 
                 snippetDock.setDlgText(ID_SNIPSHOW_EDIT,previewTextWide);
-
+                
                 delete [] previewText;
-                delete [] contentTruncated;
+                delete [] tempSnippetText;
                 delete [] previewTextWide;
 
                 //wchar_t countText[10];
@@ -3061,15 +3086,15 @@ void showSnippetDock()
     {
         snippetDock.display(!snippetDock.isVisible());
     }
+    updateMode();
     updateDockItems();
     //snippetHintUpdate();
-    
 }
 
 
 void snippetHintUpdate()
 {     
-    if ((!g_editorView) && (pc.configInt[LIVE_HINT_UPDATE]==1) && (g_rectSelection==false))
+    if ((!g_editorView) && (pc.configInt[LIVE_HINT_UPDATE] == 1) && (g_rectSelection == false) && (g_optionMode == false))
     {
         if (snippetDock.isVisible())
         {
@@ -3107,239 +3132,174 @@ void snippetHintUpdate()
 
 void updateDockItems(bool withContent, bool withAll, char* tag, bool populate)
 {   
-    pc.configInt[LIVE_HINT_UPDATE]--;
-
-    int scopeLength=0;
-    int triggerLength=0;
-    int contentLength=0;
-    int tempScopeLength=0;
-    int tempTriggerLength=0;
-    int tempContentLength=0;
-
-    //g_snippetCacheSize=snippetDock.getLength();
-    
-    clearCache();
-
-    snippetDock.clearDock();
-    sqlite3_stmt *stmt;
-    
-
-    if (g_editorView) withAll = true;
-    //TODO: there is a bug in the withAll option. The list is limited by the pc.configInt[SNIPPET_LIST_LENGTH], which is not a desirable effect
-
-    // TODO: Use strcat instead of just nested if 
-    int sqlitePrepare;
-    if (pc.configInt[SNIPPET_LIST_ORDER_TAG_TYPE]==1)
+    if (!g_freezeDock)
     {
-        if (withAll)
-        {
-            sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets ORDER BY tagType DESC,tag DESC LIMIT ? ", -1, &stmt, NULL);
-        } else 
-        {
-            sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets WHERE (tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ?) AND tag LIKE ? ORDER BY tagType DESC,tag DESC LIMIT ? ", -1, &stmt, NULL);
-        }
-    } else
-    {
-        if (withAll)
-        {
-            sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets ORDER BY tag DESC,tagType DESC LIMIT ? ", -1, &stmt, NULL);
-        } else 
-        {
-            sqlitePrepare = sqlite3_prepare_v2(g_db, "SELECT tag,tagType,snippet FROM snippets WHERE (tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ?) AND tag LIKE ? ORDER BY tag DESC,tagType DESC LIMIT ? ", -1, &stmt, NULL);
-        }
-    }
-    
-    
-	if (g_dbOpen && SQLITE_OK == sqlitePrepare)
-	{
-        char *customScope = new char[MAX_PATH];
+        pc.configInt[LIVE_HINT_UPDATE]--;
+
+        g_snippetCache.clear();
+
+        sqlite3_stmt *stmt;
+
+        if (g_editorView) withAll = true;
         
-        char *tagType1 = NULL;
-        TCHAR *fileType1 = new TCHAR[MAX_PATH];
-        char *tagType2 = NULL;
-        TCHAR *fileType2 = new TCHAR[MAX_PATH];
+        int sqlitePrepare;
+        char* sqlite3Statement = new char[400];
+        
+        const char* selectClause1 = "SELECT tag,tagType,snippet FROM snippets ";
+        const char* selectClause2 = "SELECT tag,tagType FROM snippets ";
+        const char* orderClause1 = "ORDER BY tagType DESC,tag DESC ";
+        const char* orderClause2 = "ORDER BY tag DESC,tagType DESC ";
+        const char* whereClause = "WHERE (tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ?) AND tag LIKE ? ";
 
-        if (withAll)
-        {
-            char snippetCacheSizeText[10];
-            ::_itoa(pc.configInt[SNIPPET_LIST_LENGTH], snippetCacheSizeText, 10); 
-            sqlite3_bind_text(stmt, 1, snippetCacheSizeText, -1, SQLITE_STATIC);
-        } else
-        {   
-            customScope = toCharArray(pc.configText[CUSTOM_SCOPE]);
-            sqlite3_bind_text(stmt, 1, customScope, -1, SQLITE_STATIC);
+        strcpy(sqlite3Statement,"");
+        if (withContent) strcat(sqlite3Statement,selectClause1);
+        else strcat(sqlite3Statement,selectClause2);
+        if (!withAll) strcat(sqlite3Statement, whereClause);
+        if (pc.configInt[SNIPPET_LIST_ORDER_TAG_TYPE]==1) strcat(sqlite3Statement, orderClause1);
+        else strcat(sqlite3Statement, orderClause2);
+
+        sqlitePrepare = sqlite3_prepare_v2(g_db, sqlite3Statement, -1, &stmt, NULL);
+        
+	    if (g_dbOpen && SQLITE_OK == sqlitePrepare)
+	    {
+            char *customScope = new char[MAX_PATH];
             
-            ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType1);
-            tagType1 = toCharArray(fileType1);
-            sqlite3_bind_text(stmt, 2, tagType1, -1, SQLITE_STATIC);
+            char *tagType1 = NULL;
+            TCHAR *fileType1 = new TCHAR[MAX_PATH];
+            char *tagType2 = NULL;
+            TCHAR *fileType2 = new TCHAR[MAX_PATH];
 
-            ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType2);
-            tagType2 = toCharArray(fileType2);
-            sqlite3_bind_text(stmt, 3, tagType2, -1, SQLITE_STATIC);
-
-            sqlite3_bind_text(stmt, 4, getLangTagType(), -1, SQLITE_STATIC);
-        
-            sqlite3_bind_text(stmt, 5, "GLOBAL", -1, SQLITE_STATIC);
-
-            sqlite3_bind_text(stmt, 6, tag, -1, SQLITE_STATIC);
-
-            //TODO: potential performance improvement by just setting 100
-            char snippetCacheSizeText[10];
-            ::_itoa(pc.configInt[SNIPPET_LIST_LENGTH], snippetCacheSizeText, 10); 
-            sqlite3_bind_text(stmt, 7, snippetCacheSizeText, -1, SQLITE_STATIC);
-        }
-        
-        int row = 0;
-
-        while(true)
-        {
-            if(SQLITE_ROW == sqlite3_step(stmt))
+            if (withAll)
             {
-                const char* tempTrigger = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
-                if ((withAll) || (tempTrigger[0]!='_'))
+                //char snippetCacheSizeText[10];
+                //::_itoa(pc.configInt[SNIPPET_LIST_LENGTH], snippetCacheSizeText, 10); 
+                //sqlite3_bind_text(stmt, 1, snippetCacheSizeText, -1, SQLITE_STATIC);
+            } else
+            {   
+                customScope = toCharArray(pc.configText[CUSTOM_SCOPE]);
+                sqlite3_bind_text(stmt, 1, customScope, -1, SQLITE_STATIC);
+                
+                ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType1);
+                tagType1 = toCharArray(fileType1);
+                sqlite3_bind_text(stmt, 2, tagType1, -1, SQLITE_STATIC);
+
+                ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType2);
+                tagType2 = toCharArray(fileType2);
+                sqlite3_bind_text(stmt, 3, tagType2, -1, SQLITE_STATIC);
+
+                sqlite3_bind_text(stmt, 4, getLangTagType(), -1, SQLITE_STATIC);
+            
+                sqlite3_bind_text(stmt, 5, "GLOBAL", -1, SQLITE_STATIC);
+
+                sqlite3_bind_text(stmt, 6, tag, -1, SQLITE_STATIC);
+
+                //TODO: potential performance improvement by just setting 100
+                //char snippetCacheSizeText[10];
+                //::_itoa(pc.configInt[SNIPPET_LIST_LENGTH], snippetCacheSizeText, 10); 
+                //sqlite3_bind_text(stmt, 7, snippetCacheSizeText, -1, SQLITE_STATIC);
+            }
+            
+            //int row = 0;
+
+            while(true)
+            {
+                if(SQLITE_ROW == sqlite3_step(stmt))
                 {
-                    tempTriggerLength = strlen(tempTrigger)*4 + 1;
-                    if (tempTriggerLength> triggerLength)
-                    {
-                        triggerLength = tempTriggerLength;
-                    }
-                    g_snippetCache[row].triggerText = new char[strlen(tempTrigger)*4 + 1];
-                    strcpy(g_snippetCache[row].triggerText, tempTrigger);
-
-                    const char* tempScope = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
-                    tempScopeLength = strlen(tempScope)*4 + 1;
-                    if (tempScopeLength> scopeLength)
-                    {
-                        scopeLength = tempScopeLength;
-                    }
-                    g_snippetCache[row].scope = new char[strlen(tempScope)*4 + 1];
-                    strcpy(g_snippetCache[row].scope, tempScope);
-
-
-
-                    if (withContent)
-                    {
-                        const char* tempContent = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
-                        tempContentLength = strlen(tempContent)*4 + 1;
-                        if (tempContentLength> contentLength)
-                        {
-                            contentLength = tempContentLength;
-                        }
-                        g_snippetCache[row].content = new char[strlen(tempContent)*4 + 1];
-                        strcpy(g_snippetCache[row].content, tempContent);
-                    }
-                    row++;
-
-
+                    SnipIndex tempSnipIndex;
+                    tempSnipIndex.triggerText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
+                    tempSnipIndex.scope = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
+                    if (withContent) tempSnipIndex.content = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
+                    
+                    g_snippetCache.push_back(tempSnipIndex);
+                }
+                else
+                {
+                    break;  
                 }
             }
-            else
-            {
-                break;  
-            }
+
+            delete [] customScope;
+            delete [] tagType1;
+            delete [] fileType1;
+            delete [] tagType2;
+            delete [] fileType2;
         }
+        sqlite3_finalize(stmt);
+        delete [] sqlite3Statement;
 
-        delete [] customScope;
-        delete [] tagType1;
-        delete [] fileType1;
-        delete [] tagType2;
-        delete [] fileType2;
-    }
-    sqlite3_finalize(stmt);
-    if (populate) populateDockItems();
-    
-    if (pc.configInt[LIVE_PREVIEW_BOX]==1) showPreview(true);
-
-    pc.configInt[LIVE_HINT_UPDATE]++;
-    //::SendMessage(getCurrentScintilla(),SCI_GRABFOCUS,0,0);   
-    
-}
-
-void deleteCache()
-{   
-
-    
-    for (int i=0;i<pc.configInt[SNIPPET_LIST_LENGTH];i++)
-    {
-        delete [] g_snippetCache[i].triggerText;
-        delete [] g_snippetCache[i].scope;
-        delete [] g_snippetCache[i].content;
+        if (populate) populateDockItems(withAll);
         
+        if (pc.configInt[LIVE_PREVIEW_BOX]==1) showPreview(true);
+
+        pc.configInt[LIVE_HINT_UPDATE]++;
+        //::SendMessage(getCurrentScintilla(),SCI_GRABFOCUS,0,0);   
     }
+    
+    
 }
 
-void populateDockItems()
+//void deleteCache()
+//{   
+//    //
+//    //
+//    //for (int i=0;i<pc.configInt[SNIPPET_LIST_LENGTH];i++)
+//    //{
+//    //    //delete [] g_snippetCache[i].triggerText;
+//    //    //delete [] g_snippetCache[i].scope;
+//    //    //delete [] g_snippetCache[i].content;
+//    //    g_snippetCache[i].triggerText = "";
+//    //    g_snippetCache[i].scope = "";
+//    //    g_snippetCache[i].content = "";
+//    //    
+//    //}
+//}
+//
+void populateDockItems(bool withAll)
 {
-    //TODO: Use 2 columns of list box, or list control
-    for (int j=0;j<pc.configInt[SNIPPET_LIST_LENGTH];j++)
+    snippetDock.clearDock();
+    //for (int j=0;j<pc.configInt[SNIPPET_LIST_LENGTH];j++)
+    for (int j=0;j<g_snippetCache.size();j++)
     {
-        if (g_snippetCache[j].scope !=NULL)
+        if ((withAll) || (g_snippetCache[j].triggerText[0] != '_'))
         {
-            char newText[300]="";
-            
-            int triggerTextLength = strlen(g_snippetCache[j].triggerText);
-            
-            //TODO: option to show trigger text first
 
-            //if (strcmp(g_snippetCache[j].scope,"GLOBAL")==0)
-            //{
-            //    strcat(newText,"<<");
-            //    strcat(newText,g_snippetCache[j].scope);
-            //    strcat(newText,">>");
-            //} else
-            //{
-
-            strcat(newText,"<");
-            strcat(newText,g_snippetCache[j].scope);
-            strcat(newText,">");
-            //}
-            
-            //TODO: make this 14 customizable in settings
-            int scopeLength = 14 - strlen(newText);
+            std::string newText = "<"+g_snippetCache[j].scope+">";
+            int scopeLength = 14 - newText.length();
             if (scopeLength < 3) scopeLength = 3;
-            for (int i=0;i<scopeLength;i++)
-            {
-                strcat(newText," ");
-            }
-            strcat(newText,g_snippetCache[j].triggerText);
-
-            //size_t origsize = strlen(newText) + 1;
-            //const size_t newsize = 400;
-            //size_t convertedChars = 0;
-            //wchar_t convertedTagText[newsize];
-            //mbstowcs_s(&convertedChars, convertedTagText, origsize, newText, _TRUNCATE);
-
-            wchar_t* convertedTagText = toWideChar(newText);
-
+            for (int i=0;i<scopeLength;i++) newText = newText + " ";
+            newText = newText + g_snippetCache[j].triggerText;
+            char* newTextCharArray = toCharArray(newText);
+            wchar_t* convertedTagText = toWideChar(newTextCharArray);
             snippetDock.addDockItem(convertedTagText);
             delete [] convertedTagText;
-
+            delete [] newTextCharArray;
 
         }
     }
-    deleteCache();
+    //deleteCache();
 }
 
-void clearCache()
-{   
-
-    
-    //TODO: fix update dockitems memoryleak
-    //g_snippetCacheSize=pc.configInt[SNIPPET_LIST_LENGTH];
-    
-    for (int i=0;i<pc.configInt[SNIPPET_LIST_LENGTH];i++)
-    {
-        //delete [] g_snippetCache[i].triggerText;
-        //delete [] g_snippetCache[i].scope;
-        //delete [] g_snippetCache[i].content;
-        g_snippetCache[i].triggerText=NULL;
-        g_snippetCache[i].scope=NULL;
-        g_snippetCache[i].content=NULL;
-    }
-    
-    
-
-}
+//void clearCache()
+//{   
+//    g_snippetCache.clear();
+//    
+//    //TODO: fix update dockitems memoryleak
+//    //g_snippetCacheSize=pc.configInt[SNIPPET_LIST_LENGTH];
+//    
+//    //for (int i=0;i<pc.configInt[SNIPPET_LIST_LENGTH];i++)
+//    //for (int i=0;i<g_snippetCache.size();i++)
+//    //{
+//    //    //delete [] g_snippetCache[i].triggerText;
+//    //    //delete [] g_snippetCache[i].scope;
+//    //    //delete [] g_snippetCache[i].content;
+//    //    g_snippetCache[i].triggerText="";
+//    //    g_snippetCache[i].scope="";
+//    //    g_snippetCache[i].content="";
+//    //}
+//    
+//    
+//
+//}
 
 void exportAndClearSnippets()
 {
@@ -3370,29 +3330,24 @@ void clearAllSnippets()
 {
     sqlite3_stmt *stmt;
                 
-    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets", -1, &stmt, NULL))
-    {
-        sqlite3_step(stmt);
-        sqlite3_finalize(stmt);
-    }
+    if (SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets", -1, &stmt, NULL)) sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
 
-    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "VACUUM", -1, &stmt, NULL))
-    {
-        sqlite3_step(stmt);
-        sqlite3_finalize(stmt);
-    }
+    if (SQLITE_OK == sqlite3_prepare_v2(g_db, "VACUUM", -1, &stmt, NULL)) sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
 
     updateDockItems(false,false);
 }
 
 bool exportSnippets()
 {
-    //TODO: Can actually add some informtiaon at the end of the exported snippets......can be useful information like version number or just describing the package
-
+    ////TODO: Can actually add some informtiaon at the end of the exported snippets......can be useful information like version number or just describing the package
+    
     pc.configInt[LIVE_HINT_UPDATE]--;  // Temporary turn off live update as it disturb exporting
+    //
 
     bool success = false;
-
+    
     OPENFILENAME ofn;
     char fileName[MAX_PATH] = "";
     ZeroMemory(&ofn, sizeof(ofn));
@@ -3410,32 +3365,41 @@ bool exportSnippets()
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
         int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
         ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
-
+    
         ::SendScintilla(SCI_SETCURSOR, SC_CURSORWAIT, 0);
-        pc.configInt[SNIPPET_LIST_LENGTH] = 100000;
-        g_snippetCache = new SnipIndex [pc.configInt[SNIPPET_LIST_LENGTH]];
-        updateDockItems(true,true,"%", false);
-        
+        //pc.configInt[SNIPPET_LIST_LENGTH] = 100000;
+        //g_snippetCache = new SnipIndex [pc.configInt[SNIPPET_LIST_LENGTH]];
+        //updateDockItems(true,false,"test%",false);  // This is for exporting a subset of the dataset
+        updateDockItems(true,true,"%",false);
+        g_freezeDock = true;
         int exportCount = 0;
-        for (int j=0;j<pc.configInt[SNIPPET_LIST_LENGTH];j++)
+        //for (int j=0;j<pc.configInt[SNIPPET_LIST_LENGTH];j++)
+        for (int j=0;j<g_snippetCache.size();j++)
         {
-            if (g_snippetCache[j].scope !=NULL)
+            if (g_snippetCache[j].scope != "")
             {
-                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)g_snippetCache[j].triggerText);
+                char* triggerText = toCharArray(g_snippetCache[j].triggerText);
+                char* scope = toCharArray(g_snippetCache[j].scope);
+                char* content = toCharArray(g_snippetCache[j].content);
+
+                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)triggerText);
                 ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"\r\n");
-                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)g_snippetCache[j].scope);
+                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)scope);
                 ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"\r\n");
-                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)g_snippetCache[j].content);
+                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)content);
                 ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"!$[FingerTextData FingerTextData]@#\r\n");
                 exportCount++;
+                delete [] triggerText;
+                delete [] scope;
+                delete [] content;
             }
         }
         ::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, 0, (LPARAM)fileName);
         success = true;
-
+    
         ::SendScintilla(SCI_SETCURSOR, SC_CURSORNORMAL, 0);
         wchar_t exportCountText[35] = TEXT("");
-
+    
         if (exportCount>1)
         {
             ::_itow_s(exportCount, exportCountText, 10, 10);
@@ -3451,14 +3415,19 @@ bool exportSnippets()
         ::SendScintilla(SCI_SETSAVEPOINT,0,0);
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
         showMessageBox(exportCountText);
+        g_freezeDock = false;
         //::MessageBox(nppData._nppHandle, exportCountText, TEXT(PLUGIN_NAME), MB_OK);
     }
-    pc.configInt[SNIPPET_LIST_LENGTH] = GetPrivateProfileInt(TEXT(PLUGIN_NAME), TEXT("snippet_list_length"), 1000 , pc.iniPath); // TODO: This hard coding of DEFAULT_SNIPPET_LIST_LENGTH is temporary and can cause problem.
-    g_snippetCache = new SnipIndex [pc.configInt[SNIPPET_LIST_LENGTH]];
-    updateDockItems(true,true,"%");
+    //pc.configInt[SNIPPET_LIST_LENGTH] = GetPrivateProfileInt(TEXT(PLUGIN_NAME), TEXT("snippet_list_length"), 1000 , pc.iniPath); // TODO: This hard coding of DEFAULT_SNIPPET_LIST_LENGTH is temporary and can cause problem.
+    //g_snippetCache = new SnipIndex [pc.configInt[SNIPPET_LIST_LENGTH]];
+    
     pc.configInt[LIVE_HINT_UPDATE]++;
+    
+    
+    updateDockItems(false,false,"%");
 
     return success;
+    
 }
 
 //TODO: importsnippet and savesnippets need refactoring sooooo badly
@@ -3481,8 +3450,10 @@ void importSnippets()
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
     }   
 
+    g_freezeDock = true;
     pc.configInt[LIVE_HINT_UPDATE]--;
     
+
     OPENFILENAME ofn;
     char fileName[MAX_PATH] = "";
     ZeroMemory(&ofn, sizeof(ofn));
@@ -3588,7 +3559,7 @@ void importSnippets()
                 
                 notOverWrite = false;
                 
-                if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
+                if (SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
                 {
                     sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
                     sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
@@ -3648,17 +3619,19 @@ void importSnippets()
                                         notOverWrite = true;
                                     } else
                                     {
+                                        sqlite3_stmt *stmt2;
                                         // delete existing entry
-                                        if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
+                                        if (SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt2, NULL))
                                         {
-                                            sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
-                                            sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
-                                            sqlite3_step(stmt);
+                                            sqlite3_bind_text(stmt2, 1, tagTypeText, -1, SQLITE_STATIC);
+                                            sqlite3_bind_text(stmt2, 2, tagText, -1, SQLITE_STATIC);
+                                            sqlite3_step(stmt2);
                                         } else
                                         {
                                             showMessageBox(TEXT("Cannot write into database."));
                                             //::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT(PLUGIN_NAME), MB_OK);
                                         }
+                                        sqlite3_finalize(stmt2);
                         
                                     }
                                     ::SendScintilla(SCI_GOTOLINE,17,0);
@@ -3667,43 +3640,47 @@ void importSnippets()
                         
                                 } else
                                 {
+                                    sqlite3_stmt *stmt2;
                                     // delete existing entry
-                                    if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
+                                    if (SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt2, NULL))
                                     {
-                                        sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
-                                        sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
-                                        sqlite3_step(stmt);
+                                        sqlite3_bind_text(stmt2, 1, tagTypeText, -1, SQLITE_STATIC);
+                                        sqlite3_bind_text(stmt2, 2, tagText, -1, SQLITE_STATIC);
+                                        sqlite3_step(stmt2);
                                     } else
                                     {
                                         showMessageBox(TEXT("Cannot write into database."));
                                         //::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT(PLUGIN_NAME), MB_OK);
                                     }
+                                    sqlite3_finalize(stmt2);
                                 }
                             } else
                             {
                                 notOverWrite = true;
                                 //Delete the old entry
-                                if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
+                                sqlite3_stmt *stmt2;
+                                if (SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt2, NULL))
                                 {
-                                    sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
-                                    sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
-                                    sqlite3_step(stmt);
-                                    sqlite3_finalize(stmt);
+                                    sqlite3_bind_text(stmt2, 1, tagTypeText, -1, SQLITE_STATIC);
+                                    sqlite3_bind_text(stmt2, 2, tagText, -1, SQLITE_STATIC);
+                                    sqlite3_step(stmt2);
+                                }
+                                sqlite3_finalize(stmt2);
 
-                                }
                                 //write the new entry
-                                if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "INSERT INTO snippets VALUES(?,?,?)", -1, &stmt, NULL))
+                                if (SQLITE_OK == sqlite3_prepare_v2(g_db, "INSERT INTO snippets VALUES(?,?,?,?)", -1, &stmt2, NULL))
                                 {
-                                    sqlite3_bind_text(stmt, 1, tagText, -1, SQLITE_STATIC);
-                                    sqlite3_bind_text(stmt, 2, tagTypeText, -1, SQLITE_STATIC);
-                                    sqlite3_bind_text(stmt, 3, snippetText, -1, SQLITE_STATIC);
+                                    sqlite3_bind_text(stmt2, 1, tagText, -1, SQLITE_STATIC);
+                                    sqlite3_bind_text(stmt2, 2, tagTypeText, -1, SQLITE_STATIC);
+                                    sqlite3_bind_text(stmt2, 3, snippetText, -1, SQLITE_STATIC);
+                                    sqlite3_bind_text(stmt2, 4, "", -1, SQLITE_STATIC);
                                 
-                                    sqlite3_step(stmt);
-                                    sqlite3_finalize(stmt);
+                                    sqlite3_step(stmt2);
                                 }
+                                sqlite3_finalize(stmt2);
 
                                 //write the old entry back with conflict suffix
-                                if (g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "INSERT INTO snippets VALUES(?,?,?)", -1, &stmt, NULL))
+                                if (SQLITE_OK == sqlite3_prepare_v2(g_db, "INSERT INTO snippets VALUES(?,?,?,?)", -1, &stmt2, NULL))
                                 {
                                     importCount++;
                                     //TODO: add file name to the stamp
@@ -3717,11 +3694,12 @@ void importSnippets()
                                     strcat(tagTextsuffixed,dateText);
                                     strcat(tagTextsuffixed,timeText);
                                     
-                                    sqlite3_bind_text(stmt, 1, tagTextsuffixed, -1, SQLITE_STATIC);
-                                    sqlite3_bind_text(stmt, 2, tagTypeText, -1, SQLITE_STATIC);
-                                    sqlite3_bind_text(stmt, 3, snippetTextOld, -1, SQLITE_STATIC);
-                                
-                                    sqlite3_step(stmt);
+                                    sqlite3_bind_text(stmt2, 1, tagTextsuffixed, -1, SQLITE_STATIC);
+                                    sqlite3_bind_text(stmt2, 2, tagTypeText, -1, SQLITE_STATIC);
+                                    sqlite3_bind_text(stmt2, 3, snippetTextOld, -1, SQLITE_STATIC);
+                                    sqlite3_bind_text(stmt2, 4, "", -1, SQLITE_STATIC);
+
+                                    sqlite3_step(stmt2);
 
 
                                     //sqlite3_finalize(stmt);
@@ -3730,29 +3708,32 @@ void importSnippets()
                                     delete [] dateText;
                                     delete [] timeText;
                                 }
+                                sqlite3_finalize(stmt2);
                             }
                         }
                         delete [] snippetTextOld;
-                    } else
-                    {
-                        sqlite3_finalize(stmt);
                     }
                 }
-            
-                if (notOverWrite == false && g_dbOpen && SQLITE_OK == sqlite3_prepare_v2(g_db, "INSERT INTO snippets VALUES(?,?,?)", -1, &stmt, NULL))
-                {
-                    
-                    importCount++;
-                    // Then bind the two ? parameters in the SQLite SQL to the real parameter values
-                    sqlite3_bind_text(stmt, 1, tagText, -1, SQLITE_STATIC);
-                    sqlite3_bind_text(stmt, 2, tagTypeText, -1, SQLITE_STATIC);
-                    sqlite3_bind_text(stmt, 3, snippetText, -1, SQLITE_STATIC);
-            
-                    // Run the query with sqlite3_step
-                    sqlite3_step(stmt); // SQLITE_ROW 100 sqlite3_step() has another row ready
-                    //::MessageBox(nppData._nppHandle, TEXT("The Snippet is saved."), TEXT(PLUGIN_NAME), MB_OK);
-                }
                 sqlite3_finalize(stmt);
+
+                if (notOverWrite == false)
+                {
+                    if (SQLITE_OK == sqlite3_prepare_v2(g_db, "INSERT INTO snippets VALUES(?,?,?,?)", -1, &stmt, NULL))
+                    {
+                        importCount++;
+                        // Then bind the two ? parameters in the SQLite SQL to the real parameter values
+                        sqlite3_bind_text(stmt, 1, tagText, -1, SQLITE_STATIC);
+                        sqlite3_bind_text(stmt, 2, tagTypeText, -1, SQLITE_STATIC);
+                        sqlite3_bind_text(stmt, 3, snippetText, -1, SQLITE_STATIC);
+                        sqlite3_bind_text(stmt, 4, "", -1, SQLITE_STATIC);
+
+                        // Run the query with sqlite3_step
+                        sqlite3_step(stmt); // SQLITE_ROW 100 sqlite3_step() has another row ready
+                        //::MessageBox(nppData._nppHandle, TEXT("The Snippet is saved."), TEXT(PLUGIN_NAME), MB_OK);
+                    }
+                    sqlite3_finalize(stmt);
+                }
+                
                 //delete [] tagText;
                 //delete [] tagTypeText;
                 //delete [] snippetText;
@@ -3796,6 +3777,7 @@ void importSnippets()
         //delete [] fileText;
     }
     pc.configInt[LIVE_HINT_UPDATE]++;
+    g_freezeDock = false;
 
 }
 
@@ -4004,7 +3986,7 @@ void turnOnOptionMode()
 }
 void optionNavigate(bool toNext)
 {
-    
+    pc.configInt[LIVE_HINT_UPDATE]--;
     ::SendScintilla(SCI_SETSELECTION,g_optionStartPosition,g_optionEndPosition);
     updateOptionCurrent(toNext);
     char* option = toCharArray(g_optionArray[g_optionCurrent]);
@@ -4013,13 +3995,15 @@ void optionNavigate(bool toNext)
     ::SendScintilla(SCI_GOTOPOS,g_optionStartPosition,0);
     g_optionEndPosition = g_optionStartPosition + g_optionArray[g_optionCurrent].length();
     ::SendScintilla(SCI_SETSELECTION,g_optionStartPosition,g_optionEndPosition);
+    pc.configInt[LIVE_HINT_UPDATE]++;
 }
 
 void selectionMonitor(int contentChange)
 {
-    //TODO: backspace at the beginning of line 4 in editor mode breaks hint annotation 
     //TODO: pasting text with more then one line in the scope field will break editor restriction
     //TODO: lots of optimization needed
+    
+
     //In normal view, this code is going to cater the option navigation. In editor view, it restrict selection in first 3 lines
     if (g_selectionMonitor == 1)
     {
@@ -4036,7 +4020,7 @@ void selectionMonitor(int contentChange)
         g_selectionMonitor--;
         if (g_editorView == false)
         {
-            
+            //TODO: use hook to cater option? (so that the bug of empty options can be fixed
             //TODO: reexamine possible performance improvement
             if (g_optionMode == true)
             {
@@ -4050,12 +4034,10 @@ void selectionMonitor(int contentChange)
                     optionNavigate(true);
                     //optionTriggered = true;
                     turnOnOptionMode();
-                    //g_optionMode = true; // TODO: investigate why this line is necessary
                 } else
                 {
                     optionNavigate(false);
                     turnOnOptionMode();
-                    //g_optionMode = true;
                 }
                 //else
                 //{
@@ -4157,31 +4139,61 @@ void selectionMonitor(int contentChange)
     }
 }
 
-void tagComplete()
+void doTagComplete()
 {
-    //TODO: can just use the snippetdock to do the completion (after rewrite of snippetdock)
+    tagComplete();
+}
+
+int tagComplete()
+{
+
     int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-    if (triggerTag(posCurrent,true) > 0) snippetHintUpdate();
+    int index = -1;
+    char *tag;
+    int tagLength = getCurrentTag(posCurrent, &tag);
+    char *key = new char[300];
+    strcpy(key,"");
+    if (pc.configInt[INCLUSIVE_TRIGGERTEXT_COMPLETION]==1) strcat(key,"%");
+    strcat(key,tag);
+    strcat(key,"%");
+
+    if (tagLength > 0)
+    {
+        if (pc.configInt[LIVE_HINT_UPDATE]<=0) updateDockItems(false,false,key,false);  //TODO: can omit if live update is on
+        //updateDockItems(false,false,key,false);
+        index = g_snippetCache.size()-1;
+        while ((index >= 0) && (g_snippetCache[index].triggerText[0] == '_')) index--;
+        if (index >= 0)
+        {
+            
+            SendScintilla(SCI_SETSEL,posCurrent-tagLength,posCurrent);
+            char* triggerText;
+            triggerText = toCharArray(g_snippetCache[index].triggerText);
+            SendScintilla(SCI_REPLACESEL,0,(LPARAM)triggerText);
+            delete [] triggerText;
+
+        }
+
+    }
+    if (pc.configInt[LIVE_HINT_UPDATE]<=0) updateDockItems();
+    return index;
+    //if (triggerTag(posCurrent,true) > 0) snippetHintUpdate();
 }
 
 //TODO: better triggertag, should allow for a list of scopes
-bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
+bool triggerTag(int &posCurrent, int triggerLength)
 {
     //HWND curScintilla = getCurrentScintilla();
 
     int paramPos = -1;
-    if (triggerTextComplete == false)
+    paramPos = ::SendScintilla(SCI_BRACEMATCH,posCurrent-1,0);
+    if ((paramPos>=0) && (paramPos<posCurrent))
     {
-        paramPos = ::SendScintilla(SCI_BRACEMATCH,posCurrent-1,0);
-        if ((paramPos>=0) && (paramPos<posCurrent))
-        {
-            triggerLength = triggerLength - (posCurrent - paramPos);
-            posCurrent = paramPos;
-            ::SendScintilla(SCI_GOTOPOS,paramPos,0);
-            
-        }
+        triggerLength = triggerLength - (posCurrent - paramPos);
+        posCurrent = paramPos;
+        ::SendScintilla(SCI_GOTOPOS,paramPos,0);
+        
     }
-
 
     bool tagFound = false;
     char *tag;
@@ -4214,25 +4226,25 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
 
         // Check for custom scope
         tagType = toCharArray(pc.configText[CUSTOM_SCOPE]);
-        expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
+        expanded = findTagSQLite(tag,tagType); 
         
         // Check for snippets which matches ext part
         if (!expanded)
         {
             ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
             tagType = toCharArray(fileType);
-            expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
+            expanded = findTagSQLite(tag,tagType); 
             
             // Check for snippets which matches name part
             if (!expanded)
             {
                 ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
                 tagType = toCharArray(fileType);
-                expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
+                expanded = findTagSQLite(tag,tagType); 
                 // Check for language specific snippets
                 if (!expanded)
                 {
-                    expanded = findTagSQLite(tag,getLangTagType(),triggerTextComplete); 
+                    expanded = findTagSQLite(tag,getLangTagType()); 
                     // TODO: Hardcode the extension associated with each language type, check whether the extension are the same as the current extenstion, if not, use findtagSQLite to search for snippets using those scopes
                     
                     // Check for snippets which matches the current language group
@@ -4259,7 +4271,7 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
                     if (!expanded)
                     {
                         //groupChecked = false;
-                        expanded = findTagSQLite(tag,"GLOBAL",triggerTextComplete); 
+                        expanded = findTagSQLite(tag,"GLOBAL"); 
 
                     }
                 }
@@ -4278,31 +4290,23 @@ bool triggerTag(int &posCurrent,bool triggerTextComplete, int triggerLength)
                 //::SendScintilla(SCI_SETSELECTION,paramStart + 1,paramEnd - 1);
                 //char* paramsContent = new char[paramEnd - 1 - (paramStart + 1) + 1];
                 //::SendScintilla(SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(paramsContent));
-                char* paramsContent;
-                sciGetText(&paramsContent,paramStart+1,paramEnd-1);
 
-                char paramsDelimiter = pc.configText[PARAMS_DELIMITER][0];
-                g_hotspotParams = toVectorString(paramsContent,paramsDelimiter);
-                ::SendScintilla(SCI_SETSELECTION,paramStart,paramEnd);
-                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-                delete [] paramsContent;
+
+                g_hotspotParams = smartSplit(paramStart+1,paramEnd-1,pc.configText[PARAMS_DELIMITER][0]);
+                //char* paramsContent;
+                //sciGetText(&paramsContent,paramStart+1,paramEnd-1);
+                //
+                //char paramsDelimiter = pc.configText[PARAMS_DELIMITER][0];
+                //g_hotspotParams = toVectorString(paramsContent,paramsDelimiter);
+                //delete [] paramsContent;
                 
                 //alertVector(g_hotspotParams);
 
-                
+                ::SendScintilla(SCI_SETSELECTION,paramStart,paramEnd);
+                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
             }
-
-            if (triggerTextComplete)
-            {
-                ::SendScintilla(SCI_SETSEL,posBeforeTag,posCurrent);
-                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)expanded);
-                posBeforeTag = posBeforeTag+strlen(expanded);
-            } else
-            {
-                replaceTag(expanded, posCurrent, posBeforeTag);
-            }
-                
-		    tagFound = true;
+            replaceTag(expanded, posCurrent, posBeforeTag);
+            tagFound = true;
         }
 
         delete [] fileType;
@@ -4438,7 +4442,7 @@ void setFocusToWindow()
     
 }
 
-char* getLangTagType()
+const char* getLangTagType()
 {
     int curLang = 0;
     ::SendMessage(nppData._nppHandle,NPPM_GETCURRENTLANGTYPE ,0,(LPARAM)&curLang);
@@ -4447,7 +4451,7 @@ char* getLangTagType()
     if ((curLang>54) || (curLang<0)) return "";
 
     //support the languages supported by npp 0.5.9, excluding "user defined language" abd "search results"
-    char *s[] = {"Lang:TXT","Lang:PHP","Lang:C","Lang:CPP","Lang:CS","Lang:OBJC","Lang:JAVA","Lang:RC",
+    const char *s[] = {"Lang:TXT","Lang:PHP","Lang:C","Lang:CPP","Lang:CS","Lang:OBJC","Lang:JAVA","Lang:RC",
                  "Lang:HTML","Lang:XML","Lang:MAKEFILE","Lang:PASCAL","Lang:BATCH","Lang:INI","Lang:NFO","",
                  "Lang:ASP","Lang:SQL","Lang:VB","Lang:JS","Lang:CSS","Lang:PERL","Lang:PYTHON","Lang:LUA",
                  "Lang:TEX","Lang:FORTRAN","Lang:BASH","Lang:FLASH","Lang:NSIS","Lang:TCL","Lang:LISP","Lang:SCHEME",
@@ -4641,8 +4645,15 @@ void tabActivate()
         if ((g_enable==false) || (g_rectSelection==true))
         {        
             ::SendScintilla(SCI_TAB,0,0);   
+        } else if (g_optionMode)
+        {
+            //g_optionMode = false;
+            turnOffOptionMode();
+            ::SendScintilla(SCI_GOTOPOS,g_optionEndPosition,0);
+            snippetHintUpdate();
         } else
         {
+
             int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
             //int posTriggerStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
             int lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION,posCurrent,0);
@@ -4671,11 +4682,7 @@ void tabActivate()
 
                 if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
                 bool tagFound = false;
-                if (posSelectionStart==posSelectionEnd)
-                {
-                    tagFound = triggerTag(posCurrent);
-                }
-
+                if (posSelectionStart==posSelectionEnd) tagFound = triggerTag(posCurrent);
                 if (tagFound)
                 {
                     ::SendScintilla(SCI_AUTOCCANCEL,0,0);
@@ -4747,7 +4754,7 @@ void tabActivate()
 
                 bool snippetHint = false;
 
-                bool completeFound = false;
+                int completeFound = -1;
                 if (pc.configInt[TAB_TAG_COMPLETION] == 1)
                 {
                     if ((navSpot == 0) && (tagFound == false) && (dynamicSpot==false)) 
@@ -4760,9 +4767,10 @@ void tabActivate()
                         ::SendScintilla(SCI_SETSELECTION, posSelectionStart, ::SendScintilla(SCI_GETCURRENTPOS, 0, 0));
                         ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
                         //completeFound = snippetComplete();
-                        completeFound = triggerTag(posCurrent,true);
+                        //completeFound = triggerTag(posCurrent,true);
+                        completeFound = tagComplete();
                         ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
-                        if (completeFound)
+                        if (completeFound>=0)
                         {
                             ::SendScintilla(SCI_AUTOCCANCEL,0,0);
                             snippetHint = true;
@@ -4770,7 +4778,7 @@ void tabActivate()
 	        	    }
                 }
                 
-                if ((navSpot == 0) && (tagFound == false) && (completeFound==false) && (dynamicSpot==false)) 
+                if ((navSpot == 0) && (tagFound == false) && (completeFound<0) && (dynamicSpot==false)) 
                 {
                     if (g_optionMode == true)
                     {

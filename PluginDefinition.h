@@ -73,7 +73,7 @@ void showAbout();
 
 // Custom functions for Fingertext
 void shortCutRemapped();
-char *findTagSQLite(char *tag, char *tagCompare, bool similar = false);
+char *findTagSQLite(char *tag, const char *tagCompare);
 void openDummyStaticDlg(void);
 void toggleDisable();
 void restoreTab(int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
@@ -110,13 +110,13 @@ int getCurrentTag(int posCurrent, char **buffer, int triggerLength = 0);
 
 void showSnippetDock();
 void updateDockItems(bool withContent = false, bool withAll = false, char* tag = "%", bool populate = true);
-void populateDockItems();
+void populateDockItems(bool withAll = true);
 
 void saveSnippet();
-char* getLangTagType();
+const char* getLangTagType();
 
-void deleteCache();
-void clearCache();
+//void deleteCache();
+//void clearCache();
 void editSnippet();
 void deleteSnippet();
 void insertSnippet();
@@ -146,8 +146,9 @@ void setFocusToWindow();
 void searchWindowByName(std::string searchKey = "", HWND parentWindow = 0);
 
 void selectionMonitor(int contentChange);
-bool triggerTag(int &posCurrent,bool triggerTextComplete = false,int triggerLength = 0);
-void tagComplete();
+bool triggerTag(int &posCurrent,int triggerLength = 0);
+int tagComplete();
+void doTagComplete();
 void tabActivate();
 
 std::vector<std::string> smartSplit(int start, int end, char delimiter, int parts = 0);

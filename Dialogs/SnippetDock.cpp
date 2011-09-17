@@ -72,6 +72,7 @@ void DockingDlg::clearDock()
 
 void DockingDlg::setDlgText(int dlg, TCHAR* showText)
 {
+    
     ::SetDlgItemText(_hSelf, dlg ,showText);
 
 }

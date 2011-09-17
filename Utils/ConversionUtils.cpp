@@ -70,6 +70,7 @@ wchar_t* toWideChar(char* orig)
         size_t origsize = strlen(orig) + 1;
         size_t convertedChars = 0;
         wideChar = new wchar_t[origsize*4+1];
+        //TODO: can use mbstowcs_s with NULL in second arguemnt to get the length required
         mbstowcs_s(&convertedChars, wideChar, origsize, orig, _TRUNCATE);
     }
     return wideChar;

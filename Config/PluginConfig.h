@@ -35,22 +35,21 @@
 //#include "Version.h"
 
 // Config file content
-#define CONFIG_INT_COUNT 13
+#define CONFIG_INT_COUNT 12
 #define CONFIG_TEXT_COUNT 3
 
-#define SNIPPET_LIST_LENGTH 0
-#define SNIPPET_LIST_ORDER_TAG_TYPE 1
-#define TAB_TAG_COMPLETION 2
-#define LIVE_HINT_UPDATE 3
-#define INDENT_REFERENCE 4
-#define CHAIN_LIMIT 5
-#define PRESERVE_STEPS 6
-#define IMPORT_OVERWRITE_CONFIRM 7
-#define INCLUSIVE_TRIGGERTEXT_COMPLETION 8
-#define LIVE_PREVIEW_BOX 9
-#define EDITOR_CARET_BOUND 10
-#define FORCE_MULTI_PASTE 11
-#define USE_NPP_SHORTKEY 12
+#define SNIPPET_LIST_ORDER_TAG_TYPE 0
+#define TAB_TAG_COMPLETION 1
+#define LIVE_HINT_UPDATE 2
+#define INDENT_REFERENCE 3
+#define CHAIN_LIMIT 4
+#define PRESERVE_STEPS 5
+#define IMPORT_OVERWRITE_CONFIRM 6
+#define INCLUSIVE_TRIGGERTEXT_COMPLETION 7
+#define LIVE_PREVIEW_BOX 8
+#define EDITOR_CARET_BOUND 9
+#define FORCE_MULTI_PASTE 10
+#define USE_NPP_SHORTKEY 11
 
 #define CUSTOM_SCOPE 0
 #define CUSTOM_ESCAPE_CHAR 1
@@ -58,7 +57,6 @@
 
 const int configIntDefault[CONFIG_INT_COUNT] = 
 {
-    1000,            // SNIPPET_LIST_LENGTH
     1,               // SNIPPET_LIST_ORDER_TAG_TYPE
     0,               // TAB_TAG_COMPLETION
     1,               // LIVE_HINT_UPDATE
@@ -75,7 +73,6 @@ const int configIntDefault[CONFIG_INT_COUNT] =
 
 const TCHAR configIntNames[CONFIG_INT_COUNT][MAX_PATH] = 
 {
-    TEXT("snippet_list_length"),
     TEXT("snippet_list_order_tagtype"),
     TEXT("tab_tag_completion"),
     TEXT("live_hint_update"),
