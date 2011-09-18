@@ -68,7 +68,7 @@ const int configIntDefault[CONFIG_INT_COUNT] =
     1,               // LIVE_PREVIEW_BOX
     1,               // EDITOR_CARET_BOUND
     1,               // FORCE_MULTI_PASTE
-    1
+    1                // USE_NPP_SHORTKEY
 };                   
 
 const TCHAR configIntNames[CONFIG_INT_COUNT][MAX_PATH] = 

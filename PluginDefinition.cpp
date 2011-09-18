@@ -70,23 +70,23 @@ struct SnipIndex
 };
 std::vector<SnipIndex> g_snippetCache;
 
-bool g_modifyResponse;
-bool g_enable;
+bool g_modifyResponse = true;
+int g_selectionMonitor = 1;
+bool g_rectSelection = false;
+bool g_freezeDock = false;
+bool g_enable = false;
 bool g_editorView;
-int g_selectionMonitor;
-bool g_rectSelection;
-bool g_freezeDock;
 
 int g_editorLineCount;
 
-int g_lastTriggerPosition;
-std::string g_customClipBoard;
+int g_lastTriggerPosition = 0;
+std::string g_customClipBoard = "";
 
 // For option hotspot
-bool g_optionMode;
-int g_optionStartPosition;
-int g_optionEndPosition;
-int g_optionCurrent;
+bool g_optionMode = false;
+int g_optionStartPosition = 0;
+int g_optionEndPosition = 0;
+int g_optionCurrent = 0;
 std::vector<std::string> g_optionArray;
 
 // List of acceptable tagSigns
@@ -187,8 +187,6 @@ void dataBaseInit()
         sqlite3_step(stmt);
     }
     sqlite3_finalize(stmt);
-
-    
 }
 
 // Initialization of plugin commands
@@ -231,32 +229,22 @@ void commandMenuInit()
 
 void variablesInit()
 {
-    
-    g_customClipBoard = "";   
-
-    g_modifyResponse = true;
-    if (g_dbOpen) g_enable = true;
-    else g_enable = false; //TODO: need to check database problem when setting g_enable to true elsewhere
-
-    g_selectionMonitor = 1;
-    g_rectSelection = false;
-
-    g_freezeDock = false;
-    // For option hotspot
-    turnOffOptionMode();
-    g_optionStartPosition = 0;
-    g_optionEndPosition = 0;
-    g_optionCurrent = 0;
-    
-    g_lastTriggerPosition = 0;
-    
-    //g_snippetCache = new SnipIndex [pc.configInt[SNIPPET_LIST_LENGTH]];
 
 }
 
 
 void nppReady()
 {
+    if (g_dbOpen)
+    {
+        g_enable = true;
+    } else 
+    {
+        g_enable = false; 
+        showMessageBox(TEXT("FingerText cannot be enabled because there is no database connection. Please restart Notepad++ and make sure that the config folder is writable."));
+    }
+
+    turnOffOptionMode();
     if (!(pc.configInt[USE_NPP_SHORTKEY]))
     {
         HMENU hMenu = (HMENU)::SendMessage(nppData._nppHandle, NPPM_GETMENUHANDLE, 0, 0);  // For compatibility mode
@@ -301,9 +289,6 @@ void pluginCleanUp()
     //TODO: think about how to save the parameters for the next session during clean up    
 }
 
-
-
-
 // Functions for Fingertext
 
 void shortCutRemapped()
@@ -320,16 +305,21 @@ void toggleDisable()
 {
     if (g_enable)
     {
+        
         // TODO: refactor all the message boxes to a separate function
         showMessageBox(TEXT("FingerText is disabled"));
         //::MessageBox(nppData._nppHandle, TEXT("FingerText is disabled"), TEXT(PLUGIN_NAME), MB_OK);
         g_enable = false;
+    } else if (!g_dbOpen)
+    {
+        showMessageBox(TEXT("FingerText cannot be enabled because there is no database connection. Please restart Notepad++ and make sure that the config folder is writable."));
     } else
     {
         showMessageBox(TEXT("FingerText is enabled"));
         //::MessageBox(nppData._nppHandle, TEXT("FingerText is enabled"), TEXT(PLUGIN_NAME), MB_OK);
         g_enable = true;
     }
+
     updateMode();
 }
 
@@ -399,11 +389,11 @@ void selectionToSnippet()
     }
     
     //::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
-    
-    if (!::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
-    {
-        ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_ftbPath);
-    } 
+    openTab(g_ftbPath);
+    //if (!::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
+    //{
+    //    ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_ftbPath);
+    //} 
     
     
     //curScintilla = getCurrentScintilla();
@@ -432,6 +422,12 @@ void selectionToSnippet()
     //pc.configInt[EDITOR_CARET_BOUND]++;
     g_selectionMonitor++;
 }
+
+void closeEditWindow()
+{
+    closeTab(g_ftbPath);
+}
+
 
 void editSnippet()
 {
@@ -465,10 +461,11 @@ void editSnippet()
 			const char* snippetText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)); // The 0 here means we only take the first column returned. And it is the snippet as there is only one column
     
             // After loading the content, switch to the editor buffer and promput for saving if needed
-            if (!::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
-            {
-                ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_ftbPath);
-            }
+            openTab(g_ftbPath);
+            //if (!::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
+            //{
+            //    ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_ftbPath);
+            //}
             //HWND curScintilla = getCurrentScintilla();
             promptSaveSnippet(TEXT("Do you wish to save the current snippet before editing anotoher one?"));
             ::SendScintilla(SCI_CLEARALL,0,0);
@@ -2828,10 +2825,7 @@ void showPreview(bool top)
         
         delete [] buffer;
 
-
         sqlite3_stmt *stmt;
-
-        
         
         if (SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
 	    {
@@ -2849,8 +2843,9 @@ void showPreview(bool top)
 
                 char* tempSnippetText = new char[strlen(snippetText)+1];
                 strcpy(tempSnippetText,snippetText);
+                tempSnippetText = quickStrip(tempSnippetText,'\r');
                 std::vector<std::string> vs = toVectorString(tempSnippetText,'\n');
-                
+                //TODO: remove the empty elements at the end of the vector
                 
                 int i = 0;
                 do
@@ -3092,7 +3087,7 @@ void showSnippetDock()
 }
 
 
-void snippetHintUpdate()
+bool snippetHintUpdate()
 {     
     if ((!g_editorView) && (pc.configInt[LIVE_HINT_UPDATE] == 1) && (g_rectSelection == false) && (g_optionMode == false))
     {
@@ -3126,7 +3121,12 @@ void snippetHintUpdate()
             }
             pc.configInt[LIVE_HINT_UPDATE]=1;
         }
+        return true;
+    } else
+    {
+        return false;
     }
+
     //if (g_modifyResponse) refreshAnnotation();
 }
 
@@ -3137,6 +3137,7 @@ void updateDockItems(bool withContent, bool withAll, char* tag, bool populate)
         pc.configInt[LIVE_HINT_UPDATE]--;
 
         g_snippetCache.clear();
+        
 
         sqlite3_stmt *stmt;
 
@@ -3976,26 +3977,37 @@ void updateOptionCurrent(bool toNext)
 
 void turnOffOptionMode()
 {
+    //if (g_optionMode) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
     //if (g_optionMode) alert();
     g_optionMode = false;
 }
 
 void turnOnOptionMode()
 {
+    //if (!g_optionMode) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
     g_optionMode = true;
 }
 void optionNavigate(bool toNext)
 {
+   
     pc.configInt[LIVE_HINT_UPDATE]--;
+    //g_selectionMonitor = false;
+
     ::SendScintilla(SCI_SETSELECTION,g_optionStartPosition,g_optionEndPosition);
+    //::SendMessage(getCurrentScintilla(),SCI_SETSELECTION,g_optionStartPosition,g_optionEndPosition);
     updateOptionCurrent(toNext);
     char* option = toCharArray(g_optionArray[g_optionCurrent]);
     ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)option);
+    //::SendMessage(getCurrentScintilla(),SCI_REPLACESEL, 0, (LPARAM)option);
     delete [] option;
-    ::SendScintilla(SCI_GOTOPOS,g_optionStartPosition,0);
+    //::SendScintilla(SCI_GOTOPOS,g_optionStartPosition,0);
+    //::SendMessage(getCurrentScintilla(),SCI_GOTOPOS,g_optionStartPosition,0);
     g_optionEndPosition = g_optionStartPosition + g_optionArray[g_optionCurrent].length();
     ::SendScintilla(SCI_SETSELECTION,g_optionStartPosition,g_optionEndPosition);
+    //::SendMessage(getCurrentScintilla(),SCI_SETSELECTION,g_optionStartPosition,g_optionEndPosition);
+    //g_selectionMonitor = true;
     pc.configInt[LIVE_HINT_UPDATE]++;
+   
 }
 
 void selectionMonitor(int contentChange)
@@ -4022,9 +4034,8 @@ void selectionMonitor(int contentChange)
         {
             //TODO: use hook to cater option? (so that the bug of empty options can be fixed
             //TODO: reexamine possible performance improvement
-            if (g_optionMode == true)
+            if ((contentChange & (SC_UPDATE_SELECTION)) && (g_optionMode == true))
             {
-               
                 int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
                 //alertNumber(g_optionStartPosition);
                 //alertNumber(posCurrent);
@@ -4044,6 +4055,7 @@ void selectionMonitor(int contentChange)
                 //    cleanOptionItem();
                 //    g_optionMode = false;
                 //}
+                
             }
         } else if (pc.configInt[EDITOR_CARET_BOUND] == 1)
         {
@@ -4159,8 +4171,8 @@ int tagComplete()
 
     if (tagLength > 0)
     {
-        if (pc.configInt[LIVE_HINT_UPDATE]<=0) updateDockItems(false,false,key,false);  //TODO: can omit if live update is on
-        //updateDockItems(false,false,key,false);
+        //if (pc.configInt[LIVE_HINT_UPDATE]<=0) updateDockItems(false,false,key,false);
+        updateDockItems(false,false,key,false);
         index = g_snippetCache.size()-1;
         while ((index >= 0) && (g_snippetCache[index].triggerText[0] == '_')) index--;
         if (index >= 0)
@@ -4636,24 +4648,15 @@ std::vector<std::string> smartSplit(int start, int end, char delimiter, int part
     return retVal;
 }
 
-
-
 void tabActivate()
 {
     if (sciFocus)
     {
-        if ((g_enable==false) || (g_rectSelection==true))
+        if (((g_enable==false) || (g_rectSelection==true)) && (!g_optionMode))
         {        
             ::SendScintilla(SCI_TAB,0,0);   
-        } else if (g_optionMode)
-        {
-            //g_optionMode = false;
-            turnOffOptionMode();
-            ::SendScintilla(SCI_GOTOPOS,g_optionEndPosition,0);
-            snippetHintUpdate();
         } else
         {
-
             int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
             //int posTriggerStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
             int lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION,posCurrent,0);
@@ -4672,6 +4675,7 @@ void tabActivate()
 
             } else
             {
+                bool tagFound = false;
                 g_hotspotParams.clear();
                 
                 pc.configInt[LIVE_HINT_UPDATE]--;
@@ -4681,14 +4685,24 @@ void tabActivate()
                 int posSelectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
 
                 if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
-                bool tagFound = false;
-                if (posSelectionStart==posSelectionEnd) tagFound = triggerTag(posCurrent);
-                if (tagFound)
+                
+                if (g_optionMode)
                 {
-                    ::SendScintilla(SCI_AUTOCCANCEL,0,0);
-                    posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-                    g_lastTriggerPosition = posCurrent;
-                } 
+                    //g_optionMode = false;
+                    turnOffOptionMode();
+                    ::SendScintilla(SCI_GOTOPOS,g_optionEndPosition,0);
+                    snippetHintUpdate();
+                } else
+                {
+
+                    if (posSelectionStart==posSelectionEnd) tagFound = triggerTag(posCurrent);
+                    if (tagFound)
+                    {
+                        ::SendScintilla(SCI_AUTOCCANCEL,0,0);
+                        posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+                        g_lastTriggerPosition = posCurrent;
+                    } 
+                }
                 
 
                 int navSpot = 0;
@@ -4815,7 +4829,6 @@ LRESULT CALLBACK KeyboardProc(int ncode,WPARAM wparam,LPARAM lparam)
             {
                 if( !(GetKeyState(VK_SHIFT)&0x8000) && !(GetKeyState(VK_CONTROL)&0x8000) && !(GetKeyState(VK_MENU)&0x8000) )
                 {
-
                     tabActivate(); 
                 }
             }
@@ -4836,10 +4849,6 @@ void removehook()
 {
 	UnhookWindowsHookEx(hook);
 }
-
-
-
-
 
 void testThread( void* pParams )
 { 
@@ -4863,7 +4872,7 @@ void testing()
 {
     alert("testing1");
 
-
+    SendScintilla(SCI_REPLACESEL,0,(LPARAM)"HELLO!");
     //// Disable tab key in scintilla
     //SendScintilla(SCI_ASSIGNCMDKEY,SCK_TAB,SCI_NULL);
 

@@ -1,6 +1,6 @@
-//This file is part of FingerText, a notepad++ snippet plugin.
+//This file is part of EriniataNppPluginTemplate, a notepad++ snippet plugin.
 //
-//FingerText is released under MIT License.
+//EriniataNppPluginTemplate is released under MIT License.
 //
 //MIT license
 //
@@ -70,7 +70,6 @@ wchar_t* toWideChar(char* orig)
         size_t origsize = strlen(orig) + 1;
         size_t convertedChars = 0;
         wideChar = new wchar_t[origsize*4+1];
-        //TODO: can use mbstowcs_s with NULL in second arguemnt to get the length required
         mbstowcs_s(&convertedChars, wideChar, origsize, orig, _TRUNCATE);
     }
     return wideChar;
@@ -146,50 +145,6 @@ std::vector<std::string> toSortedVectorString(std::vector<std::string> v)
     std::sort(v.begin(), v.end());
     return v;
 }
-
-
-
-//std::vector<std::string> split3(char* str, char* c, int parts)
-//{
-//    int i;;
-//    if (parts == 0)
-//    {
-//        i = -1;
-//    } else
-//    {
-//        i = 1;
-//    }
-//        
-//    std::vector<std::string> result;
-//
-//    while(1)
-//    {
-//        
-//        char *begin = str;
-//        while ((!(*str == c[0] && *str+1 == c[1] && *str+2 == c[2]) && *str && *str+1 && *str+2) || ((i >= parts) && *str)) str++;
-//        result.push_back(std::string(begin, str));
-//        if (parts != 0) i++;
-//
-//        int j=0;
-//        do
-//        {
-//            if (0 != *str)
-//            {
-//                *str++;
-//            } else 
-//            {
-//                break;
-//            }
-//            j++;
-//        } while (j<=2);
-//
-//
-//        //if (0 == *str++) break;
-//    }
-//
-//    return result;
-//}
-
 
 
 

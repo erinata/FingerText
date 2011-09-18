@@ -118,15 +118,16 @@ void DockingDlg::setSelction()
 {
     HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
     SendMessage(hwndList, LB_SETANCHORINDEX, 0, 0);
+    
 }
 
-int DockingDlg::getCount()
-{
-    int retVal;
-    HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
-    retVal = SendMessage(hwndList, LB_GETCOUNT, 0, 0);
-    return retVal;
-}
+//int DockingDlg::getCount()
+//{
+//    int retVal;
+//    HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
+//    retVal = SendMessage(hwndList, LB_GETCOUNT, 0, 0);
+//    return retVal;
+//}
 
 BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {

@@ -1,6 +1,6 @@
-//This file is part of FingerText, a notepad++ snippet plugin.
+//This file is part of ErinataNppPluginTemplate, a notepad++ snippet plugin.
 //
-//FingerText is released under MIT License.
+//ErinataNppPluginTemplate is released under MIT License.
 //
 //MIT license
 //

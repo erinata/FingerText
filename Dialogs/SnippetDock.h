@@ -52,7 +52,7 @@ class DockingDlg : public DockingDlgInterface
         void toggleSave(bool buttonOn);
         int getSelection();
         void setSelction();
-        int getCount();
+        //int getCount();
         void DockingDlg::getSelectText(TCHAR* &buffer, int index = -1);
 
     protected :

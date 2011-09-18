@@ -1,5 +1,10 @@
 changelog (for developer use only, include unreleased versions)
 
+0.5.42
+- Fixed: critical bug fix of the compatibility of (opt) and several lexer
+- Fixed: option hotspot UNDO bug
+- Changed: prevent the ftb window to be saved in the session
+
 0.5.41
 - Fixed: memory leakage problem of live update
 - Fixed: export snippet error due to live update problem
@@ -57,7 +62,7 @@ changelog (for developer use only, include unreleased versions)
 0.5.36
 ****** Changed: CUT and COPY keyword are referencing the start of hotspot instead of startingPos.
 - Fixed: Params insertion cause fingertext to freeze
-****** Refactoring and clean the COPY and CUT keyword code
+- Refactoring and clean the COPY and CUT keyword code
 
 0.5.35
 - Added: Customizable option delimiter of (opt), the default delimiter is set to be |
@@ -162,7 +167,7 @@ changelog (for developer use only, include unreleased versions)
 - do not turn off option when language change
 
 0.5.16
-****** Primitive implementation of Option Dynamic Hotspot
+- Primitive implementation of Option Dynamic Hotspot
 ****** Added: keyword SCOPE:
 ****** CUT: and GET: will get all when no parameter is passed or search fail
 ****** CUTALL and GETALL is deleted

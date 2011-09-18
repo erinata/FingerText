@@ -1,6 +1,6 @@
-//This file is part of FingerText, a notepad++ snippet plugin.
+//This file is part of ErinataNppPluginTemplate, a notepad++ snippet plugin.
 //
-//FingerText is released under MIT License.
+//ErinataNppPluginTemplate is released under MIT License.
 //
 //MIT license
 //
@@ -174,6 +174,21 @@ unsigned int sciGetText(char **text, int start, int end)
 //}
 //
 
+void closeTab(TCHAR* path)
+{
+    if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)path))
+    {
+        ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
+    } 
+}
+
+void openTab(TCHAR* path)
+{
+    if (!::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)path))
+    {
+        ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)path);
+    } 
+}
 
 void emptyFile(TCHAR* fileName)
 {

@@ -125,7 +125,7 @@ void clearAllSnippets();
 void exportAndClearSnippets();
 bool exportSnippets();
 void importSnippets();
-void snippetHintUpdate();
+bool snippetHintUpdate();
 int promptSaveSnippet(TCHAR* message = NULL);
 
 void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* path = TEXT(""));
@@ -155,6 +155,9 @@ std::vector<std::string> smartSplit(int start, int end, char delimiter, int part
 
 void removehook();
 void installhook();
+
+void closeEditWindow();
+
 
 void updateOptionCurrent(bool toNext);
 void cleanOptionItem();

@@ -1,6 +1,6 @@
-//This file is part of FingerText, a notepad++ snippet plugin.
+//This file is part of EriniataNppPluginTemplate, a notepad++ snippet plugin.
 //
-//FingerText is released under MIT License.
+//EriniataNppPluginTemplate is released under MIT License.
 //
 //MIT license
 //
@@ -35,13 +35,11 @@
 #include <vector>
 #include <sstream>
 #include <algorithm>
-//#include <tchar.h>
 
 std::string toString(const char &c);
 std::string toString(const double &d);
 std::string toString(int &i);
 std::string toString(char* source);
-
 
 wchar_t* toWideChar(char* orig);
 
@@ -53,8 +51,6 @@ double toDouble(const std::string &s);
 long toLong(std::string source);
 
 std::vector<std::string> toVectorString(char* str, char c = ' ', int parts = 0);
-//std::vector<std::string> split3(char* str, char* c, int parts);
-//std::vector<std::string> split2(char* str, char c1, char c2, char c3);
 std::vector<std::string> toSortedVectorString(std::vector<std::string> v);
 
 int toVk(char* input);

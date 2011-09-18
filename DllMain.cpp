@@ -69,12 +69,12 @@ LRESULT CALLBACK SubWndProcNpp(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
                  sciFocus = 0;
              } else if ((HIWORD(wParam) == SCEN_SETFOCUS) && nppLoaded == 1)
              {
-                 
                  sciFocus = 1;
              }
              retVal = ::CallWindowProc(wndProcNpp, hWnd, message, wParam, lParam);
              break;
         case WM_CLOSE:
+            closeEditWindow(); // Doing this before the callwindowproc will prevent the ftb window to go into the session
             retVal = ::CallWindowProc(wndProcNpp, hWnd, message, wParam, lParam);
             updateMode();  //Need to Do this because when a user attempt to close npp and the buffer shift to a file that's not saved, The bufferactivated message is not activated.
             break;
@@ -126,7 +126,11 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
         case NPPN_LANGCHANGED:
             
             //keyUpdate();
-            if (nppLoaded) updateDockItems();
+            //if (nppLoaded) updateDockItems();
+            if (nppLoaded)
+            {
+                if (!snippetHintUpdate()) updateDockItems();
+            }
             //cleanOptionItem(); //This is not necessary........but the memory will keep a list of options used in last option dynamic hotspor call
             break;
             //TODO: Try to deal with repeated triggering of snippetHintUpdate and keyUpdateS
@@ -148,17 +152,19 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             //    alertNumber(strcmp(notifyCode->text,"  "));
             //}
             //TODO: investigate better way to write this (may be use SC_MULTISTEPUNDOREDO and SC_LASTSTEPINUNDOREDO)
-            if ((nppLoaded) & ((notifyCode->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT | SC_LASTSTEPINUNDOREDO)) && (!(notifyCode->modificationType & (SC_PERFORMED_UNDO | SC_PERFORMED_REDO)))))
+            if ((nppLoaded) & ((notifyCode->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT | SC_LASTSTEPINUNDOREDO)) && (!(notifyCode->modificationType & (SC_MOD_CHANGESTYLE | SC_MOD_CHANGEFOLD)))))
             {
                 
                 turnOffOptionMode();
-                if (!(notifyCode->modificationType & (SC_MOD_INSERTTEXT))) snippetHintUpdate();
-                refreshAnnotation();
+                if (!(notifyCode->modificationType & (SC_PERFORMED_UNDO | SC_PERFORMED_REDO)))
+                {
+                    if (!(notifyCode->modificationType & (SC_MOD_INSERTTEXT))) snippetHintUpdate();
+                    refreshAnnotation();
+                }
              
             }
             break;
         case SCN_UPDATEUI:  
-            
             if (nppLoaded) selectionMonitor(notifyCode->updated);
             //if (notifyCode->updated & (SC_UPDATE_CONTENT))
             //{
@@ -186,6 +192,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             break;
 
         case NPPN_SHUTDOWN:
+            
             pluginShutdown();
             break;
         // TODO: consider using SC_MOD_CHANGEANNOTATION to shutdown use of annotation in snippet editing mode
@@ -200,6 +207,7 @@ extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam
 	//{
 	//	::MessageBox(NULL, TEXT("MOVE"), TEXT("Trace"), MB_OK);
 	//}
+
 
 	return true;
 }

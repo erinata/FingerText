@@ -1,6 +1,6 @@
-//This file is part of FingerText, a notepad++ snippet plugin.
+//This file is part of ErinataNppPluginTemplate, a notepad++ snippet plugin.
 //
-//FingerText is released under MIT License.
+//ErinataNppPluginTemplate is released under MIT License.
 //
 //MIT license
 //
@@ -52,7 +52,8 @@ int searchPrev(char* searchText, bool regExp = false);
 unsigned int sciGetText(char **text, int start = -1, int end = -1);
 //unsigned int sciGetText(HWND hwnd, char **text, int start, int end)
 
-
+void closeTab(TCHAR* path);
+void openTab(TCHAR* path);
 void emptyFile(TCHAR* fileName);
 
 #endif //NPPAPIUTILS_H
