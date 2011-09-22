@@ -156,8 +156,10 @@ std::vector<std::string> smartSplit(int start, int end, char delimiter, int part
 void removehook();
 void installhook();
 
-void closeEditWindow();
+void closeNonSessionTabs();
 
+void turnOffSnippetTriggering();
+void makeUpTab();
 
 void updateOptionCurrent(bool toNext);
 void cleanOptionItem();

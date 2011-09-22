@@ -74,7 +74,7 @@ LRESULT CALLBACK SubWndProcNpp(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
              retVal = ::CallWindowProc(wndProcNpp, hWnd, message, wParam, lParam);
              break;
         case WM_CLOSE:
-            closeEditWindow(); // Doing this before the callwindowproc will prevent the ftb window to go into the session
+            closeNonSessionTabs(); // Doing this before the callwindowproc will prevent the ftb window to go into the session
             retVal = ::CallWindowProc(wndProcNpp, hWnd, message, wParam, lParam);
             updateMode();  //Need to Do this because when a user attempt to close npp and the buffer shift to a file that's not saved, The bufferactivated message is not activated.
             break;
@@ -156,8 +156,11 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             {
                 
                 turnOffOptionMode();
+                    
                 if (!(notifyCode->modificationType & (SC_PERFORMED_UNDO | SC_PERFORMED_REDO)))
                 {
+
+
                     if (!(notifyCode->modificationType & (SC_MOD_INSERTTEXT))) snippetHintUpdate();
                     refreshAnnotation();
                 }

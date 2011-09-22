@@ -49,4 +49,4 @@ Usage Guide and Source code:\r\n\
            http://github.com/erinata/FingerText \r\n\r\n\
 "
 
-#define MENU_LENGTH 15 //15
+#define MENU_LENGTH 18 //15

@@ -173,13 +173,15 @@ void dataBaseInit()
     sqlite3_stmt *stmt;
 
     if (SQLITE_OK == sqlite3_prepare_v2(g_db, 
-    "CREATE TABLE snippets (tag TEXT, tagType TEXT, snippet TEXT)"
+    "CREATE TABLE snippets (tag TEXT, tagType TEXT, snippet TEXT, package TEXT)"
     , -1, &stmt, NULL))
     {
         sqlite3_step(stmt);
     }
     sqlite3_finalize(stmt);
 
+    //TODO: a checking on new update can be done by calling pc.newUpdate == false
+    // for those who upgrade from old database 
     if (SQLITE_OK == sqlite3_prepare_v2(g_db, 
     "ALTER TABLE snippets ADD COLUMN package TEXT"
     , -1, &stmt, NULL))
@@ -187,6 +189,9 @@ void dataBaseInit()
         sqlite3_step(stmt);
     }
     sqlite3_finalize(stmt);
+
+    //alert(pc.version);
+    //alert(pc.versionOld);
 }
 
 // Initialization of plugin commands
@@ -423,9 +428,10 @@ void selectionToSnippet()
     g_selectionMonitor++;
 }
 
-void closeEditWindow()
+void closeNonSessionTabs()
 {
     closeTab(g_ftbPath);
+    closeTab(pc.iniPath);
 }
 
 
@@ -4648,6 +4654,7 @@ std::vector<std::string> smartSplit(int start, int end, char delimiter, int part
     return retVal;
 }
 
+
 void tabActivate()
 {
     if (sciFocus)
@@ -4684,17 +4691,25 @@ void tabActivate()
                 int posSelectionStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
                 int posSelectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
 
-                if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
+                
                 
                 if (g_optionMode)
                 {
+
+                    if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
                     //g_optionMode = false;
                     turnOffOptionMode();
                     ::SendScintilla(SCI_GOTOPOS,g_optionEndPosition,0);
                     snippetHintUpdate();
                 } else
-                {
-
+                {             
+                    if (pc.configInt[FALLBACK_TAB]==1) ::SendScintilla(SCI_TAB, 0, 0);
+                    if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
+                    if (pc.configInt[FALLBACK_TAB]==1) 
+                    {
+                        ::SendScintilla(SCI_SETSELECTION, posSelectionStart, ::SendScintilla(SCI_GETCURRENTPOS, 0, 0));
+                        ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
+                    }
                     if (posSelectionStart==posSelectionEnd) tagFound = triggerTag(posCurrent);
                     if (tagFound)
                     {
@@ -4776,10 +4791,14 @@ void tabActivate()
                         
                         ::SendScintilla(SCI_GOTOPOS, posSelectionStart, 0);
                         posCurrent = posSelectionStart;
-                        ::SendScintilla(SCI_TAB, 0, 0);
+
+                        if (pc.configInt[FALLBACK_TAB]==1) ::SendScintilla(SCI_TAB, 0, 0);
                         ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
-                        ::SendScintilla(SCI_SETSELECTION, posSelectionStart, ::SendScintilla(SCI_GETCURRENTPOS, 0, 0));
-                        ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
+                        if (pc.configInt[FALLBACK_TAB]==1)
+                        {
+                            ::SendScintilla(SCI_SETSELECTION, posSelectionStart, ::SendScintilla(SCI_GETCURRENTPOS, 0, 0));
+                            ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
+                        }
                         //completeFound = snippetComplete();
                         //completeFound = triggerTag(posCurrent,true);
                         completeFound = tagComplete();

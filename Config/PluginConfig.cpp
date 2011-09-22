@@ -120,6 +120,7 @@ void PluginConfig::configSetUp()
     setTextVariables();
 
     version = ::GetPrivateProfileInt(TEXT(PLUGIN_NAME), TEXT("version"), 0, iniPath);
+    versionOld = version;
     
     if (version == VERSION_LINEAR)  // current version
     {
