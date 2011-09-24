@@ -101,7 +101,7 @@
   <ItemGroup>
     <ClCompile Include="Config\PluginConfig.cpp" />
     <ClCompile Include="DialogFeatures\StaticDialog.cpp" />
-    <ClCompile Include="Dialogs\DummyStaticDialog.cpp" />
+    <ClCompile Include="Dialogs\InsertionDialog.cpp" />
     <ClCompile Include="Dialogs\SnippetDock.cpp" />
     <ClCompile Include="DllMain.cpp" />
     <ClCompile Include="DuckEval\DuckEval.cpp" />
@@ -121,7 +121,7 @@
     <ClInclude Include="DialogFeatures\StaticDialog.h" />
     <ClInclude Include="DialogFeatures\Window.h" />
     <ClInclude Include="Dialogs\Dialog.h" />
-    <ClInclude Include="Dialogs\DummyStaticDialog.h" />
+    <ClInclude Include="Dialogs\InsertionDialog.h" />
     <ClInclude Include="Dialogs\SnippetDock.h" />
     <ClInclude Include="DuckEval\DuckEval.h" />
     <ClInclude Include="NppApi\menuCmdID.h" />

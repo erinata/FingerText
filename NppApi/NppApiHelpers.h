@@ -35,8 +35,7 @@
 // Connecting to Scintilla
 HWND getCurrentScintilla(int which = -1);
 sptr_t SendScintilla(unsigned int iMessage, uptr_t wParam, sptr_t lParam);
-void updateScintilla(int which = -1);
-
+void updateScintilla(int which = -1,HWND curScintilla = NULL);
 // Setting the menu
 ShortcutKey* setShortCutKey(bool _isAlt, bool _isCtrl, bool _isShift, UCHAR _key);
 int setCommand(TCHAR *cmdName = TEXT(""), PFUNCPLUGINCMD pFunc = NULL, ShortcutKey *sk = NULL, bool check0nInit = false);

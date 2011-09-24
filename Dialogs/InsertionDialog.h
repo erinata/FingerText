@@ -27,18 +27,20 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-#ifndef DUMMY_STATIC_DLG_H
-#define DUMMY_STATIC_DLG_H
+#ifndef INSERTION_DLG_H
+#define INSERTION_DLG_H
 
 #include "Dialog.h"
 #include "StaticDialog.h"
 #include "PluginInterface.h"
 
-class DummyStaticDlg : public StaticDialog
+#include "debugUtils.h"
+
+class InsertionDlg : public StaticDialog
 {
 
 public:
-	DummyStaticDlg() : StaticDialog() {};
+	InsertionDlg() : StaticDialog() {};
     
     void init(HINSTANCE hInst, NppData nppData)
 	{
@@ -46,9 +48,22 @@ public:
 		Window::init(hInst, nppData._nppHandle);
 	};
 
-   	void doDialog();
+   	void InsertionDlg::doDialog(int initialState = 1);
+    TCHAR* InsertionDlg::getEditText();
+    void InsertionDlg::addDockItem(wchar_t *dockItem);
+    void InsertionDlg::clearList();
+    bool InsertionDlg::insertSnippet();
+    void InsertionDlg::clearText();
+    void InsertionDlg::setTextTarget(bool fromTab);
+    void InsertionDlg::setListTarget();
+    bool InsertionDlg::completeSnippets();
+    void InsertionDlg::getSelectText(TCHAR* &buffer, int index = -1);
+    void InsertionDlg::setDlgText(int dlg, TCHAR* showText);
+    void InsertionDlg::changeMode(bool withComment);
+    void InsertionDlg::changeExpand();
 
-    virtual void destroy() {
+    virtual void destroy() 
+    {
 
     };
 
@@ -61,4 +76,4 @@ private:
     HWND			_HSource;
 };
 
-#endif // DUMMY_STATIC_DLG_H
+#endif // INSERTION_DLG_H

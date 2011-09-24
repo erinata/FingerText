@@ -1,9 +1,19 @@
 changelog (for developer use only, include unreleased versions)
 
+0.5.43.2
+****** apply username39's patch on EOL conversion
+
+0.5.43.1
+****** set sciFocus to 1 at launch
+
 0.5.43
 ****** Changed: prevent settings window to be saved in the session
-****** Added: fallback_tab option, when you use UNDO after a tab completion or a snippet triggering. Fingertext will restore the TAB action
-
+****** Added: fallback_tab in settings, when you use UNDO after a tab completion or a snippet triggering. Fingertext will restore the TAB action
+****** primitive implementation of snippet insertion dialog and SELECTION keyword
+****** Fixed: COPYLINE ....etc. will not cut the space before the triggertext
+****** Fixed: shutdown autocomplete when undo
+****** Fixed: Direct Insertion is now compatible with (opt) and (lis)
+****** Fixed: Snippet preview will not show [>END<]
 
 0.5.42
 - Fixed: critical bug fix of the compatibility of (opt) and several lexer

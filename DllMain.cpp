@@ -156,7 +156,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             {
                 
                 turnOffOptionMode();
-                    
+                ::SendScintilla(SCI_AUTOCCANCEL,0,0);
                 if (!(notifyCode->modificationType & (SC_PERFORMED_UNDO | SC_PERFORMED_REDO)))
                 {
 

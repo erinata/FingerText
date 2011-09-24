@@ -1160,14 +1160,22 @@
 #define WM_DDE_FIRST                    0x03E0
 #define IDC_SNIPPET_LIST                1000
 #define IDC_EDIT1                       1001
+#define IDC_INSERTION_EDIT              1001
 #define IDC_SAVE                        1002
+#define IDC_INSERTION_LIST              1002
 #define IDC_TRIGGER_TEXT                1003
+#define IDC_INSERTION_HINT              1003
 #define IDC_SCOPE                       1004
+#define IDC_EDIT3                       1004
+#define IDC_INSERTION_PREVIEW           1004
 #define IDC_CREATE                      1005
+#define IDC_EDIT2                       1005
+#define IDC_INSERTION_DES               1005
 #define IDC_DELETE                      1006
 #define IDC_LENGTH                      1009
 #define IDC_REFRESH                     1010
 #define IDC_BUTTON1                     1012
+#define IDC_BUTTON_MORE                 1012
 #define IDC_LIST_TITLE                  1015
 #define CF_GDIOBJLAST                   0x03FF
 #define _WIN32_WINNT_NT4                0x0400
@@ -1392,7 +1400,7 @@
 #define IDC_PREVIEW_EDIT                2102
 #define ID_UGO_STATIC                   2105
 #define ID_UGO_STATIC2                  2106
-#define IDD_DUMMY_STATIC_DLG            2200
+#define IDD_INSERTION_DLG               2200
 #define LVS_ALIGNMASK                   0x0c00
 #define CS_BYTEALIGNCLIENT              0x1000
 #define HDS_OVERFLOW                    0x1000
@@ -1525,7 +1533,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        101
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1002
+#define _APS_NEXT_CONTROL_VALUE         1006
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -72,9 +72,9 @@ HWND getCurrentScintilla(int which)
     return nppData._scintillaMainHandle;
 }
 
-void updateScintilla(int which)
+void updateScintilla(int which, HWND curScintilla)
 {
-    HWND curScintilla = getCurrentScintilla(which);
+    if (curScintilla == NULL) curScintilla = getCurrentScintilla(which);
     pSciMsg = (SciFnDirect)SendMessage(curScintilla,SCI_GETDIRECTFUNCTION, 0, 0);
     pSciWndData = (sptr_t)SendMessage(curScintilla,SCI_GETDIRECTPOINTER, 0, 0);
 }

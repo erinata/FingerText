@@ -39,10 +39,11 @@
 #include <fstream>      // For file reading and writing
 #include <winhttp.h>    // For http requests, Add winhttp.lib to additional dependencies if there is external definition error
 #include <process.h>    // For thread
+#include <regex>
 
 #include "PluginConfig.h"
 #include "sqlite3.h"
-#include "DummyStaticDialog.h"
+#include "InsertionDialog.h"
 #include "SnippetDock.h"
 #include "Version.h"
 #include "DuckEval.h"
@@ -74,7 +75,8 @@ void showAbout();
 // Custom functions for Fingertext
 void shortCutRemapped();
 char *findTagSQLite(char *tag, const char *tagCompare);
-void openDummyStaticDlg(void);
+void showInsertionDlg();
+void setInsertionDialogState(int state);
 void toggleDisable();
 void restoreTab(int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
 int searchPrevMatchedSign(char* tagSign, char* tagTail);
@@ -91,7 +93,8 @@ void evaluateHotSpot(int &firstPos, char* hotSpotText);
 void chainSnippet(int &firstPos, char* hotSpotText);
 int hotSpotNavigation(char* tagSign = "$[![", char* tagTail = "]!]");
 int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, char* tagTail = "]!]");
-void showPreview(bool top = false);
+void showPreview(bool top = false,bool insertion = false);
+
 
 void selectionToSnippet();
 void insertHotSpotSign();
@@ -109,9 +112,11 @@ void openDatabase();
 int getCurrentTag(int posCurrent, char **buffer, int triggerLength = 0);
 
 void showSnippetDock();
-void updateDockItems(bool withContent = false, bool withAll = false, char* tag = "%", bool populate = true);
-void populateDockItems(bool withAll = true);
+void updateDockItems(bool withContent = false, bool withAll = false, char* tag = "%", bool populate = false, bool populateInsertion = false);
+void populateDockItems(bool withAll = true, bool insertion = false);
 
+void setTextTarget(bool fromTab);
+void setListTarget();
 void saveSnippet();
 const char* getLangTagType();
 
@@ -119,7 +124,6 @@ const char* getLangTagType();
 //void clearCache();
 void editSnippet();
 void deleteSnippet();
-void insertSnippet();
 void exportSnippetsOnly();
 void clearAllSnippets();
 void exportAndClearSnippets();
@@ -145,10 +149,15 @@ BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam);
 void setFocusToWindow();
 void searchWindowByName(std::string searchKey = "", HWND parentWindow = 0);
 
+TCHAR* snippetTextBrokenDown(std::vector<std::string> vs, char* tempTriggerText, char* snippetContent);
+
 void selectionMonitor(int contentChange);
 bool triggerTag(int &posCurrent,int triggerLength = 0);
 int tagComplete();
 void doTagComplete();
+bool diagActivate(char* tag);
+void triggerDiagInsertion();
+
 void tabActivate();
 
 std::vector<std::string> smartSplit(int start, int end, char delimiter, int parts = 0);
@@ -156,10 +165,9 @@ std::vector<std::string> smartSplit(int start, int end, char delimiter, int part
 void removehook();
 void installhook();
 
-void closeNonSessionTabs();
+char *replaceAll(char *src, const char *fromstr, const char *tostr);
 
-void turnOffSnippetTriggering();
-void makeUpTab();
+void closeNonSessionTabs();
 
 void updateOptionCurrent(bool toNext);
 void cleanOptionItem();
@@ -169,9 +177,6 @@ void optionNavigate(bool toNext);
 
 void testing();
 void testing2();
-
-
-
 
 
 #endif //PLUGINDEFINITION_H

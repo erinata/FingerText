@@ -27,12 +27,19 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-#define VERSION_TEXT "0.5.42.0"
-#define VERSION_NUM 0,5,42,0
-#define VERSION_LINEAR 542
+#define TESTING
+
+#define VERSION_TEXT "0.5.44.0"
+#define VERSION_NUM 0,5,44,0
+#define VERSION_LINEAR 544
 #define VERSION_KEEP_CONFIG_START 500
 #define VERSION_STAGE "(Alpha)"
+#ifdef TESTING
+#define VERSION_STAGE_ADD " Nightly"
+#else
 #define VERSION_STAGE_ADD ""
+#endif
+
 
 #define AUTHOR_NAME "erinata"
 #define PLUGIN_NAME "FingerText"
@@ -48,5 +55,8 @@ Update to the lastest version:\r\n\
 Usage Guide and Source code:\r\n\
            http://github.com/erinata/FingerText \r\n\r\n\
 "
-
-#define MENU_LENGTH 18 //15
+#ifdef TESTING
+#define MENU_LENGTH 20
+#else
+#define MENU_LENGTH 17
+#endif
