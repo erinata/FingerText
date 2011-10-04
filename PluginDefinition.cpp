@@ -236,12 +236,10 @@ void commandMenuInit()
     setCommand(TEXT("Testing2"), testing2);
 }
 
-
 void variablesInit()
 {
 
 }
-
 
 void nppReady()
 {
@@ -258,11 +256,13 @@ void nppReady()
     turnOffOptionMode();
     if (!(pc.configInt[USE_NPP_SHORTKEY]))                                                         // For compatibility mode
     {                                                                                              // For compatibility mode
-        HMENU hMenu = (HMENU)::SendMessage(nppData._nppHandle, NPPM_GETMENUHANDLE, 0, 0);          // For compatibility mode
-        ::EnableMenuItem(hMenu, funcItem[g_tabActivateIndex]._cmdID, MF_BYCOMMAND | MF_GRAYED);    // For compatibility mode
+        ::EnableMenuItem((HMENU)::SendMessage(nppData._nppHandle, NPPM_GETMENUHANDLE, 0, 0), funcItem[g_tabActivateIndex]._cmdID, MF_BYCOMMAND | MF_GRAYED);    // For compatibility mode
         installhook();                                                                             // For compatibility mode
         SendScintilla(SCI_ASSIGNCMDKEY,SCK_TAB,SCI_NULL);                                          // For compatibility mode
     }                                                                                              // For compatibility mode
+
+    //Temporarily disable the insertion dialog
+    //::EnableMenuItem((HMENU)::SendMessage(nppData._nppHandle, NPPM_GETMENUHANDLE, 0, 0), funcItem[g_showInsertionDlgIndex]._cmdID, MF_BYCOMMAND | MF_GRAYED);
 
     updateMode();
     pc.upgradeMessage();
@@ -3080,7 +3080,11 @@ void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, b
 
         sqlite3_stmt *stmt;
 
-        if (g_editorView) withAll = true;
+        if (g_editorView) 
+        {
+            
+            withAll = true;
+        }
         
         int sqlitePrepare;
         char* sqlite3Statement = new char[400];
@@ -3089,7 +3093,8 @@ void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, b
         const char* selectClause2 = "SELECT tag,tagType FROM snippets ";
         const char* orderClause1 = "ORDER BY tagType DESC,tag DESC ";
         const char* orderClause2 = "ORDER BY tag DESC,tagType DESC ";
-        const char* whereClause = "WHERE (tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ?) AND tag LIKE ? ";
+        //const char* whereClause = "WHERE (tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ?) AND tag LIKE ? ";
+        const char* whereClause = "WHERE tagType LIKE ? AND tag LIKE ? ";
 
         strcpy(sqlite3Statement,"");
         if (withContent) strcat(sqlite3Statement,selectClause1);
@@ -3109,54 +3114,82 @@ void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, b
             char *tagType2 = NULL;
             TCHAR *fileType2 = new TCHAR[MAX_PATH];
 
-            if (withAll)
+            int i=0;
+            do
             {
-                //char snippetCacheSizeText[10];
-                //::_itoa(pc.configInt[SNIPPET_LIST_LENGTH], snippetCacheSizeText, 10); 
-                //sqlite3_bind_text(stmt, 1, snippetCacheSizeText, -1, SQLITE_STATIC);
-            } else
-            {   
-                customScope = toCharArray(pc.configText[CUSTOM_SCOPE]);
-                sqlite3_bind_text(stmt, 1, customScope, -1, SQLITE_STATIC);
-                
-                ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType1);
-                tagType1 = toCharArray(fileType1);
-                sqlite3_bind_text(stmt, 2, tagType1, -1, SQLITE_STATIC);
-
-                ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType2);
-                tagType2 = toCharArray(fileType2);
-                sqlite3_bind_text(stmt, 3, tagType2, -1, SQLITE_STATIC);
-
-                sqlite3_bind_text(stmt, 4, getLangTagType(), -1, SQLITE_STATIC);
-            
-                sqlite3_bind_text(stmt, 5, "GLOBAL", -1, SQLITE_STATIC);
-
-                sqlite3_bind_text(stmt, 6, tag, -1, SQLITE_STATIC);
-
-                //TODO: potential performance improvement by just setting 100
-                //char snippetCacheSizeText[10];
-                //::_itoa(pc.configInt[SNIPPET_LIST_LENGTH], snippetCacheSizeText, 10); 
-                //sqlite3_bind_text(stmt, 7, snippetCacheSizeText, -1, SQLITE_STATIC);
-            }
-            
-            //int row = 0;
-
-            while(true)
-            {
-                if(SQLITE_ROW == sqlite3_step(stmt))
+                if (withAll)
                 {
-                    SnipIndex tempSnipIndex;
-                    tempSnipIndex.triggerText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
-                    tempSnipIndex.scope = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
-                    if (withContent) tempSnipIndex.content = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
                     
-                    g_snippetCache.push_back(tempSnipIndex);
+                    //char snippetCacheSizeText[10];
+                    //::_itoa(pc.configInt[SNIPPET_LIST_LENGTH], snippetCacheSizeText, 10); 
+                    //sqlite3_bind_text(stmt, 1, snippetCacheSizeText, -1, SQLITE_STATIC);
+                } else
+                {   
+
+                    if (i == 0)
+                    {
+                        sqlite3_bind_text(stmt, 1, "SYSTEM", -1, SQLITE_STATIC);
+                        
+                    } else if (i == 1)
+                    {
+                        sqlite3_bind_text(stmt, 1, "GLOBAL", -1, SQLITE_STATIC);
+                        
+                    } else if (i == 2)
+                    {
+                        sqlite3_bind_text(stmt, 1, getLangTagType(), -1, SQLITE_STATIC);
+                        
+                    } else if (i == 3)
+                    {
+                        ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType2);
+                        tagType2 = toCharArray(fileType2);
+                        sqlite3_bind_text(stmt, 1, tagType2, -1, SQLITE_STATIC);
+                    } else if (i == 4)
+                    {
+                        ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType1);
+                        tagType1 = toCharArray(fileType1);
+                        sqlite3_bind_text(stmt, 1, tagType1, -1, SQLITE_STATIC);
+                    } else if (i == 5)
+                    {
+                        customScope = toCharArray(pc.configText[CUSTOM_SCOPE]);
+                        sqlite3_bind_text(stmt, 1, customScope, -1, SQLITE_STATIC);
+                    }
+
+                    sqlite3_bind_text(stmt, 2, tag, -1, SQLITE_STATIC);
                 }
-                else
+
+
+                    //TODO: potential performance improvement by just setting 100
+                    //char snippetCacheSizeText[10];
+                    //::_itoa(pc.configInt[SNIPPET_LIST_LENGTH], snippetCacheSizeText, 10); 
+                    //sqlite3_bind_text(stmt, 7, snippetCacheSizeText, -1, SQLITE_STATIC);
+            
+                
+                //int row = 0;
+                
+                while(true)
                 {
-                    break;  
+
+                    if(SQLITE_ROW == sqlite3_step(stmt))
+                    {
+                        
+                        SnipIndex tempSnipIndex;
+                        tempSnipIndex.triggerText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
+                        tempSnipIndex.scope = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
+                        if (withContent) tempSnipIndex.content = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
+                        
+                        g_snippetCache.push_back(tempSnipIndex);
+                    }
+                    else
+                    {
+                        break;  
+                    }
                 }
-            }
+                sqlite3_reset(stmt);
+
+                i++;
+            } while ((i <=5) && (!withAll));
+
+
 
             delete [] customScope;
             delete [] tagType1;
@@ -3167,20 +3200,17 @@ void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, b
         sqlite3_finalize(stmt);
         delete [] sqlite3Statement;
 
-        if (populate)
-        {
-            
-            populateDockItems(withAll);
-            if (pc.configInt[LIVE_PREVIEW_BOX]==1) showPreview(true,false);
-        }
+
         if (populateInsertion)
         {
             populateDockItems(withAll,true);
             showPreview(true,true);
+        } else if (populate)
+        {
+            populateDockItems(withAll);
+            if (pc.configInt[LIVE_PREVIEW_BOX]==1) showPreview(true,false);
         }
         
-        
-
         pc.configInt[LIVE_HINT_UPDATE]++;
         //::SendMessage(getCurrentScintilla(),SCI_GRABFOCUS,0,0);   
     }
@@ -3188,27 +3218,10 @@ void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, b
     
 }
 
-//void deleteCache()
-//{   
-//    //
-//    //
-//    //for (int i=0;i<pc.configInt[SNIPPET_LIST_LENGTH];i++)
-//    //{
-//    //    //delete [] g_snippetCache[i].triggerText;
-//    //    //delete [] g_snippetCache[i].scope;
-//    //    //delete [] g_snippetCache[i].content;
-//    //    g_snippetCache[i].triggerText = "";
-//    //    g_snippetCache[i].scope = "";
-//    //    g_snippetCache[i].content = "";
-//    //    
-//    //}
-//}
-//
 void populateDockItems(bool withAll, bool insertion)
 {
     if (insertion)
     {
-        
         insertionDlg.clearList();
     } else
     {
@@ -3263,28 +3276,6 @@ void setListTarget()
     
     insertionDlg.setListTarget();
 }
-
-//void clearCache()
-//{   
-//    g_snippetCache.clear();
-//    
-//    //TODO: fix update dockitems memoryleak
-//    //g_snippetCacheSize=pc.configInt[SNIPPET_LIST_LENGTH];
-//    
-//    //for (int i=0;i<pc.configInt[SNIPPET_LIST_LENGTH];i++)
-//    //for (int i=0;i<g_snippetCache.size();i++)
-//    //{
-//    //    //delete [] g_snippetCache[i].triggerText;
-//    //    //delete [] g_snippetCache[i].scope;
-//    //    //delete [] g_snippetCache[i].content;
-//    //    g_snippetCache[i].triggerText="";
-//    //    g_snippetCache[i].scope="";
-//    //    g_snippetCache[i].content="";
-//    //}
-//    
-//    
-//
-//}
 
 void exportAndClearSnippets()
 {
@@ -4232,6 +4223,7 @@ bool triggerTag(int &posCurrent, int triggerLength)
         // Check for snippets which matches ext part
         if (!expanded)
         {
+            delete [] tagType;
             ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
             tagType = toCharArray(fileType);
             expanded = findTagSQLite(tag,tagType); 
@@ -4239,6 +4231,7 @@ bool triggerTag(int &posCurrent, int triggerLength)
             // Check for snippets which matches name part
             if (!expanded)
             {
+                delete [] tagType;
                 ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
                 tagType = toCharArray(fileType);
                 expanded = findTagSQLite(tag,tagType); 
@@ -4273,7 +4266,12 @@ bool triggerTag(int &posCurrent, int triggerLength)
                     {
                         //groupChecked = false;
                         expanded = findTagSQLite(tag,"GLOBAL"); 
+                        if (!expanded)
+                        {
+                        
+                            expanded = findTagSQLite(tag,"SYSTEM"); 
 
+                        }
                     }
                 }
             }
@@ -4676,11 +4674,8 @@ void triggerDiagInsertion()
     {
         insertionDlg.completeSnippets();
     }
-
-
-    
-    
 }
+
 bool diagActivate(char* tag)
 {
     bool retVal = false;
@@ -4787,12 +4782,6 @@ bool diagActivate(char* tag)
                 {
                     if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
                 }
-
-
-                
-
-                
-
                 retVal = true;
                 
             } else
@@ -4994,37 +4983,6 @@ void tabActivate()
 }
 
 
-
-char *replaceAll(char *src, const char *fromstr, const char *tostr) {
-    char *result, *sr;
-    size_t i, count = 0;
-    size_t fromlen = strlen(fromstr); if (fromlen < 1) return src;
-    size_t tolen = strlen(tostr);
-
-    if (tolen != fromlen) {
-        for (i = 0; src[i] != '\0';) {
-            if (memcmp(&src[i], fromstr, fromlen) == 0) count++, i += fromlen;
-        else i++;
-        }
-    } else i = strlen(src);
-
-
-    result = (char *) malloc(i + 1 + count * (tolen - fromlen));
-    if (result == NULL) return NULL;
-
-
-    sr = result;
-    while (*src) {
-        if (memcmp(src, fromstr, fromlen) == 0) {
-            memcpy(sr, tostr, tolen);
-            sr += tolen;
-            src  += fromlen;
-        } else *sr++ = *src++;
-    }
-    *sr = '\0';
-
-    return result;
-}
 
 LRESULT CALLBACK KeyboardProc(int ncode,WPARAM wparam,LPARAM lparam)
 {

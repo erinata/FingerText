@@ -1,5 +1,10 @@
 changelog (for developer use only, include unreleased versions)
 
+0.5.44
+****** Add SYSTEM snippets
+****** Fixed: snippet editor not showing all snippets
+****** Changed: The snippet dock is always putting GLOBAL snippets at the bottom
+
 0.5.43.2
 ****** apply username39's patch on EOL conversion
 

@@ -165,7 +165,7 @@ std::vector<std::string> smartSplit(int start, int end, char delimiter, int part
 void removehook();
 void installhook();
 
-char *replaceAll(char *src, const char *fromstr, const char *tostr);
+
 
 void closeNonSessionTabs();
 

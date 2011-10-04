@@ -50,3 +50,36 @@ char* quickStrip(char *str, char key)
     while ((*from != key) && (*to++=*from),*from++);
     return str;
 }
+
+
+
+char *replaceAll(char *src, const char *fromstr, const char *tostr) {
+    char *result, *sr;
+    size_t i, count = 0;
+    size_t fromlen = strlen(fromstr); if (fromlen < 1) return src;
+    size_t tolen = strlen(tostr);
+
+    if (tolen != fromlen) {
+        for (i = 0; src[i] != '\0';) {
+            if (memcmp(&src[i], fromstr, fromlen) == 0) count++, i += fromlen;
+        else i++;
+        }
+    } else i = strlen(src);
+
+
+    result = (char *) malloc(i + 1 + count * (tolen - fromlen));
+    if (result == NULL) return NULL;
+
+
+    sr = result;
+    while (*src) {
+        if (memcmp(src, fromstr, fromlen) == 0) {
+            memcpy(sr, tostr, tolen);
+            sr += tolen;
+            src  += fromlen;
+        } else *sr++ = *src++;
+    }
+    *sr = '\0';
+
+    return result;
+}

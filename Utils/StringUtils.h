@@ -37,6 +37,6 @@
 
 char* quickStrip(char *str, char key);
 void findAndReplace(std::string& str, const std::string& oldStr, const std::string& newStr);
-
+char *replaceAll(char *src, const char *fromstr, const char *tostr);
 
 #endif //STRINGUTILS_H
