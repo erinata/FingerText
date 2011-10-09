@@ -843,10 +843,11 @@ bool dynamicHotspot(int &startingPos, char* tagSign, char* tagTail)
         
         if (spot>=0)
 	    {
-            checkPoint = ::SendScintilla(SCI_GETCURRENTPOS,0,0)+1;
+            //int tailPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+            checkPoint = spot+1;
             spotComplete = -1;
             //spotComplete = searchPrev(tagSign);
-
+            
             spotComplete = searchPrevMatchedSign(tagSign,tagTail);
             
             if (spotComplete>=0)
@@ -855,7 +856,7 @@ bool dynamicHotspot(int &startingPos, char* tagSign, char* tagTail)
                 int firstPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
                 int secondPos = 0;
                 
-                spotType = grabHotSpotContent(&hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength, tagTail);
+                spotType = grabHotSpotContent(&hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength,spot);
                 
                 if (spotType>0)
                 {
@@ -974,6 +975,9 @@ void paramsInsertion(int &firstPos, char* hotSpot, int &checkPoint)
                 }
                 //alertNumber(found);
             } while (found >= 0);
+        } else
+        {
+            
         }
 
         delete [] hotspotParamsCharArray;
@@ -2281,15 +2285,18 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
     char *hotSpot;
 
     int tagSpot = searchNext(tagTail);    // Find the tail first so that nested snippets are triggered correctly
+    
+
 	if (tagSpot >= 0)
 	{
         if (pc.configInt[PRESERVE_STEPS] == 0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
 
+        //int tailPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
         if (searchPrev(tagSign) >= 0)
         {
             int firstPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
             int secondPos = 0;
-            grabHotSpotContent(&hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength, tagTail);
+            grabHotSpotContent(&hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength, tagSpot);
 
             if (strncmp(hotSpotText,"(lis)",5) == 0)
             {
@@ -2552,12 +2559,14 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
     return retVal;
 }
 
-int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, char* tagTail)
+int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, int tailPos)
 {
     int spotType = 0;
 
-    searchNext(tagTail);
-	secondPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+    //searchNext(tagTail);
+    
+	//secondPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+    secondPos = tailPos;
 
     //::SendScintilla(SCI_SETSELECTION,firstPos+signLength,secondPos);
     //*hotSpotText = new char[secondPos - (firstPos + signLength) + 1];
@@ -5038,22 +5047,41 @@ void testing()
 {
     alert("testing1");
     
-    // Testing replaceall
-    char* ori = new char[100];
-    char* key = new char[10];
-    char* rep = new char[10];
-    strcpy(ori,"Hello Hello everybody!");
-    strcpy(key,"Hello");
-    strcpy(rep,"wowowowow");
 
-    alert((int)strlen(ori));
-    ori = replaceAll(ori,key,rep);
-    alert(ori);
-    alert((int)strlen(ori));
+    //// Fail attempt to create new scintillahandle
+    //HWND sciHandle;
+    //
+    //::SendMessage(nppData._nppHandle,NPPM_CREATESCINTILLAHANDLE,0,(LPARAM)&sciHandle);
+    //
+    //alert(::SendMessage(sciHandle,SCI_GETCURRENTPOS,0,0));
+    //
+    //
+    //::SendMessage(sciHandle,SCI_REPLACESEL,0,(LPARAM)"12345");
+    //::SendMessage(sciHandle,SCI_GOTOPOS,3,3);
+    //
+    //alert(::SendMessage(sciHandle,SCI_GETCURRENTPOS,0,0));
+    //
+    //::SendMessage(nppData._nppHandle,NPPM_DESTROYSCINTILLAHANDLE,0,(LPARAM)&sciHandle);
+    //
+    //alert("Hello");
 
-    delete [] ori;
-    delete [] key;
-    delete [] rep;
+
+    //// Testing replaceall
+    //char* ori = new char[100];
+    //char* key = new char[10];
+    //char* rep = new char[10];
+    //strcpy(ori,"Hello Hello everybody!");
+    //strcpy(key,"Hello");
+    //strcpy(rep,"wowowowow");
+    //
+    //alert((int)strlen(ori));
+    //ori = replaceAll(ori,key,rep);
+    //alert(ori);
+    //alert((int)strlen(ori));
+    //
+    //delete [] ori;
+    //delete [] key;
+    //delete [] rep;
 
 
 

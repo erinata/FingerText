@@ -92,7 +92,8 @@ std::string evaluateCall(char* expression);
 void evaluateHotSpot(int &firstPos, char* hotSpotText);
 void chainSnippet(int &firstPos, char* hotSpotText);
 int hotSpotNavigation(char* tagSign = "$[![", char* tagTail = "]!]");
-int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, char* tagTail = "]!]");
+
+int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, int tailPos);
 void showPreview(bool top = false,bool insertion = false);
 
 

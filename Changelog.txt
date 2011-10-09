@@ -4,6 +4,10 @@ changelog (for developer use only, include unreleased versions)
 ****** Add SYSTEM snippets
 ****** Fixed: snippet editor not showing all snippets
 ****** Changed: The snippet dock is always putting GLOBAL snippets at the bottom
+****** Fixed: nested hotspot not triggered correctly when an empty param is inserted
+****** Performance improvement of hotspot navigation
+****** Changed: Fallback_tab is not default to be on
+
 
 0.5.43.2
 ****** apply username39's patch on EOL conversion

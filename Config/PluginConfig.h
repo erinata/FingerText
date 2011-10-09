@@ -71,8 +71,8 @@ const int configIntDefault[CONFIG_INT_COUNT] =
     1,               // EDITOR_CARET_BOUND
     1,               // FORCE_MULTI_PASTE
     1,               // USE_NPP_SHORTKEY
-    1,               // FALLBACK_TAB
-    1                //INSERTION_DIALOG_STATE
+    0,               // FALLBACK_TAB
+    0                //INSERTION_DIALOG_STATE
 };                   
 
 const TCHAR configIntNames[CONFIG_INT_COUNT][MAX_PATH] = 
