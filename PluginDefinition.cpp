@@ -2749,6 +2749,7 @@ void showPreview(bool top,bool insertion)
 
                     TCHAR* currentEditTextWide = insertionDlg.getEditText();
                     char* currentEditText = toCharArray(currentEditTextWide);
+                    // TODO: cater the case where I enter something with spaces (should only read the last entry after breaking it down to vector)
                     std::vector<std::string> vs = toVectorString(currentEditText,'(',2);
                     delete [] currentEditText;
                       
@@ -2822,21 +2823,119 @@ void showPreview(bool top,bool insertion)
 
 TCHAR* snippetTextBrokenDown(std::vector<std::string> vs, char* tempTriggerText, char* snippetContent)
 {
+    //"<div id=\"$[![myid]!]\" class=\"$[![myclass]!]\">  This id is $[![myid]!] and the class is $[![myclass]!]  $[![]!]</div>"
     quickStrip(snippetContent,'\r');
     quickStrip(snippetContent,'\n');
 
-    TCHAR* snippetContentWide = toWideChar(snippetContent);
-    TCHAR* triggerTextWide = toWideChar(tempTriggerText);
+    HWND sciHandle;
+    sciHandle = (HWND)::SendMessage(nppData._nppHandle,NPPM_CREATESCINTILLAHANDLE,0,NULL);
+    updateScintilla(0,sciHandle);
+    //alert(::SendScintilla(SCI_GETCURRENTPOS,0,0));
+    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)snippetContent);
+    ::SendScintilla(SCI_GOTOPOS,0,0);
+    
+    std::vector<std::string> spotVector;
 
-    TCHAR* hintText = new TCHAR[strlen(snippetContent)+strlen(tempTriggerText)+2+1];
-    _tcscpy(hintText, triggerTextWide);
-    _tcscat(hintText, TEXT("  "));                  
-    _tcscat(hintText, snippetContentWide);          
+    int endPos;
+    int startPos;
+    int i = g_listLength-1;
 
-    delete [] snippetContentWide;
-    delete [] triggerTextWide;
+    do
+    {
+        do
+        {
+            endPos = -1;
+            startPos = -1;
 
-    return hintText;
+            endPos = searchNext(g_tagTailList[i]);
+            if (endPos >= 0)
+            {
+                endPos = endPos+3;
+                startPos = searchPrevMatchedSign(g_tagSignList[i],g_tagTailList[i]);
+            }
+            
+            if ((endPos != -1) && (startPos != -1))
+            {
+                
+                char* getText = new char[endPos-startPos+1];
+                sciGetText(&getText,startPos,endPos);
+                char* getText2 = new char[endPos-3-(startPos+4)+1];
+                sciGetText(&getText2,startPos+4,endPos-3);
+
+
+                if ((getText2[0]=='(') && (getText2[4]==')'))
+                {
+                } else
+                {
+                    ::SendScintilla(SCI_SETSEL,startPos,endPos);
+                    int found = -1;
+                    do
+                    {
+                        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+                        found = searchNext(getText);
+                    } while (found >= 0);
+
+                    endPos = startPos;
+                    spotVector.push_back(getText2);
+                }
+
+                delete [] getText;
+                delete [] getText2;
+            }
+
+            ::SendScintilla(SCI_GOTOPOS,endPos,0);
+            
+        } while ((endPos != -1) && (startPos != -1));
+        i--;
+    } while (i>=0);
+    
+    //alert(spotVector);
+
+    updateScintilla();
+    ::SendMessage(nppData._nppHandle,NPPM_DESTROYSCINTILLAHANDLE,0,(LPARAM)&sciHandle);
+
+    std::string hintString;
+    hintString = tempTriggerText;
+    
+    if (spotVector.size()!=0) 
+    {
+        hintString=hintString+"( ";
+        int j =0;
+        for (j=0;j< spotVector.size();j++)
+        {
+            if (spotVector[j].length()==0) spotVector[j] = "(empty)";
+
+            if (j!=0) hintString = hintString + ",";
+            hintString = hintString + spotVector[j];
+        }
+        hintString=hintString+" )";
+    }
+
+    char* hintText = new char[hintString.length()+1];
+    strcpy(hintText,hintString.c_str());
+    
+    TCHAR* hintTextWide = ::toWideChar(hintText);
+
+    delete [] hintText;
+
+    return hintTextWide;
+
+
+    //quickStrip(snippetContent,'\r');
+    //quickStrip(snippetContent,'\n');
+    //
+    //TCHAR* snippetContentWide = toWideChar(snippetContent);
+    //TCHAR* triggerTextWide = toWideChar(tempTriggerText);
+    //
+    //TCHAR* hintText = new TCHAR[strlen(snippetContent)+strlen(tempTriggerText)+2+1];
+    //_tcscpy(hintText, triggerTextWide);
+    //_tcscat(hintText, TEXT("  "));                  
+    //_tcscat(hintText, snippetContentWide);          
+    //
+    //delete [] snippetContentWide;
+    //delete [] triggerTextWide;
+    //
+    //return hintText;
 
 }
 
@@ -5048,21 +5147,28 @@ void testing()
     alert("testing1");
     
 
-    //// Fail attempt to create new scintillahandle
+     ////Test case for snippetTextBrokenDown
+     std::vector<std::string> vs;
+     vs.push_back("awesome");
+     vs.push_back("hello)");
+     TCHAR* result;
+     char* triggerText = new char[100];
+     strcpy(triggerText,"awesome");
+     char* content = new char[200];
+     strcpy(content,"<div id=\"$[![myid]!]\" class=\"$[![myclass]!]\">  $[![(key)$[![keyword]!]]!] $[1[priority]1] This id is $[![myid]!] and the class is $[![myclass]!]  $[![]!]</div>");
+     result = snippetTextBrokenDown(vs,triggerText,content);
+     alert(result);
+     delete [] result;
+
+
+    //// create new scintillahandle
     //HWND sciHandle;
-    //
-    //::SendMessage(nppData._nppHandle,NPPM_CREATESCINTILLAHANDLE,0,(LPARAM)&sciHandle);
-    //
+    //sciHandle = (HWND)::SendMessage(nppData._nppHandle,NPPM_CREATESCINTILLAHANDLE,0,NULL);
     //alert(::SendMessage(sciHandle,SCI_GETCURRENTPOS,0,0));
-    //
-    //
     //::SendMessage(sciHandle,SCI_REPLACESEL,0,(LPARAM)"12345");
     //::SendMessage(sciHandle,SCI_GOTOPOS,3,3);
-    //
     //alert(::SendMessage(sciHandle,SCI_GETCURRENTPOS,0,0));
-    //
     //::SendMessage(nppData._nppHandle,NPPM_DESTROYSCINTILLAHANDLE,0,(LPARAM)&sciHandle);
-    //
     //alert("Hello");
 
 

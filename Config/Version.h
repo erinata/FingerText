@@ -27,7 +27,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-#define TESTING
+//#define TESTING
 
 #define VERSION_TEXT "0.5.44.0"
 #define VERSION_NUM 0,5,44,0
@@ -46,7 +46,7 @@
 #define COPYRIGHT_TEXT "Copyright (C) 2011"
 #define DESCRIPTION_TEXT "A snippet plugin for notepad++"
 
-#define DATE_TEXT "September 2011"
+#define DATE_TEXT "October 2011"
 #define AUTHOR_TEXT "Author: Tom Lam\r\n"
 #define EMAIL_TEXT "Email: erinata@gmail.com\r\n"
 #define ABOUT_TEXT "\

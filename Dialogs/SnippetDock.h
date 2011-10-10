@@ -34,7 +34,6 @@
 #include "DockingDlgInterface.h"
 #include <WindowsX.h>
 
-
 class DockingDlg : public DockingDlgInterface
 {
     public :
