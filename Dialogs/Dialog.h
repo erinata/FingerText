@@ -63,7 +63,6 @@
 #define CS_VREDRAW                      0x0001
 #define CF_TEXT                         1
 #define SCF_ISSECURE                    0x00000001
-#define IDC_EDIT                        1
 #define BN_PAINT                        1
 #define BST_CHECKED                     0x0001
 #define TBSTYLE_SEP                     0x0001
@@ -1161,6 +1160,7 @@
 #define IDC_SNIPPET_LIST                1000
 #define IDC_EDIT1                       1001
 #define IDC_INSERTION_EDIT              1001
+#define IDC_FILTER                      1001
 #define IDC_SAVE                        1002
 #define IDC_INSERTION_LIST              1002
 #define IDC_TRIGGER_TEXT                1003
@@ -1171,12 +1171,29 @@
 #define IDC_CREATE                      1005
 #define IDC_EDIT2                       1005
 #define IDC_INSERTION_DES               1005
+#define IDC_NEW                         1005
 #define IDC_DELETE                      1006
+#define IDC_CREATESELECTION             1007
+#define IDC_RADIO_NORMAL                1008
 #define IDC_LENGTH                      1009
+#define IDC_RADIO_EDITOR                1009
 #define IDC_REFRESH                     1010
+#define IDC_STATIC_TEXT                 1010
+#define IDC_INSERT                      1011
 #define IDC_BUTTON1                     1012
 #define IDC_BUTTON_MORE                 1012
-#define IDC_LIST_TITLE                  1015
+#define IDC_OPENEDITOR                  1012
+#define IDC_CLOSEEDITOR                 1013
+#define IDC_IMPORT                      1014
+#define IDC_IMPORTFILE                  1014
+#define IDC_EXPORT                      1015
+#define IDC_EXPORTALL                   1016
+#define IDC_DELETEALL                   1017
+#define IDC_STATIC_TEXT2                1019
+#define IDC_EDIT                        1020
+#define IDC_BUTTON2                     1021
+#define IDC_IMPORTURL                   1021
+#define IDC_STATIC_TEXT3                1022
 #define CF_GDIOBJLAST                   0x03FF
 #define _WIN32_WINNT_NT4                0x0400
 #define _WIN32_IE_IE40                  0x0400
@@ -1195,7 +1212,9 @@
 #define _WIN32_IE_IE401                 0x0401
 #define psh2                            0x0401
 #define psh3                            0x0402
+#define IDC_STATIC_TEXT4                1026
 #define psh4                            0x0403
+#define IDC_STATIC_TEXT5                1027
 #define psh5                            0x0404
 #define psh6                            0x0405
 #define psh7                            0x0406
@@ -1533,7 +1552,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        101
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1006
+#define _APS_NEXT_CONTROL_VALUE         1022
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

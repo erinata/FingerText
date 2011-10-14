@@ -77,6 +77,7 @@ void shortCutRemapped();
 char *findTagSQLite(char *tag, const char *tagCompare);
 void showInsertionDlg();
 void setInsertionDialogState(int state);
+
 void toggleDisable();
 void restoreTab(int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
 int searchPrevMatchedSign(char* tagSign, char* tagTail);
@@ -113,7 +114,7 @@ void openDatabase();
 int getCurrentTag(int posCurrent, char **buffer, int triggerLength = 0);
 
 void showSnippetDock();
-void updateDockItems(bool withContent = false, bool withAll = false, char* tag = "%", bool populate = false, bool populateInsertion = false);
+void updateDockItems(bool withContent = false, bool withAll = false, char* tag = "%", bool populate = false, bool populateInsertion = false, bool searchType = false);
 void populateDockItems(bool withAll = true, bool insertion = false);
 
 void setTextTarget(bool fromTab);
@@ -123,6 +124,8 @@ const char* getLangTagType();
 
 //void deleteCache();
 //void clearCache();
+void insertSnippet();
+void closeEditor();
 void editSnippet();
 void deleteSnippet();
 void exportSnippetsOnly();

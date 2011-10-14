@@ -1,6 +1,11 @@
 changelog (for developer use only, include unreleased versions)
 
-
+0.5.45
+****** Added: Editor Specific Dock
+****** Fixed: use _ in Oldcopy and fixed the import error
+****** Fixed: closing snippetdock and reopen cause bug in edit button
+****** Changed: Disable Fingertext will disable all snippet trigger related functionalities
+****** Changed: New stub text of new snippet.
 
 0.5.44
 - Added: Snippet dialog
@@ -23,7 +28,7 @@ changelog (for developer use only, include unreleased versions)
 ****** Added: fallback_tab in settings, when you use UNDO after a tab completion or a snippet triggering. Fingertext will restore the TAB action
 ****** primitive implementation of snippet insertion dialog and SELECTION keyword
 ****** Fixed: COPYLINE ....etc. will not cut the space before the triggertext
-****** Fixed: shutdown autocomplete when undo
+- Fixed: shutdown autocomplete when undo
 - Fixed: Direct Insertion is now compatible with (opt) and (lis)
 - Fixed: Snippet preview will not show [>END<]
 

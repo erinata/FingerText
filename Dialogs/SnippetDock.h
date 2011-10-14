@@ -45,13 +45,15 @@ class DockingDlg : public DockingDlgInterface
     
         // Custom functions
         void addDockItem(wchar_t *dockItem);
-        void resizeListBox(int height,int width);
+        void resizeListBox(int height=-1,int width=-1);
         void clearDock();
         void setDlgText(int dlg, TCHAR* showText);
         void toggleSave(bool buttonOn);
         int getSelection();
         void setSelction();
         //int getCount();
+        void DockingDlg::switchDock(bool toNormal = true);
+
         void DockingDlg::getSelectText(TCHAR* &buffer, int index = -1);
 
     protected :

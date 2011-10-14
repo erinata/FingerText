@@ -53,6 +53,7 @@
 #define FALLBACK_TAB 12
 #define INSERTION_DIALOG_STATE 13
 
+
 #define CUSTOM_SCOPE 0
 #define CUSTOM_ESCAPE_CHAR 1
 #define PARAMS_DELIMITER 2
@@ -72,7 +73,9 @@ const int configIntDefault[CONFIG_INT_COUNT] =
     1,               // FORCE_MULTI_PASTE
     1,               // USE_NPP_SHORTKEY
     0,               // FALLBACK_TAB
-    0                //INSERTION_DIALOG_STATE
+    0                // INSERTION_DIALOG_STATE
+    
+
 };                   
 
 const TCHAR configIntNames[CONFIG_INT_COUNT][MAX_PATH] = 
@@ -91,6 +94,7 @@ const TCHAR configIntNames[CONFIG_INT_COUNT][MAX_PATH] =
     TEXT("use_npp_shortkey"),
     TEXT("fallback_tab"),
     TEXT("insertion_dialog_state")
+    
 };
 
 const TCHAR configTextDefault[CONFIG_TEXT_COUNT][MAX_PATH] = 

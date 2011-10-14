@@ -60,6 +60,18 @@ int g_snippetDockIndex;
 int g_tabActivateIndex;
 int g_showInsertionDlgIndex;
 
+int g_toggleDisableIndex;
+int g_selectionToSnippetIndex;
+int g_importSnippetsIndex;
+int g_exportSnippetsIndex;
+int g_deleteAllSnippetsIndex;
+int g_TriggerTextCompletionIndex;
+int g_InsertHotspotIndex;
+int g_settingsIndex;
+int g_quickGuideIndex;
+int g_aboutIndex;
+
+
 // For compatibility mode
 HHOOK hook = NULL;
 
@@ -75,7 +87,7 @@ bool g_modifyResponse = true;
 int g_selectionMonitor = 1;
 bool g_rectSelection = false;
 bool g_freezeDock = false;
-bool g_enable = false;
+bool g_enable = true;
 bool g_editorView;
 
 int g_editorLineCount;
@@ -218,22 +230,28 @@ void commandMenuInit()
     setCommand();
     g_snippetDockIndex = setCommand(TEXT("Toggle On/off SnippetDock"), showSnippetDock);
     g_showInsertionDlgIndex = setCommand(TEXT("Show Snippet Insertion Dialog"), showInsertionDlg,shKey2);
-    setCommand(TEXT("Toggle On/Off FingerText"), toggleDisable);
+    g_toggleDisableIndex = setCommand(TEXT("Toggle On/Off FingerText"), toggleDisable);
     setCommand();
-    setCommand(TEXT("Create Snippet from Selection"),  selectionToSnippet);
-    setCommand(TEXT("Import Snippets"), importSnippets);
-    setCommand(TEXT("Export Snippets"), exportSnippetsOnly);
-    setCommand(TEXT("Export and Delete All Snippets"), exportAndClearSnippets);
+    g_selectionToSnippetIndex = setCommand(TEXT("Create Snippet from Selection"),  selectionToSnippet);
+    g_importSnippetsIndex = setCommand(TEXT("Import Snippets from ftd file"), importSnippets);
+    g_exportSnippetsIndex = setCommand(TEXT("Export All Snippets"), exportSnippetsOnly);
+    g_deleteAllSnippetsIndex = setCommand(TEXT("Export and Delete All Snippets"), exportAndClearSnippets);
     setCommand();
-    setCommand(TEXT("TriggerText Completion"), doTagComplete);
-    setCommand(TEXT("Insert a hotspot"), insertHotSpotSign);
+    g_TriggerTextCompletionIndex = setCommand(TEXT("TriggerText Completion"), doTagComplete);
+    g_InsertHotspotIndex =setCommand(TEXT("Insert a hotspot"), insertHotSpotSign);
     setCommand();
-    setCommand(TEXT("Settings"), showSettings);
-    setCommand(TEXT("Quick Guide"), showHelp);
-    setCommand(TEXT("About"), showAbout);
+    g_settingsIndex = setCommand(TEXT("Settings"), showSettings);
+    g_quickGuideIndex = setCommand(TEXT("Quick Guide"), showHelp);
+    g_aboutIndex = setCommand(TEXT("About"), showAbout);
     setCommand();
     setCommand(TEXT("Testing"), testing);
     setCommand(TEXT("Testing2"), testing2);
+
+    
+
+
+
+
 }
 
 void variablesInit()
@@ -316,11 +334,26 @@ void shortCutRemapped()
 
 void toggleDisable()
 {
+    HMENU hMenu = (HMENU)::SendMessage(nppData._nppHandle, NPPM_GETMENUHANDLE, 0, 0);             // For compatibility mode
+        ::EnableMenuItem(hMenu, funcItem[g_tabActivateIndex]._cmdID, MF_BYCOMMAND | MF_GRAYED);
     if (g_enable)
     {
+        ::EnableMenuItem(hMenu, funcItem[g_snippetDockIndex]._cmdID, MF_BYCOMMAND | MF_GRAYED);
+        ::EnableMenuItem(hMenu, funcItem[g_tabActivateIndex]._cmdID, MF_BYCOMMAND | MF_GRAYED);
+        ::EnableMenuItem(hMenu, funcItem[g_showInsertionDlgIndex]._cmdID, MF_BYCOMMAND | MF_GRAYED);
         
+        ::EnableMenuItem(hMenu, funcItem[g_selectionToSnippetIndex]._cmdID, MF_BYCOMMAND | MF_GRAYED);
+        ::EnableMenuItem(hMenu, funcItem[g_importSnippetsIndex]._cmdID, MF_BYCOMMAND | MF_GRAYED);
+        ::EnableMenuItem(hMenu, funcItem[g_exportSnippetsIndex]._cmdID, MF_BYCOMMAND | MF_GRAYED);
+        ::EnableMenuItem(hMenu, funcItem[g_deleteAllSnippetsIndex]._cmdID, MF_BYCOMMAND | MF_GRAYED);
+        ::EnableMenuItem(hMenu, funcItem[g_TriggerTextCompletionIndex]._cmdID, MF_BYCOMMAND | MF_GRAYED);
+        ::EnableMenuItem(hMenu, funcItem[g_InsertHotspotIndex]._cmdID, MF_BYCOMMAND | MF_GRAYED);
+        
+        closeEditor();
+        snippetDock.display(false);
         // TODO: refactor all the message boxes to a separate function
         showMessageBox(TEXT("FingerText is disabled"));
+        
         //::MessageBox(nppData._nppHandle, TEXT("FingerText is disabled"), TEXT(PLUGIN_NAME), MB_OK);
         g_enable = false;
     } else if (!g_dbOpen)
@@ -328,6 +361,18 @@ void toggleDisable()
         showMessageBox(TEXT("FingerText cannot be enabled because there is no database connection. Please restart Notepad++ and make sure that the config folder is writable."));
     } else
     {
+
+        ::EnableMenuItem(hMenu, funcItem[g_snippetDockIndex]._cmdID, MF_BYCOMMAND);
+        ::EnableMenuItem(hMenu, funcItem[g_tabActivateIndex]._cmdID, MF_BYCOMMAND);
+        ::EnableMenuItem(hMenu, funcItem[g_showInsertionDlgIndex]._cmdID, MF_BYCOMMAND);
+        
+        ::EnableMenuItem(hMenu, funcItem[g_selectionToSnippetIndex]._cmdID, MF_BYCOMMAND);
+        ::EnableMenuItem(hMenu, funcItem[g_importSnippetsIndex]._cmdID, MF_BYCOMMAND);
+        ::EnableMenuItem(hMenu, funcItem[g_exportSnippetsIndex]._cmdID, MF_BYCOMMAND);
+        ::EnableMenuItem(hMenu, funcItem[g_deleteAllSnippetsIndex]._cmdID, MF_BYCOMMAND);
+        ::EnableMenuItem(hMenu, funcItem[g_TriggerTextCompletionIndex]._cmdID, MF_BYCOMMAND);
+        ::EnableMenuItem(hMenu, funcItem[g_InsertHotspotIndex]._cmdID, MF_BYCOMMAND);
+
         showMessageBox(TEXT("FingerText is enabled"));
         //::MessageBox(nppData._nppHandle, TEXT("FingerText is enabled"), TEXT(PLUGIN_NAME), MB_OK);
         g_enable = true;
@@ -394,7 +439,7 @@ void selectionToSnippet()
         withSelection = true;
     } else
     {
-        selection = "New snippet is here.\r\nNew snippet is here.\r\nNew snippet is here.\r\n";
+        selection = "This is some stub text for the content of your new snippet.\r\nPlease replace with the content that you want to show when the snippet is Triggered.\r\nEnjoy!\r\n";
     }
     
     //::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
@@ -437,6 +482,40 @@ void closeNonSessionTabs()
     closeTab(pc.iniPath);
 }
 
+void closeEditor()
+{
+
+    if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
+    {
+        ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
+    }
+
+}
+
+void insertSnippet()
+{
+    TCHAR* bufferWide;
+    snippetDock.getSelectText(bufferWide);
+    char* buffer = toCharArray(bufferWide);
+    buffer = quickStrip(buffer, ' ');
+
+    int scopeLength = ::strchr(buffer,'>') - buffer - 1;
+    int triggerTextLength = strlen(buffer)-scopeLength - 2;
+    char* tempTriggerText = new char [ triggerTextLength+1];
+    char* tempScope = new char[scopeLength+1];
+    
+    strncpy(tempScope,buffer+1,scopeLength);
+    tempScope[scopeLength] = '\0';
+    strncpy(tempTriggerText,buffer+1+scopeLength+1,triggerTextLength);
+    tempTriggerText[triggerTextLength] = '\0';
+    
+    delete [] buffer;
+
+    diagActivate(tempTriggerText);
+    ::SetFocus(::getCurrentScintilla());
+
+    
+}
 
 void editSnippet()
 {
@@ -3103,34 +3182,56 @@ void setInsertionDialogState(int state)
     pc.callWriteConfigInt(INSERTION_DIALOG_STATE);
 }
 
+//void setSnippetDockState(int state)
+//{
+//    pc.configInt[SNIPPETDOCK_STATE] = state;
+//    pc.callWriteConfigInt(SNIPPETDOCK_STATE);
+//}
+
 
 
 void showSnippetDock()
 {
-	snippetDock.setParent(nppData._nppHandle);
-	tTbData	data = {0};
 
-	if (!snippetDock.isCreated())
-	{
-		snippetDock.create(&data);
-
-		// define the default docking behaviour
-		data.uMask = DWS_DF_CONT_RIGHT;
-		data.pszModuleName = snippetDock.getPluginFileName();
-
-		// the dlgDlg should be the index of funcItem where the current function pointer is
-		data.dlgID = g_snippetDockIndex;
-		::SendMessage(nppData._nppHandle, NPPM_DMMREGASDCKDLG, 0, (LPARAM)&data);
-
-        //This determine the initial state of the snippetdock.
-        snippetDock.display();
-	} else
-    {
-        snippetDock.display(!snippetDock.isVisible());
-    }
     updateMode();
-    updateDockItems(false,false,"%",true);
-    //snippetHintUpdate();
+
+    if (g_enable)
+    {
+	    snippetDock.setParent(nppData._nppHandle);
+	    tTbData	data = {0};
+
+	    if (!snippetDock.isCreated())
+	    {
+	    	snippetDock.create(&data);
+
+	    	// define the default docking behaviour
+	    	data.uMask = DWS_DF_CONT_RIGHT;
+	    	data.pszModuleName = snippetDock.getPluginFileName();
+
+	    	// the dlgDlg should be the index of funcItem where the current function pointer is
+	    	data.dlgID = g_snippetDockIndex;
+	    	::SendMessage(nppData._nppHandle, NPPM_DMMREGASDCKDLG, 0, (LPARAM)&data);
+
+            //This determine the initial state of the snippetdock.
+            //snippetDock.switchDock((bool)pc.configInt[SNIPPETDOCK_STATE]);
+            snippetDock.switchDock(true);
+            snippetDock.display();
+            
+	    } else
+        {
+            snippetDock.display(!snippetDock.isVisible());
+        }
+
+
+        updateMode();
+        updateDockItems(false,false,"%",true);
+        //snippetHintUpdate();
+    } else
+    {
+        snippetDock.display(false);
+        showMessageBox(TEXT("You can open SnippetDock only when Fingertext is enabled."));
+    }
+    
 }
 
 
@@ -3177,7 +3278,7 @@ bool snippetHintUpdate()
     //if (g_modifyResponse) refreshAnnotation();
 }
 
-void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, bool populateInsertion)
+void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, bool populateInsertion,bool searchType)
 {   
     if (!g_freezeDock)
     {
@@ -3203,11 +3304,14 @@ void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, b
         const char* orderClause2 = "ORDER BY tag DESC,tagType DESC ";
         //const char* whereClause = "WHERE (tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ? OR tagType LIKE ?) AND tag LIKE ? ";
         const char* whereClause = "WHERE tagType LIKE ? AND tag LIKE ? ";
+        const char* whereClause2 = "WHERE tagType LIKE ? OR tag LIKE ? ";
+
 
         strcpy(sqlite3Statement,"");
         if (withContent) strcat(sqlite3Statement,selectClause1);
         else strcat(sqlite3Statement,selectClause2);
-        if (!withAll) strcat(sqlite3Statement, whereClause);
+        if (!searchType) strcat(sqlite3Statement, whereClause);
+        else strcat(sqlite3Statement, whereClause2);
         if (pc.configInt[SNIPPET_LIST_ORDER_TAG_TYPE]==1) strcat(sqlite3Statement, orderClause1);
         else strcat(sqlite3Statement, orderClause2);
 
@@ -3228,6 +3332,18 @@ void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, b
                 if (withAll)
                 {
                     
+                    if (searchType)
+                    {
+                        sqlite3_bind_text(stmt, 1, tag, -1, SQLITE_STATIC);
+                        
+                    } else
+                    {
+                        sqlite3_bind_text(stmt, 1, "%" , -1, SQLITE_STATIC);
+                    }
+
+                    sqlite3_bind_text(stmt, 2, tag, -1, SQLITE_STATIC);
+
+
                     //char snippetCacheSizeText[10];
                     //::_itoa(pc.configInt[SNIPPET_LIST_LENGTH], snippetCacheSizeText, 10); 
                     //sqlite3_bind_text(stmt, 1, snippetCacheSizeText, -1, SQLITE_STATIC);
@@ -3522,10 +3638,11 @@ void importSnippets()
     //TODO: importing snippet will change the current directory, which is not desirable effect
     if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
     {
+        ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
         //TODO: prompt for closing tab instead of just warning
-        showMessageBox(TEXT("Please close all the snippet editing tabs (SnippetEditor.ftb) before importing any snippet pack."));
+        //showMessageBox(TEXT("Please close all the snippet editing tabs (SnippetEditor.ftb) before importing any snippet pack."));
         //::MessageBox(nppData._nppHandle, TEXT("Please close all the snippet editing tabs (SnippetEditor.ftb) before importing any snippet pack."), TEXT(PLUGIN_NAME), MB_OK);
-        return;
+        //return;
     }
 
     if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_fttempPath))
@@ -3778,7 +3895,7 @@ void importSnippets()
                                     tagTextsuffixed = new char [strlen(tagText)+256];
                                 
                                     strcpy(tagTextsuffixed,tagText);
-                                    strcat(tagTextsuffixed,".OldCopy");
+                                    strcat(tagTextsuffixed,"_OldCopy");
                                     strcat(tagTextsuffixed,dateText);
                                     strcat(tagTextsuffixed,timeText);
                                     
@@ -3917,18 +4034,22 @@ void updateMode()
     {
         snippetDock.toggleSave(true);
         g_editorView = true;
-        snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("EDIT MODE\r\n(Double click item in list to edit another snippet, Ctrl+S to save)"));
+        snippetDock.switchDock(false);
+        //snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("EDIT MODE\r\n(Double click item in list to edit another snippet, Ctrl+S to save)"));
         updateLineCount();
     } else if (g_enable)
     {
         snippetDock.toggleSave(false);
         g_editorView = false;
-        snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Enabled]\r\n(Type trigger text and hit tab to insert snippet)"));
+        snippetDock.switchDock(true);
+        //snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Enabled]\r\n(Type trigger text and hit tab to insert snippet)"));
     } else
     {
         snippetDock.toggleSave(false);
         g_editorView = false;
-        snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Disabled]\r\n(To enable: Plugins>FingerText>Toggle FingerText On/Off)"));
+
+        snippetDock.switchDock(true);
+        //snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Disabled]\r\n(To enable: Plugins>FingerText>Toggle FingerText On/Off)"));
     }
 }
 

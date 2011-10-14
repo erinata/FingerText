@@ -291,11 +291,6 @@ BOOL CALLBACK InsertionDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPar
 			return true;
 		}
         
-        //case WM_NCACTIVATE:
-        //{
-        //    if (wParam == false) alert();
-        //
-        //}
         case WM_ACTIVATE:
         {
 
