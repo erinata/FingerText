@@ -59,7 +59,7 @@ void DockingDlg::resizeListBox(int height,int width)
     
     if (normalMode)
     {
-        y = 100;
+        y = 80;
     } else
     {
         y = 200;
@@ -258,10 +258,10 @@ void DockingDlg::switchDock(bool toNormal)
         ::ShowWindow(GetDlgItem(_hSelf, IDC_SAVE),SW_SHOW);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_DELETE),SW_SHOW);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_IMPORTFILE),SW_SHOW);
-        ::ShowWindow(GetDlgItem(_hSelf, IDC_IMPORTURL),SW_SHOW);
+        //::ShowWindow(GetDlgItem(_hSelf, IDC_IMPORTURL),SW_SHOW);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_EXPORT),SW_SHOW);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_EXPORTALL),SW_SHOW);
-        ::ShowWindow(GetDlgItem(_hSelf, IDC_DELETEALL),SW_SHOW);
+        //::ShowWindow(GetDlgItem(_hSelf, IDC_DELETEALL),SW_SHOW);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_FILTER),SW_SHOW);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT2),SW_SHOW);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT5),SW_SHOW);
@@ -329,31 +329,57 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
                     int length = SendMessage(GetDlgItem(_hSelf, IDC_FILTER), EM_LINELENGTH, 0, 0);
                     if (length>0)
                     {
-                       TCHAR* bufferWide = new TCHAR[length+1];
-                       ::GetDlgItemText(_hSelf, IDC_FILTER ,bufferWide,length+1);
-                       char* buffer = toCharArray(bufferWide);
-                       bool leadingSpace = 0;
-                       bool trailingSpace = 0;
-                       if (buffer[0] == ' ')
-                       {
-                           leadingSpace = 1;
-                       }
-                       if (buffer[strlen(buffer)-1] == ' ')
-                       {
-                           trailingSpace = 1;
-                       }
-                       // TODO: use the trailing and l=eading space to improve search
-                       char* key = new char[strlen(buffer)+2+1];
-                       strcpy(key,"");
-                       strcat(key,"%");
-                       strcat(key,buffer);
-                       strcat(key,"%");
+                        TCHAR* bufferWide = new TCHAR[length+1];
+                        ::GetDlgItemText(_hSelf, IDC_FILTER ,bufferWide,length+1);
+                        char* buffer = toCharArray(bufferWide);
+                        bool leadingSpace = 0;
+                        bool trailingSpace = 0;
+                        if (buffer[0] == ' ')
+                        {
+                            leadingSpace = 1;
+                        }
+                        if (buffer[strlen(buffer)-1] == ' ')
+                        {
+                            trailingSpace = 1;
+                        }
                        
-                       updateDockItems(true,false,key,true,false,true);
-                       delete [] buffer;
-                       
-                       delete [] bufferWide;
-                       delete [] key;
+                        char* key = new char[strlen(buffer)+2+1];
+                        strcpy(key,"");
+                        if (leadingSpace)
+                        {
+                            if (trailingSpace)
+                            {
+                                buffer[strlen(buffer)-1] = '\0';
+                                strcat(key,buffer+1);
+                            } else
+                            {
+                                strcat(key,buffer+1);
+                                strcat(key,"%");
+                            }
+                        
+                        } else
+                        {
+                            strcat(key,"%");
+                        
+                            if (trailingSpace)
+                            {
+                                buffer[strlen(buffer)-1] = '\0';
+                                strcat(key,buffer);
+                            } else
+                            {
+                                strcat(key,buffer);
+                                strcat(key,"%");
+                            }
+                        
+                        }
+                        
+                        
+                        
+                        updateDockItems(true,false,key,true,false,true);
+                        delete [] buffer;
+                        
+                        delete [] bufferWide;
+                        delete [] key;
                     } else
                     {
                         updateDockItems(true,false,"%",true,false);  
@@ -478,10 +504,8 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
         
         case WM_INITDIALOG:
         {
-            //::SetFocus(GetDlgItem(_hSelf, IDC_SNIPPET_LIST));
-            ::Button_Enable(GetDlgItem(_hSelf, IDC_IMPORTURL), false);
-            //::Button_Enable(GetDlgItem(_hSelf, IDC_EXPORT), false);
-            ::Button_Enable(GetDlgItem(_hSelf, IDC_DELETEALL), false);
+
+
             //switchDock(true);
             return true;
             //updateMode();

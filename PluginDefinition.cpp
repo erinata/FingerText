@@ -524,6 +524,8 @@ void editSnippet()
     char* buffer = toCharArray(bufferWide);
     buffer = quickStrip(buffer, ' ');
 
+    if (strlen(buffer)==0) selectionToSnippet();
+
     int scopeLength = ::strchr(buffer,'>') - buffer - 1;
     int triggerTextLength = strlen(buffer)-scopeLength - 2;
     char* tempTriggerText = new char [ triggerTextLength+1];
@@ -551,7 +553,7 @@ void editSnippet()
             // After loading the content, switch to the editor buffer and promput for saving if needed
             openTab(g_ftbPath);
 
-            
+            std::string allScope = "";
             //if (!::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
             //{
             //    ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_ftbPath);
@@ -561,12 +563,29 @@ void editSnippet()
             
             ::SendScintilla(SCI_CONVERTEOLS,SC_EOL_LF, 0);
             
+            sqlite3_stmt *stmt2;
+            if (SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT tagtype FROM snippets WHERE tag = ? AND snippet = ?", -1, &stmt2, NULL))
+            {
+                sqlite3_bind_text(stmt2, 1, tempTriggerText , -1, SQLITE_STATIC);
+		        sqlite3_bind_text(stmt2, 2, snippetText, -1, SQLITE_STATIC);
+
+                while (SQLITE_ROW == sqlite3_step(stmt2))
+                {
+                    if (allScope.length()!=0) allScope = allScope + "|";
+                    const char* extraScope = reinterpret_cast<const char *>(sqlite3_column_text(stmt2, 0));
+                    allScope = allScope + extraScope;
+
+                }
+
+            }
+            sqlite3_finalize(stmt2);
+
             ::SendScintilla(SCI_CLEARALL,0,0);
             //::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
             ::SendScintilla(SCI_INSERTTEXT, ::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)"------ FingerText Snippet Editor View ------\r\n");
             ::SendScintilla(SCI_INSERTTEXT, ::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)tempTriggerText);
             ::SendScintilla(SCI_INSERTTEXT, ::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)"\r\n");
-            ::SendScintilla(SCI_INSERTTEXT, ::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)tempScope);
+            ::SendScintilla(SCI_INSERTTEXT, ::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)allScope.c_str());
             ::SendScintilla(SCI_INSERTTEXT, ::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)"\r\n");
     
             ::SendScintilla(SCI_INSERTTEXT, ::SendScintilla(SCI_GETLENGTH,0,0), (LPARAM)snippetText);
@@ -642,7 +661,7 @@ bool getLineChecked(char **buffer, int lineNumber, TCHAR* errorText)
         char* wordChar;
         if (lineNumber==2)
         {
-            wordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_:.";
+            wordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_:.|";
             
         } else //if (lineNumber==1)
         {
@@ -719,72 +738,100 @@ void saveSnippet()
     ::SendScintilla(SCI_SETSELECTION,docLength,docLength+1); //Take away the extra space added
     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
 
+    std::vector<std::string> tagTypeTextVector = toVectorString(tagTypeText,'|');
+
     if (!problemSnippet)
     {
-        // checking for existing snippet 
-        sqlite3_stmt *stmt;
-
-        if (SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
+        int i = 0;
+        while (i<tagTypeTextVector.size())
         {
-            sqlite3_bind_text(stmt, 1, tagTypeText, -1, SQLITE_STATIC);
-		    sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
-            if(SQLITE_ROW == sqlite3_step(stmt))
+            if (tagTypeTextVector[i].length()>0)
             {
-                
-                int messageReturn = showMessageBox(TEXT("Snippet exists, overwrite?"),MB_YESNO);
-                //int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Snippet exists, overwrite?"), TEXT(PLUGIN_NAME), MB_YESNO);
-                if (messageReturn==IDNO)
-                {
-                    delete [] tagText;
-                    delete [] tagTypeText;
-                    delete [] snippetText;
-                    // not overwrite
-                    showMessageBox(TEXT("The Snippet is not saved."));
-                    //::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), TEXT(PLUGIN_NAME), MB_OK);
-                    //::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
-                    //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)" ");
-                    ::SendScintilla(SCI_SETSELECTION, 0, 1);
-                    ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"-");
-                    ::SendScintilla(SCI_GOTOPOS, 0, 0);
-                    sqlite3_finalize(stmt);
-                    return;
+                // checking for existing snippet 
+                sqlite3_stmt *stmt;
 
-                } else
+                if (SQLITE_OK == sqlite3_prepare_v2(g_db, "SELECT snippet FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt, NULL))
                 {
-                    sqlite3_stmt *stmt2;
-                    // delete existing entry
-                    if (SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt2, NULL))
+                    sqlite3_bind_text(stmt, 1, tagTypeTextVector[i].c_str(), -1, SQLITE_STATIC);
+		            sqlite3_bind_text(stmt, 2, tagText, -1, SQLITE_STATIC);
+                    if(SQLITE_ROW == sqlite3_step(stmt))
                     {
-                        sqlite3_bind_text(stmt2, 1, tagTypeText, -1, SQLITE_STATIC);
-		                sqlite3_bind_text(stmt2, 2, tagText, -1, SQLITE_STATIC);
-                        sqlite3_step(stmt2);
-                    
-                    } else
-                    {
-                        showMessageBox(TEXT("Cannot write into database."));
-                        //::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT(PLUGIN_NAME), MB_OK);
+                        std::string messageString = "Snippet \"" + std::string(tagText) + "\" in scope <" + tagTypeTextVector[i] + "> aleady exists, overwrite?";
+                        //char* message = new char[messageString.length()+1];
+                        //strcpy(message,messageString.c_str());
+                        wchar_t* messageWide = toWideChar((std::string)messageString);
+                        int messageReturn = showMessageBox(messageWide,MB_YESNO);
+                        //delete [] message;
+                        delete [] messageWide;
+                        //int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Snippet exists, overwrite?"), TEXT(PLUGIN_NAME), MB_YESNO);
+                        if (messageReturn==IDNO)
+                        {
+                            
+                            // not overwrite
+                            std::string messageString = "Snippet \"" + std::string(tagText) + "\" in scope <" + tagTypeTextVector[i] + "> is not saved.";
+                            wchar_t* messageWide = toWideChar((std::string)messageString);
+
+                            showMessageBox(messageWide);
+                            delete [] messageWide;
+
+                            delete [] tagText;
+                            delete [] tagTypeText;
+                            delete [] snippetText;
+                            //::MessageBox(nppData._nppHandle, TEXT("The Snippet is not saved."), TEXT(PLUGIN_NAME), MB_OK);
+                            //::SendMessage(curScintilla, SCI_GOTOPOS, 0, 0);
+                            //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)" ");
+                            ::SendScintilla(SCI_SETSELECTION, 0, 1);
+                            ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"-");
+                            ::SendScintilla(SCI_GOTOPOS, 0, 0);
+                            sqlite3_finalize(stmt);
+                            return;
+
+                        } else
+                        {
+                            sqlite3_stmt *stmt2;
+                            // delete existing entry
+                            if (SQLITE_OK == sqlite3_prepare_v2(g_db, "DELETE FROM snippets WHERE tagType LIKE ? AND tag LIKE ?", -1, &stmt2, NULL))
+                            {
+                                sqlite3_bind_text(stmt2, 1, tagTypeTextVector[i].c_str(), -1, SQLITE_STATIC);
+		                        sqlite3_bind_text(stmt2, 2, tagText, -1, SQLITE_STATIC);
+                                sqlite3_step(stmt2);
+                            
+                            } else
+                            {
+                                showMessageBox(TEXT("Cannot write into database."));
+                                //::MessageBox(nppData._nppHandle, TEXT("Cannot write into database."), TEXT(PLUGIN_NAME), MB_OK);
+                            }
+                            sqlite3_finalize(stmt2);
+                        
+                        }
                     }
-                    sqlite3_finalize(stmt2);
-                
                 }
-            }
-        }
-        sqlite3_finalize(stmt);
+                sqlite3_finalize(stmt);
 
-        if (SQLITE_OK == sqlite3_prepare_v2(g_db, "INSERT INTO snippets VALUES(?,?,?,?)", -1, &stmt, NULL))
-	    {
-		    // Then bind the two ? parameters in the SQLite SQL to the real parameter values
-		    sqlite3_bind_text(stmt, 1, tagText, -1, SQLITE_STATIC);
-		    sqlite3_bind_text(stmt, 2, tagTypeText, -1, SQLITE_STATIC);
-            sqlite3_bind_text(stmt, 3, snippetText, -1, SQLITE_STATIC);
-            sqlite3_bind_text(stmt, 4, "", -1, SQLITE_STATIC);
+                if (SQLITE_OK == sqlite3_prepare_v2(g_db, "INSERT INTO snippets VALUES(?,?,?,?)", -1, &stmt, NULL))
+	            {
+		            // Then bind the two ? parameters in the SQLite SQL to the real parameter values
+		            sqlite3_bind_text(stmt, 1, tagText, -1, SQLITE_STATIC);
+		            sqlite3_bind_text(stmt, 2, tagTypeTextVector[i].c_str(), -1, SQLITE_STATIC);
+                    sqlite3_bind_text(stmt, 3, snippetText, -1, SQLITE_STATIC);
+                    sqlite3_bind_text(stmt, 4, "", -1, SQLITE_STATIC);
     
-		    // Run the query with sqlite3_step
-		    sqlite3_step(stmt); // SQLITE_ROW 100 sqlite3_step() has another row ready
-            showMessageBox(TEXT("The Snippet is saved."));
-            //::MessageBox(nppData._nppHandle, TEXT("The Snippet is saved."), TEXT(PLUGIN_NAME), MB_OK);
-	    }
-        sqlite3_finalize(stmt);
+		            // Run the query with sqlite3_step
+		            sqlite3_step(stmt); // SQLITE_ROW 100 sqlite3_step() has another row ready
+
+                    std::string messageString = "Snippet \"" + std::string(tagText) + "\" in scope <" + tagTypeTextVector[i] + "> is saved.";
+                    wchar_t* messageWide = toWideChar((std::string)messageString);
+
+                    showMessageBox(messageWide);
+                    delete [] messageWide;
+                    //showMessageBox(TEXT("The Snippet is saved."));
+                    //::MessageBox(nppData._nppHandle, TEXT("The Snippet is saved."), TEXT(PLUGIN_NAME), MB_OK);
+	            }
+                sqlite3_finalize(stmt);
+            }
+            i++;
+        }
+
         ::SendScintilla(SCI_SETSAVEPOINT,0,0);
     }
     delete [] tagText;
@@ -1072,34 +1119,6 @@ void chainSnippet(int &firstPos, char* hotSpotText)
     triggerTag(triggerPos,strlen(hotSpotText));
 }
 
-////Old implementation of executeCommand
-//void executeCommand(int &firstPos, char* hotSpotText)
-//{
-//    int triggerPos = strlen(hotSpotText)+firstPos;
-//    ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
-//    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-//    
-//    char  psBuffer[130];
-//    FILE   *pPipe;
-//    int resultLength;
-//    //TODO: try the createprocess instead of _popen?
-//    //http://msdn.microsoft.com/en-us/library/ms682499(v=vs.85).aspx
-//
-//    //pPipe = _popen( "ruby -e 'puts 1+1'", "rt" );
-//    if( (pPipe = _popen( hotSpotText, "rt" )) == NULL )
-//    {    
-//        return;
-//    }
-//
-//    ::memset(psBuffer,0,sizeof(psBuffer));
-//
-//    while(fgets(psBuffer, 129, pPipe))
-//    {
-//        ::SendScintilla(SCI_REPLACESEL, 128, (LPARAM)psBuffer);
-//        ::memset (psBuffer,0,sizeof(psBuffer));
-//    }
-//    _pclose( pPipe );
-//}
 
 void webRequest(int &firstPos, char* hotSpotText)
 {
@@ -1204,6 +1223,36 @@ void webRequest(int &firstPos, char* hotSpotText)
     ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
 }
+
+
+////Old implementation of executeCommand
+//void executeCommand(int &firstPos, char* hotSpotText)
+//{
+//    int triggerPos = strlen(hotSpotText)+firstPos;
+//    ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
+//    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
+//    
+//    char  psBuffer[130];
+//    FILE   *pPipe;
+//    int resultLength;
+//    //TODO: try the createprocess instead of _popen?
+//    //http://msdn.microsoft.com/en-us/library/ms682499(v=vs.85).aspx
+//
+//    //pPipe = _popen( "ruby -e 'puts 1+1'", "rt" );
+//    if( (pPipe = _popen( hotSpotText, "rt" )) == NULL )
+//    {    
+//        return;
+//    }
+//
+//    ::memset(psBuffer,0,sizeof(psBuffer));
+//
+//    while(fgets(psBuffer, 129, pPipe))
+//    {
+//        ::SendScintilla(SCI_REPLACESEL, 128, (LPARAM)psBuffer);
+//        ::memset (psBuffer,0,sizeof(psBuffer));
+//    }
+//    _pclose( pPipe );
+//}
 
 void executeCommand(int &firstPos, char* hotSpotText)
 {
@@ -2826,6 +2875,8 @@ void showPreview(bool top,bool insertion)
 
                     insertionDlg.setDlgText(IDC_INSERTION_DES,tempSnippetCommentWide);
 
+                    int currentEditTextPos = insertionDlg.getEditPos();
+
                     TCHAR* currentEditTextWide = insertionDlg.getEditText();
                     char* currentEditText = toCharArray(currentEditTextWide);
                     // TODO: cater the case where I enter something with spaces (should only read the last entry after breaking it down to vector)
@@ -2836,7 +2887,7 @@ void showPreview(bool top,bool insertion)
                     if (strlen(vs[0].c_str())>0)
                     {
                         //TODO: analyze the snippet content and extract the params insertion hint here
-                        TCHAR* hintText = snippetTextBrokenDown(vs,tempTriggerText,tempSnippetText);
+                        TCHAR* hintText = snippetTextBrokenDown(vs,tempTriggerText,tempSnippetText,currentEditTextPos);
 
                         insertionDlg.setDlgText(IDC_INSERTION_HINT,hintText);
            
@@ -2900,8 +2951,11 @@ void showPreview(bool top,bool insertion)
 }
 
 
-TCHAR* snippetTextBrokenDown(std::vector<std::string> vs, char* tempTriggerText, char* snippetContent)
+TCHAR* snippetTextBrokenDown(std::vector<std::string> vs, char* tempTriggerText, char* snippetContent, int position)
 {
+    //TODO: should find some method to highlight part of the string according to position
+
+
     //"<div id=\"$[![myid]!]\" class=\"$[![myclass]!]\">  This id is $[![myid]!] and the class is $[![myclass]!]  $[![]!]</div>"
     quickStrip(snippetContent,'\r');
     quickStrip(snippetContent,'\n');
@@ -2978,7 +3032,7 @@ TCHAR* snippetTextBrokenDown(std::vector<std::string> vs, char* tempTriggerText,
     
     if (spotVector.size()!=0) 
     {
-        hintString=hintString+"( ";
+        hintString=hintString+"(";
         int j =0;
         for (j=0;j< spotVector.size();j++)
         {
@@ -2987,15 +3041,15 @@ TCHAR* snippetTextBrokenDown(std::vector<std::string> vs, char* tempTriggerText,
             if (j!=0) hintString = hintString + ",";
             hintString = hintString + spotVector[j];
         }
-        hintString=hintString+" )";
+        hintString=hintString+")";
     }
 
-    char* hintText = new char[hintString.length()+1];
-    strcpy(hintText,hintString.c_str());
+    //char* hintText = new char[hintString.length()+1];
+    //strcpy(hintText,hintString.c_str());
     
-    TCHAR* hintTextWide = ::toWideChar(hintText);
+    TCHAR* hintTextWide = ::toWideChar(hintString);
 
-    delete [] hintText;
+    //delete [] hintText;
 
     return hintTextWide;
 
@@ -3455,6 +3509,7 @@ void populateDockItems(bool withAll, bool insertion)
     //for (int j=0;j<pc.configInt[SNIPPET_LIST_LENGTH];j++)
     for (int j=0;j<g_snippetCache.size();j++)
     {
+
         if ((withAll) || (g_snippetCache[j].triggerText[0] != '_'))
         {
 
@@ -3487,6 +3542,7 @@ void populateDockItems(bool withAll, bool insertion)
 
         }
     }
+
     //deleteCache();
 }
 
@@ -4025,7 +4081,6 @@ void updateLineCount(int count)
     }
 }
 
-
 void updateMode()
 {
     updateScintilla();
@@ -4233,12 +4288,19 @@ void selectionMonitor(int contentChange)
     if (g_selectionMonitor == 1)
     {
         //TODO: this "100" is associated with the limit of number of multiple hotspots that can be simultaneously activated, should find a way to make this more customizable
-        if ((::SendScintilla(SCI_GETSELECTIONMODE,0,0)!=SC_SEL_STREAM) || (::SendScintilla(SCI_GETSELECTIONS,0,0)>100))
+
+        if (::SendScintilla(SCI_GETSELECTIONS,0,0)>100)
         {
             g_rectSelection = true;
         } else
         {
-            g_rectSelection = false;
+            if (::SendScintilla(SCI_GETSELECTIONMODE,0,0)!=SC_SEL_STREAM)
+            {
+                g_rectSelection = true;
+            } else
+            {
+                g_rectSelection = false;
+            }
         }
 
         g_modifyResponse = false;
@@ -5274,17 +5336,17 @@ void testing()
     
 
      ////Test case for snippetTextBrokenDown
-     std::vector<std::string> vs;
-     vs.push_back("awesome");
-     vs.push_back("hello)");
-     TCHAR* result;
-     char* triggerText = new char[100];
-     strcpy(triggerText,"awesome");
-     char* content = new char[200];
-     strcpy(content,"<div id=\"$[![myid]!]\" class=\"$[![myclass]!]\">  $[![(key)$[![keyword]!]]!] $[1[priority]1] This id is $[![myid]!] and the class is $[![myclass]!]  $[![]!]</div>");
-     result = snippetTextBrokenDown(vs,triggerText,content);
-     alert(result);
-     delete [] result;
+     //std::vector<std::string> vs;
+     //vs.push_back("awesome");
+     //vs.push_back("hello)");
+     //TCHAR* result;
+     //char* triggerText = new char[100];
+     //strcpy(triggerText,"awesome");
+     //char* content = new char[200];
+     //strcpy(content,"<div id=\"$[![myid]!]\" class=\"$[![myclass]!]\">  $[![(key)$[![keyword]!]]!] $[1[priority]1] This id is $[![myid]!] and the class is $[![myclass]!]  $[![]!]</div>");
+     //result = snippetTextBrokenDown(vs,triggerText,content);
+     //alert(result);
+     //delete [] result;
 
 
     //// create new scintillahandle

@@ -42,6 +42,7 @@ std::string toString(int &i);
 std::string toString(char* source);
 
 wchar_t* toWideChar(char* orig);
+wchar_t* toWideChar(std::string source);
 
 char* toCharArray(std::string source);
 char* toCharArray(TCHAR *orig, UINT codePage  = CP_UTF8);

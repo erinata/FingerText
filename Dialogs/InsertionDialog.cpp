@@ -99,6 +99,12 @@ void InsertionDlg::clearText()
     ::SetDlgItemText(_hSelf, IDC_INSERTION_PREVIEW ,TEXT(""));
 }
 
+int InsertionDlg::getEditPos()
+{
+    return SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_EDIT), EM_LINEINDEX, 0, 0);             
+
+}
+
 TCHAR* InsertionDlg::getEditText()
 {
     int length = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_EDIT), EM_LINELENGTH, 0, 0);             

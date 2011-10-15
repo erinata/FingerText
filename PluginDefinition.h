@@ -153,7 +153,7 @@ BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam);
 void setFocusToWindow();
 void searchWindowByName(std::string searchKey = "", HWND parentWindow = 0);
 
-TCHAR* snippetTextBrokenDown(std::vector<std::string> vs, char* tempTriggerText, char* snippetContent);
+TCHAR* snippetTextBrokenDown(std::vector<std::string> vs, char* tempTriggerText, char* snippetContent, int position);
 
 void selectionMonitor(int contentChange);
 bool triggerTag(int &posCurrent,int triggerLength = 0);

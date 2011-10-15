@@ -75,6 +75,15 @@ wchar_t* toWideChar(char* orig)
     return wideChar;
 }
 
+wchar_t* toWideChar(std::string source)
+{
+    char* temp = new char[source.length()+1];
+    strcpy(temp,source.c_str());
+    wchar_t* wide = toWideChar(temp);
+    delete [] temp;
+    return wide;
+}
+
 
 char* toCharArray(std::string source)
 {

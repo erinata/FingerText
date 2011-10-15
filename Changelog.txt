@@ -1,5 +1,14 @@
 changelog (for developer use only, include unreleased versions)
 
+
+0.5.46
+****** Added: more informative save snippet confirmation message
+****** Changed: remove spaces in insertion dialog hint
+****** Fixed: snippet editor not openning when live update show no snippet
+
+0.5.45.1
+****** multiple scopes support
+
 0.5.45
 ****** Added: Editor Specific Dock
 ****** Fixed: use _ in Oldcopy and fixed the import error
