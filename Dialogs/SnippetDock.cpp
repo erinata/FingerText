@@ -349,14 +349,14 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
                        strcat(key,buffer);
                        strcat(key,"%");
                        
-                       updateDockItems(false,false,key,true,false,true);
+                       updateDockItems(true,false,key,true,false,true);
                        delete [] buffer;
                        
                        delete [] bufferWide;
                        delete [] key;
                     } else
                     {
-                        updateDockItems(false,false,"%",true,false);  
+                        updateDockItems(true,false,"%",true,false);  
                     }
                 }
                 
@@ -446,11 +446,12 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
                 }
                 case IDC_EXPORT:
                 {
+                    exportSnippets(false);
                     return true;
                 }
                 case IDC_EXPORTALL:
                 {
-                    exportSnippetsOnly();
+                    exportSnippets(true);
                     return true;
                 }
                 case IDC_DELETEALL:
@@ -479,7 +480,7 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
         {
             //::SetFocus(GetDlgItem(_hSelf, IDC_SNIPPET_LIST));
             ::Button_Enable(GetDlgItem(_hSelf, IDC_IMPORTURL), false);
-            ::Button_Enable(GetDlgItem(_hSelf, IDC_EXPORT), false);
+            //::Button_Enable(GetDlgItem(_hSelf, IDC_EXPORT), false);
             ::Button_Enable(GetDlgItem(_hSelf, IDC_DELETEALL), false);
             //switchDock(true);
             return true;

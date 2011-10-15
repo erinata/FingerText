@@ -6,6 +6,7 @@ changelog (for developer use only, include unreleased versions)
 ****** Fixed: closing snippetdock and reopen cause bug in edit button
 ****** Changed: Disable Fingertext will disable all snippet trigger related functionalities
 ****** Changed: New stub text of new snippet.
+****** Added: exporting a subset of snippets
 
 0.5.44
 - Added: Snippet dialog

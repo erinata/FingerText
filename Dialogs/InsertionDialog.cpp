@@ -303,7 +303,7 @@ BOOL CALLBACK InsertionDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPar
             } else
             {
                 ::SetDlgItemText(_hSelf, IDC_INSERTION_HINT ,TEXT("Type the TriggerText of the snippet and press TAB to insert."));
-                updateDockItems(false,false,"%",false,true);  
+                updateDockItems(true,false,"%",false,true);  
             }
             return true;
         }
@@ -336,14 +336,14 @@ BOOL CALLBACK InsertionDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPar
                       char* key = new char[strlen(vs[0].c_str())+1+1];
                       strcpy(key,vs[0].c_str());
                       strcat(key,"%");
-                      updateDockItems(false,false,key,false,true);
+                      updateDockItems(true,false,key,false,true);
                       //::SetDlgItemText(_hSelf, IDC_INSERTION_HINT ,bufferWide);
                       delete [] bufferWide;
                       
                       delete [] key;
                    } else
                    {
-                       updateDockItems(false,false,"%",false,true);  
+                       updateDockItems(true,false,"%",false,true);  
                        ::SetDlgItemText(_hSelf, IDC_INSERTION_HINT ,TEXT("Type the TriggerText of the snippet and press TAB to insert."));
                    }
                 }

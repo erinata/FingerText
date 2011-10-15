@@ -129,7 +129,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             //if (nppLoaded) updateDockItems();
             if (nppLoaded)
             {
-                if (!snippetHintUpdate()) updateDockItems(false,false,"%",true);
+                if (!snippetHintUpdate()) updateDockItems(true,false,"%",true);
             }
             //cleanOptionItem(); //This is not necessary........but the memory will keep a list of options used in last option dynamic hotspor call
             break;
@@ -183,7 +183,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             //refreshAnnotation();
             promptSaveSnippet();
             //snippetHintUpdate();
-            updateDockItems(false,false,"%",true);
+            updateDockItems(true,false,"%",true);
             break;
         case NPPN_READY:
             //initialize();

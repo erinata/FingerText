@@ -114,7 +114,7 @@ void openDatabase();
 int getCurrentTag(int posCurrent, char **buffer, int triggerLength = 0);
 
 void showSnippetDock();
-void updateDockItems(bool withContent = false, bool withAll = false, char* tag = "%", bool populate = false, bool populateInsertion = false, bool searchType = false);
+void updateDockItems(bool withContent = true, bool withAll = false, char* tag = "%", bool populate = false, bool populateInsertion = false, bool searchType = false);
 void populateDockItems(bool withAll = true, bool insertion = false);
 
 void setTextTarget(bool fromTab);
@@ -131,7 +131,7 @@ void deleteSnippet();
 void exportSnippetsOnly();
 void clearAllSnippets();
 void exportAndClearSnippets();
-bool exportSnippets();
+bool exportSnippets(bool all = true);
 void importSnippets();
 bool snippetHintUpdate();
 int promptSaveSnippet(TCHAR* message = NULL);

@@ -287,7 +287,7 @@ void nppReady()
 
     if (pc.configInt[FORCE_MULTI_PASTE]) ::SendScintilla(SCI_SETMULTIPASTE,1,0); 
 
-    if (snippetDock.isVisible()) updateDockItems(false,false,"%",true); //snippetHintUpdate();
+    if (snippetDock.isVisible()) updateDockItems(true,false,"%",true); //snippetHintUpdate();
 }
 
 void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires  
@@ -614,7 +614,7 @@ void deleteSnippet()
     }
     sqlite3_finalize(stmt);
     //TODO: can use the sqlite3 return message to show error message when the delete is not successful
-    updateDockItems(false,false,"%",true);
+    updateDockItems(true,false,"%",true);
 
     delete [] tempTriggerText;
     delete [] tempScope;
@@ -791,7 +791,7 @@ void saveSnippet()
     delete [] tagTypeText;
     delete [] snippetText;
     
-    updateDockItems(false,false,"%",true);
+    updateDockItems(true,false,"%",true);
     g_selectionMonitor++;
 }
 
@@ -2112,7 +2112,7 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
         pc.configText[CUSTOM_SCOPE] = toWideChar(getTerm);  //TODO: memory leak here?
         pc.callWriteConfigText(CUSTOM_SCOPE);
         ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
-        updateDockItems(false,false,"%",true);
+        updateDockItems(true,false,"%",true);
         //snippetHintUpdate();
         delete [] getTerm;
     } else if (strcmp(hotSpotText,"DATE")==0)
@@ -3224,7 +3224,7 @@ void showSnippetDock()
 
 
         updateMode();
-        updateDockItems(false,false,"%",true);
+        updateDockItems(true,false,"%",true);
         //snippetHintUpdate();
     } else
     {
@@ -3253,7 +3253,7 @@ bool snippetHintUpdate()
                 
                 if (tagLength==0)
                 {
-                    updateDockItems(false,false,"%",true);
+                    updateDockItems(true,false,"%",true);
                 } else if ((tagLength>0) && (tagLength<20))
                 {
                     //alertNumber(tagLength);
@@ -3262,7 +3262,7 @@ bool snippetHintUpdate()
                     strcat(similarTag,partialTag);
                     strcat(similarTag,"%");
             
-                    updateDockItems(false,false,similarTag,true);
+                    updateDockItems(true,false,similarTag,true);
                 }
                 
                 if (tagLength>=0) delete [] partialTag;   
@@ -3536,10 +3536,10 @@ void clearAllSnippets()
     if (SQLITE_OK == sqlite3_prepare_v2(g_db, "VACUUM", -1, &stmt, NULL)) sqlite3_step(stmt);
     sqlite3_finalize(stmt);
 
-    updateDockItems(false,false,"%",true);
+    updateDockItems(true,false,"%",true);
 }
 
-bool exportSnippets()
+bool exportSnippets(bool all)
 {
     ////TODO: Can actually add some informtiaon at the end of the exported snippets......can be useful information like version number or just describing the package
     
@@ -3562,16 +3562,21 @@ bool exportSnippets()
     
     if (::GetSaveFileName(&ofn))
     {
-        ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
-        int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
-        ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
+        if (all) updateDockItems(true,true,"%",false);
+        g_freezeDock = true;
+        
     
         ::SendScintilla(SCI_SETCURSOR, SC_CURSORWAIT, 0);
         //pc.configInt[SNIPPET_LIST_LENGTH] = 100000;
         //g_snippetCache = new SnipIndex [pc.configInt[SNIPPET_LIST_LENGTH]];
         //updateDockItems(true,false,"test%",false);  // This is for exporting a subset of the dataset
-        updateDockItems(true,true,"%",false);
-        g_freezeDock = true;
+        
+        
+        ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
+        int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
+        ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
+
+
         int exportCount = 0;
         //for (int j=0;j<pc.configInt[SNIPPET_LIST_LENGTH];j++)
         for (int j=0;j<g_snippetCache.size();j++)
@@ -3624,7 +3629,7 @@ bool exportSnippets()
     pc.configInt[LIVE_HINT_UPDATE]++;
     
     
-    updateDockItems(false,false,"%",true);
+    updateDockItems(true,false,"%",true);
 
     return success;
     
@@ -3944,7 +3949,7 @@ void importSnippets()
                 //delete [] snippetText;
             
                 ::SendScintilla(SCI_SETSAVEPOINT,0,0);
-                updateDockItems(false,false,"%",true);
+                updateDockItems(true,false,"%",true);
             
                 ::SendScintilla(SCI_GOTOPOS,0,0);
                 next = searchNext("!$[FingerTextData FingerTextData]@#");
@@ -4380,7 +4385,7 @@ int tagComplete()
     if (tagLength > 0)
     {
         //if (pc.configInt[LIVE_HINT_UPDATE]<=0) updateDockItems(false,false,key,false);
-        updateDockItems(false,false,key,false);
+        updateDockItems(true,false,key,false);
         index = g_snippetCache.size()-1;
         while ((index >= 0) && (g_snippetCache[index].triggerText[0] == '_')) index--;
         if (index >= 0)
@@ -4395,7 +4400,7 @@ int tagComplete()
         }
 
     }
-    if (pc.configInt[LIVE_HINT_UPDATE]<=0) updateDockItems(false,false,"%",true);
+    if (pc.configInt[LIVE_HINT_UPDATE]<=0) updateDockItems(true,false,"%",true);
     return index;
     //if (triggerTag(posCurrent,true) > 0) snippetHintUpdate();
 }
