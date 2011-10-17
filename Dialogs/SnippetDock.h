@@ -51,6 +51,7 @@ class DockingDlg : public DockingDlgInterface
         void toggleSave(bool buttonOn);
         int getSelection();
         void setSelction();
+        void DockingDlg::switchInsertMode(int insert = 1);
         //int getCount();
         void DockingDlg::switchDock(bool toNormal = true);
 

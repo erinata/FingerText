@@ -31,6 +31,9 @@
 #include "SnippetDock.h"
 
 bool normalMode = true;
+int insertMode = 1;
+//int previewMode = 1;
+int selectMode = 1;
 //extern NppData nppData;
 
 // Function for all docking dialogs
@@ -75,20 +78,17 @@ void DockingDlg::resizeListBox(int height,int width)
        height =  rect.bottom - rect.top;
 
     }
-    width = 285;
+    width = 290;
     if (normalMode)
     {
-        height = height - y - 140;
+        height = height - y - 180;
     } else
     {
-        height = height - y - 180;
+        height = height - y - 200;
     }
 
     if (height < minimumHeight) height = minimumHeight;
-    
-    
-    
-
+        
     SetWindowPos(GetDlgItem(_hSelf, IDC_STATIC_TEXT),NULL,x,y,width,20,SWP_NOACTIVATE);
     SetWindowPos(GetDlgItem(_hSelf, IDC_PREVIEW_EDIT),NULL,x,y+20,width,20,SWP_NOACTIVATE);
     SetWindowPos(GetDlgItem(_hSelf, ID_SNIPSHOW_EDIT),NULL,x,y+40,width,120,SWP_NOACTIVATE);
@@ -100,13 +100,17 @@ void DockingDlg::resizeListBox(int height,int width)
     if (normalMode)
     {
         SetWindowPos(GetDlgItem(_hSelf, IDC_SNIPPET_LIST),NULL,x,y+180,width,height,SWP_NOACTIVATE);
-        SetWindowPos(GetDlgItem(_hSelf, IDC_STATIC_TEXT4),NULL,x,y+160,width,height,SWP_NOACTIVATE);
+        SetWindowPos(GetDlgItem(_hSelf, IDC_STATIC_TEXT4),NULL,x,y+160,120,20,SWP_NOACTIVATE);
+        SetWindowPos(GetDlgItem(_hSelf, IDC_RADIO_INSERT),NULL,x+120,y+160,100,20,SWP_NOACTIVATE);
+        SetWindowPos(GetDlgItem(_hSelf, IDC_RADIO_EDIT),NULL,x+220,y+160,100,20,SWP_NOACTIVATE);
         
     } else
     {
         SetWindowPos(GetDlgItem(_hSelf, IDC_SNIPPET_LIST),NULL,x,y+200,width,height,SWP_NOACTIVATE);
-        SetWindowPos(GetDlgItem(_hSelf, IDC_STATIC_TEXT5),NULL,x,y+180,width,height,SWP_NOACTIVATE);
-        
+        SetWindowPos(GetDlgItem(_hSelf, IDC_STATIC_TEXT6),NULL,x,y+180,width,20,SWP_NOACTIVATE);
+        //SetWindowPos(GetDlgItem(_hSelf, IDC_RADIO_INSERT),NULL,x+120,y+180,100,20,SWP_NOACTIVATE);
+        //SetWindowPos(GetDlgItem(_hSelf, IDC_RADIO_EDIT),NULL,x+220,y+180,100,20,SWP_NOACTIVATE);
+
     }
 
     // repaint the window 
@@ -119,7 +123,10 @@ void DockingDlg::clearDock()
     SendMessage(GetDlgItem(_hSelf, IDC_SNIPPET_LIST), LB_RESETCONTENT, 0, 0);
 
     //::Button_Enable(GetDlgItem(_hSelf, IDC_SAVE), false);
-    ::Button_Enable(GetDlgItem(_hSelf, IDC_INSERT), false);
+    //::Button_Enable(GetDlgItem(_hSelf, IDC_INSERT), false);
+
+    ::SetWindowText(GetDlgItem(_hSelf, IDC_OPENEDITOR),TEXT("Open Snippet Editor"));
+    selectMode = 0;
 
     ::Button_Enable(GetDlgItem(_hSelf, IDC_EDIT), false);
     ::Button_Enable(GetDlgItem(_hSelf, IDC_DELETE), false);
@@ -128,9 +135,7 @@ void DockingDlg::clearDock()
 
 void DockingDlg::setDlgText(int dlg, TCHAR* showText)
 {
-    
     ::SetDlgItemText(_hSelf, dlg ,showText);
-
 }
 
 void DockingDlg::toggleSave(bool buttonOn)
@@ -186,7 +191,7 @@ void DockingDlg::switchDock(bool toNormal)
     normalMode = toNormal;
 
     int editorButtonHeight = 20;
-    int editorButtonWidth = 135;
+    int editorButtonWidth = 145;
     int firstRow = 45;
     int firstColumn = 2;
 
@@ -207,23 +212,23 @@ void DockingDlg::switchDock(bool toNormal)
     SetWindowPos(GetDlgItem(_hSelf, IDC_EXPORT    ),NULL,firstColumn                      ,firstRow+((editorButtonHeight+2)*4),editorButtonWidth,editorButtonHeight,SWP_NOACTIVATE);
     SetWindowPos(GetDlgItem(_hSelf, IDC_EXPORTALL ),NULL,firstColumn+(editorButtonWidth+2),firstRow+((editorButtonHeight+2)*4),editorButtonWidth,editorButtonHeight,SWP_NOACTIVATE);
         
-    SetWindowPos(GetDlgItem(_hSelf, IDC_CLOSEEDITOR),NULL,2,2,285,editorButtonHeight,SWP_NOACTIVATE);
+    SetWindowPos(GetDlgItem(_hSelf, IDC_CLOSEEDITOR),NULL,2,2,290,editorButtonHeight,SWP_NOACTIVATE);
 
-    SetWindowPos(GetDlgItem(_hSelf, IDC_OPENEDITOR),NULL,2,2,285,editorButtonHeight,SWP_NOACTIVATE);
-    SetWindowPos(GetDlgItem(_hSelf, IDC_INSERT),NULL,2,30,130,30,SWP_NOACTIVATE);
-    SetWindowPos(GetDlgItem(_hSelf, IDC_CREATESELECTION),NULL,135,30,130,30,SWP_NOACTIVATE);
+    SetWindowPos(GetDlgItem(_hSelf, IDC_OPENEDITOR),NULL,2,2,290,editorButtonHeight,SWP_NOACTIVATE);
+    //SetWindowPos(GetDlgItem(_hSelf, IDC_INSERT),NULL,2,30,130,30,SWP_NOACTIVATE);
+    SetWindowPos(GetDlgItem(_hSelf, IDC_CREATESELECTION),NULL,2,24,290,editorButtonHeight,SWP_NOACTIVATE);
+    SetWindowPos(GetDlgItem(_hSelf, IDC_GETMORE),NULL,2,46,290,editorButtonHeight,SWP_NOACTIVATE);
     
-    
-
     if (toNormal)
     {
-
-        
-
+        ::ShowWindow(GetDlgItem(_hSelf, IDC_GETMORE),SW_SHOW);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_CREATESELECTION),SW_SHOW);
-        ::ShowWindow(GetDlgItem(_hSelf, IDC_INSERT),SW_SHOW);
+        //ShowWindow(GetDlgItem(_hSelf, IDC_INSERT),SW_SHOW);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_OPENEDITOR),SW_SHOW);
+        ::ShowWindow(GetDlgItem(_hSelf, IDC_RADIO_EDIT),SW_SHOW);
+        ::ShowWindow(GetDlgItem(_hSelf, IDC_RADIO_INSERT),SW_SHOW);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT4),SW_SHOW);
+
 
         ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT3),SW_HIDE);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_CLOSEEDITOR),SW_HIDE);
@@ -238,17 +243,18 @@ void DockingDlg::switchDock(bool toNormal)
         ::ShowWindow(GetDlgItem(_hSelf, IDC_DELETEALL),SW_HIDE);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_FILTER),SW_HIDE);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT2),SW_HIDE);
-        ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT5),SW_HIDE);
+        ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT6),SW_HIDE);
 
-
-        
         //setSnippetDockState(1);
 
     } else
     {
+        ::ShowWindow(GetDlgItem(_hSelf, IDC_GETMORE),SW_HIDE);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_CREATESELECTION),SW_HIDE);
-        ::ShowWindow(GetDlgItem(_hSelf, IDC_INSERT),SW_HIDE);
+        //::ShowWindow(GetDlgItem(_hSelf, IDC_INSERT),SW_HIDE);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_OPENEDITOR),SW_HIDE);
+        ::ShowWindow(GetDlgItem(_hSelf, IDC_RADIO_EDIT),SW_HIDE);
+        ::ShowWindow(GetDlgItem(_hSelf, IDC_RADIO_INSERT),SW_HIDE);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT4),SW_HIDE);
 
         ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT3),SW_SHOW);
@@ -264,10 +270,10 @@ void DockingDlg::switchDock(bool toNormal)
         //::ShowWindow(GetDlgItem(_hSelf, IDC_DELETEALL),SW_SHOW);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_FILTER),SW_SHOW);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT2),SW_SHOW);
-        ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT5),SW_SHOW);
+        ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT6),SW_SHOW);
+
         //setSnippetDockState(0);
     }
-
 
     resizeListBox();
 
@@ -276,6 +282,13 @@ void DockingDlg::switchDock(bool toNormal)
     //alert();
 }
 
+void DockingDlg::switchInsertMode(int insert)
+{
+    insertMode = insert;
+    SendMessage(GetDlgItem(_hSelf, IDC_RADIO_INSERT), BM_SETCHECK, insert, 0);
+    SendMessage(GetDlgItem(_hSelf, IDC_RADIO_EDIT), BM_SETCHECK, !insert, 0);
+    writeInsertMode(insert);
+}
 
 //int DockingDlg::getCount()
 //{
@@ -306,21 +319,26 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
                 //keyUpdate();
                 //updateDockItems();
                 //::Button_Enable(GetDlgItem(_hSelf, IDC_SAVE), true);
-                ::Button_Enable(GetDlgItem(_hSelf, IDC_INSERT), true);
+                //::Button_Enable(GetDlgItem(_hSelf, IDC_INSERT), true);
+
+                ::SetWindowText(GetDlgItem(_hSelf, IDC_OPENEDITOR),TEXT("Open selected snippet in Editor"));
+                selectMode = 1;
 
                 ::Button_Enable(GetDlgItem(_hSelf, IDC_EDIT), true);
                 ::Button_Enable(GetDlgItem(_hSelf, IDC_DELETE), true);
+                return true;
                 //::Button_Enable(GetDlgItem(_hSelf, IDC_CREATE), true);
 
             } else if (HIWORD(wParam) == LBN_DBLCLK && LOWORD(wParam) == IDC_SNIPPET_LIST)
             {
-                if (normalMode)
+                if (insertMode)
                 {
                     insertSnippet();
                 } else
                 {
                     editSnippet();
                 }
+                return true;
                 
             } else if  (((HIWORD(wParam) == EN_SETFOCUS) || (HIWORD(wParam) == EN_CHANGE)) && (LOWORD(wParam) == IDC_FILTER))
             {
@@ -385,42 +403,48 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
                         updateDockItems(true,false,"%",true,false);  
                     }
                 }
-                
+                return true;
             }
 
 
 			switch (wParam)
 			{
 
-                //case IDC_RADIO_NORMAL:
-                //{
-                //    switchDock(true);
-                //    return true;
-                //}
-                //
-                //case IDC_RADIO_EDITOR:
-                //{
-                //    switchDock(false);
-                //    return true;
-                //}
+                case IDC_RADIO_INSERT:
+                {
+                    switchInsertMode(1);
+                    return true;
+                }
+                
+                case IDC_RADIO_EDIT:
+                {
+                    switchInsertMode(0);
+                    return true;
+                }
                 case IDOK:
                 {
                     if (normalMode)
                     {
-                        insertSnippet();
+                        if (insertMode)
+                        {
+                            insertSnippet();
+                        } else
+                        {
+                            editSnippet();
+                        }
                     } else
                     {
                         editSnippet();
                     }
-
-                }
-
-                case IDC_INSERT:
-                {
-                    insertSnippet();
                     return true;
                 }
 
+                //case IDC_INSERT:
+                //{
+                //    insertSnippet();
+                //    return true;
+                //}
+                //
         		case IDC_EDIT :
 				{
 
@@ -443,11 +467,22 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 
                 case IDC_OPENEDITOR:
                 {
-                    editSnippet();
+                    if (selectMode)
+                    {
+                        editSnippet();
+                    } else
+                    {
+                        selectionToSnippet(true);
+                    }
                     return true;
                 }
 
                 case IDC_NEW:
+                {
+                    selectionToSnippet(true);
+                    return true;
+                }
+
                 case IDC_CREATESELECTION:
                 {
                     selectionToSnippet();
@@ -504,7 +539,7 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
         
         case WM_INITDIALOG:
         {
-
+            ::Button_Enable(GetDlgItem(_hSelf, IDC_GETMORE), false);
 
             //switchDock(true);
             return true;

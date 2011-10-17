@@ -35,7 +35,7 @@
 //#include "Version.h"
 
 // Config file content
-#define CONFIG_INT_COUNT 14
+#define CONFIG_INT_COUNT 15
 #define CONFIG_TEXT_COUNT 3
 
 #define SNIPPET_LIST_ORDER_TAG_TYPE 0
@@ -52,6 +52,7 @@
 #define USE_NPP_SHORTKEY 11
 #define FALLBACK_TAB 12
 #define INSERTION_DIALOG_STATE 13
+#define INSERT_MODE 14
 
 
 #define CUSTOM_SCOPE 0
@@ -73,7 +74,8 @@ const int configIntDefault[CONFIG_INT_COUNT] =
     1,               // FORCE_MULTI_PASTE
     1,               // USE_NPP_SHORTKEY
     0,               // FALLBACK_TAB
-    0                // INSERTION_DIALOG_STATE
+    0,               // INSERTION_DIALOG_STATE
+    1                // INSERT_MODE
     
 
 };                   
@@ -93,7 +95,8 @@ const TCHAR configIntNames[CONFIG_INT_COUNT][MAX_PATH] =
     TEXT("force_multipaste"),
     TEXT("use_npp_shortkey"),
     TEXT("fallback_tab"),
-    TEXT("insertion_dialog_state")
+    TEXT("insertion_dialog_state"),
+    TEXT("insert_mode")
     
 };
 

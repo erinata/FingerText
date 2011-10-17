@@ -1211,12 +1211,17 @@
 #define psh1                            0x0400
 #define _WIN32_IE_IE401                 0x0401
 #define psh2                            0x0401
+#define IDC_RADIO_INSERT                1025
 #define psh3                            0x0402
 #define IDC_STATIC_TEXT4                1026
 #define psh4                            0x0403
 #define IDC_STATIC_TEXT5                1027
+#define IDC_RADIO_EDIT                  1027
 #define psh5                            0x0404
+#define IDC_STATIC_TEXT6                1028
 #define psh6                            0x0405
+#define IDC_GETMOE                      1029
+#define IDC_GETMORE                     1029
 #define psh7                            0x0406
 #define psh8                            0x0407
 #define psh9                            0x0408
@@ -1552,7 +1557,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        101
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1022
+#define _APS_NEXT_CONTROL_VALUE         1030
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

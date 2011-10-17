@@ -232,7 +232,7 @@ void commandMenuInit()
     g_showInsertionDlgIndex = setCommand(TEXT("Show Snippet Insertion Dialog"), showInsertionDlg,shKey2);
     g_toggleDisableIndex = setCommand(TEXT("Toggle On/Off FingerText"), toggleDisable);
     setCommand();
-    g_selectionToSnippetIndex = setCommand(TEXT("Create Snippet from Selection"),  selectionToSnippet);
+    g_selectionToSnippetIndex = setCommand(TEXT("Create Snippet from Selection"), doSelectionToSnippet);
     g_importSnippetsIndex = setCommand(TEXT("Import Snippets from ftd file"), importSnippets);
     g_exportSnippetsIndex = setCommand(TEXT("Export All Snippets"), exportSnippetsOnly);
     g_deleteAllSnippetsIndex = setCommand(TEXT("Export and Delete All Snippets"), exportAndClearSnippets);
@@ -415,9 +415,12 @@ char *findTagSQLite(char *tag, const char *tagCompare)
 	return expanded; //remember to delete the returned expanded after use.
 }
 
+void doSelectionToSnippet()
+{
+    selectionToSnippet(false);
+}
 
-
-void selectionToSnippet()
+void selectionToSnippet(bool forceNew)
 {
     g_selectionMonitor--;
     
@@ -430,7 +433,7 @@ void selectionToSnippet()
 
     char* selection;
     
-    if (selectionEnd>selectionStart)
+    if ((selectionEnd>selectionStart) && (!forceNew))
     {
         
         sciGetText(&selection,selectionStart,selectionEnd);
@@ -524,8 +527,14 @@ void editSnippet()
     char* buffer = toCharArray(bufferWide);
     buffer = quickStrip(buffer, ' ');
 
-    if (strlen(buffer)==0) selectionToSnippet();
-
+    if (strlen(buffer)==0) selectionToSnippet(true);
+    //if (strlen(buffer)==0)
+    //{
+    //    ::showMessageBox(TEXT("No Snippet Selected"));
+    //    delete [] buffer;
+    //    return;
+    //}
+    //
     int scopeLength = ::strchr(buffer,'>') - buffer - 1;
     int triggerTextLength = strlen(buffer)-scopeLength - 2;
     char* tempTriggerText = new char [ triggerTextLength+1];
@@ -3269,6 +3278,7 @@ void showSnippetDock()
             //This determine the initial state of the snippetdock.
             //snippetDock.switchDock((bool)pc.configInt[SNIPPETDOCK_STATE]);
             snippetDock.switchDock(true);
+            snippetDock.switchInsertMode(pc.configInt[INSERT_MODE]);
             snippetDock.display();
             
 	    } else
@@ -3287,7 +3297,12 @@ void showSnippetDock()
     }
     
 }
-
+void writeInsertMode(bool insert)
+{
+    pc.configInt[INSERT_MODE] = insert;
+    pc.callWriteConfigInt(INSERT_MODE);
+    
+}
 
 bool snippetHintUpdate()
 {     

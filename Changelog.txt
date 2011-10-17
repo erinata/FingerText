@@ -5,6 +5,7 @@ changelog (for developer use only, include unreleased versions)
 ****** Added: more informative save snippet confirmation message
 ****** Changed: remove spaces in insertion dialog hint
 ****** Fixed: snippet editor not openning when live update show no snippet
+****** Added: Insert and edit mode
 
 0.5.45.1
 ****** multiple scopes support

@@ -97,8 +97,8 @@ int hotSpotNavigation(char* tagSign = "$[![", char* tagTail = "]!]");
 int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, int tailPos);
 void showPreview(bool top = false,bool insertion = false);
 
-
-void selectionToSnippet();
+void doSelectionToSnippet();
+void selectionToSnippet(bool forceNew = false);
 void insertHotSpotSign();
 //void insertWarmSpotSign();
 //void goToWarmSpot();
@@ -146,6 +146,8 @@ char* getDateTime(char *format, bool getDate = true, int flags = 0);
 //void insertDateTime(bool date,int type, HWND &curScintilla);
 void insertPath(TCHAR* path);
 void insertNppPath(int msg);
+
+void writeInsertMode(bool insert);
 
 void generateStroke(int vk, int modifier = 0);
 void generateKey(int vk, bool keyDown);
