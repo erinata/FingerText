@@ -2,6 +2,7 @@ changelog (for developer use only, include unreleased versions)
 
 
 0.5.46
+****** Added: New Scope Name: , which can cater multiple extensions
 ****** Added: more informative save snippet confirmation message
 ****** Changed: remove spaces in insertion dialog hint
 ****** Fixed: snippet editor not openning when live update show no snippet
@@ -19,6 +20,7 @@ changelog (for developer use only, include unreleased versions)
 ****** Added: exporting a subset of snippets
 
 0.5.44
+****** Fixed: problem of multiline tabbing
 - Added: Snippet dialog
 ****** Added: SYSTEM snippets
 - Fixed: snippet editor not showing all snippets

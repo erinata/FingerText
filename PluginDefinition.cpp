@@ -3395,7 +3395,17 @@ void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, b
             char *tagType2 = NULL;
             TCHAR *fileType2 = new TCHAR[MAX_PATH];
 
-            int i=0;
+
+            TCHAR* fileNameWide = new TCHAR[MAX_PATH];
+            ::SendMessage(nppData._nppHandle, NPPM_GETFILENAME, (WPARAM)MAX_PATH, (LPARAM)fileNameWide);
+            char* fileName = toCharArray(fileNameWide);
+            std::vector<std::string> nameParts = toVectorString(fileName,'.');
+
+            char* namePartChar;
+            //alert((int)nameParts.size());
+            int namePartSize = nameParts.size();
+
+            int i=-6;
             do
             {
                 if (withAll)
@@ -3419,45 +3429,51 @@ void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, b
                 } else
                 {   
 
-                    if (i == 0)
+                    if (i == -6)
                     {
                         sqlite3_bind_text(stmt, 1, "SYSTEM", -1, SQLITE_STATIC);
                         
-                    } else if (i == 1)
+                    } else if (i == -5)
                     {
                         sqlite3_bind_text(stmt, 1, "GLOBAL", -1, SQLITE_STATIC);
                         
-                    } else if (i == 2)
+                    } else if (i == -4)
                     {
                         sqlite3_bind_text(stmt, 1, getLangTagType(), -1, SQLITE_STATIC);
                         
-                    } else if (i == 3)
+                    } else if (i == -3)
                     {
                         ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType2);
                         tagType2 = toCharArray(fileType2);
                         sqlite3_bind_text(stmt, 1, tagType2, -1, SQLITE_STATIC);
-                    } else if (i == 4)
+                    } else if (i == -2)
                     {
                         ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType1);
                         tagType1 = toCharArray(fileType1);
                         sqlite3_bind_text(stmt, 1, tagType1, -1, SQLITE_STATIC);
-                    } else if (i == 5)
+                    } else if (i == -1)
                     {
                         customScope = toCharArray(pc.configText[CUSTOM_SCOPE]);
                         sqlite3_bind_text(stmt, 1, customScope, -1, SQLITE_STATIC);
+                    } else
+                    {
+                        //TODO: optimizing needed
+                        namePartChar = new char[nameParts[i].length()+5+1];
+                        if (nameParts[i].length()!=0)
+                        {
+                            strcpy(namePartChar, ("Name:" +nameParts[i]).c_str());
+                            sqlite3_bind_text(stmt, 1, namePartChar, -1, SQLITE_STATIC);
+                        } else
+                        {
+                            sqlite3_bind_text(stmt, 1, "", -1, SQLITE_STATIC);
+                        }
                     }
+
+
+
 
                     sqlite3_bind_text(stmt, 2, tag, -1, SQLITE_STATIC);
                 }
-
-
-                    //TODO: potential performance improvement by just setting 100
-                    //char snippetCacheSizeText[10];
-                    //::_itoa(pc.configInt[SNIPPET_LIST_LENGTH], snippetCacheSizeText, 10); 
-                    //sqlite3_bind_text(stmt, 7, snippetCacheSizeText, -1, SQLITE_STATIC);
-            
-                
-                //int row = 0;
                 
                 while(true)
                 {
@@ -3479,10 +3495,14 @@ void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, b
                 }
                 sqlite3_reset(stmt);
 
+                if (i>=0) delete [] namePartChar;
                 i++;
-            } while ((i <=5) && (!withAll));
+                //alert(i);
+            } while ((i < namePartSize) && (!withAll));
+            //} while ((i < nameParts.size()) && (!withAll));
 
-
+            delete [] fileNameWide;
+            delete [] fileName;
 
             delete [] customScope;
             delete [] tagType1;
@@ -4524,13 +4544,33 @@ bool triggerTag(int &posCurrent, int triggerLength)
         char *expanded = NULL;
         char *tagType = NULL;
         
-        TCHAR *fileType = NULL;
-        fileType = new TCHAR[MAX_PATH];
+        TCHAR *fileType = new TCHAR[MAX_PATH];
 
         // Check for custom scope
         tagType = toCharArray(pc.configText[CUSTOM_SCOPE]);
         expanded = findTagSQLite(tag,tagType); 
         
+        if (!expanded)
+        {
+            TCHAR* fileNameWide = new TCHAR[MAX_PATH];
+            ::SendMessage(nppData._nppHandle, NPPM_GETFILENAME, (WPARAM)MAX_PATH, (LPARAM)fileNameWide);
+            char* fileName = toCharArray(fileNameWide);
+            std::vector<std::string> nameParts = toVectorString(fileName,'.');
+
+            int i = 0;
+            while (i<nameParts.size() && (!expanded))
+            {
+                if (nameParts[i].length()!=0)
+                {
+                    expanded = findTagSQLite(tag,("Name:" + nameParts[i]).c_str()); 
+                }
+                i++;
+            }
+            
+            delete [] fileNameWide;
+            delete [] fileName;
+
+        }
         // Check for snippets which matches ext part
         if (!expanded)
         {
@@ -4546,6 +4586,7 @@ bool triggerTag(int &posCurrent, int triggerLength)
                 ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
                 tagType = toCharArray(fileType);
                 expanded = findTagSQLite(tag,tagType); 
+
                 // Check for language specific snippets
                 if (!expanded)
                 {
