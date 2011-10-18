@@ -86,10 +86,8 @@ void InsertionDlg::addDockItem(wchar_t *dockItem)
     SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_LIST), LB_INSERTSTRING, 0, (LPARAM)dockItem); 
 }
 
-
 void InsertionDlg::clearList()
 {
-
     SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_LIST), LB_RESETCONTENT, 0, 0);
 }
 
@@ -101,7 +99,10 @@ void InsertionDlg::clearText()
 
 int InsertionDlg::getEditPos()
 {
-    return SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_EDIT), EM_LINEINDEX, 0, 0);             
+    int startPos;
+    int endPos;
+    SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_EDIT), EM_GETSEL , (WPARAM)&startPos, (LPARAM)&endPos);             
+    return startPos;
 
 }
 
@@ -212,6 +213,9 @@ LRESULT SubWndProcEdit(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 
                 setListTarget();
 
+            } else
+            {
+                updateInsertionDialogHint();
             }
             retVal = ::CallWindowProc(wndProcEdit, hwnd, message, wParam, lParam);
 
@@ -285,15 +289,95 @@ void InsertionDlg::setListTarget()
 }
 
 
+void InsertionDlg::updateInsertionHint()
+{
+    if (::GetFocus() == GetDlgItem(_hSelf, IDC_INSERTION_EDIT))
+    {
+       int length = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_EDIT), EM_LINELENGTH, 0, 0);
+       if (length>0)
+       {
+          TCHAR* bufferWide = new TCHAR[length+1];
+          ::GetDlgItemText(_hSelf, IDC_INSERTION_EDIT ,bufferWide,length+1);
+          char* buffer = toCharArray(bufferWide);
+          std::vector<std::string> vs = toVectorString(buffer,'(',2);
+          delete [] buffer;
+          
+          char* key = new char[strlen(vs[0].c_str())+1+1];
+          strcpy(key,vs[0].c_str());
+          strcat(key,"%");
+          updateDockItems(true,false,key,false,true);
+          //::SetDlgItemText(_hSelf, IDC_INSERTION_HINT ,bufferWide);
+          delete [] bufferWide;
+          
+          delete [] key;
+       } else
+       {
+           updateDockItems(true,false,"%",false,true);  
+           ::SetDlgItemText(_hSelf, IDC_INSERTION_HINT_HIGHLIGHT,TEXT(""));
+           ::SetDlgItemText(_hSelf, IDC_INSERTION_HINT_POST ,TEXT(""));
+           ::SetDlgItemText(_hSelf, IDC_INSERTION_HINT ,TEXT("Type the TriggerText of the snippet and press TAB to insert."));
+           adjustTextHintPosition();
+       }
+    }
+}
+
+void InsertionDlg::adjustTextHintPosition()
+{
+    int fontWidth = 7;
+    int offset = 4;
+    int length1 = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_HINT), EM_LINELENGTH, 0, 0);  
+    int length2 = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_HINT_HIGHLIGHT), EM_LINELENGTH, 0, 0);  
+    int length3 = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_HINT_POST), EM_LINELENGTH, 0, 0);  
+    
+    SetWindowPos(GetDlgItem(_hSelf, IDC_INSERTION_HINT)          ,NULL,5                                                  ,35,offset+length1*fontWidth,20,SWP_NOACTIVATE);
+    SetWindowPos(GetDlgItem(_hSelf, IDC_INSERTION_HINT_HIGHLIGHT),NULL,5+offset+length1*fontWidth                         ,35,offset+length2*fontWidth,20,SWP_NOACTIVATE);
+    SetWindowPos(GetDlgItem(_hSelf, IDC_INSERTION_HINT_POST)     ,NULL,5+offset+length1*fontWidth+offset+length2*fontWidth,35,offset+length3*fontWidth,20,SWP_NOACTIVATE);
+
+    InvalidateRect (_hSelf, NULL, TRUE);
+    UpdateWindow (_hSelf);
+            
+}
+
 BOOL CALLBACK InsertionDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message) 
 	{
 
+        case WM_CTLCOLORSTATIC:
+        {
+            //if ((HWND)lParam == GetDlgItem(_hSelf, IDC_INSERTION_HINT_HIGHLIGHT)) 
+            //{
+            //    SetBkMode((HDC)wParam,TRANSPARENT);
+            //    SetTextColor((HDC)wParam, RGB(0,0,0));
+            //    return (BOOL)CreateSolidBrush (GetSysColor(COLOR_MENU));
+            //        
+            //} else 
+            if (((HWND)lParam == GetDlgItem(_hSelf, IDC_INSERTION_HINT)) || ((HWND)lParam == GetDlgItem(_hSelf, IDC_INSERTION_HINT_POST)))
+            {
+                SetBkMode((HDC)wParam,TRANSPARENT);
+                SetTextColor((HDC)wParam, RGB(128,128,128));
+                return (BOOL)CreateSolidBrush (GetSysColor(COLOR_MENU));
+
+            }
+
+
+            return false;
+            
+        }
+
         case WM_INITDIALOG:
 		{
+            //::SetTextColor((HDC)GetDlgItem(_hSelf, IDC_INSERTION_HINT_HIGHLIGHT),RGB(255,0,0));
+
             wndProcEdit = (WNDPROC)SetWindowLong(GetDlgItem(_hSelf, IDC_INSERTION_EDIT), GWL_WNDPROC, (long)SubWndProcEdit);
             wndProcList = (WNDPROC)SetWindowLong(GetDlgItem(_hSelf, IDC_INSERTION_LIST), GWL_WNDPROC, (long)SubWndProcList);
+
+            HFONT hFont=CreateFont (14, 0, 0, 0, FW_BLACK, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Consolas");
+            SendMessage (GetDlgItem(_hSelf, IDC_INSERTION_HINT_HIGHLIGHT), WM_SETFONT, WPARAM (hFont), TRUE);
+            
+
+            adjustTextHintPosition();
+
 			return true;
 		}
         
@@ -308,8 +392,11 @@ BOOL CALLBACK InsertionDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPar
                 display(false);
             } else
             {
+                ::SetDlgItemText(_hSelf, IDC_INSERTION_HINT_HIGHLIGHT,TEXT(""));
+                ::SetDlgItemText(_hSelf, IDC_INSERTION_HINT_POST ,TEXT(""));
                 ::SetDlgItemText(_hSelf, IDC_INSERTION_HINT ,TEXT("Type the TriggerText of the snippet and press TAB to insert."));
                 updateDockItems(true,false,"%",false,true);  
+                adjustTextHintPosition();
             }
             return true;
         }
@@ -328,31 +415,7 @@ BOOL CALLBACK InsertionDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPar
 
             if  (HIWORD(wParam) == EN_CHANGE && LOWORD(wParam) == IDC_INSERTION_EDIT)
             {
-                if (::GetFocus() == GetDlgItem(_hSelf, IDC_INSERTION_EDIT))
-                {
-                   int length = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_EDIT), EM_LINELENGTH, 0, 0);
-                   if (length>0)
-                   {
-                      TCHAR* bufferWide = new TCHAR[length+1];
-                      ::GetDlgItemText(_hSelf, IDC_INSERTION_EDIT ,bufferWide,length+1);
-                      char* buffer = toCharArray(bufferWide);
-                      std::vector<std::string> vs = toVectorString(buffer,'(',2);
-                      delete [] buffer;
-                      
-                      char* key = new char[strlen(vs[0].c_str())+1+1];
-                      strcpy(key,vs[0].c_str());
-                      strcat(key,"%");
-                      updateDockItems(true,false,key,false,true);
-                      //::SetDlgItemText(_hSelf, IDC_INSERTION_HINT ,bufferWide);
-                      delete [] bufferWide;
-                      
-                      delete [] key;
-                   } else
-                   {
-                       updateDockItems(true,false,"%",false,true);  
-                       ::SetDlgItemText(_hSelf, IDC_INSERTION_HINT ,TEXT("Type the TriggerText of the snippet and press TAB to insert."));
-                   }
-                }
+                //updateInsertionHint();
                 return true;
 
             }

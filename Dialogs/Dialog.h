@@ -1173,7 +1173,10 @@
 #define IDC_INSERTION_DES               1005
 #define IDC_NEW                         1005
 #define IDC_DELETE                      1006
+#define IDC_INSERTION_HINT_POST         1006
 #define IDC_CREATESELECTION             1007
+#define IDC_INSERTION_HINT_POST2        1007
+#define IDC_INSERTION_HINT_HIGHLIGHT    1007
 #define IDC_RADIO_NORMAL                1008
 #define IDC_LENGTH                      1009
 #define IDC_RADIO_EDITOR                1009
@@ -1220,7 +1223,6 @@
 #define psh5                            0x0404
 #define IDC_STATIC_TEXT6                1028
 #define psh6                            0x0405
-#define IDC_GETMOE                      1029
 #define IDC_GETMORE                     1029
 #define psh7                            0x0406
 #define psh8                            0x0407

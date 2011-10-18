@@ -62,6 +62,8 @@ public:
     void InsertionDlg::setDlgText(int dlg, TCHAR* showText);
     void InsertionDlg::changeMode(bool withComment);
     void InsertionDlg::changeExpand();
+    void InsertionDlg::updateInsertionHint();
+    void InsertionDlg::adjustTextHintPosition();
 
     virtual void destroy() 
     {

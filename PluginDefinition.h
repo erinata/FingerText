@@ -122,6 +122,8 @@ void setListTarget();
 void saveSnippet();
 const char* getLangTagType();
 
+
+void updateInsertionDialogHint();
 //void deleteCache();
 //void clearCache();
 void insertSnippet();
@@ -155,7 +157,8 @@ BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam);
 void setFocusToWindow();
 void searchWindowByName(std::string searchKey = "", HWND parentWindow = 0);
 
-TCHAR* snippetTextBrokenDown(std::vector<std::string> vs, char* tempTriggerText, char* snippetContent, int position);
+//std::vector<std::string> snippetTextBrokenDown(std::string editText, std::vector<std::string> vs, char* tempTriggerText, char* snippetContent, int position);
+std::vector<std::string> snippetTextBrokenDown(std::string editText, std::vector<std::string> params, char** tempTriggerText, char** snippetContent, int position);
 
 void selectionMonitor(int contentChange);
 bool triggerTag(int &posCurrent,int triggerLength = 0);

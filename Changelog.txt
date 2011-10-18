@@ -2,6 +2,7 @@ changelog (for developer use only, include unreleased versions)
 
 
 0.5.46
+****** Added: Dynamic insertion hint
 ****** Added: New Scope Name: , which can cater multiple extensions
 ****** Added: more informative save snippet confirmation message
 ****** Changed: remove spaces in insertion dialog hint
