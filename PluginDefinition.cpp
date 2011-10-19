@@ -240,7 +240,7 @@ void commandMenuInit()
     g_deleteAllSnippetsIndex = setCommand(TEXT("Export and Delete All Snippets"), exportAndClearSnippets);
     setCommand();
     g_TriggerTextCompletionIndex = setCommand(TEXT("TriggerText Completion"), doTagComplete);
-    g_InsertHotspotIndex =setCommand(TEXT("Insert a hotspot"), insertHotSpotSign);
+//    g_InsertHotspotIndex =setCommand(TEXT("Insert a hotspot"), insertHotSpotSign);
     setCommand();
     g_settingsIndex = setCommand(TEXT("Settings"), showSettings);
     g_quickGuideIndex = setCommand(TEXT("Quick Guide"), showHelp);
@@ -3110,48 +3110,190 @@ std::vector<std::string> snippetTextBrokenDown(std::string editText, std::vector
 
 
 
+//void insertHotSpotSign(int type)
+//{
+//    if (g_editorView)
+//    {
+//        switch (type)
+//        {
+//
+//            case 0:
+//            {
+//                insertRegularHotSpotSign();
+//                break;
+//            }
+//
+//            case 1:
+//            {
+//                insertKeyWordSign();
+//                break;
+//            }
+//
+//            case 2:
+//            {
+//                insertChainSnippetSign();
+//                break;
+//
+//            }
+//
+//            case 3:
+//            {
+//                insertCommandSign();
+//                break;
+//
+//            }
+//            case 4:
+//            {
+//                insertOptionSign();
+//                break;
+//
+//            }
+//            case 5:
+//            {
+//                insertListSign();
+//                break;
+//
+//            }
+//            case 6:
+//            {
+//                insertEndSign();
+//                break;
+//
+//            }
+//
+//        }
+//
+//        ::SetFocus(::getCurrentScintilla());
+//    }
+//
+//}
 
-void insertHotSpotSign()
+void insertRegularHotSpotSign()
 {
-    insertTagSign("$[![]!]");
+    insertTagSign(0);
+}
+void insertKeyWordSign()
+{
+    insertTagSign(1);
+}
+void insertChainSnippetSign()
+{
+    insertTagSign(2);
+}
+void insertCommandSign()
+{
+    insertTagSign(3);
+}
+void insertOptionSign()
+{
+    insertTagSign(4);
+}
+void insertListSign()
+{
+    insertTagSign(5);
+}
+
+void insertEndSign()
+{
+    insertTagSign(6);
 }
 
 //void insertWarmSpotSign()
 //{
 //    insertTagSign("${!{}!}");
 //}
-//void insertChainSnippetSign()
-//{
-//    insertTagSign("$[![(cha)snippetname]!]");
-//}
-//void insertKeyWordSpotSign()
-//{
-//    insertTagSign("$[![(key)somekeyword]!]");
-//}
-//void insertCommandLineSign()
-//{
-//    insertTagSign("$[![(cmd)somecommand]!]");
-//}
 
-void insertTagSign(char * tagSign)
+
+void insertTagSign(int type)
 {
-    //HWND curScintilla = getCurrentScintilla();
-    int posStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
-    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)tagSign);
-    //int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-    ::SendScintilla(SCI_GOTOPOS,posStart+4,0);
-    //if (g_editorView)
-    //{
-        //HWND curScintilla = getCurrentScintilla();
-        //int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-        //::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent,0);
-        //::SendMessage(curScintilla,SCI_REPLACESEL,0,(LPARAM)tagSign);
-        //::SendMessage(curScintilla,SCI_SETSEL,posCurrent+strlen(tagSign)-3-11,posCurrent+strlen(tagSign)-3);
-        ////::SendMessage(curScintilla,SCI_GOTOPOS,posCurrent+strlen(tagSign)-3,0);
-    //} else
-    //{
-    //    ::MessageBox(nppData._nppHandle, TEXT("Hotspots can be inserted only when you are editing snippets."), TEXT(PLUGIN_NAME), MB_OK);
-    //}
+
+    if (g_editorView)
+    {
+        
+        int posStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
+        int lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION, posStart, 0);
+
+        if (lineCurrent>=3)
+        {
+
+            int start = -1;
+            int end = -1;
+
+            switch (type)
+            {
+
+                case 0:
+                {
+                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"$[![default]!]");
+                    start = posStart + 4;
+                    end = posStart + 11;
+                    break;
+                }
+
+                case 1:
+                {
+                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"$[![(key)SOMEKEYWORD]!]");
+                    start = posStart + 9;
+                    end = posStart + 20;
+                    break;
+                }
+
+                case 2:
+                {
+                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"$[![(cha)snippetname]!]");
+                    start = posStart + 9;
+                    end = posStart + 20;
+                    break;
+
+                }
+
+                case 3:
+                {
+                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"$[![(run)somecommand]!]");
+                    start = posStart + 9;
+                    end = posStart + 20;
+                    break;
+
+                }
+                case 4:
+                {
+                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"$[![(opt)option1|option2|option3]!]");
+                    start = posStart + 9;
+                    end = posStart + 13;
+                    break;
+
+                }
+                case 5:
+                {
+                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"$[![(lis)listitem1|listitem2|listitem3]!]");
+                    start = posStart + 9;
+                    end = posStart + 18;
+                    break;
+
+                }
+                case 6:
+                {
+                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"[>END<]");
+                    start = posStart;
+                    end = posStart;
+                    break;
+
+                }
+
+            }
+            if (start>=0) ::SendScintilla(SCI_SETSEL,start,end);
+        } else
+        {
+            ::showMessageBox(TEXT("Hotspots can be inserted into the content of a snippet only."));
+
+        }
+
+    } else
+    {
+        ::showMessageBox(TEXT("Hotspots can be inserted only when you are editing snippets."));
+    }
+
+    
 }
 
 

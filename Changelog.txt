@@ -2,26 +2,27 @@ changelog (for developer use only, include unreleased versions)
 
 
 0.5.46
-****** Added: Dynamic insertion hint
+- Added: Dynamic insertion hint
 ****** Added: New Scope Name: , which can cater multiple extensions
-****** Added: more informative save snippet confirmation message
-****** Changed: remove spaces in insertion dialog hint
-****** Fixed: snippet editor not openning when live update show no snippet
-****** Added: Insert and edit mode
+- Added: more informative save snippet confirmation message
+- Changed: remove spaces in insertion dialog hint
+- Fixed: snippet editor not openning when live update show no snippet
+- Added: Insert and edit mode
+- Added: hotspot insertion combo box
 
 0.5.45.1
 ****** multiple scopes support
 
 0.5.45
-****** Added: Editor Specific Dock
-****** Fixed: use _ in Oldcopy and fixed the import error
-****** Fixed: closing snippetdock and reopen cause bug in edit button
-****** Changed: Disable Fingertext will disable all snippet trigger related functionalities
-****** Changed: New stub text of new snippet.
-****** Added: exporting a subset of snippets
+- Added: Editor Specific Dock
+- Fixed: use _ in Oldcopy and fixed the import error
+- Fixed: closing snippetdock and reopen cause bug in edit button
+- Changed: Disable Fingertext will disable all snippet trigger related functionalities
+- Changed: New stub text of new snippet.
+- Added: exporting a subset of snippets
 
 0.5.44
-****** Fixed: problem of multiline tabbing
+- Fixed: problem of multiline tabbing
 - Added: Snippet dialog
 ****** Added: SYSTEM snippets
 - Fixed: snippet editor not showing all snippets

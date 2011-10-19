@@ -65,7 +65,7 @@ void DockingDlg::resizeListBox(int height,int width)
         y = 80;
     } else
     {
-        y = 200;
+        y = 250;
     }
     x = 0;
 
@@ -175,12 +175,36 @@ void DockingDlg::getSelectText(TCHAR* &buffer, int index)
 
 }
 
-void DockingDlg::setSelction()
+//void DockingDlg::setSelction()
+//{
+//    
+//    SendMessage(GetDlgItem(_hSelf, IDC_SNIPPET_LIST), LB_SETANCHORINDEX, 0, 0);
+//    
+//}
+
+void DockingDlg::setupHotspotCombo()
 {
-    HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
-    SendMessage(hwndList, LB_SETANCHORINDEX, 0, 0);
-    
+    HWND combo = GetDlgItem(_hSelf, IDC_COMBO_HOTSPOT);
+
+    SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)TEXT("Regular Hotspot $[![]!]"));
+    SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)TEXT("Keyword (key)"));
+    SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)TEXT("Chain Snippet (cha)"));
+    SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)TEXT("Command (run)"));
+    SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)TEXT("Option (opt)"));
+    SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)TEXT("List (list)"));
+    SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)TEXT("End of Snippet [>END<]"));
+    SendMessage(combo, CB_SETCURSEL, 0, 0);
+
 }
+
+void DockingDlg::insertHotspot()
+{
+    int type = SendMessage(GetDlgItem(_hSelf, IDC_COMBO_HOTSPOT), CB_GETCURSEL, 0, 0);
+    //::insertHotSpotSign(select);
+    insertTagSign(type);
+    ::SetFocus(::getCurrentScintilla());
+}
+
 
 void DockingDlg::switchDock(bool toNormal)
 {
@@ -192,25 +216,31 @@ void DockingDlg::switchDock(bool toNormal)
 
     int editorButtonHeight = 20;
     int editorButtonWidth = 145;
-    int firstRow = 45;
+    int firstRow = 55;
     int firstColumn = 2;
 
-    SetWindowPos(GetDlgItem(_hSelf, IDC_STATIC_TEXT3),NULL,firstColumn                      ,25,editorButtonWidth,editorButtonHeight,SWP_NOACTIVATE);
+    SetWindowPos(GetDlgItem(_hSelf, IDC_STATIC_TEXT3 ),NULL,firstColumn                          ,firstRow-20,editorButtonWidth,editorButtonHeight,SWP_NOACTIVATE);
+                                                                                                 
+                                                                                                 
+    SetWindowPos(GetDlgItem(_hSelf, IDC_NEW          ),NULL,firstColumn                          ,firstRow,editorButtonWidth,editorButtonHeight,SWP_NOACTIVATE);
+                                                                                                 
+    SetWindowPos(GetDlgItem(_hSelf, IDC_EDIT         ),NULL,firstColumn                          ,firstRow+((editorButtonHeight+2)*1),editorButtonWidth    ,editorButtonHeight,SWP_NOACTIVATE);
+    SetWindowPos(GetDlgItem(_hSelf, IDC_SAVE         ),NULL,firstColumn+(editorButtonWidth+2)    ,firstRow+((editorButtonHeight+2)*1),editorButtonWidth    ,editorButtonHeight,SWP_NOACTIVATE);
+                                                                                                                                                           
+    SetWindowPos(GetDlgItem(_hSelf, IDC_DELETE       ),NULL,firstColumn                          ,firstRow+((editorButtonHeight+2)*2),editorButtonWidth    ,editorButtonHeight,SWP_NOACTIVATE);
+    SetWindowPos(GetDlgItem(_hSelf, IDC_DELETEALL    ),NULL,firstColumn+(editorButtonWidth+2)    ,firstRow+((editorButtonHeight+2)*2),editorButtonWidth    ,editorButtonHeight,SWP_NOACTIVATE);
+                                                                                                                                                           
+    SetWindowPos(GetDlgItem(_hSelf, IDC_IMPORTFILE   ),NULL,firstColumn                          ,firstRow+((editorButtonHeight+2)*3),editorButtonWidth    ,editorButtonHeight,SWP_NOACTIVATE);
+    SetWindowPos(GetDlgItem(_hSelf, IDC_IMPORTURL    ),NULL,firstColumn+(editorButtonWidth+2)    ,firstRow+((editorButtonHeight+2)*3),editorButtonWidth    ,editorButtonHeight,SWP_NOACTIVATE);
+                                                                                                                                                           
+    SetWindowPos(GetDlgItem(_hSelf, IDC_EXPORT       ),NULL,firstColumn                          ,firstRow+((editorButtonHeight+2)*4),editorButtonWidth    ,editorButtonHeight,SWP_NOACTIVATE);
+    SetWindowPos(GetDlgItem(_hSelf, IDC_EXPORTALL    ),NULL,firstColumn+(editorButtonWidth+2)    ,firstRow+((editorButtonHeight+2)*4),editorButtonWidth    ,editorButtonHeight,SWP_NOACTIVATE);
+                                                                                                                                                           
+    SetWindowPos(GetDlgItem(_hSelf, IDC_STATIC_TEXT7 ),NULL,firstColumn                          ,firstRow+((editorButtonHeight+2)*6),editorButtonWidth*2  ,editorButtonHeight,SWP_NOACTIVATE);
+    SetWindowPos(GetDlgItem(_hSelf, IDC_HOTSPOT      ),NULL,firstColumn                          ,firstRow+((editorButtonHeight+2)*7),70,24,SWP_NOACTIVATE);
+    SetWindowPos(GetDlgItem(_hSelf, IDC_COMBO_HOTSPOT),NULL,firstColumn+70+5                    ,firstRow+((editorButtonHeight+2)*7),215,24,SWP_NOACTIVATE);
+
     
-
-    SetWindowPos(GetDlgItem(_hSelf, IDC_NEW       ),NULL,firstColumn                      ,firstRow,editorButtonWidth,editorButtonHeight,SWP_NOACTIVATE);
-                                                                                          
-    SetWindowPos(GetDlgItem(_hSelf, IDC_EDIT      ),NULL,firstColumn                      ,firstRow+((editorButtonHeight+2)*1),editorButtonWidth,editorButtonHeight,SWP_NOACTIVATE);
-    SetWindowPos(GetDlgItem(_hSelf, IDC_SAVE      ),NULL,firstColumn+(editorButtonWidth+2),firstRow+((editorButtonHeight+2)*1),editorButtonWidth,editorButtonHeight,SWP_NOACTIVATE);
-    
-    SetWindowPos(GetDlgItem(_hSelf, IDC_DELETE    ),NULL,firstColumn                      ,firstRow+((editorButtonHeight+2)*2),editorButtonWidth,editorButtonHeight,SWP_NOACTIVATE);
-    SetWindowPos(GetDlgItem(_hSelf, IDC_DELETEALL ),NULL,firstColumn+(editorButtonWidth+2),firstRow+((editorButtonHeight+2)*2),editorButtonWidth,editorButtonHeight,SWP_NOACTIVATE);
-
-    SetWindowPos(GetDlgItem(_hSelf, IDC_IMPORTFILE),NULL,firstColumn                      ,firstRow+((editorButtonHeight+2)*3),editorButtonWidth,editorButtonHeight,SWP_NOACTIVATE);
-    SetWindowPos(GetDlgItem(_hSelf, IDC_IMPORTURL ),NULL,firstColumn+(editorButtonWidth+2),firstRow+((editorButtonHeight+2)*3),editorButtonWidth,editorButtonHeight,SWP_NOACTIVATE);
-
-    SetWindowPos(GetDlgItem(_hSelf, IDC_EXPORT    ),NULL,firstColumn                      ,firstRow+((editorButtonHeight+2)*4),editorButtonWidth,editorButtonHeight,SWP_NOACTIVATE);
-    SetWindowPos(GetDlgItem(_hSelf, IDC_EXPORTALL ),NULL,firstColumn+(editorButtonWidth+2),firstRow+((editorButtonHeight+2)*4),editorButtonWidth,editorButtonHeight,SWP_NOACTIVATE);
         
     SetWindowPos(GetDlgItem(_hSelf, IDC_CLOSEEDITOR),NULL,2,2,290,editorButtonHeight,SWP_NOACTIVATE);
 
@@ -228,8 +258,7 @@ void DockingDlg::switchDock(bool toNormal)
         ::ShowWindow(GetDlgItem(_hSelf, IDC_RADIO_EDIT),SW_SHOW);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_RADIO_INSERT),SW_SHOW);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT4),SW_SHOW);
-
-
+        
         ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT3),SW_HIDE);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_CLOSEEDITOR),SW_HIDE);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_NEW),SW_HIDE);
@@ -244,7 +273,11 @@ void DockingDlg::switchDock(bool toNormal)
         ::ShowWindow(GetDlgItem(_hSelf, IDC_FILTER),SW_HIDE);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT2),SW_HIDE);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT6),SW_HIDE);
+        ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT7),SW_HIDE);
+        ::ShowWindow(GetDlgItem(_hSelf, IDC_HOTSPOT),SW_HIDE);
+        ::ShowWindow(GetDlgItem(_hSelf, IDC_COMBO_HOTSPOT),SW_HIDE);
 
+        
         //setSnippetDockState(1);
 
     } else
@@ -271,7 +304,9 @@ void DockingDlg::switchDock(bool toNormal)
         ::ShowWindow(GetDlgItem(_hSelf, IDC_FILTER),SW_SHOW);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT2),SW_SHOW);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT6),SW_SHOW);
-
+        ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT7),SW_SHOW);
+        ::ShowWindow(GetDlgItem(_hSelf, IDC_HOTSPOT),SW_SHOW);
+        ::ShowWindow(GetDlgItem(_hSelf, IDC_COMBO_HOTSPOT),SW_SHOW);
         //setSnippetDockState(0);
     }
 
@@ -289,6 +324,8 @@ void DockingDlg::switchInsertMode(int insert)
     SendMessage(GetDlgItem(_hSelf, IDC_RADIO_EDIT), BM_SETCHECK, !insert, 0);
     writeInsertMode(insert);
 }
+
+
 
 //int DockingDlg::getCount()
 //{
@@ -520,6 +557,14 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
                     return true;
                 }
 
+                case IDC_HOTSPOT:
+                {
+                    insertHotspot();
+
+                    return true;
+                }
+
+
 			}
 			return false;
 		}
@@ -539,8 +584,10 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
         
         case WM_INITDIALOG:
         {
-            ::Button_Enable(GetDlgItem(_hSelf, IDC_GETMORE), false);
+            setupHotspotCombo();
 
+            ::Button_Enable(GetDlgItem(_hSelf, IDC_GETMORE), false);
+            
             //switchDock(true);
             return true;
             //updateMode();

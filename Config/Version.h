@@ -27,11 +27,11 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-#define TESTING
+//#define TESTING
 
-#define VERSION_TEXT "0.5.45.2"
-#define VERSION_NUM 0,5,45,2
-#define VERSION_LINEAR 545
+#define VERSION_TEXT "0.5.46"
+#define VERSION_NUM 0,5,46,0
+#define VERSION_LINEAR 546
 #define VERSION_KEEP_CONFIG_START 500
 #define VERSION_STAGE "(Alpha)"
 #ifdef TESTING
@@ -56,7 +56,7 @@ Usage Guide and Source code:\r\n\
            http://github.com/erinata/FingerText \r\n\r\n\
 "
 #ifdef TESTING
-#define MENU_LENGTH 20
+#define MENU_LENGTH 19
 #else
-#define MENU_LENGTH 17
+#define MENU_LENGTH 16
 #endif

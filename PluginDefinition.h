@@ -99,15 +99,23 @@ void showPreview(bool top = false,bool insertion = false);
 
 void doSelectionToSnippet();
 void selectionToSnippet(bool forceNew = false);
-void insertHotSpotSign();
+
+//void insertHotSpotSign(int type);
+void insertRegularHotSpotSign();
 //void insertWarmSpotSign();
 //void goToWarmSpot();
 //bool warmSpotNavigation(HWND &curScintilla);
-//void insertChainSnippetSign();
-//void insertKeyWordSpotSign();
-//void insertCommandLineSign();
+void insertChainSnippetSign();
+void insertKeyWordSign();
+void insertCommandSign();
+void insertOptionSign();
+void insertListSign();
+void insertEndSign();
+//void insertTagSign(char * tagSign);
+void insertTagSign(int type);
+
 void searchAndReplace(std::string key, std::string text, bool regExp = false);
-void insertTagSign(char * tagSign);
+
 bool getLineChecked(char **buffer, int lineNumber, TCHAR* errorText);
 bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag);
 void openDatabase();

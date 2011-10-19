@@ -1198,6 +1198,7 @@
 #define IDC_IMPORTURL                   1021
 #define IDC_STATIC_TEXT3                1022
 #define CF_GDIOBJLAST                   0x03FF
+#define IDC_STATIC_TEXT7                1023
 #define _WIN32_WINNT_NT4                0x0400
 #define _WIN32_IE_IE40                  0x0400
 #define WM_USER                         0x0400
@@ -1225,7 +1226,9 @@
 #define psh6                            0x0405
 #define IDC_GETMORE                     1029
 #define psh7                            0x0406
+#define IDC_COMBO_HOTSPOT               1030
 #define psh8                            0x0407
+#define IDC_HOTSPOT                     1031
 #define psh9                            0x0408
 #define psh10                           0x0409
 #define psh11                           0x040a
@@ -1559,7 +1562,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        101
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1030
+#define _APS_NEXT_CONTROL_VALUE         1032
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -50,9 +50,11 @@ class DockingDlg : public DockingDlgInterface
         void setDlgText(int dlg, TCHAR* showText);
         void toggleSave(bool buttonOn);
         int getSelection();
-        void setSelction();
+        //void setSelction();
+        void DockingDlg::setupHotspotCombo();
         void DockingDlg::switchInsertMode(int insert = 1);
         //int getCount();
+        void DockingDlg::insertHotspot();
         void DockingDlg::switchDock(bool toNormal = true);
 
         void DockingDlg::getSelectText(TCHAR* &buffer, int index = -1);
