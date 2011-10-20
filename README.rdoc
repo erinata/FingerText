@@ -451,7 +451,7 @@ those files are included in the source.
 DuckEval and sqlite3 have their own licenses. The licenses are included in the 
 source.
 
-FingerText version 0.5.44 (excluding the parts mentioned above) is released 
+FingerText version 0.5.46 (excluding the parts mentioned above) is released 
 under MIT license.
 
 MIT license

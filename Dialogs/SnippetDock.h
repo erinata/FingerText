@@ -56,7 +56,10 @@ class DockingDlg : public DockingDlgInterface
         //int getCount();
         void DockingDlg::insertHotspot();
         void DockingDlg::switchDock(bool toNormal = true);
-
+        void DockingDlg::selectSnippetList(int selection);
+        int DockingDlg::searchSnippetList(wchar_t* key);
+        int DockingDlg::getTopIndex();
+        void DockingDlg::setTopIndex(int index);
         void DockingDlg::getSelectText(TCHAR* &buffer, int index = -1);
 
     protected :

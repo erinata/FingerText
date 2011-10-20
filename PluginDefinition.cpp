@@ -56,6 +56,8 @@ PluginConfig pc;
 // Dialogs
 DockingDlg snippetDock;
 InsertionDlg insertionDlg;
+SettingDlg settingDlg;
+CreationDlg creationDlg;
 
 // Need a record for all the cmdIndex that involve a dock or a shortkey
 int g_snippetDockIndex;
@@ -127,9 +129,12 @@ void pluginInit(HANDLE hModule)
 
 void dialogsInit()
 {
-    snippetDock.init((HINSTANCE)g_hModule, NULL);
+    snippetDock.init((HINSTANCE)g_hModule, nppData._nppHandle);
     insertionDlg.init((HINSTANCE)g_hModule, nppData);
+    settingDlg.init((HINSTANCE)g_hModule, nppData);
+    creationDlg.init((HINSTANCE)g_hModule, nppData);
 }
+
 
 void pathInit()
 {
@@ -243,15 +248,14 @@ void commandMenuInit()
 //    g_InsertHotspotIndex =setCommand(TEXT("Insert a hotspot"), insertHotSpotSign);
     setCommand();
     g_settingsIndex = setCommand(TEXT("Settings"), showSettings);
+    
     g_quickGuideIndex = setCommand(TEXT("Quick Guide"), showHelp);
     g_aboutIndex = setCommand(TEXT("About"), showAbout);
     setCommand();
     setCommand(TEXT("Testing"), testing);
     setCommand(TEXT("Testing2"), testing2);
-
-    
-
-
+    setCommand(TEXT("Test Settings"), showSettingDlg);
+    setCommand(TEXT("Test Creation"), showCreationDlg);
 
 
 }
@@ -316,6 +320,8 @@ void commandMenuCleanUp()
     delete funcItem[g_tabActivateIndex]._pShKey;
     delete funcItem[g_showInsertionDlgIndex]._pShKey;
     
+    
+
 	// Don't forget to deallocate your shortcut here
 }
 
@@ -526,6 +532,9 @@ void insertSnippet()
 
 void editSnippet()
 {
+    int topIndex = -1;
+    if (g_editorView) topIndex = snippetDock.getTopIndex();
+
     TCHAR* bufferWide;
     snippetDock.getSelectText(bufferWide);
     char* buffer = toCharArray(bufferWide);
@@ -614,11 +623,25 @@ void editSnippet()
     ::SendScintilla(SCI_EMPTYUNDOBUFFER,0,0);
     delete [] tempTriggerText;
     delete [] tempScope;
+
+    int scrollPos = snippetDock.searchSnippetList(bufferWide);
+    snippetDock.selectSnippetList(scrollPos);
+    if (topIndex == -1)
+    {
+        snippetDock.setTopIndex(scrollPos);
+    } else
+    {
+        snippetDock.setTopIndex(topIndex);
+    }
+
+
     delete [] bufferWide;
 }
 
 void deleteSnippet()
 {
+    int topIndex = snippetDock.getTopIndex();
+    
     TCHAR* bufferWide;
     snippetDock.getSelectText(bufferWide);
     char* buffer = toCharArray(bufferWide);
@@ -650,6 +673,10 @@ void deleteSnippet()
 
     delete [] tempTriggerText;
     delete [] tempScope;
+
+
+    snippetDock.setTopIndex(topIndex);
+    
     delete [] bufferWide;
 }
 
@@ -847,12 +874,22 @@ void saveSnippet()
 
         ::SendScintilla(SCI_SETSAVEPOINT,0,0);
     }
+
+    updateDockItems(true,false,"%",true);
+
+    //TODO: This is not working. The scrolling works but the snippetdock reset the scrolling after thei savesnippet() finished   
+    wchar_t* searchItem = constructDockItems(toString(tagTypeText),toString(tagText),14);
+    int scrollPos = snippetDock.searchSnippetList(searchItem);
+    snippetDock.selectSnippetList(scrollPos);
+    snippetDock.setTopIndex(scrollPos);
+    
+    delete [] searchItem;
     delete [] tagText;
     delete [] tagTypeText;
     delete [] snippetText;
     
-    updateDockItems(true,false,"%",true);
     g_selectionMonitor++;
+
 }
 
 void restoreTab(int &posCurrent, int &posSelectionStart, int &posSelectionEnd)
@@ -3096,77 +3133,8 @@ std::vector<std::string> snippetTextBrokenDown(std::string editText, std::vector
         hintTextVector[cell]=hintTextVector[cell]+")"; //+toString(location);
     }
     return hintTextVector;
-    
-
-
-    //std::vector<std::string> hintTextVector;
-    //hintTextVector.push_back("aaa");
-    //hintTextVector.push_back("bbb");
-    //hintTextVector.push_back("ccc");
-    //
-    //return hintTextVector;
-    //
+   
 }
-
-
-
-//void insertHotSpotSign(int type)
-//{
-//    if (g_editorView)
-//    {
-//        switch (type)
-//        {
-//
-//            case 0:
-//            {
-//                insertRegularHotSpotSign();
-//                break;
-//            }
-//
-//            case 1:
-//            {
-//                insertKeyWordSign();
-//                break;
-//            }
-//
-//            case 2:
-//            {
-//                insertChainSnippetSign();
-//                break;
-//
-//            }
-//
-//            case 3:
-//            {
-//                insertCommandSign();
-//                break;
-//
-//            }
-//            case 4:
-//            {
-//                insertOptionSign();
-//                break;
-//
-//            }
-//            case 5:
-//            {
-//                insertListSign();
-//                break;
-//
-//            }
-//            case 6:
-//            {
-//                insertEndSign();
-//                break;
-//
-//            }
-//
-//        }
-//
-//        ::SetFocus(::getCurrentScintilla());
-//    }
-//
-//}
 
 void insertRegularHotSpotSign()
 {
@@ -3407,6 +3375,20 @@ void showInsertionDlg()
 {
     insertionDlg.doDialog(pc.configInt[INSERTION_DIALOG_STATE]);
 }
+
+void showSettingDlg()
+{
+    settingDlg.doDialog();
+}
+
+void showCreationDlg()
+{
+    
+    creationDlg.doDialog();
+}
+
+
+
 
 void setInsertionDialogState(int state)
 {
@@ -3706,6 +3688,17 @@ void updateInsertionDialogHint()
     insertionDlg.updateInsertionHint();
 }
 
+wchar_t* constructDockItems(std::string scope, std::string triggerText, int maxlength)
+{
+    std::string newText = "<"+scope+">";
+    int scopeLength;
+    scopeLength = maxlength - newText.length();
+    if (scopeLength < 3) scopeLength = 3;
+    for (int i=0;i<scopeLength;i++) newText = newText + " ";
+    newText = newText + triggerText;
+    return toWideChar(newText);
+}
+
 void populateDockItems(bool withAll, bool insertion)
 {
     if (insertion)
@@ -3721,34 +3714,21 @@ void populateDockItems(bool withAll, bool insertion)
     {
 
         if ((withAll) || (g_snippetCache[j].triggerText[0] != '_'))
-        {
+        {   
+            int maxLength = 14;
+            if (insertion) maxLength = 12;
 
-            std::string newText = "<"+g_snippetCache[j].scope+">";
-            int scopeLength;
-            if (insertion) 
-            {
-                scopeLength = 12 - newText.length();
-            } else
-            {
-                scopeLength = 14 - newText.length();
-            }
-
-            if (scopeLength < 3) scopeLength = 3;
-            for (int i=0;i<scopeLength;i++) newText = newText + " ";
-            newText = newText + g_snippetCache[j].triggerText;
-            char* newTextCharArray = toCharArray(newText);
-            wchar_t* convertedTagText = toWideChar(newTextCharArray);
+            wchar_t* convertedTagText = constructDockItems(g_snippetCache[j].scope,g_snippetCache[j].triggerText,maxLength);
 
             if (insertion) 
             {
-                
                 insertionDlg.addDockItem(convertedTagText);
             } else
             {
                 snippetDock.addDockItem(convertedTagText);
             }
             delete [] convertedTagText;
-            delete [] newTextCharArray;
+            
 
         }
     }
@@ -3854,9 +3834,9 @@ bool exportSnippets(bool all)
                 char* content = toCharArray(g_snippetCache[j].content);
 
                 ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)triggerText);
-                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"\r\n");
+                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"\n");
                 ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)scope);
-                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"\r\n");
+                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"\n");
                 ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)content);
                 ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"!$[FingerTextData FingerTextData]@#\r\n");
                 exportCount++;
@@ -3865,6 +3845,8 @@ bool exportSnippets(bool all)
                 delete [] content;
             }
         }
+
+        ::SendScintilla(SCI_CONVERTEOLS,SC_EOL_LF, 0);
         ::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, 0, (LPARAM)fileName);
         success = true;
     
@@ -4073,15 +4055,15 @@ void importSnippets()
                         
                                     ::SendScintilla(SCI_GOTOLINE,0,0);
                                     //TODO: refactor this repeated replacesel action
-                                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"\r\nConflicting Snippet: \r\n\r\n     ");
+                                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"\nConflicting Snippet: \n\n     ");
                                     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)tagText);
                                     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"  <");
                                     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)tagTypeText);
-                                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)">\r\n");
-                                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"\r\n\r\n   (More details of the conflicts will be shown in future releases)");
-                                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n----------------------------------------\r\n");
-                                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"---------- [ Pending Imports ] ---------\r\n");
-                                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"----------------------------------------\r\n");
+                                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)">\n");
+                                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"\n\n   (More details of the conflicts will be shown in future releases)");
+                                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"\n\n\n\n\n\n\n\n----------------------------------------\n");
+                                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"---------- [ Pending Imports ] ---------\n");
+                                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"----------------------------------------\n");
                         
                                     int messageReturn = showMessageBox(TEXT("A snippet already exists, overwrite?"),MB_YESNO);
                                     //int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("A snippet already exists, overwrite?"), TEXT(PLUGIN_NAME), MB_YESNO);
@@ -4240,7 +4222,7 @@ void importSnippets()
             if (conflictCount>0)
             {
                 //TODO: more detail messages and count the number of conflict or problematic snippets
-                wcscat_s(importCountText,TEXT("\r\n\r\nThere are some conflicts between the imported and existing snippets. You may go to the snippet editor to clean them up."));
+                wcscat_s(importCountText,TEXT("\n\nThere are some conflicts between the imported and existing snippets. You may go to the snippet editor to clean them up."));
             }
             //::MessageBox(nppData._nppHandle, TEXT("Complete importing snippets"), TEXT(PLUGIN_NAME), MB_OK);
             showMessageBox(importCountText);
@@ -4254,6 +4236,8 @@ void importSnippets()
     }
     pc.configInt[LIVE_HINT_UPDATE]++;
     g_freezeDock = false;
+    ::snippetHintUpdate();
+    //updateDockItems(true,false,"%",true,false,false);
 
 }
 
@@ -4677,6 +4661,11 @@ int tagComplete()
     //if (triggerTag(posCurrent,true) > 0) snippetHintUpdate();
 }
 
+void triggerSave()
+{
+    if (g_editorView) ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_SAVE);
+}
+
 //TODO: better triggertag, should allow for a list of scopes
 bool triggerTag(int &posCurrent, int triggerLength)
 {
@@ -4721,6 +4710,12 @@ bool triggerTag(int &posCurrent, int triggerLength)
         
         TCHAR *fileType = new TCHAR[MAX_PATH];
 
+
+
+
+
+
+
         // Check for custom scope
         tagType = toCharArray(pc.configText[CUSTOM_SCOPE]);
         expanded = findTagSQLite(tag,tagType); 
@@ -4746,6 +4741,11 @@ bool triggerTag(int &posCurrent, int triggerLength)
             delete [] fileName;
 
         }
+
+
+
+
+
         // Check for snippets which matches ext part
         if (!expanded)
         {
@@ -5556,6 +5556,9 @@ void testThread( void* pParams )
 void testing2()
 {
     alert("testing2");
+    ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
+    int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
+    ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
 
 
 
@@ -5565,6 +5568,45 @@ void testing()
 {
     alert("testing1");
     
+
+    ////Testing drawing pixel on screen
+    //COLORREF color = RGB(255,0,0); // COLORREF to hold the color info
+	//HDC hdc = GetDC(0); // Get the DC from that HWND
+    //int x = 0;
+    //int y = 0;
+    //
+    //for (x = 0; x<200; x++)
+    //{
+    //    for (y = 0; y<200; y++)
+    //    {
+    //        if (((x%2) && (!(y%2))) || ((y%2) && (!(x%2))))
+    //        {
+	//            SetPixel(hdc, x, y, color); // SetPixel(HDC hdc, int x, int y, COLORREF color)
+    //         
+    //        }
+    //
+    //    }
+    //}
+    //ReleaseDC(0, hdc); // Release the DC
+	//DeleteDC(hdc); // Delete the DC
+
+
+    ////Testing drawing on screen
+    //HDC screenDC = ::GetDC(0);
+    //::Rectangle(screenDC, 200, 200, 300, 300);
+    //::ReleaseDC(0, screenDC);
+    //DeleteDC(screenDC);
+
+
+    ////Testing drawing on screen
+    //HDC screenDC = ::GetDC(nppData._scintillaMainHandle);
+    //::Rectangle(screenDC, 200, 200, 300, 300);
+    //::ReleaseDC(nppData._scintillaMainHandle, screenDC);
+    //DeleteDC(screenDC);
+
+    //// Search of items in listbox
+    //alert(snippetDock.searchSnippetList(TEXT("<GLOBAL>      div")));
+
 
      ////Test case for snippetTextBrokenDown
      //std::vector<std::string> vs;
@@ -5913,75 +5955,4 @@ void testing()
     //Console::ReadLine();
 
 
-    
-
-    //::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
-    //selectionToSnippet();
-
-    //int posCurrent = ::SendMessage(curScintilla,SCI_GETCURRENTPOS,0,0);
-
-    //snippetComplete(posCurrent);
-    
-
-    //
-    //if (newUpdate)
-    //{
-    //    ::MessageBox(nppData._nppHandle, TEXT("New!"), TEXT(PLUGIN_NAME), MB_OK);
-    //} else
-    //{
-    //    ::MessageBox(nppData._nppHandle, TEXT("Old!"), TEXT(PLUGIN_NAME), MB_OK);
-    //}
-    //
-    //
-    //::SendMessage(curScintilla, SCI_SETLINEINDENTATION, 0, 11);
-    //::SendMessage(curScintilla, SCI_SETLINEINDENTATION, 1, 11);
-    //::SendMessage(curScintilla, SCI_SETLINEINDENTATION, 2, 11);
-    //::SendMessage(curScintilla, SCI_SETLINEINDENTATION, 3, 11);
-
-    //int enc = ::SendMessage(curScintilla, SCI_GETLINEINDENTATION, 0, 0);
-    //wchar_t countText[10];
-    //::_itow_s(enc, countText, 10, 10); 
-    //::MessageBox(nppData._nppHandle, countText, TEXT(PLUGIN_NAME), MB_OK);
-
-    //    
-    ////char *tagType1 = NULL;
-    //TCHAR fileType1[5];
-    //::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType1);
-    ////toCharArray(fileType1, &tagType1);
-    //::MessageBox(nppData._nppHandle, fileType1, TEXT(PLUGIN_NAME), MB_OK);
-    //
-    //TCHAR key[MAX_PATH];
-    //::swprintf(key,fileType1);
-    //::MessageBox(nppData._nppHandle, key, TEXT(PLUGIN_NAME), MB_OK);
-    //
-    //const TCHAR* key2 = (TCHAR*)".txt";
-    //
-    //if (key==key2)
-    //{
-    //    ::MessageBox(nppData._nppHandle, TEXT("txt!"), TEXT(PLUGIN_NAME), MB_OK);
-    //
-    //} else
-    //{
-    //   ::MessageBox(nppData._nppHandle, TEXT("not txt!"), TEXT(PLUGIN_NAME), MB_OK);
-    //}
-    //
-    //::SendMessage(curScintilla, SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"Hello!");
-    //::SendMessage(curScintilla, SCI_ANNOTATIONSETVISIBLE, 2, 0);
-      
-    //exportSnippets();
-
-    // messagebox shows the current buffer encoding id
-    //int enc = ::SendMessage(nppData._nppHandle, NPPM_GETBUFFERENCODING, (LPARAM)::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0), 0);
-
-    //int enc = pc.snippetListLength;
-    //wchar_t countText[10];
-    //::_itow_s(enc, countText, 10, 10); 
-    //::MessageBox(nppData._nppHandle, countText, TEXT(PLUGIN_NAME), MB_OK);
-
-
-    //TCHAR file2switch[]=TEXT("C:\\Users\\tomtom\\Desktop\\FingerTextEditor");
-    //TCHAR file2switch[]=TEXT("FingerTextEditor");
-    //::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)file2switch);
-
-    //::SendMessage(nppData._nppHandle, NPPM_ACTIVATEDOC, MAIN_VIEW, 1);
 }

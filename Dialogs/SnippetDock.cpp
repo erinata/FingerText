@@ -197,6 +197,29 @@ void DockingDlg::setupHotspotCombo()
 
 }
 
+
+
+int DockingDlg::searchSnippetList(wchar_t* key)
+{
+    return SendMessage(GetDlgItem(_hSelf, IDC_SNIPPET_LIST), LB_FINDSTRINGEXACT, -1, (LPARAM)key);
+}
+
+void DockingDlg::setTopIndex(int index)
+{
+    SendMessage(GetDlgItem(_hSelf, IDC_SNIPPET_LIST), LB_SETTOPINDEX, index, 0);
+}
+
+int DockingDlg::getTopIndex()
+{
+    return SendMessage(GetDlgItem(_hSelf, IDC_SNIPPET_LIST), LB_GETTOPINDEX, 0, 0);
+}
+
+void DockingDlg::selectSnippetList(int selection)
+{
+    SendMessage(GetDlgItem(_hSelf, IDC_SNIPPET_LIST), LB_SETCURSEL, selection, 0);
+}
+
+
 void DockingDlg::insertHotspot()
 {
     int type = SendMessage(GetDlgItem(_hSelf, IDC_COMBO_HOTSPOT), CB_GETCURSEL, 0, 0);
@@ -325,8 +348,6 @@ void DockingDlg::switchInsertMode(int insert)
     writeInsertMode(insert);
 }
 
-
-
 //int DockingDlg::getCount()
 //{
 //    int retVal;
@@ -339,10 +360,43 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 {
 	switch (message) 
 	{
+        // TODO: This is the code for changing background color, should be enabled by settings
+        //case WM_CTLCOLORLISTBOX:
+        //{
+        //
+        //    if ((HWND)lParam == GetDlgItem(_hSelf, IDC_SNIPPET_LIST))
+        //    {
+        //        ::SetBkMode((HDC)wParam,OPAQUE);
+        //        
+        //        ::SetBkColor((HDC)wParam,RGB(0,0,0));
+        //        ::SetTextColor((HDC)wParam, RGB(255,255,255));
+        //        return (BOOL)CreateSolidBrush(RGB(0,0,0));
+        //
+        //    }
+        //
+        //
+        //    return false;
+        //}
+        //
+        //case WM_CTLCOLORSTATIC:
+        //{
+        //    if (((HWND)lParam == GetDlgItem(_hSelf, IDC_PREVIEW_EDIT)) || ((HWND)lParam == GetDlgItem(_hSelf, ID_SNIPSHOW_EDIT)))
+        //    {
+        //        ::SetBkMode((HDC)wParam,OPAQUE);
+        //        
+        //        ::SetBkColor((HDC)wParam,RGB(0,0,0));
+        //        ::SetTextColor((HDC)wParam, RGB(255,255,255));
+        //        return (BOOL)CreateSolidBrush(RGB(0,0,0));
+        //    }
+        //    return false;
+        //
+        //}
+
         case WM_SIZE:
         {
             //TODO: this is triggering too many times esp when npp is starting up, some efficiency improvment can be done
             resizeListBox(HIWORD(lParam),LOWORD(lParam));
+            return true;
             //alert();
         }
 
@@ -492,7 +546,8 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 
                 case IDC_SAVE:
                 {
-                    saveSnippet();
+                    //saveSnippet();
+                    triggerSave();
                     return true;
                 }
 

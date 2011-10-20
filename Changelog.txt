@@ -1,6 +1,9 @@
 changelog (for developer use only, include unreleased versions)
 
 
+0.5.47
+****** delete and edit doesn't scroll the snippet list
+
 0.5.46
 - Added: Dynamic insertion hint
 ****** Added: New Scope Name: , which can cater multiple extensions

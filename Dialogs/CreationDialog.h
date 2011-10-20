@@ -27,36 +27,41 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-#define TESTING
+#ifndef CREATION_DLG_H
+#define CREATION_DLG_H
 
-#define VERSION_TEXT "0.5.47"
-#define VERSION_NUM 0,5,47,0
-#define VERSION_LINEAR 547
-#define VERSION_KEEP_CONFIG_START 500
-#define VERSION_STAGE "(Alpha)"
-#ifdef TESTING
-#define VERSION_STAGE_ADD " Nightly"
-#else
-#define VERSION_STAGE_ADD ""
-#endif
+#include "Dialog.h"
+#include "StaticDialog.h"
+#include "PluginInterface.h"
 
+#include "debugUtils.h"
 
-#define AUTHOR_NAME "erinata"
-#define PLUGIN_NAME "FingerText"
-#define COPYRIGHT_TEXT "Copyright (C) 2011"
-#define DESCRIPTION_TEXT "A snippet plugin for notepad++"
+class CreationDlg : public StaticDialog
+{
 
-#define DATE_TEXT "October 2011"
-#define AUTHOR_TEXT "Author: Tom Lam\r\n"
-#define EMAIL_TEXT "Email: erinata@gmail.com\r\n"
-#define ABOUT_TEXT "\
-Update to the lastest version:\r\n\
-           http://sourceforge.net/projects/fingertext/ \r\n\
-Usage Guide and Source code:\r\n\
-           http://github.com/erinata/FingerText \r\n\r\n\
-"
-#ifdef TESTING
-#define MENU_LENGTH 21
-#else
-#define MENU_LENGTH 16
-#endif
+public:
+	CreationDlg() : StaticDialog() {};
+    
+    void init(HINSTANCE hInst, NppData nppData)
+	{
+		_nppData = nppData;
+		Window::init(hInst, nppData._nppHandle);
+	};
+
+   	void CreationDlg::doDialog();
+  
+
+    virtual void destroy() 
+    {
+
+    };
+    
+protected :
+	virtual BOOL CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
+
+private:
+	NppData			_nppData;
+    HWND			_HSource;
+};
+
+#endif // CREATION_DLG_H

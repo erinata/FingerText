@@ -27,36 +27,51 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-#define TESTING
+#include "PluginDefinition.h"
+#include "CreationDialog.h"
 
-#define VERSION_TEXT "0.5.47"
-#define VERSION_NUM 0,5,47,0
-#define VERSION_LINEAR 547
-#define VERSION_KEEP_CONFIG_START 500
-#define VERSION_STAGE "(Alpha)"
-#ifdef TESTING
-#define VERSION_STAGE_ADD " Nightly"
-#else
-#define VERSION_STAGE_ADD ""
-#endif
+void CreationDlg::doDialog()
+{
+    if (!isCreated())
+    {
+        create(IDD_CREATION_DLG);
+
+    }
+    goToCenter(); 
+}
 
 
-#define AUTHOR_NAME "erinata"
-#define PLUGIN_NAME "FingerText"
-#define COPYRIGHT_TEXT "Copyright (C) 2011"
-#define DESCRIPTION_TEXT "A snippet plugin for notepad++"
+BOOL CALLBACK CreationDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch (message) 
+	{
+        case WM_INITDIALOG:
+        {
+            return true;
+        }
 
-#define DATE_TEXT "October 2011"
-#define AUTHOR_TEXT "Author: Tom Lam\r\n"
-#define EMAIL_TEXT "Email: erinata@gmail.com\r\n"
-#define ABOUT_TEXT "\
-Update to the lastest version:\r\n\
-           http://sourceforge.net/projects/fingertext/ \r\n\
-Usage Guide and Source code:\r\n\
-           http://github.com/erinata/FingerText \r\n\r\n\
-"
-#ifdef TESTING
-#define MENU_LENGTH 21
-#else
-#define MENU_LENGTH 16
-#endif
+		case WM_COMMAND: 
+		{
+
+			switch (wParam)
+			{
+				case IDOK:
+  
+                    display(false);
+                    return true;
+				case IDCANCEL:
+              
+                	display(false);
+					return true;
+
+				default:
+                    return false;
+			}
+		}
+        
+        default:
+            //return false;
+            return StaticDialog::dlgProc(_HSource, message, wParam, lParam);
+	}
+	
+}

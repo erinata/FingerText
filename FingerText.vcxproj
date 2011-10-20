@@ -25,6 +25,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -101,7 +102,9 @@
   <ItemGroup>
     <ClCompile Include="Config\PluginConfig.cpp" />
     <ClCompile Include="DialogFeatures\StaticDialog.cpp" />
+    <ClCompile Include="Dialogs\CreationDialog.cpp" />
     <ClCompile Include="Dialogs\InsertionDialog.cpp" />
+    <ClCompile Include="Dialogs\SettingDialog.cpp" />
     <ClCompile Include="Dialogs\SnippetDock.cpp" />
     <ClCompile Include="DllMain.cpp" />
     <ClCompile Include="DuckEval\DuckEval.cpp" />
@@ -120,8 +123,10 @@
     <ClInclude Include="DialogFeatures\DockingResource.h" />
     <ClInclude Include="DialogFeatures\StaticDialog.h" />
     <ClInclude Include="DialogFeatures\Window.h" />
+    <ClInclude Include="Dialogs\CreationDialog.h" />
     <ClInclude Include="Dialogs\Dialog.h" />
     <ClInclude Include="Dialogs\InsertionDialog.h" />
+    <ClInclude Include="Dialogs\SettingDialog.h" />
     <ClInclude Include="Dialogs\SnippetDock.h" />
     <ClInclude Include="DuckEval\DuckEval.h" />
     <ClInclude Include="NppApi\menuCmdID.h" />

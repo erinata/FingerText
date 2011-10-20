@@ -181,9 +181,10 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
         case NPPN_FILESAVED:
             //keyUpdate();
             //refreshAnnotation();
+            updateDockItems(true,false,"%",true);
             promptSaveSnippet();
             //snippetHintUpdate();
-            updateDockItems(true,false,"%",true);
+            
             break;
         case NPPN_READY:
             //initialize();

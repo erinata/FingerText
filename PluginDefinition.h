@@ -45,6 +45,8 @@
 #include "sqlite3.h"
 #include "InsertionDialog.h"
 #include "SnippetDock.h"
+#include "SettingDialog.h"
+#include "CreationDialog.h"
 #include "Version.h"
 #include "DuckEval.h"
 #include "NppApiHelpers.h"
@@ -69,6 +71,8 @@ void pluginShutdown();             // Called when Notepad++ shuts down
 
 // common Functions for a plugin
 void showSettings();
+void showSettingDlg();
+void showCreationDlg();
 void showHelp();
 void showAbout();
 
@@ -123,7 +127,9 @@ int getCurrentTag(int posCurrent, char **buffer, int triggerLength = 0);
 
 void showSnippetDock();
 void updateDockItems(bool withContent = true, bool withAll = false, char* tag = "%", bool populate = false, bool populateInsertion = false, bool searchType = false);
+wchar_t* constructDockItems(std::string scope, std::string triggerText, int maxlength);
 void populateDockItems(bool withAll = true, bool insertion = false);
+
 
 void setTextTarget(bool fromTab);
 void setListTarget();
@@ -145,6 +151,8 @@ bool exportSnippets(bool all = true);
 void importSnippets();
 bool snippetHintUpdate();
 int promptSaveSnippet(TCHAR* message = NULL);
+
+void triggerSave();
 
 void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* path = TEXT(""));
 

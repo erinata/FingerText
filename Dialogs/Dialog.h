@@ -1430,6 +1430,8 @@
 #define ID_UGO_STATIC                   2105
 #define ID_UGO_STATIC2                  2106
 #define IDD_INSERTION_DLG               2200
+#define IDD_SETTING_DLG                 2300
+#define IDD_CREATION_DLG                2400
 #define LVS_ALIGNMASK                   0x0c00
 #define CS_BYTEALIGNCLIENT              0x1000
 #define HDS_OVERFLOW                    0x1000

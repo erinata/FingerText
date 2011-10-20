@@ -359,10 +359,7 @@ BOOL CALLBACK InsertionDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPar
                 return (BOOL)CreateSolidBrush (GetSysColor(COLOR_MENU));
 
             }
-
-
             return false;
-            
         }
 
         case WM_INITDIALOG:
