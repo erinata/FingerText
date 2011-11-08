@@ -40,6 +40,7 @@
 #include <winhttp.h>    // For http requests, Add winhttp.lib to additional dependencies if there is external definition error
 #include <process.h>    // For thread
 #include <regex>
+#include <algorithm>
 
 #include "PluginConfig.h"
 #include "sqlite3.h"
@@ -177,6 +178,7 @@ void searchWindowByName(std::string searchKey = "", HWND parentWindow = 0);
 std::vector<std::string> snippetTextBrokenDown(std::string editText, std::vector<std::string> params, char** tempTriggerText, char** snippetContent, int position);
 
 void selectionMonitor(int contentChange);
+std::vector<std::string> generateScopeList();
 bool triggerTag(int &posCurrent,int triggerLength = 0);
 int tagComplete();
 void doTagComplete();

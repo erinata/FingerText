@@ -3506,14 +3506,9 @@ void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, b
 
         g_snippetCache.clear();
         
-
         sqlite3_stmt *stmt;
 
-        if (g_editorView) 
-        {
-            
-            withAll = true;
-        }
+        if (g_editorView) withAll = true;
         
         int sqlitePrepare;
         char* sqlite3Statement = new char[400];
@@ -3539,26 +3534,12 @@ void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, b
         
 	    if (g_dbOpen && SQLITE_OK == sqlitePrepare)
 	    {
-            char *customScope = new char[MAX_PATH];
-            
-            char *tagType1 = NULL;
-            TCHAR *fileType1 = new TCHAR[MAX_PATH];
-            char *tagType2 = NULL;
-            TCHAR *fileType2 = new TCHAR[MAX_PATH];
+            std::vector<std::string> scopeList = generateScopeList();
 
-
-            TCHAR* fileNameWide = new TCHAR[MAX_PATH];
-            ::SendMessage(nppData._nppHandle, NPPM_GETFILENAME, (WPARAM)MAX_PATH, (LPARAM)fileNameWide);
-            char* fileName = toCharArray(fileNameWide);
-            std::vector<std::string> nameParts = toVectorString(fileName,'.');
-
-            char* namePartChar;
-            //alert((int)nameParts.size());
-            int namePartSize = nameParts.size();
-
-            int i=-6;
+            int i=scopeList.size()-1;
             do
             {
+
                 if (withAll)
                 {
                     
@@ -3573,56 +3554,10 @@ void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, b
 
                     sqlite3_bind_text(stmt, 2, tag, -1, SQLITE_STATIC);
 
-
-                    //char snippetCacheSizeText[10];
-                    //::_itoa(pc.configInt[SNIPPET_LIST_LENGTH], snippetCacheSizeText, 10); 
-                    //sqlite3_bind_text(stmt, 1, snippetCacheSizeText, -1, SQLITE_STATIC);
                 } else
                 {   
-
-                    if (i == -6)
-                    {
-                        sqlite3_bind_text(stmt, 1, "SYSTEM", -1, SQLITE_STATIC);
-                        
-                    } else if (i == -5)
-                    {
-                        sqlite3_bind_text(stmt, 1, "GLOBAL", -1, SQLITE_STATIC);
-                        
-                    } else if (i == -4)
-                    {
-                        sqlite3_bind_text(stmt, 1, getLangTagType(), -1, SQLITE_STATIC);
-                        
-                    } else if (i == -3)
-                    {
-                        ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType2);
-                        tagType2 = toCharArray(fileType2);
-                        sqlite3_bind_text(stmt, 1, tagType2, -1, SQLITE_STATIC);
-                    } else if (i == -2)
-                    {
-                        ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType1);
-                        tagType1 = toCharArray(fileType1);
-                        sqlite3_bind_text(stmt, 1, tagType1, -1, SQLITE_STATIC);
-                    } else if (i == -1)
-                    {
-                        customScope = toCharArray(pc.configText[CUSTOM_SCOPE]);
-                        sqlite3_bind_text(stmt, 1, customScope, -1, SQLITE_STATIC);
-                    } else
-                    {
-                        //TODO: optimizing needed
-                        namePartChar = new char[nameParts[i].length()+5+1];
-                        if (nameParts[i].length()!=0)
-                        {
-                            strcpy(namePartChar, ("Name:" +nameParts[i]).c_str());
-                            sqlite3_bind_text(stmt, 1, namePartChar, -1, SQLITE_STATIC);
-                        } else
-                        {
-                            sqlite3_bind_text(stmt, 1, "", -1, SQLITE_STATIC);
-                        }
-                    }
-
-
-
-
+                    const char* scopeListItem = scopeList[i].c_str();
+                    sqlite3_bind_text(stmt, 1, scopeListItem, -1, SQLITE_STATIC);
                     sqlite3_bind_text(stmt, 2, tag, -1, SQLITE_STATIC);
                 }
                 
@@ -3646,20 +3581,11 @@ void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, b
                 }
                 sqlite3_reset(stmt);
 
-                if (i>=0) delete [] namePartChar;
-                i++;
+                i--;
                 //alert(i);
-            } while ((i < namePartSize) && (!withAll));
+            } while ((i>=0) && (!withAll));
             //} while ((i < nameParts.size()) && (!withAll));
-
-            delete [] fileNameWide;
-            delete [] fileName;
-
-            delete [] customScope;
-            delete [] tagType1;
-            delete [] fileType1;
-            delete [] tagType2;
-            delete [] fileType2;
+;
         }
         sqlite3_finalize(stmt);
         delete [] sqlite3Statement;
@@ -4666,11 +4592,63 @@ void triggerSave()
     if (g_editorView) ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_SAVE);
 }
 
-//TODO: better triggertag, should allow for a list of scopes
+
+
+std::vector<std::string> generateScopeList()
+{
+    std::vector<std::string> scopeList;
+    
+    std::string customScopeString = toString(pc.configText[CUSTOM_SCOPE]);
+    if (std::find(scopeList.begin(),scopeList.end(),customScopeString) == scopeList.end())
+        scopeList.push_back(customScopeString);
+    
+
+    TCHAR* fileNameWide = new TCHAR[MAX_PATH];
+    ::SendMessage(nppData._nppHandle, NPPM_GETFILENAME, (WPARAM)MAX_PATH, (LPARAM)fileNameWide);
+    char* fileName = toCharArray(fileNameWide);
+    std::vector<std::string> nameParts = toVectorString(fileName,'.');
+
+    int i = 0;
+    while (i<nameParts.size())
+    {
+        if (nameParts[i].length()!=0)
+        {
+            std::string namePartsString = ("Name:" + nameParts[i]).c_str();
+            if (std::find(scopeList.begin(),scopeList.end(),namePartsString) == scopeList.end())
+                scopeList.push_back(namePartsString);
+        }
+        i++;
+    }
+    delete [] fileName;
+    delete [] fileNameWide;
+
+    TCHAR *namePart = new TCHAR[MAX_PATH];
+    ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)namePart);
+    std::string namePartString = toString(namePart);
+    if (std::find(scopeList.begin(),scopeList.end(),namePartString) == scopeList.end())
+    scopeList.push_back(namePartString);
+    delete [] namePart;
+
+    TCHAR *extPart = new TCHAR[MAX_PATH];
+    ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)extPart);
+    std::string extPartString = toString(extPart);
+    if (std::find(scopeList.begin(),scopeList.end(),extPartString) == scopeList.end())
+    scopeList.push_back(extPartString);
+    delete [] extPart;
+
+    std::string langString = toString((char*)getLangTagType());
+    if (std::find(scopeList.begin(),scopeList.end(),langString) == scopeList.end())
+        scopeList.push_back(langString);
+        
+    if (std::find(scopeList.begin(),scopeList.end(),"GLOBAL") == scopeList.end()) scopeList.push_back("GLOBAL");;
+    if (std::find(scopeList.begin(),scopeList.end(),"SYSTEM") == scopeList.end()) scopeList.push_back("SYSTEM");
+        
+    return scopeList;
+
+}
+
 bool triggerTag(int &posCurrent, int triggerLength)
 {
-
-    //HWND curScintilla = getCurrentScintilla();
 
     int paramPos = -1;
     paramPos = ::SendScintilla(SCI_BRACEMATCH,posCurrent-1,0);
@@ -4679,23 +4657,11 @@ bool triggerTag(int &posCurrent, int triggerLength)
         triggerLength = triggerLength - (posCurrent - paramPos);
         posCurrent = paramPos;
         ::SendScintilla(SCI_GOTOPOS,paramPos,0);
-        
     }
 
     bool tagFound = false;
     char *tag;
 	int tagLength = getCurrentTag(posCurrent, &tag, triggerLength);
-    
-    //int position = 0;
-    //bool groupChecked = false;
-
-    //int curLang = 0;
-    //::SendMessage(nppData._nppHandle,NPPM_GETCURRENTLANGTYPE ,0,(LPARAM)&curLang);
-    //wchar_t curLangNumber[10];
-    //wchar_t curLangText[20];
-    //::wcscpy(curLangText, TEXT("LANG_"));
-    //::_itow_s(curLang, curLangNumber, 10, 10);
-    //::wcscat(curLangText, curLangNumber);
 
     if (((triggerLength<=0) && (tag[0] == '_')) || (tagLength == 0))
     {
@@ -4705,104 +4671,17 @@ bool triggerTag(int &posCurrent, int triggerLength)
         
         int posBeforeTag = posCurrent - tagLength;
 
+        std::vector<std::string> scopeList = generateScopeList();
+
         char *expanded = NULL;
-        char *tagType = NULL;
         
-        TCHAR *fileType = new TCHAR[MAX_PATH];
-
-
-
-
-
-
-
-        // Check for custom scope
-        tagType = toCharArray(pc.configText[CUSTOM_SCOPE]);
-        expanded = findTagSQLite(tag,tagType); 
-        
-        if (!expanded)
+        int i = 0;
+        while ((i<scopeList.size()) && (!expanded))
         {
-            TCHAR* fileNameWide = new TCHAR[MAX_PATH];
-            ::SendMessage(nppData._nppHandle, NPPM_GETFILENAME, (WPARAM)MAX_PATH, (LPARAM)fileNameWide);
-            char* fileName = toCharArray(fileNameWide);
-            std::vector<std::string> nameParts = toVectorString(fileName,'.');
-
-            int i = 0;
-            while (i<nameParts.size() && (!expanded))
-            {
-                if (nameParts[i].length()!=0)
-                {
-                    expanded = findTagSQLite(tag,("Name:" + nameParts[i]).c_str()); 
-                }
-                i++;
-            }
-            
-            delete [] fileNameWide;
-            delete [] fileName;
-
+            expanded = findTagSQLite(tag,scopeList[i].c_str());
+            i++;
         }
 
-
-
-
-
-        // Check for snippets which matches ext part
-        if (!expanded)
-        {
-            delete [] tagType;
-            ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-            tagType = toCharArray(fileType);
-            expanded = findTagSQLite(tag,tagType); 
-            
-            // Check for snippets which matches name part
-            if (!expanded)
-            {
-                delete [] tagType;
-                ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-                tagType = toCharArray(fileType);
-                expanded = findTagSQLite(tag,tagType); 
-
-                // Check for language specific snippets
-                if (!expanded)
-                {
-                    expanded = findTagSQLite(tag,getLangTagType()); 
-                    // TODO: Hardcode the extension associated with each language type, check whether the extension are the same as the current extenstion, if not, use findtagSQLite to search for snippets using those scopes
-                    
-                    // Check for snippets which matches the current language group
-                    //if (!expanded)
-                    //{
-                    //    groupChecked = true;
-                    //    position = 0;
-                    //    do
-                    //    {   
-                    //        tagType = getGroupScope(curLangText,position);
-                    //        if (tagType)
-                    //        {
-                    //            expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
-                    //            
-                    //        } else
-                    //        {
-                    //            break;
-                    //        }
-                    //        position++;
-                    //    } while (!expanded);
-                    //}
-
-                    // Check for GLOBAL snippets
-                    if (!expanded)
-                    {
-                        //groupChecked = false;
-                        expanded = findTagSQLite(tag,"GLOBAL"); 
-                        if (!expanded)
-                        {
-                        
-                            expanded = findTagSQLite(tag,"SYSTEM"); 
-
-                        }
-                    }
-                }
-            }
-        }
 
         // Only if a tag is found in the above process, a replace tag or trigger text completion action will be done.
         if (expanded)
@@ -4861,9 +4740,9 @@ bool triggerTag(int &posCurrent, int triggerLength)
             tagFound = true;
         }
 
-        delete [] fileType;
-        //if (!groupChecked) delete [] tagType;
-        delete [] tagType;
+        //delete [] fileType;
+                //if (!groupChecked) delete [] tagType;
+        //delete [] tagType;
         delete [] expanded;
 		delete [] tag;
         
@@ -5568,6 +5447,11 @@ void testing()
 {
     alert("testing1");
     
+    TCHAR* test = TEXT("ABC");
+    
+    std::string teststring = toString(test);
+
+    alert(teststring);
 
     ////Testing drawing pixel on screen
     //COLORREF color = RGB(255,0,0); // COLORREF to hold the color info

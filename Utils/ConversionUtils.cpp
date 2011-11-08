@@ -57,6 +57,14 @@ std::string toString(char* source)
     return ss.str();
 }
 
+std::string toString(TCHAR* source)
+{
+    char* mb = toCharArray(source);
+    std::stringstream ss;
+    ss << mb;
+    delete [] mb;
+    return ss.str();
+}
 
 wchar_t* toWideChar(char* orig)
 {
