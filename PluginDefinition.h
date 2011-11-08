@@ -131,12 +131,13 @@ void updateDockItems(bool withContent = true, bool withAll = false, char* tag = 
 wchar_t* constructDockItems(std::string scope, std::string triggerText, int maxlength);
 void populateDockItems(bool withAll = true, bool insertion = false);
 
+bool fingerTextListActive();
 
 void setTextTarget(bool fromTab);
 void setListTarget();
 void saveSnippet();
-const char* getLangTagType();
-
+//const char* getLangTagType();
+std::string getLangTagType();
 
 void updateInsertionDialogHint();
 //void deleteCache();

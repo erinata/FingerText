@@ -96,6 +96,8 @@ bool g_editorView;
 
 int g_editorLineCount;
 
+bool fingerTextList;
+
 int g_lastTriggerPosition = 0;
 std::string g_customClipBoard = "";
 std::string g_selectedText = "";
@@ -581,7 +583,7 @@ void editSnippet()
             //    ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_ftbPath);
             //}
             //HWND curScintilla = getCurrentScintilla();
-            promptSaveSnippet(TEXT("Do you wish to save the current snippet before editing anotoher one?"));
+            promptSaveSnippet(TEXT("Do you wish to save the current snippet before editing another one?"));
             
             ::SendScintilla(SCI_CONVERTEOLS,SC_EOL_LF, 0);
             
@@ -957,7 +959,6 @@ int searchNextMatchedTail(char* tagSign, char* tagTail)
 
     do
     {
-        
         int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
         signSpot = searchNext(tagSign);
         if (signSpot != -1) signSpot = signSpot+signLength;
@@ -2446,6 +2447,17 @@ char* getDateTime(char *format, bool getDate, int flags)
 //    return spotFound;
 //}
 
+bool fingerTextListActive()
+{
+    if (fingerTextList)
+    {
+        fingerTextList = false;
+        return true;
+    } else
+    {
+        return false;
+    }
+}
 
 
 int hotSpotNavigation(char* tagSign, char* tagTail)
@@ -2478,6 +2490,7 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
 
             if (strncmp(hotSpotText,"(lis)",5) == 0)
             {
+                fingerTextList = true;
                 ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
 
                 ::SendScintilla(SCI_GOTOPOS,firstPos,0);
@@ -4398,6 +4411,8 @@ void optionNavigate(bool toNext)
    
 }
 
+bool withSelection = false;
+
 void selectionMonitor(int contentChange)
 {
     //TODO: pasting text with more then one line in the scope field will break editor restriction
@@ -4427,29 +4442,45 @@ void selectionMonitor(int contentChange)
         g_selectionMonitor--;
         if (g_editorView == false)
         {
-            //TODO: use hook to cater option? (so that the bug of empty options can be fixed
+                        //TODO: use hook to cater option? (so that the bug of empty options can be fixed
             //TODO: reexamine possible performance improvement
-            if ((contentChange & (SC_UPDATE_SELECTION)) && (g_optionMode == true))
+            if (contentChange & (SC_UPDATE_SELECTION))
             {
-                int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-                //alertNumber(g_optionStartPosition);
-                //alertNumber(posCurrent);
-                //TODO: a bug when there is an empty option and the hotspot is at the beginning of document
-                if (posCurrent > g_optionStartPosition)
+                if (g_optionMode)
                 {
-                    optionNavigate(true);
-                    //optionTriggered = true;
-                    turnOnOptionMode();
+                    int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+                    //alertNumber(g_optionStartPosition);
+                    //alertNumber(posCurrent);
+                    //TODO: a bug when there is an empty option and the hotspot is at the beginning of document
+                    if (posCurrent > g_optionStartPosition)
+                    {
+                        optionNavigate(true);
+                        //optionTriggered = true;
+                        turnOnOptionMode();
+                    } else
+                    {
+                        optionNavigate(false);
+                        turnOnOptionMode();
+                    }
+                    //else
+                    //{
+                    //    cleanOptionItem();
+                    //    g_optionMode = false;
+                    //}
                 } else
                 {
-                    optionNavigate(false);
-                    turnOnOptionMode();
+                    int selectionStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
+                    int selectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
+
+                    if (selectionStart==selectionEnd)
+                    {
+                        withSelection = false;
+                    } else if ((!withSelection) && (selectionStart!=selectionEnd))
+                    {
+                        withSelection = true;
+                        updateDockItems(true,false,"%",true);
+                    } 
                 }
-                //else
-                //{
-                //    cleanOptionItem();
-                //    g_optionMode = false;
-                //}
                 
             }
         } else if (pc.configInt[EDITOR_CARET_BOUND] == 1)
@@ -4553,7 +4584,6 @@ void doTagComplete()
 
 int tagComplete()
 {
-
     int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
     int index = -1;
     char *tag;
@@ -4592,28 +4622,296 @@ void triggerSave()
     if (g_editorView) ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_SAVE);
 }
 
+std::vector<std::string> getAssociatedScopes(std::string s)
+{
+    //TODO: move this to the setting
+    std::vector<std::string> result;
 
+    if (s.compare("Lang:TXT")==0)
+    {
+        result.push_back("Ext:txt");
+    } else if (s.compare("Lang:PHP")==0)
+    {
+        result.push_back("Ext:php");
+        result.push_back("Ext:php3");
+        result.push_back("Ext:phtml");
+          
+    } else if (s.compare("Lang:C")==0)
+    {
+        result.push_back("Ext:c");
+        result.push_back("Ext:h");
+
+    } else if (s.compare("Lang:CPP")==0)
+    {
+        result.push_back("Ext:cpp");
+        result.push_back("Ext:hpp");
+        result.push_back("Ext:c");
+        result.push_back("Ext:h");
+    } else if (s.compare("Lang:CS")==0)
+    {
+        result.push_back("Ext:cs");
+
+    } else if (s.compare("Lang:OBJC")==0)
+    {
+        result.push_back("Ext:m");
+        result.push_back("Ext:h");
+    } else if (s.compare("Lang:JAVA")==0)
+    {
+        result.push_back("Ext:java");
+    } else if (s.compare("Lang:RC")==0)
+    {
+        result.push_back("Ext:rc");
+    } else if (s.compare("Lang:HTML")==0)
+    {
+        result.push_back("Ext:html");
+        result.push_back("Ext:htm");
+        result.push_back("Ext:js");
+        result.push_back("Ext:css");
+    } else if (s.compare("Lang:XML")==0)
+    {
+        result.push_back("Ext:xml");
+        result.push_back("Ext:xsml");
+        result.push_back("Ext:xsl");
+        result.push_back("Ext:xsd");
+        result.push_back("Ext:kml");    
+        result.push_back("Ext:wsdl");    
+        
+    } else if (s.compare("Lang:MAKEFILE")==0)
+    {
+        result.push_back("Ext:mak");   
+        
+    } else if (s.compare("Lang:PASCAL")==0)
+    {
+        result.push_back("Ext:pas");   
+        result.push_back("Ext:inc");   
+
+    } else if (s.compare("Lang:BATCH")==0)
+    {
+        result.push_back("Ext:bat");
+        result.push_back("Ext:cmd");
+        result.push_back("Ext:nt");
+          
+
+    } else if (s.compare("Lang:INI")==0)
+    {
+        result.push_back("Ext:ini");
+        result.push_back("Ext:inf");
+        result.push_back("Ext:reg");
+        result.push_back("Ext:url");
+           
+    } else if (s.compare("Lang:NFO")==0)
+    {
+        result.push_back("Ext:nfo");
+
+    } else if (s.compare("Lang:ASP")==0)
+    {
+        result.push_back("Ext:asp");
+    } else if (s.compare("Lang:SQL")==0)
+    {
+        result.push_back("Ext:sql");
+    } else if (s.compare("Lang:VB")==0)
+    {
+        result.push_back("Ext:vb");
+        result.push_back("Ext:vbs");
+    } else if (s.compare("Lang:JS")==0)
+    {
+        result.push_back("Ext:js");
+    } else if (s.compare("Lang:CSS")==0)
+    {
+        result.push_back("Ext:css");
+
+    } else if (s.compare("Lang:PERL")==0)
+    {
+        result.push_back("Ext:pl");
+        result.push_back("Ext:pm");
+        result.push_back("Ext:plx");
+
+    } else if (s.compare("Lang:PYTHON")==0)
+    {
+        result.push_back("Ext:py");
+        result.push_back("Ext:pyw");
+
+    } else if (s.compare("Lang:LUA")==0)
+    {
+        result.push_back("Ext:lua");
+
+    } else if (s.compare("Lang:TEX")==0)
+    {
+        result.push_back("Ext:tex");
+
+    } else if (s.compare("Lang:FORTRAN")==0)
+    {
+        result.push_back("Ext:f");
+        result.push_back("Ext:for");
+        result.push_back("Ext:f90");
+        result.push_back("Ext:f95");
+        result.push_back("Ext:f2k");
+        
+    } else if (s.compare("Lang:BASH")==0)
+    {
+        result.push_back("Ext:sh");
+        result.push_back("Ext:bsh");
+
+    } else if (s.compare("Lang:FLASH")==0)
+    {
+        result.push_back("Ext:as");
+        result.push_back("Ext:mx");
+
+    } else if (s.compare("Lang:NSIS")==0)
+    {
+        result.push_back("Ext:nsi");
+        result.push_back("Ext:nsh");
+    } else if (s.compare("Lang:TCL")==0)
+    {
+        result.push_back("Ext:tcl");
+    } else if (s.compare("Lang:LISP")==0)
+    {
+        result.push_back("Ext:lsp");
+        result.push_back("Ext:lisp");
+    } else if (s.compare("Lang:SCHEME")==0)
+    {
+        result.push_back("Ext:scm");
+        result.push_back("Ext:md");
+        result.push_back("Ext:ss");
+    } else if (s.compare("Lang:ASM")==0)
+    {
+        result.push_back("Ext:asm");
+    } else if (s.compare("Lang:DIFF")==0)
+    {
+        result.push_back("Ext:diff");
+        result.push_back("Ext:patch");
+
+    } else if (s.compare("Lang:PROPS")==0)
+    {
+        result.push_back("Ext:properties");
+        
+    } else if (s.compare("Lang:PS")==0)
+    {
+        result.push_back("Ext:ps");
+    } else if (s.compare("Lang:RUBY")==0)
+    {
+        result.push_back("Ext:rb");
+        result.push_back("Ext:rbw");
+    } else if (s.compare("Lang:SMALLTALK")==0)
+    {
+        result.push_back("Ext:st");
+    } else if (s.compare("Lang:VHDL")==0)
+    {
+        result.push_back("Ext:vhd");
+        result.push_back("Ext:vhdl");
+    } else if (s.compare("Lang:KIX")==0)
+    {
+        result.push_back("Ext:kix");
+    } else if (s.compare("Lang:AU3")==0)
+    {
+        result.push_back("Ext:au3");
+    } else if (s.compare("Lang:CAML")==0)
+    {
+        result.push_back("Ext:ml");
+        result.push_back("Ext:mli");
+        result.push_back("Ext:sml");
+        result.push_back("Ext:thy");
+           
+    } else if (s.compare("Lang:ADA")==0)
+    {
+        result.push_back("Ext:ada");
+        result.push_back("Ext:ads");
+        result.push_back("Ext:adb");
+          
+    } else if (s.compare("Lang:VERILOG")==0)
+    {
+        result.push_back("Ext:v");
+    } else if (s.compare("Lang:MATLAB")==0)
+    {
+        result.push_back("Ext:m");
+    } else if (s.compare("Lang:HASKELL")==0)
+    {
+        result.push_back("Ext:las");
+        result.push_back("Ext:as");
+        result.push_back("Ext:lhs");
+        result.push_back("Ext:hs");
+        
+    } else if (s.compare("Lang:INNO")==0)
+    {
+        result.push_back("Ext:iss");
+    } else if (s.compare("Lang:CMAKE")==0)
+    {
+        result.push_back("Ext:cmake");
+    } else if (s.compare("Lang:YAML")==0)
+    {
+        result.push_back("Ext:yml");
+    } else if (s.compare("Lang:COBOL")==0)
+    {
+        result.push_back("Ext:cbl");
+        result.push_back("Ext:cbd");
+        result.push_back("Ext:cdb");
+        result.push_back("Ext:cdc");
+        result.push_back("Ext:cob");
+            
+    } else if (s.compare("Lang:GUI4CLI")==0)
+    {
+        result.push_back("");
+    } else if (s.compare("Lang:D")==0)
+    {
+        result.push_back("Ext:d");
+    } else if (s.compare("Lang:POWERSHELL")==0)
+    {
+        result.push_back("Ext:ps1");
+    } else if (s.compare("Lang:R")==0)
+    {
+        result.push_back("Ext:r");
+    } else
+    {
+        result.push_back("");
+    }
+    //alert(result);
+    return result;
+
+}
 
 std::vector<std::string> generateScopeList()
 {
     std::vector<std::string> scopeList;
-    
-    std::string customScopeString = toString(pc.configText[CUSTOM_SCOPE]);
-    if (std::find(scopeList.begin(),scopeList.end(),customScopeString) == scopeList.end())
-        scopeList.push_back(customScopeString);
-    
+    int i = 0;
 
+    // Add Custom Scope
+    char* customScopesCharArray = toCharArray(pc.configText[CUSTOM_SCOPE]);
+    std::vector<std::string> customScopes = toVectorString(customScopesCharArray,'|');
+    i = 0;  
+    while (i<customScopes.size())  //TODO: use pop_back instead of while loop with index i
+    {
+        if (customScopes[i].length()!=0)
+        {
+            std::string customScopeString = customScopes[i];
+            if (std::find(scopeList.begin(),scopeList.end(),customScopeString) == scopeList.end())
+                scopeList.push_back(customScopeString);
+        }
+        i++;
+    }
+    delete [] customScopesCharArray;
+
+    //std::string customScopeString = toString(pc.configText[CUSTOM_SCOPE]);
+    //if (std::find(scopeList.begin(),scopeList.end(),customScopeString) == scopeList.end())
+    //    scopeList.push_back(customScopeString);
+    
+    // Add the Name Scope by decomposing the current file name
     TCHAR* fileNameWide = new TCHAR[MAX_PATH];
     ::SendMessage(nppData._nppHandle, NPPM_GETFILENAME, (WPARAM)MAX_PATH, (LPARAM)fileNameWide);
     char* fileName = toCharArray(fileNameWide);
     std::vector<std::string> nameParts = toVectorString(fileName,'.');
-
-    int i = 0;
+    i = 0;
+    std::string namePartsString = "";
     while (i<nameParts.size())
     {
         if (nameParts[i].length()!=0)
         {
-            std::string namePartsString = ("Name:" + nameParts[i]).c_str();
+            if (i==0) 
+            {
+                namePartsString = "Name:" + nameParts[i];
+            } else 
+            {
+                namePartsString = "Ext:" + nameParts[i];
+            }
             if (std::find(scopeList.begin(),scopeList.end(),namePartsString) == scopeList.end())
                 scopeList.push_back(namePartsString);
         }
@@ -4622,26 +4920,46 @@ std::vector<std::string> generateScopeList()
     delete [] fileName;
     delete [] fileNameWide;
 
+    // Add the Language Scope 
+    //std::string langString = toString((char*)getLangTagType());
+    std::string langString = "Lang:" + getLangTagType();
+    if (std::find(scopeList.begin(),scopeList.end(),langString) == scopeList.end())
+        scopeList.push_back(langString);
+
+    // Add the Assocation Scope
+    // TODO: can loop the current scopeList to add all the scope associated witht he current list, or to modify getAssociatedScope to take a vector of string directly
+    std::vector<std::string> associatedScopes = getAssociatedScopes(langString);
+    i = 0;
+    while (i<associatedScopes.size())
+    {
+        if (associatedScopes[i].length()!=0)
+        {
+            std::string assocatedScopeString = associatedScopes[i];
+            if (std::find(scopeList.begin(),scopeList.end(),assocatedScopeString) == scopeList.end())
+                scopeList.push_back(assocatedScopeString);
+        }
+        i++;
+    }
+    
+    // Add the NamePart Scope and ExtPart Scope for backward compatibility
     TCHAR *namePart = new TCHAR[MAX_PATH];
     ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)namePart);
     std::string namePartString = toString(namePart);
     if (std::find(scopeList.begin(),scopeList.end(),namePartString) == scopeList.end())
-    scopeList.push_back(namePartString);
+        scopeList.push_back(namePartString);
     delete [] namePart;
 
     TCHAR *extPart = new TCHAR[MAX_PATH];
     ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)extPart);
     std::string extPartString = toString(extPart);
     if (std::find(scopeList.begin(),scopeList.end(),extPartString) == scopeList.end())
-    scopeList.push_back(extPartString);
+        scopeList.push_back(extPartString);
     delete [] extPart;
-
-    std::string langString = toString((char*)getLangTagType());
-    if (std::find(scopeList.begin(),scopeList.end(),langString) == scopeList.end())
-        scopeList.push_back(langString);
-        
-    if (std::find(scopeList.begin(),scopeList.end(),"GLOBAL") == scopeList.end()) scopeList.push_back("GLOBAL");;
+    
+    // Add the Global and System Scope        
+    if (std::find(scopeList.begin(),scopeList.end(),"GLOBAL") == scopeList.end()) scopeList.push_back("GLOBAL");
     if (std::find(scopeList.begin(),scopeList.end(),"SYSTEM") == scopeList.end()) scopeList.push_back("SYSTEM");
+    
         
     return scopeList;
 
@@ -4681,7 +4999,6 @@ bool triggerTag(int &posCurrent, int triggerLength)
             expanded = findTagSQLite(tag,scopeList[i].c_str());
             i++;
         }
-
 
         // Only if a tag is found in the above process, a replace tag or trigger text completion action will be done.
         if (expanded)
@@ -4873,27 +5190,47 @@ void setFocusToWindow()
     
 }
 
-const char* getLangTagType()
+//const char* getLangTagType()
+//{
+//    int curLang = 0;
+//    ::SendMessage(nppData._nppHandle,NPPM_GETCURRENTLANGTYPE ,0,(LPARAM)&curLang);
+//    //alertNumber(curLang);
+//    
+//    if ((curLang>54) || (curLang<0)) return "";
+//
+//    //support the languages supported by npp 0.5.9, excluding "user defined language" abd "search results"
+//    const char *s[] = {"Lang:TXT","Lang:PHP","Lang:C","Lang:CPP","Lang:CS","Lang:OBJC","Lang:JAVA","Lang:RC",
+//                 "Lang:HTML","Lang:XML","Lang:MAKEFILE","Lang:PASCAL","Lang:BATCH","Lang:INI","Lang:NFO","",
+//                 "Lang:ASP","Lang:SQL","Lang:VB","Lang:JS","Lang:CSS","Lang:PERL","Lang:PYTHON","Lang:LUA",
+//                 "Lang:TEX","Lang:FORTRAN","Lang:BASH","Lang:FLASH","Lang:NSIS","Lang:TCL","Lang:LISP","Lang:SCHEME",
+//                 "Lang:ASM","Lang:DIFF","Lang:PROPS","Lang:PS","Lang:RUBY","Lang:SMALLTALK","Lang:VHDL","Lang:KIX",
+//                 "Lang:AU3","Lang:CAML","Lang:ADA","Lang:VERILOG","Lang:MATLAB","Lang:HASKELL","Lang:INNO","",
+//                 "Lang:CMAKE","Lang:YAML","Lang:COBOL","Lang:GUI4CLI","Lang:D","Lang:POWERSHELL","Lang:R"};
+//    
+//    return s[curLang];
+//    //return "";
+//}
+
+
+std::string getLangTagType()
 {
     int curLang = 0;
     ::SendMessage(nppData._nppHandle,NPPM_GETCURRENTLANGTYPE ,0,(LPARAM)&curLang);
-    //alertNumber(curLang);
-    
-    if ((curLang>54) || (curLang<0)) return "";
 
-    //support the languages supported by npp 0.5.9, excluding "user defined language" abd "search results"
-    const char *s[] = {"Lang:TXT","Lang:PHP","Lang:C","Lang:CPP","Lang:CS","Lang:OBJC","Lang:JAVA","Lang:RC",
-                 "Lang:HTML","Lang:XML","Lang:MAKEFILE","Lang:PASCAL","Lang:BATCH","Lang:INI","Lang:NFO","",
-                 "Lang:ASP","Lang:SQL","Lang:VB","Lang:JS","Lang:CSS","Lang:PERL","Lang:PYTHON","Lang:LUA",
-                 "Lang:TEX","Lang:FORTRAN","Lang:BASH","Lang:FLASH","Lang:NSIS","Lang:TCL","Lang:LISP","Lang:SCHEME",
-                 "Lang:ASM","Lang:DIFF","Lang:PROPS","Lang:PS","Lang:RUBY","Lang:SMALLTALK","Lang:VHDL","Lang:KIX",
-                 "Lang:AU3","Lang:CAML","Lang:ADA","Lang:VERILOG","Lang:MATLAB","Lang:HASKELL","Lang:INNO","",
-                 "Lang:CMAKE","Lang:YAML","Lang:COBOL","Lang:GUI4CLI","Lang:D","Lang:POWERSHELL","Lang:R"};
+    // TODO: can use string directly instead of char array?
+    if ((curLang>54) || (curLang<0)) return "";
+    const char *s[] = {"TXT","PHP","C","CPP","CS","OBJC","JAVA","RC",
+                 "HTML","XML","MAKEFILE","PASCAL","BATCH","INI","NFO","",
+                 "ASP","SQL","VB","JS","CSS","PERL","PYTHON","LUA",
+                 "TEX","FORTRAN","BASH","FLASH","NSIS","TCL","LISP","SCHEME",
+                 "ASM","DIFF","PROPS","PS","RUBY","SMALLTALK","VHDL","KIX",
+                 "AU3","CAML","ADA","VERILOG","MATLAB","HASKELL","INNO","",
+                 "CMAKE","YAML","COBOL","GUI4CLI","D","POWERSHELL","R"};
     
     return s[curLang];
-    //return "";
-}
 
+
+}
 
 
 void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* pathWide)
@@ -5096,6 +5433,7 @@ bool diagActivate(char* tag)
 
         } else
         {
+            if (::SendScintilla(SCI_AUTOCACTIVE,0,0)) ::SendScintilla(SCI_AUTOCCANCEL,0,0);
             if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
             turnOffOptionMode();
 
@@ -5211,11 +5549,19 @@ void tabActivate()
 {
     if (sciFocus)
     {
-        if (((g_enable==false) || (g_rectSelection==true)) && (!g_optionMode))
+        //if (((g_enable==false) || (g_rectSelection==true) || (::SendScintilla(SCI_AUTOCACTIVE,0,0))) && (!g_optionMode))
+        if (((g_enable==false) || (g_rectSelection==true) ) && (!g_optionMode))
         {        
             ::SendScintilla(SCI_TAB,0,0);   
         } else
         {
+            int autoComplete = 0;
+
+            if (::SendScintilla(SCI_AUTOCACTIVE,0,0))
+            {
+                ::SendScintilla(SCI_AUTOCCOMPLETE,0,0);
+                autoComplete = 1;
+            }
             int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
             
             //int posTriggerStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
@@ -5258,13 +5604,14 @@ void tabActivate()
                     if (posSelectionStart==posSelectionEnd) tagFound = triggerTag(posCurrent); 
                     if (tagFound)
                     {
+                        //::SendScintilla(SCI_AUTOCCANCEL,0,0);
                         g_selectedText = "";
-                        ::SendScintilla(SCI_AUTOCCANCEL,0,0);
                         posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
                         g_lastTriggerPosition = posCurrent;
                         
                     } else
                     {
+
                         if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
                     }
                 }
@@ -5363,7 +5710,7 @@ void tabActivate()
 	        	    }
                 }
                 
-                if ((navSpot == 0) && (tagFound == false) && (completeFound<0) && (dynamicSpot==false)) 
+                if ((navSpot == 0) && (tagFound == false) && (completeFound<0) && (dynamicSpot==false) && (autoComplete==0)) 
                 {
                     if (g_optionMode == true)
                     {

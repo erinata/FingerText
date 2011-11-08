@@ -422,13 +422,20 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 
             } else if (HIWORD(wParam) == LBN_DBLCLK && LOWORD(wParam) == IDC_SNIPPET_LIST)
             {
-                if (insertMode)
+                if (normalMode)
                 {
-                    insertSnippet();
+                    if (insertMode)
+                    {
+                        insertSnippet();
+                    } else
+                    {
+                        editSnippet();
+                    }
                 } else
                 {
                     editSnippet();
                 }
+                
                 return true;
                 
             } else if  (((HIWORD(wParam) == EN_SETFOCUS) || (HIWORD(wParam) == EN_CHANGE)) && (LOWORD(wParam) == IDC_FILTER))
