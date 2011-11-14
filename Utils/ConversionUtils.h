@@ -40,6 +40,7 @@ std::string toString(const char &c);
 std::string toString(const double &d);
 std::string toString(int &i);
 std::string toString(char* source);
+std::string toString(TCHAR* source);
 
 wchar_t* toWideChar(char* orig);
 wchar_t* toWideChar(std::string source);

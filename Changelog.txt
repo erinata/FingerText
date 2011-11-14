@@ -1,12 +1,24 @@
 changelog (for developer use only, include unreleased versions)
 
 
+
+
 0.5.47
-****** delete and edit doesn't scroll the snippet list
+****** Added: snippet count on snippetDock
+****** Fixed: delete and edit doesn't scroll the snippet list
+****** Added: association scope
+****** Added: Allow for multiple custom scope
+****** Fixed: Fingertext hotspot will not interfere regular autocomplete
+****** Changed: Auto hotspot navigation after list box seletion
+****** Fixed: Messagebox wordings and typos
+****** Changed: snippet dock show all snippet when there is a selection
+****** Added: New Scope "Ext:"
+****** Fixed: Double click on Snippet dock will not edit the clicked snippet
+****** Fixed: problem importing and exporting snippets to very long path name
 
 0.5.46
 - Added: Dynamic insertion hint
-****** Added: New Scope Name: , which can cater multiple extensions
+****** Added: New Scope "Name:" , which can cater multiple extensions
 - Added: more informative save snippet confirmation message
 - Changed: remove spaces in insertion dialog hint
 - Fixed: snippet editor not openning when live update show no snippet

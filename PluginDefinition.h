@@ -40,6 +40,7 @@
 #include <winhttp.h>    // For http requests, Add winhttp.lib to additional dependencies if there is external definition error
 #include <process.h>    // For thread
 #include <regex>
+#include <algorithm>
 
 #include "PluginConfig.h"
 #include "sqlite3.h"
@@ -130,12 +131,13 @@ void updateDockItems(bool withContent = true, bool withAll = false, char* tag = 
 wchar_t* constructDockItems(std::string scope, std::string triggerText, int maxlength);
 void populateDockItems(bool withAll = true, bool insertion = false);
 
+bool fingerTextListActive();
 
 void setTextTarget(bool fromTab);
 void setListTarget();
 void saveSnippet();
-const char* getLangTagType();
-
+//const char* getLangTagType();
+std::string getLangTagType();
 
 void updateInsertionDialogHint();
 //void deleteCache();
@@ -156,6 +158,8 @@ void triggerSave();
 
 void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* path = TEXT(""));
 
+
+void updateSnippetCount();
 void updateMode();
 void refreshAnnotation();
 void updateLineCount(int count = -1);
@@ -177,6 +181,7 @@ void searchWindowByName(std::string searchKey = "", HWND parentWindow = 0);
 std::vector<std::string> snippetTextBrokenDown(std::string editText, std::vector<std::string> params, char** tempTriggerText, char** snippetContent, int position);
 
 void selectionMonitor(int contentChange);
+std::vector<std::string> generateScopeList();
 bool triggerTag(int &posCurrent,int triggerLength = 0);
 int tagComplete();
 void doTagComplete();

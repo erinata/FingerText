@@ -96,6 +96,10 @@ bool g_editorView;
 
 int g_editorLineCount;
 
+std::string g_snippetCount = "";
+
+bool fingerTextList;
+
 int g_lastTriggerPosition = 0;
 std::string g_customClipBoard = "";
 std::string g_selectedText = "";
@@ -114,6 +118,15 @@ int g_listLength = 4;
 
 //For params insertion
 std::vector<std::string> g_hotspotParams;
+
+//support the languages supported by npp 0.5.9, excluding "user defined language" abd "search results"
+const std::string langList[] = {"TXT","PHP","C","CPP","CS","OBJC","JAVA","RC",
+                                "HTML","XML","MAKEFILE","PASCAL","BATCH","INI","NFO","",
+                                "ASP","SQL","VB","JS","CSS","PERL","PYTHON","LUA",
+                                "TEX","FORTRAN","BASH","FLASH","NSIS","TCL","LISP","SCHEME",
+                                "ASM","DIFF","PROPS","PS","RUBY","SMALLTALK","VHDL","KIX",
+                                "AU3","CAML","ADA","VERILOG","MATLAB","HASKELL","INNO","",
+                                "CMAKE","YAML","COBOL","GUI4CLI","D","POWERSHELL","R"};
 
 //For SETWIN
 HWND g_tempWindowHandle;
@@ -135,25 +148,24 @@ void dialogsInit()
     creationDlg.init((HINSTANCE)g_hModule, nppData);
 }
 
-
 void pathInit()
 {
     // Get the config folder of notepad++ and append the plugin name to form the root of all config files
     ::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH, reinterpret_cast<LPARAM>(g_basePath));
     ::_tcscat_s(g_basePath,TEXT("\\"));
     ::_tcscat_s(g_basePath,TEXT(PLUGIN_NAME));
-    if (PathFileExists(g_basePath) == false) ::CreateDirectory(g_basePath, NULL);
+    if (!PathFileExists(g_basePath)) ::CreateDirectory(g_basePath, NULL);
     
     // Initialize the files needed (ini and database paths are initalized in configInit and databaseInit)
     ::_tcscpy_s(g_fttempPath,g_basePath);
     ::_tcscat_s(g_fttempPath,TEXT("\\"));
     ::_tcscat_s(g_fttempPath,TEXT(PLUGIN_NAME));
     ::_tcscat_s(g_fttempPath,TEXT(".fttemp"));
-    if (PathFileExists(g_fttempPath) == false) emptyFile(g_fttempPath);
+    if (!PathFileExists(g_fttempPath)) emptyFile(g_fttempPath);
 
     ::_tcscpy_s(g_ftbPath,g_basePath);
     ::_tcscat_s(g_ftbPath,TEXT("\\SnippetEditor.ftb"));
-    if (PathFileExists(g_ftbPath) == false) emptyFile(g_ftbPath);
+    if (!PathFileExists(g_ftbPath)) emptyFile(g_ftbPath);
     
 }
 
@@ -262,6 +274,7 @@ void commandMenuInit()
 
 void variablesInit()
 {
+    updateSnippetCount();
     g_customSciHandle = (HWND)::SendMessage(nppData._nppHandle,NPPM_CREATESCINTILLAHANDLE,0,NULL);        
 }
 
@@ -581,7 +594,7 @@ void editSnippet()
             //    ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)g_ftbPath);
             //}
             //HWND curScintilla = getCurrentScintilla();
-            promptSaveSnippet(TEXT("Do you wish to save the current snippet before editing anotoher one?"));
+            promptSaveSnippet(TEXT("Do you wish to save the current snippet before editing another one?"));
             
             ::SendScintilla(SCI_CONVERTEOLS,SC_EOL_LF, 0);
             
@@ -669,6 +682,8 @@ void deleteSnippet()
     }
     sqlite3_finalize(stmt);
     //TODO: can use the sqlite3 return message to show error message when the delete is not successful
+
+    updateSnippetCount();
     updateDockItems(true,false,"%",true);
 
     delete [] tempTriggerText;
@@ -875,6 +890,8 @@ void saveSnippet()
         ::SendScintilla(SCI_SETSAVEPOINT,0,0);
     }
 
+    updateSnippetCount();
+
     updateDockItems(true,false,"%",true);
 
     //TODO: This is not working. The scrolling works but the snippetdock reset the scrolling after thei savesnippet() finished   
@@ -957,7 +974,6 @@ int searchNextMatchedTail(char* tagSign, char* tagTail)
 
     do
     {
-        
         int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
         signSpot = searchNext(tagSign);
         if (signSpot != -1) signSpot = signSpot+signLength;
@@ -2446,6 +2462,17 @@ char* getDateTime(char *format, bool getDate, int flags)
 //    return spotFound;
 //}
 
+bool fingerTextListActive()
+{
+    if (fingerTextList)
+    {
+        fingerTextList = false;
+        return true;
+    } else
+    {
+        return false;
+    }
+}
 
 
 int hotSpotNavigation(char* tagSign, char* tagTail)
@@ -2478,6 +2505,7 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
 
             if (strncmp(hotSpotText,"(lis)",5) == 0)
             {
+                fingerTextList = true;
                 ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
 
                 ::SendScintilla(SCI_GOTOPOS,firstPos,0);
@@ -3506,14 +3534,9 @@ void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, b
 
         g_snippetCache.clear();
         
-
         sqlite3_stmt *stmt;
 
-        if (g_editorView) 
-        {
-            
-            withAll = true;
-        }
+        if (g_editorView) withAll = true;
         
         int sqlitePrepare;
         char* sqlite3Statement = new char[400];
@@ -3539,26 +3562,12 @@ void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, b
         
 	    if (g_dbOpen && SQLITE_OK == sqlitePrepare)
 	    {
-            char *customScope = new char[MAX_PATH];
-            
-            char *tagType1 = NULL;
-            TCHAR *fileType1 = new TCHAR[MAX_PATH];
-            char *tagType2 = NULL;
-            TCHAR *fileType2 = new TCHAR[MAX_PATH];
+            std::vector<std::string> scopeList = generateScopeList();
 
-
-            TCHAR* fileNameWide = new TCHAR[MAX_PATH];
-            ::SendMessage(nppData._nppHandle, NPPM_GETFILENAME, (WPARAM)MAX_PATH, (LPARAM)fileNameWide);
-            char* fileName = toCharArray(fileNameWide);
-            std::vector<std::string> nameParts = toVectorString(fileName,'.');
-
-            char* namePartChar;
-            //alert((int)nameParts.size());
-            int namePartSize = nameParts.size();
-
-            int i=-6;
+            int i=scopeList.size()-1;
             do
             {
+
                 if (withAll)
                 {
                     
@@ -3573,56 +3582,10 @@ void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, b
 
                     sqlite3_bind_text(stmt, 2, tag, -1, SQLITE_STATIC);
 
-
-                    //char snippetCacheSizeText[10];
-                    //::_itoa(pc.configInt[SNIPPET_LIST_LENGTH], snippetCacheSizeText, 10); 
-                    //sqlite3_bind_text(stmt, 1, snippetCacheSizeText, -1, SQLITE_STATIC);
                 } else
                 {   
-
-                    if (i == -6)
-                    {
-                        sqlite3_bind_text(stmt, 1, "SYSTEM", -1, SQLITE_STATIC);
-                        
-                    } else if (i == -5)
-                    {
-                        sqlite3_bind_text(stmt, 1, "GLOBAL", -1, SQLITE_STATIC);
-                        
-                    } else if (i == -4)
-                    {
-                        sqlite3_bind_text(stmt, 1, getLangTagType(), -1, SQLITE_STATIC);
-                        
-                    } else if (i == -3)
-                    {
-                        ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType2);
-                        tagType2 = toCharArray(fileType2);
-                        sqlite3_bind_text(stmt, 1, tagType2, -1, SQLITE_STATIC);
-                    } else if (i == -2)
-                    {
-                        ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType1);
-                        tagType1 = toCharArray(fileType1);
-                        sqlite3_bind_text(stmt, 1, tagType1, -1, SQLITE_STATIC);
-                    } else if (i == -1)
-                    {
-                        customScope = toCharArray(pc.configText[CUSTOM_SCOPE]);
-                        sqlite3_bind_text(stmt, 1, customScope, -1, SQLITE_STATIC);
-                    } else
-                    {
-                        //TODO: optimizing needed
-                        namePartChar = new char[nameParts[i].length()+5+1];
-                        if (nameParts[i].length()!=0)
-                        {
-                            strcpy(namePartChar, ("Name:" +nameParts[i]).c_str());
-                            sqlite3_bind_text(stmt, 1, namePartChar, -1, SQLITE_STATIC);
-                        } else
-                        {
-                            sqlite3_bind_text(stmt, 1, "", -1, SQLITE_STATIC);
-                        }
-                    }
-
-
-
-
+                    const char* scopeListItem = scopeList[i].c_str();
+                    sqlite3_bind_text(stmt, 1, scopeListItem, -1, SQLITE_STATIC);
                     sqlite3_bind_text(stmt, 2, tag, -1, SQLITE_STATIC);
                 }
                 
@@ -3646,20 +3609,11 @@ void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, b
                 }
                 sqlite3_reset(stmt);
 
-                if (i>=0) delete [] namePartChar;
-                i++;
+                i--;
                 //alert(i);
-            } while ((i < namePartSize) && (!withAll));
+            } while ((i>=0) && (!withAll));
             //} while ((i < nameParts.size()) && (!withAll));
-
-            delete [] fileNameWide;
-            delete [] fileName;
-
-            delete [] customScope;
-            delete [] tagType1;
-            delete [] fileType1;
-            delete [] tagType2;
-            delete [] fileType2;
+;
         }
         sqlite3_finalize(stmt);
         delete [] sqlite3Statement;
@@ -3697,6 +3651,8 @@ wchar_t* constructDockItems(std::string scope, std::string triggerText, int maxl
     for (int i=0;i<scopeLength;i++) newText = newText + " ";
     newText = newText + triggerText;
     return toWideChar(newText);
+
+
 }
 
 void populateDockItems(bool withAll, bool insertion)
@@ -3710,9 +3666,9 @@ void populateDockItems(bool withAll, bool insertion)
     }
 
     //for (int j=0;j<pc.configInt[SNIPPET_LIST_LENGTH];j++)
-    for (int j=0;j<g_snippetCache.size();j++)
+    int j=0;
+    for (j=0;j<g_snippetCache.size();j++)
     {
-
         if ((withAll) || (g_snippetCache[j].triggerText[0] != '_'))
         {   
             int maxLength = 14;
@@ -3727,13 +3683,40 @@ void populateDockItems(bool withAll, bool insertion)
             {
                 snippetDock.addDockItem(convertedTagText);
             }
-            //delete [] convertedTagText;
-            
+
+            delete [] convertedTagText;
 
         }
     }
+    
 
+    if (!insertion)
+    {
+        wchar_t* countText = toWideChar(toString(j)+"/"+g_snippetCount);
+        snippetDock.updateSnippetCount(countText);
+        delete [] countText;
+    }
+
+    
     //deleteCache();
+}
+
+void updateSnippetCount()
+{
+    sqlite3_stmt *stmt;
+
+    const char *sqlitePrepareStatement = "SELECT COUNT(*) FROM snippets";
+    
+    if (SQLITE_OK == sqlite3_prepare_v2(g_db, sqlitePrepareStatement, -1, &stmt, NULL))
+	{
+        if(SQLITE_ROW == sqlite3_step(stmt)) 
+		{
+			g_snippetCount = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+		}
+	}
+    
+	sqlite3_finalize(stmt);
+
 }
 
 void setTextTarget(bool fromTab)
@@ -3782,6 +3765,7 @@ void clearAllSnippets()
     if (SQLITE_OK == sqlite3_prepare_v2(g_db, "VACUUM", -1, &stmt, NULL)) sqlite3_step(stmt);
     sqlite3_finalize(stmt);
 
+    updateSnippetCount();
     updateDockItems(true,false,"%",true);
 }
 
@@ -3795,7 +3779,7 @@ bool exportSnippets(bool all)
     bool success = false;
     
     OPENFILENAME ofn;
-    char fileName[MAX_PATH] = "";
+    wchar_t fileName[MAX_PATH] = TEXT("");
     ZeroMemory(&ofn, sizeof(ofn));
     
     ofn.lStructSize = sizeof(OPENFILENAME);
@@ -3909,7 +3893,7 @@ void importSnippets()
     
 
     OPENFILENAME ofn;
-    char fileName[MAX_PATH] = "";
+    wchar_t fileName[MAX_PATH] = TEXT("");
     ZeroMemory(&ofn, sizeof(ofn));
 
     ofn.lStructSize = sizeof(OPENFILENAME);
@@ -3962,8 +3946,6 @@ void importSnippets()
             int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
             ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
 
-
-        
             //HWND curScintilla = getCurrentScintilla();
             ::SendScintilla(SCI_SETCURSOR, SC_CURSORWAIT, 0);
 
@@ -4197,6 +4179,7 @@ void importSnippets()
                 //delete [] snippetText;
             
                 ::SendScintilla(SCI_SETSAVEPOINT,0,0);
+                
                 updateDockItems(true,false,"%",true);
             
                 ::SendScintilla(SCI_GOTOPOS,0,0);
@@ -4236,6 +4219,7 @@ void importSnippets()
     }
     pc.configInt[LIVE_HINT_UPDATE]++;
     g_freezeDock = false;
+    updateSnippetCount();
     ::snippetHintUpdate();
     //updateDockItems(true,false,"%",true,false,false);
 
@@ -4472,6 +4456,8 @@ void optionNavigate(bool toNext)
    
 }
 
+bool withSelection = false;
+
 void selectionMonitor(int contentChange)
 {
     //TODO: pasting text with more then one line in the scope field will break editor restriction
@@ -4501,29 +4487,45 @@ void selectionMonitor(int contentChange)
         g_selectionMonitor--;
         if (g_editorView == false)
         {
-            //TODO: use hook to cater option? (so that the bug of empty options can be fixed
+                        //TODO: use hook to cater option? (so that the bug of empty options can be fixed
             //TODO: reexamine possible performance improvement
-            if ((contentChange & (SC_UPDATE_SELECTION)) && (g_optionMode == true))
+            if (contentChange & (SC_UPDATE_SELECTION))
             {
-                int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-                //alertNumber(g_optionStartPosition);
-                //alertNumber(posCurrent);
-                //TODO: a bug when there is an empty option and the hotspot is at the beginning of document
-                if (posCurrent > g_optionStartPosition)
+                if (g_optionMode)
                 {
-                    optionNavigate(true);
-                    //optionTriggered = true;
-                    turnOnOptionMode();
+                    int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+                    //alertNumber(g_optionStartPosition);
+                    //alertNumber(posCurrent);
+                    //TODO: a bug when there is an empty option and the hotspot is at the beginning of document
+                    if (posCurrent > g_optionStartPosition)
+                    {
+                        optionNavigate(true);
+                        //optionTriggered = true;
+                        turnOnOptionMode();
+                    } else
+                    {
+                        optionNavigate(false);
+                        turnOnOptionMode();
+                    }
+                    //else
+                    //{
+                    //    cleanOptionItem();
+                    //    g_optionMode = false;
+                    //}
                 } else
                 {
-                    optionNavigate(false);
-                    turnOnOptionMode();
+                    int selectionStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
+                    int selectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
+
+                    if (selectionStart==selectionEnd)
+                    {
+                        withSelection = false;
+                    } else if ((!withSelection) && (selectionStart!=selectionEnd))
+                    {
+                        withSelection = true;
+                        updateDockItems(true,false,"%",true);
+                    } 
                 }
-                //else
-                //{
-                //    cleanOptionItem();
-                //    g_optionMode = false;
-                //}
                 
             }
         } else if (pc.configInt[EDITOR_CARET_BOUND] == 1)
@@ -4627,7 +4629,6 @@ void doTagComplete()
 
 int tagComplete()
 {
-
     int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
     int index = -1;
     char *tag;
@@ -4666,11 +4667,352 @@ void triggerSave()
     if (g_editorView) ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_SAVE);
 }
 
-//TODO: better triggertag, should allow for a list of scopes
+std::vector<std::string> getAssociatedScopes(std::string s)
+{
+    //TODO: move this to the setting
+    std::vector<std::string> result;
+
+    if (s.compare("Lang:TXT")==0)
+    {
+        result.push_back("Ext:txt");
+    } else if (s.compare("Lang:PHP")==0)
+    {
+        result.push_back("Ext:php");
+        result.push_back("Ext:php3");
+        result.push_back("Ext:phtml");
+        result.push_back("Ext:html");
+          
+    } else if (s.compare("Lang:C")==0)
+    {
+        result.push_back("Ext:c");
+        result.push_back("Ext:h");
+
+    } else if (s.compare("Lang:CPP")==0)
+    {
+        result.push_back("Ext:cpp");
+        result.push_back("Ext:hpp");
+        result.push_back("Ext:c");
+        result.push_back("Ext:h");
+    } else if (s.compare("Lang:CS")==0)
+    {
+        result.push_back("Ext:cs");
+
+    } else if (s.compare("Lang:OBJC")==0)
+    {
+        result.push_back("Ext:m");
+        result.push_back("Ext:h");
+    } else if (s.compare("Lang:JAVA")==0)
+    {
+        result.push_back("Ext:java");
+    } else if (s.compare("Lang:RC")==0)
+    {
+        result.push_back("Ext:rc");
+    } else if (s.compare("Lang:HTML")==0)
+    {
+        result.push_back("Ext:html");
+        result.push_back("Ext:htm");
+        result.push_back("Ext:js");
+        result.push_back("Ext:css");
+    } else if (s.compare("Lang:XML")==0)
+    {
+        result.push_back("Ext:xml");
+        result.push_back("Ext:xsml");
+        result.push_back("Ext:xsl");
+        result.push_back("Ext:xsd");
+        result.push_back("Ext:kml");    
+        result.push_back("Ext:wsdl");    
+        
+    } else if (s.compare("Lang:MAKEFILE")==0)
+    {
+        result.push_back("Ext:mak");   
+        
+    } else if (s.compare("Lang:PASCAL")==0)
+    {
+        result.push_back("Ext:pas");   
+        result.push_back("Ext:inc");   
+
+    } else if (s.compare("Lang:BATCH")==0)
+    {
+        result.push_back("Ext:bat");
+        result.push_back("Ext:cmd");
+        result.push_back("Ext:nt");
+          
+
+    } else if (s.compare("Lang:INI")==0)
+    {
+        result.push_back("Ext:ini");
+        result.push_back("Ext:inf");
+        result.push_back("Ext:reg");
+        result.push_back("Ext:url");
+           
+    } else if (s.compare("Lang:NFO")==0)
+    {
+        result.push_back("Ext:nfo");
+
+    } else if (s.compare("Lang:ASP")==0)
+    {
+        result.push_back("Ext:asp");
+    } else if (s.compare("Lang:SQL")==0)
+    {
+        result.push_back("Ext:sql");
+    } else if (s.compare("Lang:VB")==0)
+    {
+        result.push_back("Ext:vb");
+        result.push_back("Ext:vbs");
+    } else if (s.compare("Lang:JS")==0)
+    {
+        result.push_back("Ext:js");
+    } else if (s.compare("Lang:CSS")==0)
+    {
+        result.push_back("Ext:css");
+
+    } else if (s.compare("Lang:PERL")==0)
+    {
+        result.push_back("Ext:pl");
+        result.push_back("Ext:pm");
+        result.push_back("Ext:plx");
+
+    } else if (s.compare("Lang:PYTHON")==0)
+    {
+        result.push_back("Ext:py");
+        result.push_back("Ext:pyw");
+
+    } else if (s.compare("Lang:LUA")==0)
+    {
+        result.push_back("Ext:lua");
+
+    } else if (s.compare("Lang:TEX")==0)
+    {
+        result.push_back("Ext:tex");
+
+    } else if (s.compare("Lang:FORTRAN")==0)
+    {
+        result.push_back("Ext:f");
+        result.push_back("Ext:for");
+        result.push_back("Ext:f90");
+        result.push_back("Ext:f95");
+        result.push_back("Ext:f2k");
+        
+    } else if (s.compare("Lang:BASH")==0)
+    {
+        result.push_back("Ext:sh");
+        result.push_back("Ext:bsh");
+
+    } else if (s.compare("Lang:FLASH")==0)
+    {
+        result.push_back("Ext:as");
+        result.push_back("Ext:mx");
+
+    } else if (s.compare("Lang:NSIS")==0)
+    {
+        result.push_back("Ext:nsi");
+        result.push_back("Ext:nsh");
+    } else if (s.compare("Lang:TCL")==0)
+    {
+        result.push_back("Ext:tcl");
+    } else if (s.compare("Lang:LISP")==0)
+    {
+        result.push_back("Ext:lsp");
+        result.push_back("Ext:lisp");
+    } else if (s.compare("Lang:SCHEME")==0)
+    {
+        result.push_back("Ext:scm");
+        result.push_back("Ext:md");
+        result.push_back("Ext:ss");
+    } else if (s.compare("Lang:ASM")==0)
+    {
+        result.push_back("Ext:asm");
+    } else if (s.compare("Lang:DIFF")==0)
+    {
+        result.push_back("Ext:diff");
+        result.push_back("Ext:patch");
+
+    } else if (s.compare("Lang:PROPS")==0)
+    {
+        result.push_back("Ext:properties");
+        
+    } else if (s.compare("Lang:PS")==0)
+    {
+        result.push_back("Ext:ps");
+    } else if (s.compare("Lang:RUBY")==0)
+    {
+        result.push_back("Ext:rb");
+        result.push_back("Ext:rbw");
+    } else if (s.compare("Lang:SMALLTALK")==0)
+    {
+        result.push_back("Ext:st");
+    } else if (s.compare("Lang:VHDL")==0)
+    {
+        result.push_back("Ext:vhd");
+        result.push_back("Ext:vhdl");
+    } else if (s.compare("Lang:KIX")==0)
+    {
+        result.push_back("Ext:kix");
+    } else if (s.compare("Lang:AU3")==0)
+    {
+        result.push_back("Ext:au3");
+    } else if (s.compare("Lang:CAML")==0)
+    {
+        result.push_back("Ext:ml");
+        result.push_back("Ext:mli");
+        result.push_back("Ext:sml");
+        result.push_back("Ext:thy");
+           
+    } else if (s.compare("Lang:ADA")==0)
+    {
+        result.push_back("Ext:ada");
+        result.push_back("Ext:ads");
+        result.push_back("Ext:adb");
+          
+    } else if (s.compare("Lang:VERILOG")==0)
+    {
+        result.push_back("Ext:v");
+    } else if (s.compare("Lang:MATLAB")==0)
+    {
+        result.push_back("Ext:m");
+    } else if (s.compare("Lang:HASKELL")==0)
+    {
+        result.push_back("Ext:las");
+        result.push_back("Ext:as");
+        result.push_back("Ext:lhs");
+        result.push_back("Ext:hs");
+        
+    } else if (s.compare("Lang:INNO")==0)
+    {
+        result.push_back("Ext:iss");
+    } else if (s.compare("Lang:CMAKE")==0)
+    {
+        result.push_back("Ext:cmake");
+    } else if (s.compare("Lang:YAML")==0)
+    {
+        result.push_back("Ext:yml");
+    } else if (s.compare("Lang:COBOL")==0)
+    {
+        result.push_back("Ext:cbl");
+        result.push_back("Ext:cbd");
+        result.push_back("Ext:cdb");
+        result.push_back("Ext:cdc");
+        result.push_back("Ext:cob");
+            
+    } else if (s.compare("Lang:GUI4CLI")==0)
+    {
+        result.push_back("");
+    } else if (s.compare("Lang:D")==0)
+    {
+        result.push_back("Ext:d");
+    } else if (s.compare("Lang:POWERSHELL")==0)
+    {
+        result.push_back("Ext:ps1");
+    } else if (s.compare("Lang:R")==0)
+    {
+        result.push_back("Ext:r");
+    } else
+    {
+        result.push_back("");
+    }
+    //alert(result);
+    return result;
+
+}
+
+std::vector<std::string> generateScopeList()
+{
+    std::vector<std::string> scopeList;
+    int i = 0;
+
+    // Add Custom Scope
+    char* customScopesCharArray = toCharArray(pc.configText[CUSTOM_SCOPE]);
+    std::vector<std::string> customScopes = toVectorString(customScopesCharArray,'|');
+    i = 0;  
+    while (i<customScopes.size())  //TODO: use pop_back instead of while loop with index i
+    {
+        if (customScopes[i].length()!=0)
+        {
+            std::string customScopeString = customScopes[i];
+            if (std::find(scopeList.begin(),scopeList.end(),customScopeString) == scopeList.end())
+                scopeList.push_back(customScopeString);
+        }
+        i++;
+    }
+    delete [] customScopesCharArray;
+
+    //std::string customScopeString = toString(pc.configText[CUSTOM_SCOPE]);
+    //if (std::find(scopeList.begin(),scopeList.end(),customScopeString) == scopeList.end())
+    //    scopeList.push_back(customScopeString);
+    
+    // Add the Name Scope by decomposing the current file name
+    TCHAR* fileNameWide = new TCHAR[MAX_PATH];
+    ::SendMessage(nppData._nppHandle, NPPM_GETFILENAME, (WPARAM)MAX_PATH, (LPARAM)fileNameWide);
+    char* fileName = toCharArray(fileNameWide);
+    std::vector<std::string> nameParts = toVectorString(fileName,'.');
+    i = 0;
+    std::string namePartsString = "";
+    while (i<nameParts.size())
+    {
+        if (nameParts[i].length()!=0)
+        {
+            if (i==0) 
+            {
+                namePartsString = "Name:" + nameParts[i];
+            } else 
+            {
+                namePartsString = "Ext:" + nameParts[i];
+            }
+            if (std::find(scopeList.begin(),scopeList.end(),namePartsString) == scopeList.end())
+                scopeList.push_back(namePartsString);
+        }
+        i++;
+    }
+    delete [] fileName;
+    delete [] fileNameWide;
+
+    // Add the Language Scope 
+    //std::string langString = toString((char*)getLangTagType());
+    std::string langString = "Lang:" + getLangTagType();
+    if (std::find(scopeList.begin(),scopeList.end(),langString) == scopeList.end())
+        scopeList.push_back(langString);
+
+    // Add the Assocation Scope
+    // TODO: can loop the current scopeList to add all the scope associated witht he current list, or to modify getAssociatedScope to take a vector of string directly
+    std::vector<std::string> associatedScopes = getAssociatedScopes(langString);
+    i = 0;
+    while (i<associatedScopes.size())
+    {
+        if (associatedScopes[i].length()!=0)
+        {
+            std::string assocatedScopeString = associatedScopes[i];
+            if (std::find(scopeList.begin(),scopeList.end(),assocatedScopeString) == scopeList.end())
+                scopeList.push_back(assocatedScopeString);
+        }
+        i++;
+    }
+    
+    // Add the NamePart Scope and ExtPart Scope for backward compatibility
+    TCHAR *namePart = new TCHAR[MAX_PATH];
+    ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)namePart);
+    std::string namePartString = toString(namePart);
+    if (std::find(scopeList.begin(),scopeList.end(),namePartString) == scopeList.end())
+        scopeList.push_back(namePartString);
+    delete [] namePart;
+
+    TCHAR *extPart = new TCHAR[MAX_PATH];
+    ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)extPart);
+    std::string extPartString = toString(extPart);
+    if (std::find(scopeList.begin(),scopeList.end(),extPartString) == scopeList.end())
+        scopeList.push_back(extPartString);
+    delete [] extPart;
+    
+    // Add the Global and System Scope        
+    if (std::find(scopeList.begin(),scopeList.end(),"GLOBAL") == scopeList.end()) scopeList.push_back("GLOBAL");
+    if (std::find(scopeList.begin(),scopeList.end(),"SYSTEM") == scopeList.end()) scopeList.push_back("SYSTEM");
+    
+        
+    return scopeList;
+
+}
+
 bool triggerTag(int &posCurrent, int triggerLength)
 {
-
-    //HWND curScintilla = getCurrentScintilla();
 
     int paramPos = -1;
     paramPos = ::SendScintilla(SCI_BRACEMATCH,posCurrent-1,0);
@@ -4679,23 +5021,11 @@ bool triggerTag(int &posCurrent, int triggerLength)
         triggerLength = triggerLength - (posCurrent - paramPos);
         posCurrent = paramPos;
         ::SendScintilla(SCI_GOTOPOS,paramPos,0);
-        
     }
 
     bool tagFound = false;
     char *tag;
 	int tagLength = getCurrentTag(posCurrent, &tag, triggerLength);
-    
-    //int position = 0;
-    //bool groupChecked = false;
-
-    //int curLang = 0;
-    //::SendMessage(nppData._nppHandle,NPPM_GETCURRENTLANGTYPE ,0,(LPARAM)&curLang);
-    //wchar_t curLangNumber[10];
-    //wchar_t curLangText[20];
-    //::wcscpy(curLangText, TEXT("LANG_"));
-    //::_itow_s(curLang, curLangNumber, 10, 10);
-    //::wcscat(curLangText, curLangNumber);
 
     if (((triggerLength<=0) && (tag[0] == '_')) || (tagLength == 0))
     {
@@ -4705,103 +5035,15 @@ bool triggerTag(int &posCurrent, int triggerLength)
         
         int posBeforeTag = posCurrent - tagLength;
 
+        std::vector<std::string> scopeList = generateScopeList();
+
         char *expanded = NULL;
-        char *tagType = NULL;
         
-        TCHAR *fileType = new TCHAR[MAX_PATH];
-
-
-
-
-
-
-
-        // Check for custom scope
-        tagType = toCharArray(pc.configText[CUSTOM_SCOPE]);
-        expanded = findTagSQLite(tag,tagType); 
-        
-        if (!expanded)
+        int i = 0;
+        while ((i<scopeList.size()) && (!expanded))
         {
-            TCHAR* fileNameWide = new TCHAR[MAX_PATH];
-            ::SendMessage(nppData._nppHandle, NPPM_GETFILENAME, (WPARAM)MAX_PATH, (LPARAM)fileNameWide);
-            char* fileName = toCharArray(fileNameWide);
-            std::vector<std::string> nameParts = toVectorString(fileName,'.');
-
-            int i = 0;
-            while (i<nameParts.size() && (!expanded))
-            {
-                if (nameParts[i].length()!=0)
-                {
-                    expanded = findTagSQLite(tag,("Name:" + nameParts[i]).c_str()); 
-                }
-                i++;
-            }
-            
-            delete [] fileNameWide;
-            delete [] fileName;
-
-        }
-
-
-
-
-
-        // Check for snippets which matches ext part
-        if (!expanded)
-        {
-            delete [] tagType;
-            ::SendMessage(nppData._nppHandle, NPPM_GETNAMEPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-            tagType = toCharArray(fileType);
-            expanded = findTagSQLite(tag,tagType); 
-            
-            // Check for snippets which matches name part
-            if (!expanded)
-            {
-                delete [] tagType;
-                ::SendMessage(nppData._nppHandle, NPPM_GETEXTPART, (WPARAM)MAX_PATH, (LPARAM)fileType);
-                tagType = toCharArray(fileType);
-                expanded = findTagSQLite(tag,tagType); 
-
-                // Check for language specific snippets
-                if (!expanded)
-                {
-                    expanded = findTagSQLite(tag,getLangTagType()); 
-                    // TODO: Hardcode the extension associated with each language type, check whether the extension are the same as the current extenstion, if not, use findtagSQLite to search for snippets using those scopes
-                    
-                    // Check for snippets which matches the current language group
-                    //if (!expanded)
-                    //{
-                    //    groupChecked = true;
-                    //    position = 0;
-                    //    do
-                    //    {   
-                    //        tagType = getGroupScope(curLangText,position);
-                    //        if (tagType)
-                    //        {
-                    //            expanded = findTagSQLite(tag,tagType,triggerTextComplete); 
-                    //            
-                    //        } else
-                    //        {
-                    //            break;
-                    //        }
-                    //        position++;
-                    //    } while (!expanded);
-                    //}
-
-                    // Check for GLOBAL snippets
-                    if (!expanded)
-                    {
-                        //groupChecked = false;
-                        expanded = findTagSQLite(tag,"GLOBAL"); 
-                        if (!expanded)
-                        {
-                        
-                            expanded = findTagSQLite(tag,"SYSTEM"); 
-
-                        }
-                    }
-                }
-            }
+            expanded = findTagSQLite(tag,scopeList[i].c_str());
+            i++;
         }
 
         // Only if a tag is found in the above process, a replace tag or trigger text completion action will be done.
@@ -4861,9 +5103,9 @@ bool triggerTag(int &posCurrent, int triggerLength)
             tagFound = true;
         }
 
-        delete [] fileType;
-        //if (!groupChecked) delete [] tagType;
-        delete [] tagType;
+        //delete [] fileType;
+                //if (!groupChecked) delete [] tagType;
+        //delete [] tagType;
         delete [] expanded;
 		delete [] tag;
         
@@ -4994,27 +5236,13 @@ void setFocusToWindow()
     
 }
 
-const char* getLangTagType()
+std::string getLangTagType()
 {
-    int curLang = 0;
+    int curLang = -1;
     ::SendMessage(nppData._nppHandle,NPPM_GETCURRENTLANGTYPE ,0,(LPARAM)&curLang);
-    //alertNumber(curLang);
-    
     if ((curLang>54) || (curLang<0)) return "";
-
-    //support the languages supported by npp 0.5.9, excluding "user defined language" abd "search results"
-    const char *s[] = {"Lang:TXT","Lang:PHP","Lang:C","Lang:CPP","Lang:CS","Lang:OBJC","Lang:JAVA","Lang:RC",
-                 "Lang:HTML","Lang:XML","Lang:MAKEFILE","Lang:PASCAL","Lang:BATCH","Lang:INI","Lang:NFO","",
-                 "Lang:ASP","Lang:SQL","Lang:VB","Lang:JS","Lang:CSS","Lang:PERL","Lang:PYTHON","Lang:LUA",
-                 "Lang:TEX","Lang:FORTRAN","Lang:BASH","Lang:FLASH","Lang:NSIS","Lang:TCL","Lang:LISP","Lang:SCHEME",
-                 "Lang:ASM","Lang:DIFF","Lang:PROPS","Lang:PS","Lang:RUBY","Lang:SMALLTALK","Lang:VHDL","Lang:KIX",
-                 "Lang:AU3","Lang:CAML","Lang:ADA","Lang:VERILOG","Lang:MATLAB","Lang:HASKELL","Lang:INNO","",
-                 "Lang:CMAKE","Lang:YAML","Lang:COBOL","Lang:GUI4CLI","Lang:D","Lang:POWERSHELL","Lang:R"};
-    
-    return s[curLang];
-    //return "";
+    return langList[curLang];
 }
-
 
 
 void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* pathWide)
@@ -5217,6 +5445,7 @@ bool diagActivate(char* tag)
 
         } else
         {
+            if (::SendScintilla(SCI_AUTOCACTIVE,0,0)) ::SendScintilla(SCI_AUTOCCANCEL,0,0);
             if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
             turnOffOptionMode();
 
@@ -5332,11 +5561,19 @@ void tabActivate()
 {
     if (sciFocus)
     {
-        if (((g_enable==false) || (g_rectSelection==true)) && (!g_optionMode))
+        //if (((g_enable==false) || (g_rectSelection==true) || (::SendScintilla(SCI_AUTOCACTIVE,0,0))) && (!g_optionMode))
+        if (((g_enable==false) || (g_rectSelection==true) ) && (!g_optionMode))
         {        
             ::SendScintilla(SCI_TAB,0,0);   
         } else
         {
+            int autoComplete = 0;
+
+            if (::SendScintilla(SCI_AUTOCACTIVE,0,0))
+            {
+                ::SendScintilla(SCI_AUTOCCOMPLETE,0,0);
+                autoComplete = 1;
+            }
             int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
             
             //int posTriggerStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
@@ -5379,13 +5616,14 @@ void tabActivate()
                     if (posSelectionStart==posSelectionEnd) tagFound = triggerTag(posCurrent); 
                     if (tagFound)
                     {
+                        //::SendScintilla(SCI_AUTOCCANCEL,0,0);
                         g_selectedText = "";
-                        ::SendScintilla(SCI_AUTOCCANCEL,0,0);
                         posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
                         g_lastTriggerPosition = posCurrent;
                         
                     } else
                     {
+
                         if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
                     }
                 }
@@ -5484,7 +5722,7 @@ void tabActivate()
 	        	    }
                 }
                 
-                if ((navSpot == 0) && (tagFound == false) && (completeFound<0) && (dynamicSpot==false)) 
+                if ((navSpot == 0) && (tagFound == false) && (completeFound<0) && (dynamicSpot==false) && (autoComplete==0)) 
                 {
                     if (g_optionMode == true)
                     {
@@ -5567,7 +5805,17 @@ void testing2()
 void testing()
 {
     alert("testing1");
-    
+       
+
+    ////Testing getpixel
+    //HDC hdc = GetDC(0);
+    //COLORREF color = ::GetPixel(hdc,100,100);
+    ////COLORREF color = RGB(255,128,64);
+    //alert((int)GetRValue(color));
+    //alert((int)GetGValue(color));
+    //alert((int)GetBValue(color));
+
+
 
     ////Testing drawing pixel on screen
     //COLORREF color = RGB(255,0,0); // COLORREF to hold the color info

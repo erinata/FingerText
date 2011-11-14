@@ -100,14 +100,17 @@ void DockingDlg::resizeListBox(int height,int width)
     if (normalMode)
     {
         SetWindowPos(GetDlgItem(_hSelf, IDC_SNIPPET_LIST),NULL,x,y+180,width,height,SWP_NOACTIVATE);
-        SetWindowPos(GetDlgItem(_hSelf, IDC_STATIC_TEXT4),NULL,x,y+160,120,20,SWP_NOACTIVATE);
-        SetWindowPos(GetDlgItem(_hSelf, IDC_RADIO_INSERT),NULL,x+120,y+160,100,20,SWP_NOACTIVATE);
-        SetWindowPos(GetDlgItem(_hSelf, IDC_RADIO_EDIT),NULL,x+220,y+160,100,20,SWP_NOACTIVATE);
+        SetWindowPos(GetDlgItem(_hSelf, IDC_STATIC_TEXT4),NULL,x,y+160,85,20,SWP_NOACTIVATE);
+        SetWindowPos(GetDlgItem(_hSelf, IDC_SNIPPET_COUNT),NULL,x+85,y+160,60,20,SWP_NOACTIVATE);
+        SetWindowPos(GetDlgItem(_hSelf, IDC_RADIO_INSERT),NULL,x+160,y+160,70,20,SWP_NOACTIVATE);
+        SetWindowPos(GetDlgItem(_hSelf, IDC_RADIO_EDIT),NULL,x+240,y+160,70,20,SWP_NOACTIVATE);
         
     } else
     {
         SetWindowPos(GetDlgItem(_hSelf, IDC_SNIPPET_LIST),NULL,x,y+200,width,height,SWP_NOACTIVATE);
-        SetWindowPos(GetDlgItem(_hSelf, IDC_STATIC_TEXT6),NULL,x,y+180,width,20,SWP_NOACTIVATE);
+        SetWindowPos(GetDlgItem(_hSelf, IDC_STATIC_TEXT4),NULL,x,y+180,85,20,SWP_NOACTIVATE);
+        SetWindowPos(GetDlgItem(_hSelf, IDC_SNIPPET_COUNT),NULL,x+85,y+180,60,20,SWP_NOACTIVATE);
+        SetWindowPos(GetDlgItem(_hSelf, IDC_STATIC_TEXT6),NULL,x+145,y+180,width,20,SWP_NOACTIVATE);
         //SetWindowPos(GetDlgItem(_hSelf, IDC_RADIO_INSERT),NULL,x+120,y+180,100,20,SWP_NOACTIVATE);
         //SetWindowPos(GetDlgItem(_hSelf, IDC_RADIO_EDIT),NULL,x+220,y+180,100,20,SWP_NOACTIVATE);
 
@@ -229,9 +232,14 @@ void DockingDlg::insertHotspot()
 }
 
 
+void DockingDlg::updateSnippetCount(wchar_t* count)
+{
+    ::SetWindowText(GetDlgItem(_hSelf, IDC_SNIPPET_COUNT),count);
+}
+
 void DockingDlg::switchDock(bool toNormal)
 {
-    
+    //updateSnippetCount();
     //SendMessage (GetDlgItem(_hSelf, IDC_RADIO_NORMAL), BM_SETCHECK, toNormal, 0);
     //SendMessage (GetDlgItem(_hSelf, IDC_RADIO_EDITOR), BM_SETCHECK, !toNormal, 0);
 
@@ -280,7 +288,7 @@ void DockingDlg::switchDock(bool toNormal)
         ::ShowWindow(GetDlgItem(_hSelf, IDC_OPENEDITOR),SW_SHOW);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_RADIO_EDIT),SW_SHOW);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_RADIO_INSERT),SW_SHOW);
-        ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT4),SW_SHOW);
+        //::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT4),SW_SHOW);
         
         ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT3),SW_HIDE);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_CLOSEEDITOR),SW_HIDE);
@@ -311,7 +319,7 @@ void DockingDlg::switchDock(bool toNormal)
         ::ShowWindow(GetDlgItem(_hSelf, IDC_OPENEDITOR),SW_HIDE);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_RADIO_EDIT),SW_HIDE);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_RADIO_INSERT),SW_HIDE);
-        ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT4),SW_HIDE);
+        //::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT4),SW_HIDE);
 
         ::ShowWindow(GetDlgItem(_hSelf, IDC_STATIC_TEXT3),SW_SHOW);
         ::ShowWindow(GetDlgItem(_hSelf, IDC_CLOSEEDITOR),SW_SHOW);
@@ -422,13 +430,20 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 
             } else if (HIWORD(wParam) == LBN_DBLCLK && LOWORD(wParam) == IDC_SNIPPET_LIST)
             {
-                if (insertMode)
+                if (normalMode)
                 {
-                    insertSnippet();
+                    if (insertMode)
+                    {
+                        insertSnippet();
+                    } else
+                    {
+                        editSnippet();
+                    }
                 } else
                 {
                     editSnippet();
                 }
+                
                 return true;
                 
             } else if  (((HIWORD(wParam) == EN_SETFOCUS) || (HIWORD(wParam) == EN_CHANGE)) && (LOWORD(wParam) == IDC_FILTER))

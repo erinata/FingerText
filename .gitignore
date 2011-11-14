@@ -3,6 +3,7 @@
 /Unicode Debug/*
 /Unicode Release/*
 /_package/*
+/FingerTextStandardLibrary/*
 test.bat
 testrelease.bat
 release.bat

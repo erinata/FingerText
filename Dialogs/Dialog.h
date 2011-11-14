@@ -1168,6 +1168,7 @@
 #define IDC_SCOPE                       1004
 #define IDC_EDIT3                       1004
 #define IDC_INSERTION_PREVIEW           1004
+#define IDC_SNIPPET_COUNT               1004
 #define IDC_CREATE                      1005
 #define IDC_EDIT2                       1005
 #define IDC_INSERTION_DES               1005

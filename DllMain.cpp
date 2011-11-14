@@ -199,6 +199,15 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             
             pluginShutdown();
             break;
+
+        case SCN_AUTOCSELECTION:
+            //if (fingerTextListActive())
+            //{
+            //    ::SendScintilla(SCI_INSERTTEXT,(WPARAM)notifyCode->position,(LPARAM)notifyCode->text);
+            //    ::SendScintilla(SCI_AUTOCCANCEL,0,0);
+            //    //hotSpotNavigation();
+            //}
+            break;
         // TODO: consider using SC_MOD_CHANGEANNOTATION to shutdown use of annotation in snippet editing mode
     }
 }
