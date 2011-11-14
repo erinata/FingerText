@@ -3727,7 +3727,7 @@ void populateDockItems(bool withAll, bool insertion)
             {
                 snippetDock.addDockItem(convertedTagText);
             }
-            delete [] convertedTagText;
+            //delete [] convertedTagText;
             
 
         }
