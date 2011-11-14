@@ -96,6 +96,8 @@ bool g_editorView;
 
 int g_editorLineCount;
 
+std::string g_snippetCount = "";
+
 bool fingerTextList;
 
 int g_lastTriggerPosition = 0;
@@ -117,6 +119,15 @@ int g_listLength = 4;
 //For params insertion
 std::vector<std::string> g_hotspotParams;
 
+//support the languages supported by npp 0.5.9, excluding "user defined language" abd "search results"
+const std::string langList[] = {"TXT","PHP","C","CPP","CS","OBJC","JAVA","RC",
+                                "HTML","XML","MAKEFILE","PASCAL","BATCH","INI","NFO","",
+                                "ASP","SQL","VB","JS","CSS","PERL","PYTHON","LUA",
+                                "TEX","FORTRAN","BASH","FLASH","NSIS","TCL","LISP","SCHEME",
+                                "ASM","DIFF","PROPS","PS","RUBY","SMALLTALK","VHDL","KIX",
+                                "AU3","CAML","ADA","VERILOG","MATLAB","HASKELL","INNO","",
+                                "CMAKE","YAML","COBOL","GUI4CLI","D","POWERSHELL","R"};
+
 //For SETWIN
 HWND g_tempWindowHandle;
 wchar_t* g_tempWindowKey;
@@ -137,25 +148,24 @@ void dialogsInit()
     creationDlg.init((HINSTANCE)g_hModule, nppData);
 }
 
-
 void pathInit()
 {
     // Get the config folder of notepad++ and append the plugin name to form the root of all config files
     ::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH, reinterpret_cast<LPARAM>(g_basePath));
     ::_tcscat_s(g_basePath,TEXT("\\"));
     ::_tcscat_s(g_basePath,TEXT(PLUGIN_NAME));
-    if (PathFileExists(g_basePath) == false) ::CreateDirectory(g_basePath, NULL);
+    if (!PathFileExists(g_basePath)) ::CreateDirectory(g_basePath, NULL);
     
     // Initialize the files needed (ini and database paths are initalized in configInit and databaseInit)
     ::_tcscpy_s(g_fttempPath,g_basePath);
     ::_tcscat_s(g_fttempPath,TEXT("\\"));
     ::_tcscat_s(g_fttempPath,TEXT(PLUGIN_NAME));
     ::_tcscat_s(g_fttempPath,TEXT(".fttemp"));
-    if (PathFileExists(g_fttempPath) == false) emptyFile(g_fttempPath);
+    if (!PathFileExists(g_fttempPath)) emptyFile(g_fttempPath);
 
     ::_tcscpy_s(g_ftbPath,g_basePath);
     ::_tcscat_s(g_ftbPath,TEXT("\\SnippetEditor.ftb"));
-    if (PathFileExists(g_ftbPath) == false) emptyFile(g_ftbPath);
+    if (!PathFileExists(g_ftbPath)) emptyFile(g_ftbPath);
     
 }
 
@@ -264,6 +274,7 @@ void commandMenuInit()
 
 void variablesInit()
 {
+    updateSnippetCount();
     g_customSciHandle = (HWND)::SendMessage(nppData._nppHandle,NPPM_CREATESCINTILLAHANDLE,0,NULL);        
 }
 
@@ -671,6 +682,8 @@ void deleteSnippet()
     }
     sqlite3_finalize(stmt);
     //TODO: can use the sqlite3 return message to show error message when the delete is not successful
+
+    updateSnippetCount();
     updateDockItems(true,false,"%",true);
 
     delete [] tempTriggerText;
@@ -876,6 +889,8 @@ void saveSnippet()
 
         ::SendScintilla(SCI_SETSAVEPOINT,0,0);
     }
+
+    updateSnippetCount();
 
     updateDockItems(true,false,"%",true);
 
@@ -3649,9 +3664,9 @@ void populateDockItems(bool withAll, bool insertion)
     }
 
     //for (int j=0;j<pc.configInt[SNIPPET_LIST_LENGTH];j++)
-    for (int j=0;j<g_snippetCache.size();j++)
+    int j=0;
+    for (j=0;j<g_snippetCache.size();j++)
     {
-
         if ((withAll) || (g_snippetCache[j].triggerText[0] != '_'))
         {   
             int maxLength = 14;
@@ -3667,12 +3682,34 @@ void populateDockItems(bool withAll, bool insertion)
                 snippetDock.addDockItem(convertedTagText);
             }
             delete [] convertedTagText;
-            
-
         }
     }
 
+    if (!insertion)
+    {
+        wchar_t* countText = toWideChar(toString(j)+"/"+g_snippetCount);
+        snippetDock.updateSnippetCount(countText);
+        delete [] countText;
+    }
     //deleteCache();
+}
+
+void updateSnippetCount()
+{
+    sqlite3_stmt *stmt;
+
+    const char *sqlitePrepareStatement = "SELECT COUNT(*) FROM snippets";
+    
+    if (SQLITE_OK == sqlite3_prepare_v2(g_db, sqlitePrepareStatement, -1, &stmt, NULL))
+	{
+        if(SQLITE_ROW == sqlite3_step(stmt)) 
+		{
+			g_snippetCount = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+		}
+	}
+    
+	sqlite3_finalize(stmt);
+
 }
 
 void setTextTarget(bool fromTab)
@@ -3721,6 +3758,7 @@ void clearAllSnippets()
     if (SQLITE_OK == sqlite3_prepare_v2(g_db, "VACUUM", -1, &stmt, NULL)) sqlite3_step(stmt);
     sqlite3_finalize(stmt);
 
+    updateSnippetCount();
     updateDockItems(true,false,"%",true);
 }
 
@@ -3901,8 +3939,6 @@ void importSnippets()
             int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
             ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
 
-
-        
             //HWND curScintilla = getCurrentScintilla();
             ::SendScintilla(SCI_SETCURSOR, SC_CURSORWAIT, 0);
 
@@ -4136,6 +4172,7 @@ void importSnippets()
                 //delete [] snippetText;
             
                 ::SendScintilla(SCI_SETSAVEPOINT,0,0);
+                
                 updateDockItems(true,false,"%",true);
             
                 ::SendScintilla(SCI_GOTOPOS,0,0);
@@ -4175,6 +4212,7 @@ void importSnippets()
     }
     pc.configInt[LIVE_HINT_UPDATE]++;
     g_freezeDock = false;
+    updateSnippetCount();
     ::snippetHintUpdate();
     //updateDockItems(true,false,"%",true,false,false);
 
@@ -4635,6 +4673,7 @@ std::vector<std::string> getAssociatedScopes(std::string s)
         result.push_back("Ext:php");
         result.push_back("Ext:php3");
         result.push_back("Ext:phtml");
+        result.push_back("Ext:html");
           
     } else if (s.compare("Lang:C")==0)
     {
@@ -5190,46 +5229,12 @@ void setFocusToWindow()
     
 }
 
-//const char* getLangTagType()
-//{
-//    int curLang = 0;
-//    ::SendMessage(nppData._nppHandle,NPPM_GETCURRENTLANGTYPE ,0,(LPARAM)&curLang);
-//    //alertNumber(curLang);
-//    
-//    if ((curLang>54) || (curLang<0)) return "";
-//
-//    //support the languages supported by npp 0.5.9, excluding "user defined language" abd "search results"
-//    const char *s[] = {"Lang:TXT","Lang:PHP","Lang:C","Lang:CPP","Lang:CS","Lang:OBJC","Lang:JAVA","Lang:RC",
-//                 "Lang:HTML","Lang:XML","Lang:MAKEFILE","Lang:PASCAL","Lang:BATCH","Lang:INI","Lang:NFO","",
-//                 "Lang:ASP","Lang:SQL","Lang:VB","Lang:JS","Lang:CSS","Lang:PERL","Lang:PYTHON","Lang:LUA",
-//                 "Lang:TEX","Lang:FORTRAN","Lang:BASH","Lang:FLASH","Lang:NSIS","Lang:TCL","Lang:LISP","Lang:SCHEME",
-//                 "Lang:ASM","Lang:DIFF","Lang:PROPS","Lang:PS","Lang:RUBY","Lang:SMALLTALK","Lang:VHDL","Lang:KIX",
-//                 "Lang:AU3","Lang:CAML","Lang:ADA","Lang:VERILOG","Lang:MATLAB","Lang:HASKELL","Lang:INNO","",
-//                 "Lang:CMAKE","Lang:YAML","Lang:COBOL","Lang:GUI4CLI","Lang:D","Lang:POWERSHELL","Lang:R"};
-//    
-//    return s[curLang];
-//    //return "";
-//}
-
-
 std::string getLangTagType()
 {
-    int curLang = 0;
+    int curLang = -1;
     ::SendMessage(nppData._nppHandle,NPPM_GETCURRENTLANGTYPE ,0,(LPARAM)&curLang);
-
-    // TODO: can use string directly instead of char array?
     if ((curLang>54) || (curLang<0)) return "";
-    const char *s[] = {"TXT","PHP","C","CPP","CS","OBJC","JAVA","RC",
-                 "HTML","XML","MAKEFILE","PASCAL","BATCH","INI","NFO","",
-                 "ASP","SQL","VB","JS","CSS","PERL","PYTHON","LUA",
-                 "TEX","FORTRAN","BASH","FLASH","NSIS","TCL","LISP","SCHEME",
-                 "ASM","DIFF","PROPS","PS","RUBY","SMALLTALK","VHDL","KIX",
-                 "AU3","CAML","ADA","VERILOG","MATLAB","HASKELL","INNO","",
-                 "CMAKE","YAML","COBOL","GUI4CLI","D","POWERSHELL","R"};
-    
-    return s[curLang];
-
-
+    return langList[curLang];
 }
 
 
@@ -5793,12 +5798,17 @@ void testing2()
 void testing()
 {
     alert("testing1");
-    
-    TCHAR* test = TEXT("ABC");
-    
-    std::string teststring = toString(test);
+       
 
-    alert(teststring);
+    ////Testing getpixel
+    //HDC hdc = GetDC(0);
+    //COLORREF color = ::GetPixel(hdc,100,100);
+    ////COLORREF color = RGB(255,128,64);
+    //alert((int)GetRValue(color));
+    //alert((int)GetGValue(color));
+    //alert((int)GetBValue(color));
+
+
 
     ////Testing drawing pixel on screen
     //COLORREF color = RGB(255,0,0); // COLORREF to hold the color info

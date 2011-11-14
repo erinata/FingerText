@@ -2,6 +2,7 @@ changelog (for developer use only, include unreleased versions)
 
 
 0.5.47
+****** Added: snippet count on snippetDock
 ****** Fixed: delete and edit doesn't scroll the snippet list
 ****** Added: association scope
 ****** Added: Allow for multiple custom scope
@@ -11,6 +12,7 @@ changelog (for developer use only, include unreleased versions)
 ****** Changed: snippet dock show all snippet when there is a selection
 ****** Added: New Scope "Ext:"
 ****** Fixed: Double click on Snippet dock will not edit the clicked snippet
+
 
 0.5.46
 - Added: Dynamic insertion hint

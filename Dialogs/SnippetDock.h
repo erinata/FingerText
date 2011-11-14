@@ -54,6 +54,7 @@ class DockingDlg : public DockingDlgInterface
         void DockingDlg::setupHotspotCombo();
         void DockingDlg::switchInsertMode(int insert = 1);
         //int getCount();
+        void DockingDlg::updateSnippetCount(wchar_t* count);
         void DockingDlg::insertHotspot();
         void DockingDlg::switchDock(bool toNormal = true);
         void DockingDlg::selectSnippetList(int selection);

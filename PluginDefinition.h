@@ -158,6 +158,8 @@ void triggerSave();
 
 void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* path = TEXT(""));
 
+
+void updateSnippetCount();
 void updateMode();
 void refreshAnnotation();
 void updateLineCount(int count = -1);
