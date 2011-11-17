@@ -4,17 +4,17 @@ changelog (for developer use only, include unreleased versions)
 
 
 0.5.47
-****** Added: snippet count on snippetDock
-****** Fixed: delete and edit doesn't scroll the snippet list
+- Added: snippet count on snippetDock
+- Fixed: delete and edit doesn't scroll the snippet list
 ****** Added: association scope
 ****** Added: Allow for multiple custom scope
-****** Fixed: Fingertext hotspot will not interfere regular autocomplete
-****** Changed: Auto hotspot navigation after list box seletion
-****** Fixed: Messagebox wordings and typos
-****** Changed: snippet dock show all snippet when there is a selection
+- Fixed: Fingertext hotspot will not interfere regular autocomplete
+- Changed: Auto hotspot navigation after list box seletion
+- Fixed: Messagebox wordings and typos
+- Changed: snippet dock show all snippet when there is a selection
 ****** Added: New Scope "Ext:"
-****** Fixed: Double click on Snippet dock will not edit the clicked snippet
-****** Fixed: problem importing and exporting snippets to very long path name
+- Fixed: The bug of double clicking on Snippet dock will not edit the clicked snippet
+- Fixed: problem importing and exporting snippets to very long path name
 
 0.5.46
 - Added: Dynamic insertion hint
@@ -44,7 +44,7 @@ changelog (for developer use only, include unreleased versions)
 - Changed: The snippet dock is always putting GLOBAL snippets at the bottom
 - Fixed: nested hotspot not triggered correctly when an empty param is inserted
 - Performance improvement of hotspot navigation
-****** Changed: Fallback_tab is not default to be on
+- Changed: Fallback_tab is not default to be on
 
 
 0.5.43.2
