@@ -3614,7 +3614,6 @@ void updateDockItems(bool withContent, bool withAll, char* tag, bool populate, b
                 //alert(i);
             } while ((i>=0) && (!withAll));
             //} while ((i < nameParts.size()) && (!withAll));
-;
         }
         sqlite3_finalize(stmt);
         delete [] sqlite3Statement;
