@@ -29,9 +29,9 @@
 
 #define TESTING
 
-#define VERSION_TEXT "0.5.49"
-#define VERSION_NUM 0,5,49,0
-#define VERSION_LINEAR 549
+#define VERSION_TEXT "0.5.50"
+#define VERSION_NUM 0,5,50,0
+#define VERSION_LINEAR 550
 #define VERSION_KEEP_CONFIG_START 549
 #define VERSION_STAGE "(Alpha)"
 #ifdef TESTING
@@ -43,10 +43,10 @@
 
 #define AUTHOR_NAME "erinata"
 #define PLUGIN_NAME "FingerText"
-#define COPYRIGHT_TEXT "Copyright (C) 2011"
+#define COPYRIGHT_TEXT "Copyright (C) 2011-2012"
 #define DESCRIPTION_TEXT "A snippet plugin for notepad++"
 
-#define DATE_TEXT "October 2011"
+#define DATE_TEXT "January 2012"
 #define AUTHOR_TEXT "Author: Tom Lam\r\n"
 #define EMAIL_TEXT "Email: erinata@gmail.com\r\n"
 #define ABOUT_TEXT "\
