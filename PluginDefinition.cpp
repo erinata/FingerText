@@ -1350,6 +1350,8 @@ void executeCommand(int &firstPos, char* hotSpotText)
     securityAttributes.bInheritHandle = true;
     securityAttributes.lpSecurityDescriptor = NULL;
 
+
+
     if (!CreatePipe(&processStdoutRead, &processStdoutWrite, &securityAttributes, 0) )
     {
         //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->StdoutRd CreatePipe\n");
@@ -1365,10 +1367,10 @@ void executeCommand(int &firstPos, char* hotSpotText)
         //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->Stdin CreatePipe\n");
     }
 
-   if (!SetHandleInformation(processStdinWrite, HANDLE_FLAG_INHERIT, 0) )
-   {
-       //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->Stdin SetHandleInformation\n");
-   }
+    if (!SetHandleInformation(processStdinWrite, HANDLE_FLAG_INHERIT, 0) )
+    {
+        //::SendMessage(curScintilla, SCI_INSERTTEXT, 0, (LPARAM)"->Stdin SetHandleInformation\n");
+    }
 
     TCHAR* cmdLine = toWideChar(hotSpotText+offset);
 
@@ -1383,9 +1385,17 @@ void executeCommand(int &firstPos, char* hotSpotText)
     si.hStdError = processStdoutWrite;
     si.hStdOutput = processStdoutWrite;
     si.hStdInput = processStdinRead;
+
     // Hide window
     si.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
+        
     si.wShowWindow = SW_HIDE;
+
+    if (silent)
+    {
+        si.wShowWindow = SW_SHOW;
+
+    }
 
     // Create process.
     processSuccess = CreateProcess(

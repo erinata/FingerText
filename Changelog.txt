@@ -1,6 +1,10 @@
 changelog (for developer use only, include unreleased versions)
 
-0.5.49
+0.5.51
+****** Fixed bug in (run)
+
+
+0.5.50
 - reset settings file
 
 0.5.47
