@@ -4282,21 +4282,21 @@ void updateMode()
     {
         snippetDock.toggleSave(true);
         g_editorView = true;
-        snippetDock.switchDock(false);
+        if (snippetDock.isVisible()) snippetDock.switchDock(false);
         //snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("EDIT MODE\r\n(Double click item in list to edit another snippet, Ctrl+S to save)"));
         updateLineCount();
     } else if (g_enable)
     {
         snippetDock.toggleSave(false);
         g_editorView = false;
-        snippetDock.switchDock(true);
+        if (snippetDock.isVisible()) snippetDock.switchDock(true);
         //snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Enabled]\r\n(Type trigger text and hit tab to insert snippet)"));
     } else
     {
         snippetDock.toggleSave(false);
         g_editorView = false;
 
-        snippetDock.switchDock(true);
+        if (snippetDock.isVisible()) snippetDock.switchDock(true);
         //snippetDock.setDlgText(IDC_LIST_TITLE, TEXT("NORMAL MODE [FingerText Disabled]\r\n(To enable: Plugins>FingerText>Toggle FingerText On/Off)"));
     }
 }

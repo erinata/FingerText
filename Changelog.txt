@@ -1,7 +1,11 @@
 changelog (for developer use only, include unreleased versions)
 
+
+0.5.52
+****** Fixed gray bug (solution by jvdanlio)
+
 0.5.51
-****** Fixed bug in (run)
+- Fixed bug in (run)
 
 
 0.5.50
