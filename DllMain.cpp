@@ -32,7 +32,7 @@
 extern FuncItem funcItem[MENU_LENGTH];
 extern NppData nppData;
 extern DockingDlg snippetDock;
-WNDPROC	wndProcNpp = NULL;
+extern WNDPROC	wndProcNpp;
 extern int nppLoaded;
 extern int sciFocus;
 
@@ -96,6 +96,7 @@ extern "C" __declspec(dllexport) void setInfo(NppData nppDataInfo)
     dataBaseInit();
     commandMenuInit();
     variablesInit();
+    
 }
 
 extern "C" __declspec(dllexport) const TCHAR * getName()

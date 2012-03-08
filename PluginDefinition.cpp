@@ -36,6 +36,8 @@ HANDLE g_hModule;                   // the hModule from pluginInit for initializ
 
 HWND g_customSciHandle;
 
+WNDPROC	wndProcNpp = NULL;
+
 // Status dummies 
 int nppLoaded = 0;    // Indicates NPP_READY has triggered
 int sciFocus = 1;     // Indicates the current focus is on the editor
@@ -314,7 +316,6 @@ void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires
     ::SendMessage(nppData._nppHandle,NPPM_DESTROYSCINTILLAHANDLE,0,(LPARAM)g_customSciHandle);
 
     if (!(pc.configInt[USE_NPP_SHORTKEY])) removehook();  // For compatibility mode
-    
     //delete [] g_snippetCache;
     
     if (g_dbOpen)
@@ -322,6 +323,8 @@ void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires
         sqlite3_close(g_db);  // This close the database when the plugin shutdown.
         g_dbOpen = false;
     }
+
+    ::SetWindowLongPtr(nppData._nppHandle, GWL_WNDPROC, (LPARAM)wndProcNpp); // Clean up subclassing
 
     pc.configCleanUp();
     
@@ -333,8 +336,6 @@ void commandMenuCleanUp()
     delete funcItem[g_tabActivateIndex]._pShKey;
     delete funcItem[g_showInsertionDlgIndex]._pShKey;
     
-    
-
 	// Don't forget to deallocate your shortcut here
 }
 
