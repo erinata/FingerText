@@ -27,7 +27,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-//#define TESTING
+#define TESTING
 
 #define VERSION_TEXT "0.5.52.0"
 #define VERSION_NUM 0,5,52,0
@@ -56,7 +56,7 @@ Usage Guide and Source code:\r\n\
            http://github.com/erinata/FingerText \r\n\r\n\
 "
 #ifdef TESTING
-#define MENU_LENGTH 21
+#define MENU_LENGTH 22
 #else
-#define MENU_LENGTH 16
+#define MENU_LENGTH 17
 #endif

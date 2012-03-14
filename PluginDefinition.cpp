@@ -73,9 +73,12 @@ int g_exportSnippetsIndex;
 int g_deleteAllSnippetsIndex;
 int g_TriggerTextCompletionIndex;
 int g_InsertHotspotIndex;
+int g_insertPreviousIndex;
 int g_settingsIndex;
 int g_quickGuideIndex;
 int g_aboutIndex;
+
+std::string lastTriggerText = "";
 
 
 // For compatibility mode
@@ -259,6 +262,7 @@ void commandMenuInit()
     g_deleteAllSnippetsIndex = setCommand(TEXT("Export and Delete All Snippets"), exportAndClearSnippets);
     setCommand();
     g_TriggerTextCompletionIndex = setCommand(TEXT("TriggerText Completion"), doTagComplete);
+    g_insertPreviousIndex = setCommand(TEXT("Insert Previous Snippet"), insertPrevious);
 //    g_InsertHotspotIndex =setCommand(TEXT("Insert a hotspot"), insertHotSpotSign);
     setCommand();
     g_settingsIndex = setCommand(TEXT("Settings"), showSettings);
@@ -5112,6 +5116,7 @@ bool triggerTag(int &posCurrent, int triggerLength)
 
             replaceTag(expanded, posCurrent, posBeforeTag);
             tagFound = true;
+            lastTriggerText = tag;
         }
 
         //delete [] fileType;
@@ -5255,6 +5260,14 @@ std::string getLangTagType()
     return langList[curLang];
 }
 
+void insertPrevious()
+{
+    //alert(lastTriggerText);
+    char* tag = new char[lastTriggerText.length()+1];
+    strcpy(tag,lastTriggerText.c_str());
+    diagActivate(tag);
+    delete [] tag;
+}
 
 void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* pathWide)
 {

@@ -156,6 +156,8 @@ int promptSaveSnippet(TCHAR* message = NULL);
 
 void triggerSave();
 
+void insertPrevious();
+
 void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* path = TEXT(""));
 
 
