@@ -3057,9 +3057,6 @@ void showPreview(bool top,bool insertion)
 
 std::vector<std::string> snippetTextBrokenDown(std::string editText, std::vector<std::string> params, char** tempTriggerText, char** snippetContent, int position)
 {
-
-    
-
     int location = 0;
     
     if (position<=editText.length())
@@ -3313,14 +3310,9 @@ void insertTagSign(int type)
     
 }
 
-
-
 bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
 {
     
-    //TODO: can use ::SendMessage(curScintilla, SCI_ENSUREVISIBLE, line-1, 0); to make sure that caret is visible after long snippet substitution.
-    //TODO: should abandon this `[SnippetInserting] method
-
     char *expanded_eolfix;
     int eolmode = ::SendScintilla(SCI_GETEOLMODE, 0, 0);
     char *eol[3] = {"\r\n","\r","\n"};
@@ -3337,7 +3329,11 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
     ::SendScintilla(SCI_REPLACETARGET, strlen(expanded_eolfix), reinterpret_cast<LPARAM>(expanded_eolfix));
 
     delete [] expanded_eolfix;
+    
+    ::SendScintilla(SCI_GOTOPOS,0,0);
+    int stopFound = searchNext("$[![]!]");
 
+    ::SendScintilla(SCI_GOTOPOS,0,0);
     searchNext("`[SnippetInserting]");
     int posEndOfInsertedText = ::SendScintilla(SCI_GETCURRENTPOS,0,0)+19;
 
@@ -3355,15 +3351,22 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
     }
     searchNext("`[SnippetInserting]");
     posEndOfInsertedText = ::SendScintilla(SCI_GETCURRENTPOS,0,0)+19;
-                    
+    
     ::SendScintilla(SCI_GOTOPOS,posBeforeTag,0);
     searchNext("[>END<]");
     int posEndOfSnippet = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
         
     ::SendScintilla(SCI_SETSELECTION,posEndOfSnippet,posEndOfInsertedText);
-    ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
+
+    if (stopFound<0)
+    {
+        ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"$[![]!]");
+    } else
+    {
+        ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
+    }
     
-	//::SendScintilla(SCI_GOTOPOS, posCurrent, 0);
+
     return true;
 }
 

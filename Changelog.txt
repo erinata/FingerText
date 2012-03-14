@@ -1,9 +1,13 @@
 changelog (for developer use only, include unreleased versions)
 
+0.5.54
+****** Fixed: for snippet without a stopping hotspot, a $[![]!] is automatically added. It fixed the problem of default value in the last hotspot, or option hotspot not working properly.
+
 0.5.53
 ****** clean up subclassing
 ****** Added: previous snippet
 ****** Added: keyword TRIGGERTEXT
+
 
 0.5.52
 - Fixed gray bug (solution by jvdanlio)

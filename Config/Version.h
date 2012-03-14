@@ -29,9 +29,9 @@
 
 #define TESTING
 
-#define VERSION_TEXT "0.5.52.0"
-#define VERSION_NUM 0,5,52,0
-#define VERSION_LINEAR 552
+#define VERSION_TEXT "0.5.54.0"
+#define VERSION_NUM 0,5,54,0
+#define VERSION_LINEAR 554
 #define VERSION_KEEP_CONFIG_START 549
 #define VERSION_STAGE "(Alpha)"
 #ifdef TESTING
@@ -46,7 +46,7 @@
 #define COPYRIGHT_TEXT "Copyright (C) 2011-2012"
 #define DESCRIPTION_TEXT "A snippet plugin for notepad++"
 
-#define DATE_TEXT "February 2012"
+#define DATE_TEXT "March 2012"
 #define AUTHOR_TEXT "Author: Tom Lam\r\n"
 #define EMAIL_TEXT "Email: erinata@gmail.com\r\n"
 #define ABOUT_TEXT "\
