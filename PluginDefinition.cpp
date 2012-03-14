@@ -133,10 +133,9 @@ const std::string langList[] = {"TXT","PHP","C","CPP","CS","OBJC","JAVA","RC",
                                 "AU3","CAML","ADA","VERILOG","MATLAB","HASKELL","INNO","",
                                 "CMAKE","YAML","COBOL","GUI4CLI","D","POWERSHELL","R"};
 
-
+// The word char settings for scope and triggertext
 const char* scopeWordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_:.|";
 const char* triggertextWordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
-
 char escapeWordChar[200];
 
 //For SETWIN
@@ -2056,13 +2055,31 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
         {
             ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)g_selectedText.c_str());
         }
-    } else if ((strcmp(hotSpotText,"TEMP") == 0) || (strcmp(hotSpotText,"TEMPFILE") == 0))
+    } else if (strcmp(hotSpotText,"TEMPFILE") == 0)
     {
         insertPath(g_fttempPath);
 
     } else if (strcmp(hotSpotText,"FILEFOCUS") == 0)
     {
         insertPath(g_currentFocusPath);
+
+    } else if (strncmp(hotSpotText,"TEMPFILE:",9)==0)
+    {
+        char* getTerm;
+        getTerm = new char[hotSpotTextLength];
+        strcpy(getTerm,hotSpotText+9);
+        std::string delimiter = toString(getTerm);
+        insertPath(g_fttempPath,delimiter);
+        delete [] getTerm;
+
+    } else if (strncmp(hotSpotText,"FILEFOCUS:",10)==0)
+    {
+        char* getTerm;
+        getTerm = new char[hotSpotTextLength];
+        strcpy(getTerm,hotSpotText+10);
+        std::string delimiter = toString(getTerm);
+        insertPath(g_currentFocusPath,delimiter);
+        delete [] getTerm;
 
     } else if (strncmp(hotSpotText,"SETFILE:",8) == 0)  //TODO: a lot of refactoring needed for the file series
     {
@@ -2349,6 +2366,15 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
     } else if (strcmp(hotSpotText,"DIRECTORY")==0)
     {
         insertNppPath(NPPM_GETCURRENTDIRECTORY);
+    } else if (strncmp(hotSpotText,"DIRECTORY:",10)==0)
+    {
+        char* getTerm;
+        getTerm = new char[hotSpotTextLength];
+        strcpy(getTerm,hotSpotText+10);
+        std::string delimiter = toString(getTerm);
+        insertNppPath(NPPM_GETCURRENTDIRECTORY,delimiter);
+        delete [] getTerm;
+
     } else if (strncmp(hotSpotText,"SLEEP:",6)==0)
     {
         char* getTerm;
@@ -2356,6 +2382,13 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
         strcpy(getTerm,hotSpotText+6);
         
         int sleepLength = ::atoi(getTerm);
+        if (sleepLength>60000)
+        {
+            sleepLength = 60000;
+        } else if (sleepLength<0)
+        {
+            sleepLength = 0;
+        }
         ::Sleep(sleepLength);
         ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
         delete [] getTerm;
@@ -2421,26 +2454,25 @@ void searchAndReplace(std::string key, std::string text, bool regexp)
     }
 }
 
-//TODO: insertpath and insertnpppath (and/or other insert function) need refactoring
-void insertPath(TCHAR* path)
+void insertPath(TCHAR* path, std::string delimiter)
 {
     char* pathText = toCharArray(path,(int)::SendScintilla(SCI_GETCODEPAGE, 0, 0));
-	//WideCharToMultiByte((int)::SendScintilla(SCI_GETCODEPAGE, 0, 0), 0, path, -1, pathText, MAX_PATH, NULL, NULL);
-    ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)pathText);
+    std::string pathTextString = toString(pathText);
+    findAndReplace(pathTextString,"\\",delimiter);
+    //findAndReplace(pathTextString,"\\","\\\\");
+    char* pathTextReplaced = toCharArray(pathTextString);
+    ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)pathTextReplaced);
+    delete [] pathTextReplaced;
     delete [] pathText;
 }
 
-void insertNppPath(int msg)
+void insertNppPath(int msg, std::string delimiter)
 {
 	TCHAR path[MAX_PATH];
 	::SendMessage(nppData._nppHandle, msg, 0, (LPARAM)path);
 
-    char* pathText = toCharArray(path,(int)::SendScintilla(SCI_GETCODEPAGE, 0, 0));
-	//char pathText[MAX_PATH];
-	//WideCharToMultiByte((int)::SendScintilla(SCI_GETCODEPAGE, 0, 0), 0, path, -1, pathText, MAX_PATH, NULL, NULL);
-	::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)pathText);
+    insertPath(path,delimiter);
 
-    delete [] pathText;
 }
 
 //void insertDateTime(bool date,int type, HWND &curScintilla)
@@ -5811,16 +5843,16 @@ void removehook()
 	UnhookWindowsHookEx(hook);
 }
 
-void testThread( void* pParams )
-{ 
-    //system("npp -multiInst");
-    for (int i = 0; i<100;i++)
-    {
-        SendScintilla(SCI_REPLACESEL,0,(LPARAM)toCharArray(toString((double)sciFocus)));
-        Sleep(1000);
-    }
-    
-}
+//void testThread( void* pParams )
+//{ 
+//    //system("npp -multiInst");
+//    for (int i = 0; i<100;i++)
+//    {
+//        SendScintilla(SCI_REPLACESEL,0,(LPARAM)toCharArray(toString((double)sciFocus)));
+//        Sleep(1000);
+//    }
+//    
+//}
 
 void testing2()
 {

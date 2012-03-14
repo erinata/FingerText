@@ -168,8 +168,8 @@ void updateLineCount(int count = -1);
 char* getDateTime(char *format, bool getDate = true, int flags = 0);
 
 //void insertDateTime(bool date,int type, HWND &curScintilla);
-void insertPath(TCHAR* path);
-void insertNppPath(int msg);
+void insertPath(TCHAR* path,std::string delimiter="\\");
+void insertNppPath(int msg,std::string delimiter="\\");
 
 void writeInsertMode(bool insert);
 
