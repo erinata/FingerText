@@ -1942,7 +1942,12 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
     //TODO: remove the GET series
     //TODO: all keywords should have a "no colon" version and show error message of "params needed"
 
-    if (strcmp(hotSpotText,"PASTE") == 0)
+    if (strcmp(hotSpotText,"TRIGGERTEXT") == 0) 
+    {
+        char* lastTriggerTextText = toCharArray(lastTriggerText);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)lastTriggerTextText);
+        delete [] lastTriggerTextText;
+    } else if (strcmp(hotSpotText,"PASTE") == 0)
     {
         ::SendScintilla(SCI_PASTE,0,0);
 	    

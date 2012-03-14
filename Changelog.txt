@@ -3,7 +3,7 @@ changelog (for developer use only, include unreleased versions)
 0.5.53
 ****** clean up subclassing
 ****** Added: previous snippet
-
+****** Added: keyword TRIGGERTEXT
 
 0.5.52
 - Fixed gray bug (solution by jvdanlio)
