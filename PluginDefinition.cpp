@@ -133,6 +133,12 @@ const std::string langList[] = {"TXT","PHP","C","CPP","CS","OBJC","JAVA","RC",
                                 "AU3","CAML","ADA","VERILOG","MATLAB","HASKELL","INNO","",
                                 "CMAKE","YAML","COBOL","GUI4CLI","D","POWERSHELL","R"};
 
+
+const char* scopeWordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_:.|";
+const char* triggertextWordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+
+char escapeWordChar[200];
+
 //For SETWIN
 HWND g_tempWindowHandle;
 wchar_t* g_tempWindowKey;
@@ -280,8 +286,23 @@ void commandMenuInit()
 
 void variablesInit()
 {
+    
+    if (wcslen(pc.configText[CUSTOM_ESCAPE_CHAR])>0)
+    {
+        char *customEscapeChar = toCharArray(pc.configText[CUSTOM_ESCAPE_CHAR]);
+        strncpy(escapeWordChar,customEscapeChar,20);
+        strcat(escapeWordChar,triggertextWordChar);
+        delete [] customEscapeChar;
+    } else
+    {
+        strcpy(escapeWordChar,triggertextWordChar);
+    }
+
+
     updateSnippetCount();
-    g_customSciHandle = (HWND)::SendMessage(nppData._nppHandle,NPPM_CREATESCINTILLAHANDLE,0,NULL);        
+    g_customSciHandle = (HWND)::SendMessage(nppData._nppHandle,NPPM_CREATESCINTILLAHANDLE,0,NULL); 
+
+
 }
 
 void nppReady()
@@ -719,16 +740,23 @@ bool getLineChecked(char **buffer, int lineNumber, TCHAR* errorText)
     {
         int tagPosLineEnd = ::SendScintilla(SCI_GETLINEENDPOSITION,lineNumber,0);
 
-        char* wordChar;
+        //char* wordChar;
+        //if (lineNumber==2)
+        //{
+        //    wordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_:.|";
+        //    
+        //} else //if (lineNumber==1)
+        //{
+        //    wordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+        //}
+
         if (lineNumber==2)
         {
-            wordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_:.|";
-            
-        } else //if (lineNumber==1)
+            ::SendScintilla(SCI_SETWORDCHARS, 0, (LPARAM)scopeWordChar);
+        } else
         {
-            wordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+            ::SendScintilla(SCI_SETWORDCHARS, 0, (LPARAM)triggertextWordChar);
         }
-        ::SendScintilla(SCI_SETWORDCHARS, 0, (LPARAM)wordChar);
         tagPosEnd = ::SendScintilla(SCI_WORDENDPOSITION,tagPosStart,0);
         ::SendScintilla(SCI_SETCHARSDEFAULT, 0, 0);
         //::SendMessage(curScintilla,SCI_SEARCHANCHOR,0,0);
@@ -3365,8 +3393,6 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
     {
         ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
     }
-    
-
     return true;
 }
 
@@ -3378,25 +3404,7 @@ int getCurrentTag(int posCurrent, char **buffer, int triggerLength)
     int posBeforeTag;
     if (triggerLength<=0)
     {
-        //TODO: global variable for word Char?
-        char wordChar[MAX_PATH]="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
-
-        //alertNumber(wcslen(pc.configText[CUSTOM_ESCAPE_CHAR]));
-        //TODO: potential performance improvement by forming the wordchar with escape char that the initialization
-        if (wcslen(pc.configText[CUSTOM_ESCAPE_CHAR])>0)
-        {
-            char *customEscapeChar = toCharArray(pc.configText[CUSTOM_ESCAPE_CHAR]);
-            strcat(wordChar,customEscapeChar);
-            delete [] customEscapeChar;
-        }
-        
-
-        //if (g_escapeChar == 1)
-        //{
-        //    strcat(wordChar,"<");
-        //}
-
-        ::SendScintilla(SCI_SETWORDCHARS, 0, (LPARAM)wordChar);
+        ::SendScintilla(SCI_SETWORDCHARS, 0, (LPARAM)escapeWordChar);
 	    posBeforeTag = static_cast<int>(::SendScintilla(SCI_WORDSTARTPOSITION, posCurrent, 1));
         ::SendScintilla(SCI_SETCHARSDEFAULT, 0, 0);
     } else
@@ -3406,15 +3414,6 @@ int getCurrentTag(int posCurrent, char **buffer, int triggerLength)
                 
     if (posCurrent - posBeforeTag < 100) // Max tag length 100
     {
-        
-
-        //*buffer = new char[(posCurrent - posBeforeTag) + 1];
-		//Sci_TextRange tagRange;
-		//tagRange.chrg.cpMin = posBeforeTag;
-		//tagRange.chrg.cpMax = posCurrent;
-		//tagRange.lpstrText = *buffer;
-        //
-	    //::SendScintilla(SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&tagRange));
         sciGetText(&*buffer, posBeforeTag, posCurrent);
 
 		length = (posCurrent - posBeforeTag);

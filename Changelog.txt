@@ -2,6 +2,8 @@ changelog (for developer use only, include unreleased versions)
 
 0.5.54
 ****** Fixed: for snippet without a stopping hotspot, a $[![]!] is automatically added. It fixed the problem of default value in the last hotspot, or option hotspot not working properly.
+****** improved performance in dealing with escape char
+****** Fixed: bug caused by too many escape chars, now limited to 20
 
 0.5.53
 ****** clean up subclassing
