@@ -285,18 +285,14 @@ void commandMenuInit()
 
 void variablesInit()
 {
-    
+    strcpy(escapeWordChar,triggertextWordChar);
+
     if (wcslen(pc.configText[CUSTOM_ESCAPE_CHAR])>0)
     {
         char *customEscapeChar = toCharArray(pc.configText[CUSTOM_ESCAPE_CHAR]);
-        strncpy(escapeWordChar,customEscapeChar,20);
-        strcat(escapeWordChar,triggertextWordChar);
+        strncat(escapeWordChar,customEscapeChar,20);
         delete [] customEscapeChar;
-    } else
-    {
-        strcpy(escapeWordChar,triggertextWordChar);
     }
-
 
     updateSnippetCount();
     g_customSciHandle = (HWND)::SendMessage(nppData._nppHandle,NPPM_CREATESCINTILLAHANDLE,0,NULL); 
@@ -1969,12 +1965,7 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
     //TODO: remove the GET series
     //TODO: all keywords should have a "no colon" version and show error message of "params needed"
 
-    if (strcmp(hotSpotText,"TRIGGERTEXT") == 0) 
-    {
-        char* lastTriggerTextText = toCharArray(lastTriggerText);
-        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)lastTriggerTextText);
-        delete [] lastTriggerTextText;
-    } else if (strcmp(hotSpotText,"PASTE") == 0)
+    if (strcmp(hotSpotText,"PASTE") == 0)
     {
         ::SendScintilla(SCI_PASTE,0,0);
 	    
@@ -2400,7 +2391,12 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
     } else if ((strncmp(hotSpotText,"COUNT_",6)==0) && (strncmp(hotSpotText+7,":",1)==0))
     {
         // TODO: fill in content for this COUNT keyword
-    } else
+    } else if (strcmp(hotSpotText,"TRIGGERTEXT") == 0) 
+    {
+        char* lastTriggerTextText = toCharArray(lastTriggerText);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)lastTriggerTextText);
+        delete [] lastTriggerTextText;
+    } else 
     {
         char* errorMessage = new char[hotSpotTextLength+40];
         if (hotSpotTextLength>0)
