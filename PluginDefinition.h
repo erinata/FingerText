@@ -148,6 +148,7 @@ void editSnippet();
 void deleteSnippet();
 void exportSnippetsOnly();
 void clearAllSnippets();
+void downloadStandardLibrary();
 void exportAndClearSnippets();
 bool exportSnippets(bool all = true);
 void importSnippets();

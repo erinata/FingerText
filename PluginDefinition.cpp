@@ -71,6 +71,7 @@ int g_selectionToSnippetIndex;
 int g_importSnippetsIndex;
 int g_exportSnippetsIndex;
 int g_deleteAllSnippetsIndex;
+int g_downloadStandardLibraryIndex;
 int g_TriggerTextCompletionIndex;
 int g_InsertHotspotIndex;
 int g_insertPreviousIndex;
@@ -267,10 +268,11 @@ void commandMenuInit()
     g_importSnippetsIndex = setCommand(TEXT("Import Snippets from ftd file"), importSnippets);
     g_exportSnippetsIndex = setCommand(TEXT("Export All Snippets"), exportSnippetsOnly);
     g_deleteAllSnippetsIndex = setCommand(TEXT("Export and Delete All Snippets"), exportAndClearSnippets);
+    //g_downloadStandardLibraryIndex = setCommand(TEXT("Download FingerText Standard Library"), downloadStandardLibrary);
     setCommand();
     g_TriggerTextCompletionIndex = setCommand(TEXT("TriggerText Completion"), doTagComplete);
     g_insertPreviousIndex = setCommand(TEXT("Insert Previous Snippet"), insertPrevious);
-//    g_InsertHotspotIndex =setCommand(TEXT("Insert a hotspot"), insertHotSpotSign);
+    //g_InsertHotspotIndex =setCommand(TEXT("Insert a hotspot"), insertHotSpotSign);
     setCommand();
     g_settingsIndex = setCommand(TEXT("Settings"), showSettings);
     
@@ -3810,6 +3812,12 @@ void setListTarget()
     
     insertionDlg.setListTarget();
 }
+
+void downloadStandardLibrary()
+{
+
+}
+
 
 void exportAndClearSnippets()
 {

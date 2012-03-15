@@ -1,4 +1,4 @@
-= FingerText (current version 0.5.53(Alpha))
+= FingerText (current version 0.5.55(Alpha))
 
 Tab triggered snippet plugin for Notepad++.
 
@@ -16,10 +16,10 @@ This plugin is still in Alpha stage so do expect that it can be buggy. However, 
 
 I guess most notepad++ users are using plugin manager. You can just go to Plugins>Plugin Manager>Show Plugin Manager and look for Fingertext to install this plugin.
 
-However if you would like to install it manually or the plugin manager is not providing the most updated version, you can download the file "FingerText - 0.5.53.zip" at http://sourceforge.net/projects/fingertext/files/Alpha%20Releases/FingerText%20-%200.5.53.zip/download
+However if you would like to install it manually or the plugin manager is not providing the most updated version, you can download the file "FingerText - 0.5.55.zip" at http://sourceforge.net/projects/fingertext/files/Alpha%20Releases/FingerText%20-%200.5.55.zip/download
 Unzip the package and copy the FingerText.dll to the plugins folder of Notepad++. This is the only file you need to run FingerText in notepad++.
 
-The readme.rdoc file is for your reference. And the FingerText0.5.53SampleSnippets.ftd is a file containing some sample snippets. (You need this if you want to follow the usage guide in this document)
+The readme.rdoc file is for your reference. And the FingerText0.5.55SampleSnippets.ftd is a file containing some sample snippets. (You need this if you want to follow the usage guide in this document)
 
 == Screenshots
 
@@ -37,9 +37,9 @@ http://github.com/downloads/erinata/FingerText/FingerText0.5.46_ScreenClip_4_lab
 
 You should have FingerText installed. If you are in doubt, go to the notepad++ menu, there should be "FingerText" under "Plugins".
 
-To import the sample snippets, go to notepad++ menu > plugin > FingerText > Import Snippets. Choose the file FingerText0.5.53SampleSnippets.ftd (which is the file you downloaded with the FingerText.dll) and all the sample snippets will be installed.
+To import the sample snippets, go to notepad++ menu > plugin > FingerText > Import Snippets. Choose the file FingerText0.5.55SampleSnippets.ftd (which is the file you downloaded with the FingerText.dll) and all the sample snippets will be installed.
 
-If you are using plugin Manager to download FingerText or you just cannot locate the sample snippet file, you can download it from http://github.com/downloads/erinata/FingerText/FingerText0.5.53SampleSnippets.ftd
+If you are using plugin Manager to download FingerText or you just cannot locate the sample snippet file, you can download it from http://github.com/downloads/erinata/FingerText/FingerText0.5.55SampleSnippets.ftd
 
 To verify you have imported the snippets correctly, go to notepad++ menu > Plugins > FingerText > Show SnippetDock. A Dialog with a list of available snippets should show up.
 
@@ -156,7 +156,7 @@ Everything is compatible.
 
 == Upgrading from any version between 0.5.20 and 0.5.35
 
-In version 0.5.53 after you triggered a option hotspot, you can use right/down arrow to move to next option, left/up arrow to move to previous option. Hit tab confirm the choice.
+In version 0.5.55 after you triggered a option hotspot, you can use right/down arrow to move to next option, left/up arrow to move to previous option. Hit tab confirm the choice.
 Also the option hotspot is not delimited by |~| anymore, it's using is simplier |. So $[![(opt)ABC|DEF|GHI]!] will define an hotspot with 3 options.
 
 Upgrading from any version between 0.5.0 and 0.5.18
@@ -186,8 +186,18 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 == Change log 
 (for the detail change log (including the development log) please refer to the CHANGELOG file in the repository)
 
-0.5.53
--
+0.5.55
+- use $[0[]0] to indicate final caret position in snippet. If $[0[]0] is not found in snippet, it will be added to the end of snippet automatically.
+- automatically navigate to next hotspot when (lis) hotspot is chosen.
+- Added: keyword hotspot LASTOPTION and LASTLISTITEM, which will yield the previously chosen option or list item respectively
+- Added: keyword DIRECTORY, TEMPFILE and FILEFOCUS now takes delimiter as a parameter. Therefore $[![(key)DIRECTORY]!] will show the current directory, and $[![(key)DIRECTORY:\\]!] will show the current directory with //, e.g. d:\\documents\\files.
+- Added: keyword TRIGGERTEXT, which will show the triggertext of the previously triggered snippet
+- Added: a menu item which will trigger the previously triggered snippet
+- clean up subclassing when Fingertext is closed
+- Fixed: bug caused by too many escape chars, now limited to 20
+- Fixed: last hotspot or option hotspot not working properly
+- updated snippet editor hint
+- improved performance in dealing with escape char
 
 0.5.52
 - various bug fixes
