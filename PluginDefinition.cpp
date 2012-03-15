@@ -3386,10 +3386,11 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
 
     delete [] expanded_eolfix;
     
-    ::SendScintilla(SCI_GOTOPOS,0,0);
+    ::SendScintilla(SCI_GOTOPOS,posBeforeTag,0);
     int stopFound = searchNext("$[![]!]");
+    //int stopFound = -1;
 
-    ::SendScintilla(SCI_GOTOPOS,0,0);
+    ::SendScintilla(SCI_GOTOPOS,posBeforeTag,0);
     searchNext("`[SnippetInserting]");
     int posEndOfInsertedText = ::SendScintilla(SCI_GETCURRENTPOS,0,0)+19;
 
