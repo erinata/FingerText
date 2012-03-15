@@ -202,6 +202,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             break;
 
         case SCN_AUTOCSELECTION:
+            recordLastListItem(notifyCode->text);
             //if (fingerTextListActive())
             //{
             //    ::SendScintilla(SCI_INSERTTEXT,(WPARAM)notifyCode->position,(LPARAM)notifyCode->text);

@@ -203,6 +203,8 @@ void closeNonSessionTabs();
 
 void updateOptionCurrent(bool toNext);
 void cleanOptionItem();
+void recordOptionText();
+void recordLastListItem(const char* item = "");
 void turnOffOptionMode();
 void turnOnOptionMode();
 void optionNavigate(bool toNext);

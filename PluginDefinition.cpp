@@ -79,7 +79,8 @@ int g_quickGuideIndex;
 int g_aboutIndex;
 
 std::string lastTriggerText = "";
-
+std::string lastOption = "";
+std::string lastListItem = "";
 
 // For compatibility mode
 HHOOK hook = NULL;
@@ -2396,6 +2397,16 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
         char* lastTriggerTextText = toCharArray(lastTriggerText);
         ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)lastTriggerTextText);
         delete [] lastTriggerTextText;
+    } else if (strcmp(hotSpotText,"LASTOPTION") == 0) 
+    {
+        char* lastOptionText = toCharArray(lastOption);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)lastOptionText);
+        delete [] lastOptionText;
+    } else if (strcmp(hotSpotText,"LASTLISTITEM") == 0) 
+    {
+        char* lastListItemText = toCharArray(lastListItem);
+        ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)lastListItemText);
+        delete [] lastListItemText;
     } else 
     {
         char* errorMessage = new char[hotSpotTextLength+40];
@@ -4472,10 +4483,26 @@ void updateOptionCurrent(bool toNext)
     //return g_optionArray[g_optionCurrent];
 }
 
+void recordOptionText()
+{
+    char* optionText;
+    sciGetText(&optionText,-1,-1);
+    lastOption = toString(optionText);
+    delete [] optionText;
+
+}
+
+void recordLastListItem(const char* item)
+{
+    char* lastListItemCharArray = toCharArray(item);
+    lastListItem = toString(lastListItemCharArray);
+    delete [] lastListItemCharArray;
+}
+
 void turnOffOptionMode()
 {
     
-    //if (g_optionMode) alert();
+    if (g_optionMode) recordOptionText();
     g_optionMode = false;
 }
 
