@@ -189,12 +189,14 @@ void DockingDlg::setupHotspotCombo()
 {
     HWND combo = GetDlgItem(_hSelf, IDC_COMBO_HOTSPOT);
 
+    SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)TEXT("Final Caret Position $[0[]0]"));
     SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)TEXT("Regular Hotspot $[![]!]"));
     SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)TEXT("Keyword (key)"));
     SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)TEXT("Chain Snippet (cha)"));
     SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)TEXT("Command (run)"));
     SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)TEXT("Option (opt)"));
-    SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)TEXT("List (list)"));
+    SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)TEXT("List (lis)"));
+    SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)TEXT("Evaluation (eva)"));
     SendMessage(combo, CB_ADDSTRING, 0, (LPARAM)TEXT("End of Snippet [>END<]"));
     SendMessage(combo, CB_SETCURSEL, 0, 0);
 

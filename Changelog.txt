@@ -1,5 +1,13 @@
 changelog (for developer use only, include unreleased versions)
 
+0.5.55
+****** Add $[0[]0] as the lowest priority hotspot
+****** change the automatically added hotspot to $[0[]0]
+****** navigate to next hotspot when (lis) hotspot is chosen.
+****** Add (eva) and final caret location in snippet editor
+****** Changed snippet editor hint text
+****** Changed: hotspot will be inserted to the start of snippet if the caret is not at the snippet content but the insert button is clicked on the snippet dock
+
 0.5.54.3
 ****** Added: keyword hotspot LASTOPTION and LASTLISTITEM
 

@@ -118,9 +118,10 @@ int g_optionCurrent = 0;
 std::vector<std::string> g_optionArray;
 
 // List of acceptable tagSigns
-char *g_tagSignList[] = {"$[![","$[1[","$[2[","$[3["};
-char *g_tagTailList[] = {"]!]","]1]","]2]","]3]"};
-int g_listLength = 4;
+char *g_tagSignList[] = {"$[0[","$[![","$[1[","$[2[","$[3["};
+char *g_tagTailList[] = {"]0]","]!]","]1]","]2]","]3]"};
+char* stopCharArray;
+int g_listLength = 5;
 
 //For params insertion
 std::vector<std::string> g_hotspotParams;
@@ -286,8 +287,11 @@ void commandMenuInit()
 
 void variablesInit()
 {
-    strcpy(escapeWordChar,triggertextWordChar);
+    stopCharArray = new char[strlen(g_tagSignList[0])+strlen(g_tagTailList[0])+1];
+    strcpy(stopCharArray,g_tagSignList[0]);
+    strcat(stopCharArray,g_tagTailList[0]);
 
+    strcpy(escapeWordChar,triggertextWordChar);
     if (wcslen(pc.configText[CUSTOM_ESCAPE_CHAR])>0)
     {
         char *customEscapeChar = toCharArray(pc.configText[CUSTOM_ESCAPE_CHAR]);
@@ -487,7 +491,7 @@ void selectionToSnippet(bool forceNew)
         withSelection = true;
     } else
     {
-        selection = "This is some stub text for the content of your new snippet.\r\nPlease replace the stub text with the content that you want to show when the snippet is triggered.\r\nEnjoy!\r\n";
+        selection = "This is some stub text for the content of your new snippet.\r\nPlease replace the stub text with the content that you want to show when the snippet is triggered.\r\n\r\nEnjoy!\r\n";
     }
     
     //::SendMessage(curScintilla,SCI_GETSELTEXT,0, reinterpret_cast<LPARAM>(selection));
@@ -532,12 +536,8 @@ void closeNonSessionTabs()
 
 void closeEditor()
 {
-
     if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
-    {
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
-    }
-
 }
 
 void insertSnippet()
@@ -2579,7 +2579,6 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
 
     int tagSpot = searchNext(tagTail);    // Find the tail first so that nested snippets are triggered correctly
     
-
 	if (tagSpot >= 0)
 	{
         if (pc.configInt[PRESERVE_STEPS] == 0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
@@ -3294,81 +3293,97 @@ void insertTagSign(int type)
         int posStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
         int lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION, posStart, 0);
 
-        if (lineCurrent>=3)
+        if (lineCurrent<3) ::SendScintilla(SCI_GOTOLINE,3,0);
+        
+
+        int start = -1;
+        int end = -1;
+
+        switch (type)
         {
-
-            int start = -1;
-            int end = -1;
-
-            switch (type)
+            case 0:
             {
+                //TODO: Fingertext should check whether a final caret position exists or not
+                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"$[0[]0]");
+                start = posStart;
+                end = posStart;
+                break;
+            }
 
-                case 0:
-                {
-                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"$[![default]!]");
-                    start = posStart + 4;
-                    end = posStart + 11;
-                    break;
-                }
+            case 1:
+            {
+                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"$[![default]!]");
+                start = posStart + 4;
+                end = posStart + 11;
+                break;
+            }
 
-                case 1:
-                {
-                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"$[![(key)SOMEKEYWORD]!]");
-                    start = posStart + 9;
-                    end = posStart + 20;
-                    break;
-                }
+            case 2:
+            {
+                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"$[![(key)SOMEKEYWORD]!]");
+                start = posStart + 9;
+                end = posStart + 20;
+                break;
+            }
 
-                case 2:
-                {
-                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"$[![(cha)snippetname]!]");
-                    start = posStart + 9;
-                    end = posStart + 20;
-                    break;
-
-                }
-
-                case 3:
-                {
-                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"$[![(run)somecommand]!]");
-                    start = posStart + 9;
-                    end = posStart + 20;
-                    break;
-
-                }
-                case 4:
-                {
-                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"$[![(opt)option1|option2|option3]!]");
-                    start = posStart + 9;
-                    end = posStart + 13;
-                    break;
-
-                }
-                case 5:
-                {
-                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"$[![(lis)listitem1|listitem2|listitem3]!]");
-                    start = posStart + 9;
-                    end = posStart + 18;
-                    break;
-
-                }
-                case 6:
-                {
-                    ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"[>END<]");
-                    start = posStart;
-                    end = posStart;
-                    break;
-
-                }
+            case 3:
+            {
+                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"$[![(cha)snippetname]!]");
+                start = posStart + 9;
+                end = posStart + 20;
+                break;
 
             }
-            if (start>=0) ::SendScintilla(SCI_SETSEL,start,end);
-        } else
-        {
-            ::showMessageBox(TEXT("Hotspots can be inserted into the content of a snippet only."));
+
+            case 4:
+            {
+                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"$[![(run)somecommand]!]");
+                start = posStart + 9;
+                end = posStart + 20;
+                break;
+
+            }
+            case 5:
+            {
+                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"$[![(opt)option1|option2|option3]!]");
+                start = posStart + 9;
+                end = posStart + 13;
+                break;
+
+            }
+            case 6:
+            {
+                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"$[![(lis)listitem1|listitem2|listitem3]!]");
+                start = posStart + 9;
+                end = posStart + 18;
+                break;
+
+            }
+            case 7:
+            {
+                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"$[![(eva)1+2-3*4/5]!]");
+                start = posStart + 9;
+                end = posStart + 18;
+                break;
+            }
+            case 8:
+            {
+                ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"[>END<]");
+                start = posStart;
+                end = posStart;
+                break;
+
+            }
 
         }
-
+        if (start>=0) ::SendScintilla(SCI_SETSEL,start,end);
+         
+        //else
+        //{
+        //    ::showMessageBox(TEXT("Hotspots can be inserted into the content of a snippet only."));
+        //
+        //}
+        //
     } else
     {
         ::showMessageBox(TEXT("Hotspots can be inserted only when you are editing snippets."));
@@ -3398,7 +3413,8 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
     delete [] expanded_eolfix;
     
     ::SendScintilla(SCI_GOTOPOS,posBeforeTag,0);
-    int stopFound = searchNext("$[![]!]");
+    
+    int stopFound = searchNext(stopCharArray);
     //int stopFound = -1;
 
     ::SendScintilla(SCI_GOTOPOS,posBeforeTag,0);
@@ -3428,11 +3444,14 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
 
     if (stopFound<0)
     {
-        ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"$[![]!]");
+        ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)stopCharArray);
     } else
     {
         ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
     }
+
+    delete [] stopCharArray;
+
     return true;
 }
 
@@ -4395,7 +4414,7 @@ __________________________________________________________________________\r\n\
  Triggertext is the text you type to trigger the snippets.\r\n\
  e.g. \"npp\"(without quotes) means the snippet is triggered \r\n\
  when you type npp and hit tab)\r\n\
-__________________________________________________________________________\r\n\r\n\r\n\r\n\
+__________________________________________________________________________\r\n\r\n\r\n\r\n\r\n\
        =============   TriggerText   =============                        ");
             } else if (lineCurrent == 2)
             {
@@ -4404,20 +4423,21 @@ __________________________________________________________________________\r\n\
  Snippet Editor Hint: \r\n\r\n\
  Scope determines where the snippet is available.\r\n\
  e.g. \"GLOBAL\"(without quotes) for globally available snippets.\r\n\
- \".cpp\"(without quotes) means available in .cpp documents and\r\n\
+ \"Ext:cpp\"(without quotes) means available in .cpp documents and\r\n\
  \"Lang:HTML\"(without quotes) for all html documents.\r\n\
-__________________________________________________________________________\r\n\r\n\r\n\
+__________________________________________________________________________\r\n\r\n\r\n\r\n\
        =============   TriggerText   =============                        ");
             } else
             {
                 ::SendScintilla(SCI_ANNOTATIONSETTEXT, 0, (LPARAM)"\
 __________________________________________________________________________\r\n\
  Snippet Editor Hint: \r\n\r\n\
- Snippet Content is the text that is inserted to the editor when \r\n\
- a snippet is triggered.\r\n\
- It can be as long as many paragraphs or just several words.\r\n\
- Remember to place an [>END<] at the end of the snippet.\r\n\
-__________________________________________________________________________\r\n\r\n\r\n\
+ Snippet Content is the text that is inserted to the editor\r\n\
+ when a snippet is triggered.\r\n\
+ It can be as long as many paragraphs or just several words.\r\n\r\n\
+ Place a $[0[]0] to set the final location of the caret.\r\n\
+ Remember to place an [>END<] at the very end of the snippet.\r\n\
+__________________________________________________________________________\r\n\r\n\
        =============   TriggerText   =============                        ");
             }
 
@@ -5693,10 +5713,10 @@ void tabActivate()
                 {
 
                     if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
-                    //g_optionMode = false;
                     turnOffOptionMode();
                     ::SendScintilla(SCI_GOTOPOS,g_optionEndPosition,0);
-                    snippetHintUpdate();
+                    
+                    //snippetHintUpdate();
                 } else
                 {             
 

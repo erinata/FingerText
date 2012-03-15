@@ -202,13 +202,17 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             break;
 
         case SCN_AUTOCSELECTION:
-            recordLastListItem(notifyCode->text);
-            //if (fingerTextListActive())
-            //{
-            //    ::SendScintilla(SCI_INSERTTEXT,(WPARAM)notifyCode->position,(LPARAM)notifyCode->text);
-            //    ::SendScintilla(SCI_AUTOCCANCEL,0,0);
-            //    //hotSpotNavigation();
-            //}
+            
+            if (fingerTextListActive())
+            {
+                recordLastListItem(notifyCode->text);
+                //::SendScintilla(SCI_INSERTTEXT,(WPARAM)notifyCode->position,(LPARAM)notifyCode->text);
+                //::SendScintilla(SCI_AUTOCCANCEL,0,0);
+                hotSpotNavigation();
+            }
+            break;
+        case SCN_AUTOCCANCELLED:
+            fingerTextListActive();
             break;
         // TODO: consider using SC_MOD_CHANGEANNOTATION to shutdown use of annotation in snippet editing mode
     }
