@@ -115,6 +115,8 @@ Hotspots are indicated by $[![Whatever Text]!]. This "Whatever Text" can be a hi
 
 Notice that hotspots with the same name will be highlighted at the same time. Try editing the snippet "for" which you have triggered in previous section. You can see that there are a bunch of $[![(var)]!], which will be highlighted simultaneously when the snippet is triggered.
 
+You may also add one $[0[]0] in your snippet. This indicates the final caret position, which means where you want the caret to locate after you have navigate through all the hotspots.
+
 Anything after [>END<] will not be inserted into the document so you can write comment about the snippet there.
 
 Chinese characters are supported. You can try it by triggering the snippet "chinese". All snippets should be encoded in UTF-8 and being triggered in UTF-8 document. Notice that Chinese character tag names are not supported. Actually sometimes it works sometimes it doesn't so it is not officially supported. 
