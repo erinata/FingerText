@@ -352,6 +352,8 @@ void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires
     }
 
     ::SetWindowLongPtr(nppData._nppHandle, GWL_WNDPROC, (LPARAM)wndProcNpp); // Clean up subclassing
+    
+    delete [] stopCharArray;
 
     pc.configCleanUp();
     
@@ -3416,6 +3418,8 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
     
     ::SendScintilla(SCI_GOTOPOS,posBeforeTag,0);
     
+     //alert(stopCharArray);
+
     int stopFound = searchNext(stopCharArray);
     //int stopFound = -1;
 
@@ -3452,7 +3456,7 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
         ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
     }
 
-    delete [] stopCharArray;
+    //delete [] stopCharArray;
 
     return true;
 }
