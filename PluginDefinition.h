@@ -192,6 +192,7 @@ bool diagActivate(char* tag);
 void triggerDiagInsertion();
 
 void tabActivate();
+void doTabActivate(bool navOnly = false);
 
 std::vector<std::string> smartSplit(int start, int end, char delimiter, int parts = 0);
 

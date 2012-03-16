@@ -205,10 +205,12 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             
             if (fingerTextListActive())
             {
+                
                 recordLastListItem(notifyCode->text);
                 //::SendScintilla(SCI_INSERTTEXT,(WPARAM)notifyCode->position,(LPARAM)notifyCode->text);
                 //::SendScintilla(SCI_AUTOCCANCEL,0,0);
-                hotSpotNavigation();
+                //hotSpotNavigation();
+                doTabActivate(true);
             }
             break;
         case SCN_AUTOCCANCELLED:

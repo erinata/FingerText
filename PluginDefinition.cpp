@@ -79,9 +79,9 @@ int g_settingsIndex;
 int g_quickGuideIndex;
 int g_aboutIndex;
 
-std::string lastTriggerText = "";
-std::string lastOption = "";
-std::string lastListItem = "";
+std::string g_lastTriggerText = "";
+std::string g_lastOption = "";
+std::string g_lastListItem = "";
 
 // For compatibility mode
 HHOOK hook = NULL;
@@ -105,7 +105,7 @@ int g_editorLineCount;
 
 std::string g_snippetCount = "";
 
-bool fingerTextList;
+bool g_fingerTextList;
 
 int g_lastTriggerPosition = 0;
 std::string g_customClipBoard = "";
@@ -121,7 +121,7 @@ std::vector<std::string> g_optionArray;
 // List of acceptable tagSigns
 char *g_tagSignList[] = {"$[0[","$[![","$[1[","$[2[","$[3["};
 char *g_tagTailList[] = {"]0]","]!]","]1]","]2]","]3]"};
-char* stopCharArray;
+char* g_stopCharArray;
 int g_listLength = 5;
 
 //For params insertion
@@ -289,9 +289,9 @@ void commandMenuInit()
 
 void variablesInit()
 {
-    stopCharArray = new char[strlen(g_tagSignList[0])+strlen(g_tagTailList[0])+1];
-    strcpy(stopCharArray,g_tagSignList[0]);
-    strcat(stopCharArray,g_tagTailList[0]);
+    g_stopCharArray = new char[strlen(g_tagSignList[0])+strlen(g_tagTailList[0])+1];
+    strcpy(g_stopCharArray,g_tagSignList[0]);
+    strcat(g_stopCharArray,g_tagTailList[0]);
 
     strcpy(escapeWordChar,triggertextWordChar);
     if (wcslen(pc.configText[CUSTOM_ESCAPE_CHAR])>0)
@@ -353,7 +353,7 @@ void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires
 
     ::SetWindowLongPtr(nppData._nppHandle, GWL_WNDPROC, (LPARAM)wndProcNpp); // Clean up subclassing
     
-    delete [] stopCharArray;
+    delete [] g_stopCharArray;
 
     pc.configCleanUp();
     
@@ -2398,17 +2398,17 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
         // TODO: fill in content for this COUNT keyword
     } else if (strcmp(hotSpotText,"TRIGGERTEXT") == 0) 
     {
-        char* lastTriggerTextText = toCharArray(lastTriggerText);
+        char* lastTriggerTextText = toCharArray(g_lastTriggerText);
         ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)lastTriggerTextText);
         delete [] lastTriggerTextText;
     } else if (strcmp(hotSpotText,"LASTOPTION") == 0) 
     {
-        char* lastOptionText = toCharArray(lastOption);
+        char* lastOptionText = toCharArray(g_lastOption);
         ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)lastOptionText);
         delete [] lastOptionText;
     } else if (strcmp(hotSpotText,"LASTLISTITEM") == 0) 
     {
-        char* lastListItemText = toCharArray(lastListItem);
+        char* lastListItemText = toCharArray(g_lastListItem);
         ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)lastListItemText);
         delete [] lastListItemText;
     } else 
@@ -2556,9 +2556,9 @@ char* getDateTime(char *format, bool getDate, int flags)
 
 bool fingerTextListActive()
 {
-    if (fingerTextList)
+    if (g_fingerTextList)
     {
-        fingerTextList = false;
+        g_fingerTextList = false;
         return true;
     } else
     {
@@ -2596,7 +2596,7 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
 
             if (strncmp(hotSpotText,"(lis)",5) == 0)
             {
-                fingerTextList = true;
+                g_fingerTextList = true;
                 ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
 
                 ::SendScintilla(SCI_GOTOPOS,firstPos,0);
@@ -3418,9 +3418,9 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
     
     ::SendScintilla(SCI_GOTOPOS,posBeforeTag,0);
     
-     //alert(stopCharArray);
+     //alert(g_stopCharArray);
 
-    int stopFound = searchNext(stopCharArray);
+    int stopFound = searchNext(g_stopCharArray);
     //int stopFound = -1;
 
     ::SendScintilla(SCI_GOTOPOS,posBeforeTag,0);
@@ -3450,13 +3450,13 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
 
     if (stopFound<0)
     {
-        ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)stopCharArray);
+        ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)g_stopCharArray);
     } else
     {
         ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
     }
 
-    //delete [] stopCharArray;
+    //delete [] g_stopCharArray;
 
     return true;
 }
@@ -4519,7 +4519,7 @@ void recordOptionText()
 {
     char* optionText;
     sciGetText(&optionText,-1,-1);
-    lastOption = toString(optionText);
+    g_lastOption = toString(optionText);
     delete [] optionText;
 
 }
@@ -4527,7 +4527,7 @@ void recordOptionText()
 void recordLastListItem(const char* item)
 {
     char* lastListItemCharArray = toCharArray(item);
-    lastListItem = toString(lastListItemCharArray);
+    g_lastListItem = toString(lastListItemCharArray);
     delete [] lastListItemCharArray;
 }
 
@@ -5211,7 +5211,7 @@ bool triggerTag(int &posCurrent, int triggerLength)
 
             replaceTag(expanded, posCurrent, posBeforeTag);
             tagFound = true;
-            lastTriggerText = tag;
+            g_lastTriggerText = tag;
         }
 
         //delete [] fileType;
@@ -5357,9 +5357,9 @@ std::string getLangTagType()
 
 void insertPrevious()
 {
-    //alert(lastTriggerText);
-    char* tag = new char[lastTriggerText.length()+1];
-    strcpy(tag,lastTriggerText.c_str());
+    //alert(g_lastTriggerText);
+    char* tag = new char[g_lastTriggerText.length()+1];
+    strcpy(tag,g_lastTriggerText.c_str());
     diagActivate(tag);
     delete [] tag;
 }
@@ -5606,7 +5606,7 @@ bool diagActivate(char* tag)
                 if (g_editorView == false)
                 {
                     int i;
-                    if (!tagFound) 
+                    if (!tagFound) //TODO: as tagFound is checked to be true 10 lines ago.....there is something wrong here?
                     {
 
                         i = g_listLength-1;
@@ -5659,14 +5659,14 @@ bool diagActivate(char* tag)
                         i--;
                     } while ((navSpot <= 0) && (i >= 0));
 
-                    if (!((navSpot > 0) || (dynamicSpot)))
+                    if ((!((navSpot > 0) || (dynamicSpot))) && (outBound))
                     {
                         int prevPos = g_lastTriggerPosition;
                         do
                         {
                             g_lastTriggerPosition = prevPos;
                             prevPos = searchPrev("\\$\\[.\\[",true);
-                        } while (prevPos>0);
+                        } while (prevPos>=0);
 
                         //::SendScintilla(SCI_GOTOPOS,0,0);
                         //g_lastTriggerPosition = 0;
@@ -5722,6 +5722,11 @@ bool diagActivate(char* tag)
 
 void tabActivate()
 {
+    doTabActivate();
+}
+
+void doTabActivate(bool navOnly)
+{
     if (sciFocus)
     {
         //if (((g_enable==false) || (g_rectSelection==true) || (::SendScintilla(SCI_AUTOCACTIVE,0,0))) && (!g_optionMode))
@@ -5767,7 +5772,6 @@ void tabActivate()
 
                 if (g_optionMode)
                 {
-
                     if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
                     turnOffOptionMode();
                     ::SendScintilla(SCI_GOTOPOS,g_optionEndPosition,0);
@@ -5776,7 +5780,7 @@ void tabActivate()
                 } else
                 {             
 
-                    if (posSelectionStart==posSelectionEnd) tagFound = triggerTag(posCurrent); 
+                    if ((posSelectionStart==posSelectionEnd) && (!navOnly)) tagFound = triggerTag(posCurrent); 
                     if (tagFound)
                     {
                         //::SendScintilla(SCI_AUTOCCANCEL,0,0);
@@ -5835,7 +5839,6 @@ void tabActivate()
                         }
                     
                     }
-                    //TODO: cater more level of priority
                     //TODO: Params inertion will stop when navSpot is true, so it is not working properly under differnt level of priority
                     //      Or in other words it only work for the highest existing level of priority
                     
@@ -5859,12 +5862,12 @@ void tabActivate()
                     
                     if ((!((navSpot > 0) || (dynamicSpot))) && (outBound))
                     {
-                        int prevPos = g_lastTriggerPosition;
+                        int prevPos = g_lastTriggerPosition; //TODO: should be able to restructure and use the prevHotspotPos defined before
                         do
                         {
                             g_lastTriggerPosition = prevPos;
                             prevPos = searchPrev("\\$\\[.\\[",true);
-                        } while (prevPos>0);
+                        } while (prevPos>=0);
 
                         //::SendScintilla(SCI_GOTOPOS,0,0);
                         //g_lastTriggerPosition = 0;

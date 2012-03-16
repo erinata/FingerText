@@ -1,5 +1,10 @@
 changelog (for developer use only, include unreleased versions)
 
+0.5.57
+****** Fixed: error in finding previous hotspot when the hotspot is located at the beginning of the document
+****** Fixed: error causing fingertext do not navigate to another hotspot after choice in (lis)
+****** prefix global variable with g_
+
 0.5.56
 - Fixed: critical bug of crashing npp when triggering snippets
 - Fixed: More refined solution of hotspot navigation priority when the user trigger a snippet in the middle of another snippet
