@@ -5576,8 +5576,6 @@ bool diagActivate(char* tag)
             g_selectedText = selectedText;
             delete [] selectedText;
 
-            
-
 
             SendScintilla(SCI_REPLACESEL,0,(LPARAM)tag);
 
@@ -5602,26 +5600,43 @@ bool diagActivate(char* tag)
                 int navSpot = 0;
                 bool dynamicSpotTemp = false;
                 bool dynamicSpot = false;
+                bool outBound = false;
+                int prevHotspotPos = -1;
 
                 if (g_editorView == false)
                 {
                     int i;
                     if (!tagFound) 
                     {
+
                         i = g_listLength-1;
                         if (posCurrent > g_lastTriggerPosition)
                         {
                             do
                             {
                                 //TODO: limit the search to g_lastTriggerPosition ?       
-                                if (searchPrev(g_tagSignList[i]) >= 0)
+                                prevHotspotPos = searchPrev(g_tagSignList[i]);
+
+                                
+
+                                if (prevHotspotPos >= 0)
                                 {
+                                    if (prevHotspotPos < g_lastTriggerPosition)
+                                    {
+                                        outBound = true;
+                                    }
+                                    
                                     ::SendScintilla(SCI_GOTOPOS,g_lastTriggerPosition,0);
                                     posCurrent = g_lastTriggerPosition;
+                    
+                                    //posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+                                    //posCurrent = 0;
+                                    //g_lastTriggerPosition = posCurrent;
                                     break;   
                                 }
                                 i--;
                             } while (i>=0);
+
                         }
 
                     }
@@ -5643,7 +5658,37 @@ bool diagActivate(char* tag)
                         
                         i--;
                     } while ((navSpot <= 0) && (i >= 0));
-                    
+
+                    if (!((navSpot > 0) || (dynamicSpot)))
+                    {
+                        int prevPos = g_lastTriggerPosition;
+                        do
+                        {
+                            g_lastTriggerPosition = prevPos;
+                            prevPos = searchPrev("\\$\\[.\\[",true);
+                        } while (prevPos>0);
+
+                        //::SendScintilla(SCI_GOTOPOS,0,0);
+                        //g_lastTriggerPosition = 0;
+                        posCurrent = g_lastTriggerPosition;
+
+                        i = g_listLength - 1;
+                        do
+                        {
+                            if (dynamicSpot)
+                            {
+                                dynamicHotspot(posCurrent,g_tagSignList[i],g_tagTailList[i]);
+                            } else
+                            {
+                                dynamicSpot = dynamicHotspot(posCurrent,g_tagSignList[i],g_tagTailList[i]);
+                            }
+                            ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
+                            
+                            navSpot = hotSpotNavigation(g_tagSignList[i],g_tagTailList[i]);
+                            
+                            i--;
+                        } while ((navSpot <= 0) && (i >= 0));
+                    }
                     //TODO: this line is position here so the priority spot can be implement, but this cause the 
                     //      1st hotspot not undoable when the snippet is triggered. More investigation on how to
                     //      manipulate the undo list is required to make these 2 features compatible
@@ -5674,7 +5719,6 @@ bool diagActivate(char* tag)
      }
      return retVal;
 }
-
 
 void tabActivate()
 {
@@ -5753,6 +5797,8 @@ void tabActivate()
                 int navSpot = 0;
                 bool dynamicSpotTemp = false;
                 bool dynamicSpot = false;
+                bool outBound = false;
+                int prevHotspotPos = -1;
 
                 if (g_editorView == false)
                 {
@@ -5765,22 +5811,36 @@ void tabActivate()
                             do
                             {
                                 //TODO: limit the search to g_lastTriggerPosition ?       
-                                if (searchPrev(g_tagSignList[i]) >= 0)
+                                prevHotspotPos = searchPrev(g_tagSignList[i]);
+
+                                
+
+                                if (prevHotspotPos >= 0)
                                 {
+                                    if (prevHotspotPos < g_lastTriggerPosition)
+                                    {
+                                        outBound = true;
+                                    }
+                                    
                                     ::SendScintilla(SCI_GOTOPOS,g_lastTriggerPosition,0);
                                     posCurrent = g_lastTriggerPosition;
+                    
+                                    //posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+                                    //posCurrent = 0;
+                                    //g_lastTriggerPosition = posCurrent;
                                     break;   
                                 }
                                 i--;
                             } while (i>=0);
                         }
-
+                    
                     }
                     //TODO: cater more level of priority
                     //TODO: Params inertion will stop when navSpot is true, so it is not working properly under differnt level of priority
                     //      Or in other words it only work for the highest existing level of priority
-                    i = g_listLength - 1;
                     
+                    
+                    i = g_listLength - 1;
                     do
                     {
                         if (dynamicSpot)
@@ -5796,6 +5856,37 @@ void tabActivate()
                         
                         i--;
                     } while ((navSpot <= 0) && (i >= 0));
+                    
+                    if ((!((navSpot > 0) || (dynamicSpot))) && (outBound))
+                    {
+                        int prevPos = g_lastTriggerPosition;
+                        do
+                        {
+                            g_lastTriggerPosition = prevPos;
+                            prevPos = searchPrev("\\$\\[.\\[",true);
+                        } while (prevPos>0);
+
+                        //::SendScintilla(SCI_GOTOPOS,0,0);
+                        //g_lastTriggerPosition = 0;
+                        posCurrent = g_lastTriggerPosition;
+
+                        i = g_listLength - 1;
+                        do
+                        {
+                            if (dynamicSpot)
+                            {
+                                dynamicHotspot(posCurrent,g_tagSignList[i],g_tagTailList[i]);
+                            } else
+                            {
+                                dynamicSpot = dynamicHotspot(posCurrent,g_tagSignList[i],g_tagTailList[i]);
+                            }
+                            ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
+                            
+                            navSpot = hotSpotNavigation(g_tagSignList[i],g_tagTailList[i]);
+                            
+                            i--;
+                        } while ((navSpot <= 0) && (i >= 0));
+                    }
                     
                     //TODO: this line is position here so the priority spot can be implement, but this cause the 
                     //      1st hotspot not undoable when the snippet is triggered. More investigation on how to
@@ -5913,9 +6004,11 @@ void removehook()
 void testing2()
 {
     alert("testing2");
-    ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
-    int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
-    ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
+    
+    
+    //::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
+    //int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
+    //::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
 
 
 

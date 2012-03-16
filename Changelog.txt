@@ -1,5 +1,9 @@
 changelog (for developer use only, include unreleased versions)
 
+0.5.56
+- Fixed: critical bug of crashing npp when triggering snippets
+- Fixed: More refined solution of hotspot navigation priority when the user trigger a snippet in the middle of another snippet
+
 0.5.55
 - Add $[0[]0] as the lowest priority hotspot
 - change the automatically added hotspot to $[0[]0]
