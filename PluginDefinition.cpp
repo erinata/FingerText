@@ -3419,13 +3419,9 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
     ::SendScintilla(SCI_REPLACETARGET, strlen(expanded_eolfix), reinterpret_cast<LPARAM>(expanded_eolfix));
 
     delete [] expanded_eolfix;
-    
-    ::SendScintilla(SCI_GOTOPOS,posBeforeTag,0);
-    
-     //alert(g_stopCharArray);
+       
 
-    int stopFound = searchNext(g_stopCharArray);
-    //int stopFound = -1;
+     //alert(g_stopCharArray);
 
     ::SendScintilla(SCI_GOTOPOS,posBeforeTag,0);
     searchNext("`[SnippetInserting]");
@@ -3451,14 +3447,19 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
     int posEndOfSnippet = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
         
     ::SendScintilla(SCI_SETSELECTION,posEndOfSnippet,posEndOfInsertedText);
+    ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
 
-    if (stopFound<0)
+    ::SendScintilla(SCI_GOTOPOS,posBeforeTag,0);
+    //int stopFound = searchNext(g_stopCharArray);
+    int stopFound = searchNext("\\$\\[.\\[",true);
+    //int stopFound = -1;
+    
+    if (stopFound<posBeforeTag)
     {
+        ::SendScintilla(SCI_GOTOPOS,posEndOfSnippet,0);
         ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)g_stopCharArray);
-    } else
-    {
-        ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
     }
+    
 
     //delete [] g_stopCharArray;
 

@@ -1,5 +1,7 @@
 changelog (for developer use only, include unreleased versions)
 
+0.5.57.2
+****** restrict the addition of $[0[]0] to snippet with no hotspot and it's inserted to a document with no hotspot following the insertion
 
 0.5.57.1
 ****** Try to fix the final hotspot problem without an extra $[0[]0]
