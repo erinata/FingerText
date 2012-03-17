@@ -1,7 +1,6 @@
-//This file is part of FingerText, a notepad++ snippet plugin.
-//
-//DuckEval is currently not released but will be released as a separate project later. 
-//Currently it is part of the project Fingertext.
+// DuckEval is originally developed as part of Fingertext.
+// It will be released as a separate project later. 
+// Currently there is no license for sharing and reusing.
 
 #ifndef DUCKEVAL_H
 #define DUCKEVAL_H

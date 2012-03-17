@@ -158,7 +158,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             //TODO: investigate better way to write this (may be use SC_MULTISTEPUNDOREDO and SC_LASTSTEPINUNDOREDO)
             if ((nppLoaded) & ((notifyCode->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT | SC_LASTSTEPINUNDOREDO)) && (!(notifyCode->modificationType & (SC_MOD_CHANGESTYLE | SC_MOD_CHANGEFOLD)))))
             {
-                g_onHotSpot = false;
+                //g_onHotSpot = false;
+                //
                 turnOffOptionMode();
                 ::SendScintilla(SCI_AUTOCCANCEL,0,0);
                 if (!(notifyCode->modificationType & (SC_PERFORMED_UNDO | SC_PERFORMED_REDO)))
@@ -168,6 +169,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
                     if (!(notifyCode->modificationType & (SC_MOD_INSERTTEXT))) snippetHintUpdate();
                     refreshAnnotation();
                 }
+
+                //if (notifyCode->modificationType & (SC_MOD_DELETETEXT)) g_onHotSpot = false;
              
             }
             break;

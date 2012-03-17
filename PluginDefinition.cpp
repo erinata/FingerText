@@ -4635,9 +4635,10 @@ void selectionMonitor(int contentChange)
                     int selectionStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
                     int selectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
 
+                    
                     if (selectionStart==selectionEnd)
                     {
-                        g_onHotSpot = false;
+                        g_onHotSpot = false;    
                         withSelection = false;
                         
                     } else if ((!withSelection) && (selectionStart!=selectionEnd))
@@ -4645,6 +4646,7 @@ void selectionMonitor(int contentChange)
                         withSelection = true;
                         updateDockItems(true,false,"%",true);
                     } 
+                    
                 }
                 
             }
@@ -5699,6 +5701,9 @@ bool diagActivate(char* tag)
                             i--;
                         } while ((navSpot <= 0) && (i >= 0));
                     }
+
+                    
+
                     //TODO: this line is position here so the priority spot can be implement, but this cause the 
                     //      1st hotspot not undoable when the snippet is triggered. More investigation on how to
                     //      manipulate the undo list is required to make these 2 features compatible
@@ -5708,26 +5713,35 @@ bool diagActivate(char* tag)
                     {
                         if ((navSpot > 0) || (dynamicSpot)) ::SendScintilla(SCI_AUTOCCANCEL,0,0);
                     }
+
+                    if ((navSpot > 0) || (dynamicSpot)) g_onHotSpot = true;
+                    
                 } else
                 {
                     if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
                 }
+
                 retVal = true;
                 
             } else
             {
+                
                 // clear the tag
                 ::SendScintilla(SCI_SETSEL,posCurrent-triggerLength, posCurrent);
                 ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
                 retVal = false;
                 if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
             }
+            
             g_selectionMonitor++;
             pc.configInt[LIVE_HINT_UPDATE]++;
 
         }
      }
+
+     
      return retVal;
+
 }
 
 void tabActivate()
@@ -5900,7 +5914,7 @@ void doTabActivate(bool navOnly)
                         } while ((navSpot <= 0) && (i >= 0));
                     }
                     
-                    if ((navSpot > 0) || (dynamicSpot)) g_onHotSpot = true;
+                    
                     //TODO: this line is position here so the priority spot can be implement, but this cause the 
                     //      1st hotspot not undoable when the snippet is triggered. More investigation on how to
                     //      manipulate the undo list is required to make these 2 features compatible
@@ -5910,6 +5924,8 @@ void doTabActivate(bool navOnly)
                     {
                         if ((navSpot > 0) || (dynamicSpot)) ::SendScintilla(SCI_AUTOCCANCEL,0,0);
                     }
+
+                    if ((navSpot > 0) || (dynamicSpot)) g_onHotSpot = true;
                 } else
                 {
                     if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
@@ -5917,7 +5933,7 @@ void doTabActivate(bool navOnly)
 
                 bool snippetHint = false;
 
-                if (g_onHotSpot)
+                if ((g_onHotSpot) && (posSelectionStart!=posSelectionEnd))
                 {
                     if ((navSpot == 0) && (tagFound == false) && (dynamicSpot==false)) 
                     {
@@ -5927,9 +5943,6 @@ void doTabActivate(bool navOnly)
 
                 } else
                 {
-
-
-
                     
 
                     int completeFound = -1;
