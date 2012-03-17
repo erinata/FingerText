@@ -35,6 +35,7 @@ extern DockingDlg snippetDock;
 extern WNDPROC	wndProcNpp;
 extern int nppLoaded;
 extern int sciFocus;
+extern bool g_onHotSpot;
 
 BOOL APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID lpReserved)
 {
@@ -120,6 +121,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
         //    updateMode();
         //    break;
         case NPPN_BUFFERACTIVATED:
+            g_onHotSpot = false;
             updateMode();
             turnOffOptionMode();
             //refreshAnnotation();
@@ -136,7 +138,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             break;
             //TODO: Try to deal with repeated triggering of snippetHintUpdate and keyUpdateS
         case SCN_CHARADDED:
-            
+            g_onHotSpot = false;
             //alertNumber(notifyCode->ch);
 
             //refreshAnnotation();
@@ -146,7 +148,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             //showPreview();
             break;
 
-        case SCN_MODIFIED:         
+        case SCN_MODIFIED:
+            
             // This can catch the to be inserted text, but it cannot catch tab as the text insert of tab is different in different situation
             //if ((nppLoaded) && (notifyCode->modificationType & (SC_MOD_BEFOREINSERT)))
             //{
@@ -155,7 +158,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             //TODO: investigate better way to write this (may be use SC_MULTISTEPUNDOREDO and SC_LASTSTEPINUNDOREDO)
             if ((nppLoaded) & ((notifyCode->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT | SC_LASTSTEPINUNDOREDO)) && (!(notifyCode->modificationType & (SC_MOD_CHANGESTYLE | SC_MOD_CHANGEFOLD)))))
             {
-                
+                g_onHotSpot = false;
                 turnOffOptionMode();
                 ::SendScintilla(SCI_AUTOCCANCEL,0,0);
                 if (!(notifyCode->modificationType & (SC_PERFORMED_UNDO | SC_PERFORMED_REDO)))
@@ -168,7 +171,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
              
             }
             break;
-        case SCN_UPDATEUI:  
+        case SCN_UPDATEUI:
+            //g_onHotSpot = false;
             if (nppLoaded) selectionMonitor(notifyCode->updated);
             //if (notifyCode->updated & (SC_UPDATE_CONTENT))
             //{
@@ -202,7 +206,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             break;
 
         case SCN_AUTOCSELECTION:
-            
+            g_onHotSpot = false;
             if (fingerTextListActive())
             {
                 
@@ -214,6 +218,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
             }
             break;
         case SCN_AUTOCCANCELLED:
+            g_onHotSpot = false;
             fingerTextListActive();
             break;
         // TODO: consider using SC_MOD_CHANGEANNOTATION to shutdown use of annotation in snippet editing mode

@@ -1,5 +1,9 @@
 changelog (for developer use only, include unreleased versions)
 
+
+0.5.57.1
+****** Try to fix the final hotspot problem without an extra $[0[]0]
+
 0.5.57
 ****** Fixed: error in finding previous hotspot when the hotspot is located at the beginning of the document
 ****** Fixed: error causing fingertext do not navigate to another hotspot after choice in (lis)

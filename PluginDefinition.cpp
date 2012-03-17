@@ -83,6 +83,8 @@ std::string g_lastTriggerText = "";
 std::string g_lastOption = "";
 std::string g_lastListItem = "";
 
+bool g_onHotSpot = false;
+
 // For compatibility mode
 HHOOK hook = NULL;
 
@@ -2585,6 +2587,7 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
     
 	if (tagSpot >= 0)
 	{
+        
         if (pc.configInt[PRESERVE_STEPS] == 0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
 
         //int tailPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
@@ -2847,6 +2850,7 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
 
         }
         if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
+        
 	} else
     {
         //delete [] hotSpot;  // Don't try to delete if it has not been initialized
@@ -4599,8 +4603,11 @@ void selectionMonitor(int contentChange)
         {
                         //TODO: use hook to cater option? (so that the bug of empty options can be fixed
             //TODO: reexamine possible performance improvement
+
             if (contentChange & (SC_UPDATE_SELECTION))
             {
+                
+                
                 if (g_optionMode)
                 {
                     int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
@@ -4629,7 +4636,9 @@ void selectionMonitor(int contentChange)
 
                     if (selectionStart==selectionEnd)
                     {
+                        g_onHotSpot = false;
                         withSelection = false;
+                        
                     } else if ((!withSelection) && (selectionStart!=selectionEnd))
                     {
                         withSelection = true;
@@ -5730,7 +5739,7 @@ void doTabActivate(bool navOnly)
     if (sciFocus)
     {
         //if (((g_enable==false) || (g_rectSelection==true) || (::SendScintilla(SCI_AUTOCACTIVE,0,0))) && (!g_optionMode))
-        if (((g_enable==false) || (g_rectSelection==true) ) && (!g_optionMode))
+        if (((g_enable==false) || (g_rectSelection==true) ) && (!g_optionMode) && (!g_onHotSpot))
         {        
             ::SendScintilla(SCI_TAB,0,0);   
         } else
@@ -5773,9 +5782,8 @@ void doTabActivate(bool navOnly)
                 if (g_optionMode)
                 {
                     if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
-                    turnOffOptionMode();
-                    ::SendScintilla(SCI_GOTOPOS,g_optionEndPosition,0);
-                    
+                    //turnOffOptionMode();
+                    //::SendScintilla(SCI_GOTOPOS,g_optionEndPosition,0);
                     //snippetHintUpdate();
                 } else
                 {             
@@ -5891,6 +5899,7 @@ void doTabActivate(bool navOnly)
                         } while ((navSpot <= 0) && (i >= 0));
                     }
                     
+                    if ((navSpot > 0) || (dynamicSpot)) g_onHotSpot = true;
                     //TODO: this line is position here so the priority spot can be implement, but this cause the 
                     //      1st hotspot not undoable when the snippet is triggered. More investigation on how to
                     //      manipulate the undo list is required to make these 2 features compatible
@@ -5907,55 +5916,72 @@ void doTabActivate(bool navOnly)
 
                 bool snippetHint = false;
 
-                int completeFound = -1;
-                if (pc.configInt[TAB_TAG_COMPLETION] == 1)
+                if (g_onHotSpot)
                 {
                     if ((navSpot == 0) && (tagFound == false) && (dynamicSpot==false)) 
-	        	    {
-                        
-                        ::SendScintilla(SCI_GOTOPOS, posSelectionStart, 0);
-                        posCurrent = posSelectionStart;
+                    {
+                        ::SendScintilla(SCI_GOTOPOS, posSelectionEnd, 0);
+                        g_onHotSpot = false;
+                    }
 
-                        if (pc.configInt[FALLBACK_TAB]==1) ::SendScintilla(SCI_TAB, 0, 0);
-                        ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
-                        if (pc.configInt[FALLBACK_TAB]==1)
-                        {
-                            ::SendScintilla(SCI_SETSELECTION, posSelectionStart, ::SendScintilla(SCI_GETCURRENTPOS, 0, 0));
-                            ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
-                        }
-                        //completeFound = snippetComplete();
-                        //completeFound = triggerTag(posCurrent,true);
-                        completeFound = tagComplete();
-                        ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
-                        if (completeFound>=0)
-                        {
-                            ::SendScintilla(SCI_AUTOCCANCEL,0,0);
-                            snippetHint = true;
-                        }
-	        	    }
-                }
-                
-                if ((navSpot == 0) && (tagFound == false) && (completeFound<0) && (dynamicSpot==false) && (autoComplete==0)) 
+                } else
                 {
-                    if (g_optionMode == true)
+
+
+
+                    
+
+                    int completeFound = -1;
+                    if (pc.configInt[TAB_TAG_COMPLETION] == 1)
                     {
-                        turnOffOptionMode();
-                        ::SendScintilla(SCI_GOTOPOS,g_optionEndPosition,0);
-                        snippetHint = true;
-                    } else
+                        if ((navSpot == 0) && (tagFound == false) && (dynamicSpot==false)) 
+	        	        {
+                            
+                            ::SendScintilla(SCI_GOTOPOS, posSelectionStart, 0);
+                            posCurrent = posSelectionStart;
+
+                            if (pc.configInt[FALLBACK_TAB]==1) ::SendScintilla(SCI_TAB, 0, 0);
+                            ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
+                            if (pc.configInt[FALLBACK_TAB]==1)
+                            {
+                                ::SendScintilla(SCI_SETSELECTION, posSelectionStart, ::SendScintilla(SCI_GETCURRENTPOS, 0, 0));
+                                ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
+                            }
+                            //completeFound = snippetComplete();
+                            //completeFound = triggerTag(posCurrent,true);
+                            completeFound = tagComplete();
+                            ::SendScintilla(SCI_ENDUNDOACTION, 0, 0);
+                            if (completeFound>=0)
+                            {
+                                ::SendScintilla(SCI_AUTOCCANCEL,0,0);
+                                snippetHint = true;
+                            }
+	        	        }
+                    }
+                    
+                    if ((navSpot == 0) && (tagFound == false) && (completeFound<0) && (dynamicSpot==false) && (autoComplete==0)) 
                     {
-                        //g_tempWindowHandle = (HWND)::SendMessage(nppData._nppHandle,NPPM_DMMGETPLUGINHWNDBYNAME ,(WPARAM)TEXT("SherloXplorer"),(LPARAM)TEXT("SherloXplorer.dll"));
-                        //setFocusToWindow();
-                        //generateKey(toVk("TAB"),true);
-                        //generateKey(toVk("TAB"),false);
-                        restoreTab(posCurrent, posSelectionStart, posSelectionEnd);
+                        if (g_optionMode == true)
+                        {
+                            turnOffOptionMode();
+                            ::SendScintilla(SCI_GOTOPOS,g_optionEndPosition,0);
+                            snippetHint = true;
+                        } else
+                        {
+                            //g_tempWindowHandle = (HWND)::SendMessage(nppData._nppHandle,NPPM_DMMGETPLUGINHWNDBYNAME ,(WPARAM)TEXT("SherloXplorer"),(LPARAM)TEXT("SherloXplorer.dll"));
+                            //setFocusToWindow();
+                            //generateKey(toVk("TAB"),true);
+                            //generateKey(toVk("TAB"),false);
+                            restoreTab(posCurrent, posSelectionStart, posSelectionEnd);
+                        }
                     }
                 }
-
                 pc.configInt[LIVE_HINT_UPDATE]++;
                 if (snippetHint) snippetHintUpdate();
                 g_selectionMonitor++;
+                //g_onHotSpot = true;
             }
+            
         }
     }
 }
@@ -6007,7 +6033,7 @@ void removehook()
 void testing2()
 {
     alert("testing2");
-    
+    if  (g_onHotSpot == true) alert();
     
     //::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
     //int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
