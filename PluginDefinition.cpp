@@ -280,7 +280,7 @@ void commandMenuInit()
     setCommand();
     g_selectionToSnippetIndex = setCommand(TEXT("Create Snippet from Selection"), doSelectionToSnippet);
     g_importSnippetsIndex = setCommand(TEXT("Import Snippets from ftd file"), importSnippetsOnly);
-    g_downloadStandardLibraryIndex = setCommand(TEXT("Import FingerText Standard Library"), downloadStandardLibrary);
+    //g_downloadStandardLibraryIndex = setCommand(TEXT("Import FingerText Standard Library"), downloadStandardLibrary);
     g_exportSnippetsIndex = setCommand(TEXT("Export All Snippets"), exportSnippetsOnly);
     g_deleteAllSnippetsIndex = setCommand(TEXT("Delete All Snippets"), exportAndClearSnippets);
     
@@ -3844,8 +3844,10 @@ void downloadStandardLibrary()
     ::wcscpy(type,TEXT("GET"));
     ::wcscpy(path,g_downloadPath);
 
+    ::SendScintilla(SCI_SETCURSOR, SC_CURSORWAIT, 0);
     httpToFile(server,request,type,path);
-    
+    ::SendScintilla(SCI_SETCURSOR, SC_CURSORNORMAL, 0);
+
     importSnippets(g_downloadPath);
 
     delete [] server;
@@ -3908,6 +3910,7 @@ bool exportSnippets(bool all, wchar_t* path)
     pc.configInt[LIVE_HINT_UPDATE]--;  // Temporary turn off live update as it disturb exporting
     //
 
+    //TODO: improve efficiency by ignoring these in the case of withPath
     bool success = false;
     
     OPENFILENAME ofn;
@@ -4043,7 +4046,7 @@ void importSnippets(wchar_t* path)
     g_freezeDock = true;
     pc.configInt[LIVE_HINT_UPDATE]--;
     
-
+    //TODO: improve efficiency by ignoring these in the case of withPath
     OPENFILENAME ofn;
     wchar_t fileName[MAX_PATH] = TEXT("");
     ZeroMemory(&ofn, sizeof(ofn));
