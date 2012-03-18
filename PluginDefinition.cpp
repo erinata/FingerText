@@ -51,7 +51,7 @@ wchar_t g_basePath[MAX_PATH];
 TCHAR g_ftbPath[MAX_PATH];
 TCHAR g_fttempPath[MAX_PATH];
 TCHAR g_currentFocusPath[MAX_PATH];
-TCHAR g_backupPath[MAX_PATH];
+//TCHAR g_backupPath[MAX_PATH];
 TCHAR g_downloadPath[MAX_PATH];
 
 
@@ -185,9 +185,9 @@ void pathInit()
     ::_tcscat_s(g_ftbPath,TEXT("\\SnippetEditor.ftb"));
     if (!PathFileExists(g_ftbPath)) emptyFile(g_ftbPath);
 
-    ::_tcscpy_s(g_backupPath,g_basePath);
-    ::_tcscat_s(g_backupPath,TEXT("\\SnippetsBackup.ftd"));
-    if (!PathFileExists(g_backupPath)) emptyFile(g_backupPath);
+    //::_tcscpy_s(g_backupPath,g_basePath);
+    //::_tcscat_s(g_backupPath,TEXT("\\SnippetsBackup.ftd"));
+    //if (!PathFileExists(g_backupPath)) emptyFile(g_backupPath);
 
     ::_tcscpy_s(g_downloadPath,g_basePath);
     ::_tcscat_s(g_downloadPath,TEXT("\\SnippetsDownloaded.ftd"));
@@ -3858,6 +3858,28 @@ void downloadStandardLibrary()
 
 }
 
+bool backupAllSnippets()
+{
+    TCHAR* backupPath = new TCHAR[MAX_PATH];
+    ::wcscpy(backupPath,g_basePath);
+    ::wcscat(backupPath,TEXT("\\SnippetsBackup-"));
+        
+    char* dateText = getDateTime("yyyyMMdd");
+    char* timeText = getDateTime("HHmm",false);
+    TCHAR* dateTextWide;
+    TCHAR* timeTextWide;
+    dateTextWide = toWideChar(dateText);
+    timeTextWide = toWideChar(timeText);
+    
+    ::wcscat(backupPath,dateTextWide);
+    ::wcscat(backupPath,timeTextWide);
+    ::wcscat(backupPath,TEXT(".ftd"));
+    
+    bool retVal = exportSnippets(true, backupPath);
+
+    delete [] backupPath;
+    return retVal;
+}
 
 
 void exportAndClearSnippets()
@@ -3867,7 +3889,7 @@ void exportAndClearSnippets()
     //int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Are you sure that you want to clear the whole snippet database?"), TEXT(PLUGIN_NAME), MB_YESNO);
     if (messageReturn == IDYES)
     {
-        if (exportSnippets(true, g_backupPath))
+        if (backupAllSnippets())
         {
             clearAllSnippets();
             showMessageBox(TEXT("All snippets are deleted. \r\n\r\nIf you want to UNDO this action now, you can recover your snippets by importing the SnippetsBackup.ftd file in the Fingertext config folder."));
@@ -4088,7 +4110,20 @@ void importSnippets(wchar_t* path)
             return;
         }
 
+        if (backupAllSnippets())
+        {
+            showMessageBox(TEXT("Fingertext backed up your current snippet database in the SnippetBackup.ftd in the config folder.\r\n\r\nIn case any thing strange happened during the import process, you can recover you snippets by importing the backup ftd file."),MB_OK);
+        } else
+        {
+            int continueImport = showMessageBox(TEXT("An error occurred and Fingertext cannot backup your current snippet database. \r\n\r\nYou can continue to import the snippets but you may not be able to undo this action.\r\n\r\n Are you sure that you want to contine with the import action?"),MB_YESNO);
+            if (continueImport = IDYES)
+            {
 
+            } else
+            {
+                return;
+            }
+        }
         //::MessageBox(nppData._nppHandle, (LPCWSTR)fileName, TEXT(PLUGIN_NAME), MB_OK);
         std::ifstream file;
         //file.open((LPCWSTR)fileName, std::ios::binary | std::ios::in);     //TODO: verified why this doesn't work. Specifying the binary thing will cause redundant copy keeping when importing
