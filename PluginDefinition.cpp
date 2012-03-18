@@ -4073,9 +4073,12 @@ void importSnippets(wchar_t* path)
         //   conflictOverwrite = ::MessageBox(nppData._nppHandle, TEXT("Do you want to overwrite the database when the imported snippets has conflicts with existing snippets? Press Yes if you want to overwrite, No if you want to keep both versions."), TEXT(PLUGIN_NAME), MB_YESNO);
         //}
 
-        //TODO: It should not ask whether you want to overwrite or not if you have an empty database
+        
         int conflictKeepCopy = IDNO;
-        conflictKeepCopy = showMessageBox(TEXT("Do you want to keep both versions if the imported snippets are conflicting with existing one?\r\n\r\nYes - Keep both versions\r\nNo - Overwrite existing version\r\nCancel - Stop importing"),MB_YESNOCANCEL);
+        if (toDouble(g_snippetCount) != 0)
+        {
+            conflictKeepCopy = showMessageBox(TEXT("Do you want to keep both versions if the imported snippets are conflicting with existing one?\r\n\r\nYes - Keep both versions\r\nNo - Overwrite existing version\r\nCancel - Stop importing"),MB_YESNOCANCEL);
+        }
         //conflictKeepCopy = ::MessageBox(nppData._nppHandle, TEXT("Do you want to keep both versions if the imported snippets are conflicting with existing one?\r\n\r\nYes - Keep both versions\r\nNo - Overwrite existing version\r\nCancel - Stop importing"), TEXT(PLUGIN_NAME), MB_YESNOCANCEL);
 
         if (conflictKeepCopy == IDCANCEL)
@@ -6119,7 +6122,8 @@ void removehook()
 void testing2()
 {
     alert("testing2");
-    if  (g_onHotSpot == true) alert();
+    
+    alert(g_snippetCount);
     
     //::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
     //int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);

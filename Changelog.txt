@@ -5,6 +5,7 @@ changelog (for developer use only, include unreleased versions)
 ****** The last hotspot problem works for diaglog insertion too
 ****** The "delete all snippet" command backup snippets automatically without asking 
 ****** default hotkey for insertion dialog changed to alt+/
+****** Ask about overwriting option only when you have snippets in your database
 
 
 
