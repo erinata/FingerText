@@ -143,7 +143,8 @@ const std::string langList[] = {"TXT","PHP","C","CPP","CS","OBJC","JAVA","RC",
 
 // The word char settings for scope and triggertext
 const char* scopeWordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_:.|";
-const char* triggertextWordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+const char* triggertextWordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-^";
+const char* searchWordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-";
 char escapeWordChar[200];
 
 //For SETWIN
@@ -311,7 +312,7 @@ void variablesInit()
     strcpy(g_stopCharArray,g_tagSignList[0]);
     strcat(g_stopCharArray,g_tagTailList[0]);
 
-    strcpy(escapeWordChar,triggertextWordChar);
+    strcpy(escapeWordChar,searchWordChar);
     if (wcslen(pc.configText[CUSTOM_ESCAPE_CHAR])>0)
     {
         char *customEscapeChar = toCharArray(pc.configText[CUSTOM_ESCAPE_CHAR]);
@@ -3389,6 +3390,8 @@ void insertTagSign(int type)
             }
             case 8:
             {
+                //TODO: Fingertext should check whether [>END<] exists or not, one solution is to put an error message if found. Another is to find and replace all the existing [>END<] by "" before adding the new [>END<]
+
                 ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"[>END<]");
                 start = posStart;
                 end = posStart;
