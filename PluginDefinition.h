@@ -150,7 +150,7 @@ void exportSnippetsOnly();
 void clearAllSnippets();
 void downloadStandardLibrary();
 void exportAndClearSnippets();
-bool exportSnippets(bool all = true);
+bool exportSnippets(bool all = true, wchar_t* path = TEXT(""));
 void importSnippets();
 bool snippetHintUpdate();
 int promptSaveSnippet(TCHAR* message = NULL);

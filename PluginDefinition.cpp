@@ -51,6 +51,7 @@ wchar_t g_basePath[MAX_PATH];
 TCHAR g_ftbPath[MAX_PATH];
 TCHAR g_fttempPath[MAX_PATH];
 TCHAR g_currentFocusPath[MAX_PATH];
+TCHAR g_backupPath[MAX_PATH];
 
 // Config object
 PluginConfig pc;
@@ -181,6 +182,10 @@ void pathInit()
     ::_tcscpy_s(g_ftbPath,g_basePath);
     ::_tcscat_s(g_ftbPath,TEXT("\\SnippetEditor.ftb"));
     if (!PathFileExists(g_ftbPath)) emptyFile(g_ftbPath);
+
+    ::_tcscpy_s(g_backupPath,g_basePath);
+    ::_tcscat_s(g_backupPath,TEXT("\\SnippetsBackup.ftd"));
+    if (!PathFileExists(g_backupPath)) emptyFile(g_backupPath);
     
 }
 
@@ -269,7 +274,7 @@ void commandMenuInit()
     g_selectionToSnippetIndex = setCommand(TEXT("Create Snippet from Selection"), doSelectionToSnippet);
     g_importSnippetsIndex = setCommand(TEXT("Import Snippets from ftd file"), importSnippets);
     g_exportSnippetsIndex = setCommand(TEXT("Export All Snippets"), exportSnippetsOnly);
-    g_deleteAllSnippetsIndex = setCommand(TEXT("Export and Delete All Snippets"), exportAndClearSnippets);
+    g_deleteAllSnippetsIndex = setCommand(TEXT("Delete All Snippets"), exportAndClearSnippets);
     //g_downloadStandardLibraryIndex = setCommand(TEXT("Download FingerText Standard Library"), downloadStandardLibrary);
     setCommand();
     g_TriggerTextCompletionIndex = setCommand(TEXT("TriggerText Completion"), doTagComplete);
@@ -3830,22 +3835,26 @@ void downloadStandardLibrary()
 
 void exportAndClearSnippets()
 {
-    //TODO: move the snippet export counting message out of the export snippets function so that it can be shown together with the clear snippet message
-    if (exportSnippets())
+    
+    int messageReturn = showMessageBox(TEXT("Are you sure that you want to clear the whole snippet database?"),MB_YESNO);
+    //int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Are you sure that you want to clear the whole snippet database?"), TEXT(PLUGIN_NAME), MB_YESNO);
+    if (messageReturn == IDYES)
     {
-        int messageReturn = showMessageBox(TEXT("Are you sure that you want to clear the whole snippet database?"),MB_YESNO);
-        //int messageReturn = ::MessageBox(nppData._nppHandle, TEXT("Are you sure that you want to clear the whole snippet database?"), TEXT(PLUGIN_NAME), MB_YESNO);
-        if (messageReturn == IDYES)
+        if (exportSnippets(true, g_backupPath))
         {
             clearAllSnippets();
-            showMessageBox(TEXT("All snippets are deleted."));
-            //::MessageBox(nppData._nppHandle, TEXT("All snippets are deleted."), TEXT(PLUGIN_NAME), MB_OK);
-        } else 
+            showMessageBox(TEXT("All snippets are deleted. \r\n\r\nIf you want to UNDO this action now, you can recover your snippets by importing the SnippetsBackup.ftd file in the Fingertext config folder."));
+        } else
         {
-            showMessageBox(TEXT("Snippet clearing is aborted."));
-            //::MessageBox(nppData._nppHandle, TEXT("Snippet clearing is aborted."), TEXT(PLUGIN_NAME), MB_OK);
+            showMessageBox(TEXT("An error occured. The snippet database cannot be cleared. If you really want to clear the snippet database you can close Notepad++ and remove the FingerText.db3 in the config folder."));
         }
+        
+    } else 
+    {
+        showMessageBox(TEXT("Snippet clearing is aborted."));
+        
     }
+    
 }
 
 void exportSnippetsOnly()
@@ -3867,7 +3876,7 @@ void clearAllSnippets()
     updateDockItems(true,false,"%",true);
 }
 
-bool exportSnippets(bool all)
+bool exportSnippets(bool all, wchar_t* path)
 {
     ////TODO: Can actually add some informtiaon at the end of the exported snippets......can be useful information like version number or just describing the package
     
@@ -3887,13 +3896,17 @@ bool exportSnippets(bool all)
     ofn.nMaxFile = MAX_PATH;
     ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
     ofn.lpstrDefExt = TEXT("");
-    
-    if (::GetSaveFileName(&ofn))
+
+    bool getSave = false;
+    bool withPath = true;
+    if (::wcscmp(path,TEXT(""))==0) withPath = false;
+    if (!withPath) getSave = ::GetSaveFileName(&ofn);
+
+    if ((getSave) || (withPath))
     {
         if (all) updateDockItems(true,true,"%",false);
         g_freezeDock = true;
         
-    
         ::SendScintilla(SCI_SETCURSOR, SC_CURSORWAIT, 0);
         //pc.configInt[SNIPPET_LIST_LENGTH] = 100000;
         //g_snippetCache = new SnipIndex [pc.configInt[SNIPPET_LIST_LENGTH]];
@@ -3929,7 +3942,14 @@ bool exportSnippets(bool all)
         }
 
         ::SendScintilla(SCI_CONVERTEOLS,SC_EOL_LF, 0);
-        ::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, 0, (LPARAM)fileName);
+        if (withPath)
+        {
+            ::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, 0, (LPARAM)path);
+        } else
+        {
+            ::SendMessage(nppData._nppHandle, NPPM_SAVECURRENTFILEAS, 0, (LPARAM)fileName);
+        }
+        
         success = true;
     
         ::SendScintilla(SCI_SETCURSOR, SC_CURSORNORMAL, 0);
@@ -3949,7 +3969,9 @@ bool exportSnippets(bool all)
         
         ::SendScintilla(SCI_SETSAVEPOINT,0,0);
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
-        showMessageBox(exportCountText);
+
+        if (!withPath) showMessageBox(exportCountText);
+
         g_freezeDock = false;
         //::MessageBox(nppData._nppHandle, exportCountText, TEXT(PLUGIN_NAME), MB_OK);
     }
@@ -3969,6 +3991,7 @@ bool exportSnippets(bool all)
 //TODO: Or it should be rewrite, import snippet should open the snippetediting.ftb, turn or annotation, and cut and paste the snippet on to that file and use the saveSnippet function
 void importSnippets()
 {
+    
     
     //TODO: importing snippet will change the current directory, which is not desirable effect
     if (::SendMessage(nppData._nppHandle, NPPM_SWITCHTOFILE, 0, (LPARAM)g_ftbPath))
@@ -4010,6 +4033,8 @@ void importSnippets()
         //{
         //   conflictOverwrite = ::MessageBox(nppData._nppHandle, TEXT("Do you want to overwrite the database when the imported snippets has conflicts with existing snippets? Press Yes if you want to overwrite, No if you want to keep both versions."), TEXT(PLUGIN_NAME), MB_YESNO);
         //}
+
+        //TODO: It should not ask whether you want to overwrite or not if you have an empty database
         int conflictKeepCopy = IDNO;
         conflictKeepCopy = showMessageBox(TEXT("Do you want to keep both versions if the imported snippets are conflicting with existing one?\r\n\r\nYes - Keep both versions\r\nNo - Overwrite existing version\r\nCancel - Stop importing"),MB_YESNOCANCEL);
         //conflictKeepCopy = ::MessageBox(nppData._nppHandle, TEXT("Do you want to keep both versions if the imported snippets are conflicting with existing one?\r\n\r\nYes - Keep both versions\r\nNo - Overwrite existing version\r\nCancel - Stop importing"), TEXT(PLUGIN_NAME), MB_YESNOCANCEL);
