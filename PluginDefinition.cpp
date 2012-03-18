@@ -217,7 +217,9 @@ void dataBaseInit()
     strcat(dataBasePath,".db3");
     delete [] basePath;
 
-    if (sqlite3_open(dataBasePath, &g_db))
+    bool dbError = sqlite3_open(dataBasePath, &g_db);
+
+    if (dbError)
     {
         g_dbOpen = false;
         showMessageBox(TEXT("Cannot find or open database file in config folder"));
@@ -248,6 +250,7 @@ void dataBaseInit()
         sqlite3_step(stmt);
     }
     sqlite3_finalize(stmt);
+    
 
     //alert(pc.version);
     //alert(pc.versionOld);
@@ -3878,6 +3881,10 @@ bool backupAllSnippets()
     bool retVal = exportSnippets(true, backupPath);
 
     delete [] backupPath;
+    delete [] dateText;
+    delete [] timeText;
+    delete [] dateTextWide;
+    delete [] timeTextWide;
     return retVal;
 }
 
@@ -4065,6 +4072,21 @@ void importSnippets(wchar_t* path)
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_CLOSE);
     }   
 
+
+    //TODO: verify why an error may occur when this backupAllSnippet block is put inside the ((getSave) || (withPath)) block
+    //if (backupAllSnippets())
+    //{
+    //    showMessageBox(TEXT("Fingertext backed up your current snippet database in the SnippetBackup.ftd in the config folder.\r\n\r\nIn case any thing strange happened during the import process, you can recover you snippets by importing the backup ftd file."),MB_OK);
+    //} else
+    //{
+    //    int continueImport = showMessageBox(TEXT("An error occurred and Fingertext cannot backup your current snippet database. \r\n\r\nYou can continue to import the snippets but you may not be able to undo this action.\r\n\r\n Are you sure that you want to contine with the import action?"),MB_YESNO);
+    //    if (!(continueImport == IDYES)) return;
+    //}
+    //
+    //TODO: to decide on whether to silently backup or to explicitly tell the user the snippets are backup.
+    if (toDouble(g_snippetCount) != 0) backupAllSnippets();
+
+
     g_freezeDock = true;
     pc.configInt[LIVE_HINT_UPDATE]--;
     
@@ -4087,43 +4109,20 @@ void importSnippets(wchar_t* path)
     if (!withPath) getSave = ::GetSaveFileName(&ofn);
 
     if ((getSave) || (withPath))
-    {
-
-        //int conflictOverwrite = IDNO;
-        //if (g_importOverWriteOption==1)
-        //{
-        //   conflictOverwrite = ::MessageBox(nppData._nppHandle, TEXT("Do you want to overwrite the database when the imported snippets has conflicts with existing snippets? Press Yes if you want to overwrite, No if you want to keep both versions."), TEXT(PLUGIN_NAME), MB_YESNO);
-        //}
-
-        
+    {   
         int conflictKeepCopy = IDNO;
         if (toDouble(g_snippetCount) != 0)
         {
             conflictKeepCopy = showMessageBox(TEXT("Do you want to keep both versions if the imported snippets are conflicting with existing one?\r\n\r\nYes - Keep both versions\r\nNo - Overwrite existing version\r\nCancel - Stop importing"),MB_YESNOCANCEL);
         }
-        //conflictKeepCopy = ::MessageBox(nppData._nppHandle, TEXT("Do you want to keep both versions if the imported snippets are conflicting with existing one?\r\n\r\nYes - Keep both versions\r\nNo - Overwrite existing version\r\nCancel - Stop importing"), TEXT(PLUGIN_NAME), MB_YESNOCANCEL);
 
         if (conflictKeepCopy == IDCANCEL)
         {
             showMessageBox(TEXT("Snippet importing aborted."));
-            //::MessageBox(nppData._nppHandle, TEXT("Snippet importing aborted."), TEXT(PLUGIN_NAME), MB_OK);
             return;
         }
 
-        if (backupAllSnippets())
-        {
-            showMessageBox(TEXT("Fingertext backed up your current snippet database in the SnippetBackup.ftd in the config folder.\r\n\r\nIn case any thing strange happened during the import process, you can recover you snippets by importing the backup ftd file."),MB_OK);
-        } else
-        {
-            int continueImport = showMessageBox(TEXT("An error occurred and Fingertext cannot backup your current snippet database. \r\n\r\nYou can continue to import the snippets but you may not be able to undo this action.\r\n\r\n Are you sure that you want to contine with the import action?"),MB_YESNO);
-            if (continueImport = IDYES)
-            {
-
-            } else
-            {
-                return;
-            }
-        }
+        
         //::MessageBox(nppData._nppHandle, (LPCWSTR)fileName, TEXT(PLUGIN_NAME), MB_OK);
         std::ifstream file;
         //file.open((LPCWSTR)fileName, std::ios::binary | std::ios::in);     //TODO: verified why this doesn't work. Specifying the binary thing will cause redundant copy keeping when importing
