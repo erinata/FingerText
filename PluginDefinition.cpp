@@ -3842,7 +3842,7 @@ void downloadStandardLibrary()
     TCHAR* path = new TCHAR[MAX_PATH];
 
     ::wcscpy(server,TEXT("cloud.github.com"));
-    ::wcscpy(request,TEXT("/downloads/erinata/FingerText/FingerText0.5.52SampleSnippets.ftd"));
+    ::wcscpy(request,TEXT("/downloads/erinata/FingerText/FingerText0.5.58SampleSnippets.ftd"));
    
     ::wcscpy(type,TEXT("GET"));
     ::wcscpy(path,g_downloadPath);

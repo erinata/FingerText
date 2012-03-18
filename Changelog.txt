@@ -2,23 +2,21 @@ changelog (for developer use only, include unreleased versions)
 
 0.5.58
 ****** Added: Download Fingertext Sample Snippets
-****** The last hotspot problem works for diaglog insertion too
-****** The "delete all snippet" command backup snippets automatically without asking 
-****** default hotkey for insertion dialog changed to alt+/
-****** Ask about overwriting option only when you have snippets in your database
-
-
+- The last hotspot problem works for diaglog insertion too
+- The "delete all snippet" command backup snippets automatically without asking 
+- default hotkey for insertion dialog changed to alt+/
+- Ask about overwriting option only when you have snippets in your database
 
 0.5.57.2
-****** restrict the addition of $[0[]0] to snippet with no hotspot and it's inserted to a document with no hotspot following the insertion
+- restrict the addition of $[0[]0] to snippet with no hotspot and it's inserted to a document with no hotspot following the insertion
 
 0.5.57.1
-****** Try to fix the final hotspot problem without an extra $[0[]0]
+- Try to fix the final hotspot problem without an extra $[0[]0]
 
 0.5.57
-****** Fixed: error in finding previous hotspot when the hotspot is located at the beginning of the document
-****** Fixed: error causing fingertext do not navigate to another hotspot after choice in (lis)
-****** prefix global variable with g_
+- Fixed: error in finding previous hotspot when the hotspot is located at the beginning of the document
+- Fixed: error causing fingertext do not navigate to another hotspot after choice in (lis)
+- prefix global variable with g_
 
 0.5.56
 - Fixed: critical bug of crashing npp when triggering snippets
@@ -220,7 +218,7 @@ changelog (for developer use only, include unreleased versions)
 
 0.5.31
 - Fixed: freeze when closing npp immediately after upgrade 
-****** Added: dynamic hotspot (eva)
+- Added: dynamic hotspot (eva)
 - Changed: Snippets can be triggered after period
 
 0.5.30
