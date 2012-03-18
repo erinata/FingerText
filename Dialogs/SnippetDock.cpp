@@ -611,7 +611,7 @@ BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
                 }
                 case IDC_IMPORTFILE:
                 {
-                    importSnippets();
+                    importSnippetsOnly();
                     return true;
                 }
                 case IDC_EXPORT:

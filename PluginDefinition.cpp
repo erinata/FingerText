@@ -52,6 +52,8 @@ TCHAR g_ftbPath[MAX_PATH];
 TCHAR g_fttempPath[MAX_PATH];
 TCHAR g_currentFocusPath[MAX_PATH];
 TCHAR g_backupPath[MAX_PATH];
+TCHAR g_downloadPath[MAX_PATH];
+
 
 // Config object
 PluginConfig pc;
@@ -186,6 +188,10 @@ void pathInit()
     ::_tcscpy_s(g_backupPath,g_basePath);
     ::_tcscat_s(g_backupPath,TEXT("\\SnippetsBackup.ftd"));
     if (!PathFileExists(g_backupPath)) emptyFile(g_backupPath);
+
+    ::_tcscpy_s(g_downloadPath,g_basePath);
+    ::_tcscat_s(g_downloadPath,TEXT("\\SnippetsDownloaded.ftd"));
+    if (!PathFileExists(g_downloadPath)) emptyFile(g_downloadPath);
     
 }
 
@@ -263,7 +269,8 @@ void commandMenuInit()
     }
 
     ShortcutKey *shKey2;
-    shKey2 = setShortCutKey(true,false,false,190);
+    shKey2 = setShortCutKey(true,false,false,VK_OEM_2);
+    //shKey2 = setShortCutKey(true,false,false,190);
     
     g_tabActivateIndex = setCommand(tabActivateText, tabActivate, shKey);
     setCommand();
@@ -272,10 +279,11 @@ void commandMenuInit()
     g_toggleDisableIndex = setCommand(TEXT("Toggle On/Off FingerText"), toggleDisable);
     setCommand();
     g_selectionToSnippetIndex = setCommand(TEXT("Create Snippet from Selection"), doSelectionToSnippet);
-    g_importSnippetsIndex = setCommand(TEXT("Import Snippets from ftd file"), importSnippets);
+    g_importSnippetsIndex = setCommand(TEXT("Import Snippets from ftd file"), importSnippetsOnly);
+    g_downloadStandardLibraryIndex = setCommand(TEXT("Import FingerText Standard Library"), downloadStandardLibrary);
     g_exportSnippetsIndex = setCommand(TEXT("Export All Snippets"), exportSnippetsOnly);
     g_deleteAllSnippetsIndex = setCommand(TEXT("Delete All Snippets"), exportAndClearSnippets);
-    //g_downloadStandardLibraryIndex = setCommand(TEXT("Download FingerText Standard Library"), downloadStandardLibrary);
+    
     setCommand();
     g_TriggerTextCompletionIndex = setCommand(TEXT("TriggerText Completion"), doTagComplete);
     g_insertPreviousIndex = setCommand(TEXT("Insert Previous Snippet"), insertPrevious);
@@ -1276,7 +1284,7 @@ void webRequest(int &firstPos, char* hotSpotText)
         SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
     }
 
-    
+        
     int triggerPos = strlen(hotSpotText)+firstPos-requestTypeLength;
     //TODO: rewrite this part so that it doesn't rely on searchNext, and separate it out to another function to prepare for the implementation of "web snippet import"
     SendScintilla(SCI_GOTOPOS,firstPos,0);
@@ -1316,9 +1324,6 @@ void webRequest(int &firstPos, char* hotSpotText)
 
         TCHAR* requestWide = toWideChar(hotSpotText + serverEnd - firstPos);
         
-        //alertTCharArray(serverWide);
-        //alertTCharArray(requestWide);
-
         //TODO: customizing type of request
         httpToFile(serverWide,requestWide,requestType,g_currentFocusPath);
         
@@ -3822,15 +3827,35 @@ void setTextTarget(bool fromTab)
 }
 
 void setListTarget()
-{
-    
+{    
     insertionDlg.setListTarget();
 }
 
 void downloadStandardLibrary()
 {
+    TCHAR* server = new TCHAR[MAX_PATH];
+    TCHAR* request = new TCHAR[MAX_PATH];
+    TCHAR* type = new TCHAR[MAX_PATH];
+    TCHAR* path = new TCHAR[MAX_PATH];
+
+    ::wcscpy(server,TEXT("cloud.github.com"));
+    ::wcscpy(request,TEXT("/downloads/erinata/FingerText/FingerText0.5.52SampleSnippets.ftd"));
+   
+    ::wcscpy(type,TEXT("GET"));
+    ::wcscpy(path,g_downloadPath);
+
+    httpToFile(server,request,type,path);
+    
+    importSnippets(g_downloadPath);
+
+    delete [] server;
+    delete [] request;
+    delete [] type;
+    delete [] path;
+
 
 }
+
 
 
 void exportAndClearSnippets()
@@ -3987,9 +4012,15 @@ bool exportSnippets(bool all, wchar_t* path)
     
 }
 
+void importSnippetsOnly()
+{
+    importSnippets();
+}
+
+
 //TODO: importsnippet and savesnippets need refactoring sooooo badly
 //TODO: Or it should be rewrite, import snippet should open the snippetediting.ftb, turn or annotation, and cut and paste the snippet on to that file and use the saveSnippet function
-void importSnippets()
+void importSnippets(wchar_t* path)
 {
     
     
@@ -4025,7 +4056,12 @@ void importSnippets()
     ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
     ofn.lpstrDefExt = TEXT("");
     
-    if (::GetOpenFileName(&ofn))
+    bool getSave = false;
+    bool withPath = true;
+    if (::wcscmp(path,TEXT(""))==0) withPath = false;
+    if (!withPath) getSave = ::GetSaveFileName(&ofn);
+
+    if ((getSave) || (withPath))
     {
 
         //int conflictOverwrite = IDNO;
@@ -4050,7 +4086,15 @@ void importSnippets()
         //::MessageBox(nppData._nppHandle, (LPCWSTR)fileName, TEXT(PLUGIN_NAME), MB_OK);
         std::ifstream file;
         //file.open((LPCWSTR)fileName, std::ios::binary | std::ios::in);     //TODO: verified why this doesn't work. Specifying the binary thing will cause redundant copy keeping when importing
-        file.open((LPCWSTR)fileName); // TODO: This part may cause problem in chinese file names
+        
+        if (withPath)
+        {
+            file.open((LPCWSTR)path); 
+        } else
+        {
+            file.open((LPCWSTR)fileName); 
+        }
+        
 
         file.seekg(0, std::ios::end);
         int fileLength = file.tellg();

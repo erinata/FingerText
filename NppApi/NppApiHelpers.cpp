@@ -109,7 +109,6 @@ int showMessageBox(TCHAR* text, int flags)
     return ::MessageBox(nppData._nppHandle, text, TEXT(PLUGIN_NAME), flags);
 }
 
-
 int searchNext(char* searchText, bool regExp)
 {
     int searchFlags = 0;
@@ -117,6 +116,7 @@ int searchNext(char* searchText, bool regExp)
     ::SendScintilla(SCI_SEARCHANCHOR, 0,0);
     return ::SendScintilla(SCI_SEARCHNEXT, searchFlags,(LPARAM)searchText);
 }
+
 int searchPrev(char* searchText, bool regExp)
 {    
     int searchFlags = 0;
