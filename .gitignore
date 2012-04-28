@@ -3,9 +3,10 @@
 /Unicode Debug/*
 /Unicode Release/*
 /_package/*
-/FingerTextStandardLibrary/*
+/DefaultSnippetPackage/*
 test.bat
 testrelease.bat
 release.bat
 *.aps
 *.pdb
+/Fingertext-notes/*

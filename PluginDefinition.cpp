@@ -74,7 +74,7 @@ int g_selectionToSnippetIndex;
 int g_importSnippetsIndex;
 int g_exportSnippetsIndex;
 int g_deleteAllSnippetsIndex;
-int g_downloadStandardLibraryIndex;
+int g_downloadDefaultPackageIndex;
 int g_TriggerTextCompletionIndex;
 int g_InsertHotspotIndex;
 int g_insertPreviousIndex;
@@ -284,7 +284,7 @@ void commandMenuInit()
     setCommand();
     g_selectionToSnippetIndex = setCommand(TEXT("Create Snippet from Selection"), doSelectionToSnippet);
     g_importSnippetsIndex = setCommand(TEXT("Import Snippets from ftd file"), importSnippetsOnly);
-    //g_downloadStandardLibraryIndex = setCommand(TEXT("Import FingerText Standard Library"), downloadStandardLibrary);
+    //g_downloadDefaultPackageIndex = setCommand(TEXT("Import Default Snippet Package"), downloadDefaultPackage);
     g_exportSnippetsIndex = setCommand(TEXT("Export All Snippets"), exportSnippetsOnly);
     g_deleteAllSnippetsIndex = setCommand(TEXT("Delete All Snippets"), exportAndClearSnippets);
     
@@ -3837,7 +3837,7 @@ void setListTarget()
     insertionDlg.setListTarget();
 }
 
-void downloadStandardLibrary()
+void downloadDefaultPackage()
 {
     TCHAR* server = new TCHAR[MAX_PATH];
     TCHAR* request = new TCHAR[MAX_PATH];
@@ -5247,9 +5247,11 @@ std::vector<std::string> generateScopeList()
 
 bool triggerTag(int &posCurrent, int triggerLength)
 {
-
     int paramPos = -1;
-    paramPos = ::SendScintilla(SCI_BRACEMATCH,posCurrent-1,0);
+    char* previousChar;
+    sciGetText(&previousChar, posCurrent-1, posCurrent);
+    if (strcmp(previousChar,")")==0) paramPos = ::SendScintilla(SCI_BRACEMATCH,posCurrent-1,0);
+    delete [] previousChar;
     if ((paramPos>=0) && (paramPos<posCurrent))
     {
         triggerLength = triggerLength - (posCurrent - paramPos);
