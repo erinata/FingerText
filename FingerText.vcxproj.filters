@@ -63,9 +63,6 @@
     <ClCompile Include="Dialogs\CreationDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Embeded\DefaultPackage.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PluginDefinition.h">
@@ -135,9 +132,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Dialogs\CreationDialog.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Embeded\DefaultPackage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

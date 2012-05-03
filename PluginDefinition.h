@@ -44,7 +44,6 @@
 
 #include "PluginConfig.h"
 #include "sqlite3.h"
-#include "DefaultPackage.h"
 #include "InsertionDialog.h"
 #include "SnippetDock.h"
 #include "SettingDialog.h"

@@ -187,6 +187,10 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 (for the detail change log (including the development log) please refer to the CHANGELOG file in the repository)
 
 
+0.5.60
+- Fingertext will not be shipped with a Fingertextsamplesnippet.ftd file. To install the default snippets, just go to menu > plugin > FingerText > Install Default Snippet Package.
+- The symbol "-" is allowed in triggertext.
+- Only () can used to wrap parameters. It means that you can only trigger the mit snippet using "mit(Tom)", but not "mit<Tom>".
 
 0.5.58
 - The last hotspot problem works for diaglog insertion too
@@ -276,7 +280,7 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 - Fixed: snippet dock not updating when previous session is loaded.
 - Fixed: Notepad++ not registering state of snippet dock
 - Fixed: FILENAME EXTNAME keyword insert paths with Chinese characters properly under ANSI
-- Added: more instructions about params insertion method into the README. Try to trigger the snippet "mit" by typing "mit(2010,John Smith)" (without quote) and hit tab to see what it means.
+- Added: more instructions about params insertion method into the README. Try to trigger the snippet "mit" by typing "mit(John Smith)" (without quote) and hit tab to see what it means.
 
 0.5.39
 - Added: dynamic hotspot (lis), which is a drop down box version of (opt)
