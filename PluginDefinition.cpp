@@ -75,6 +75,8 @@ int g_importSnippetsIndex;
 int g_exportSnippetsIndex;
 int g_deleteAllSnippetsIndex;
 int g_downloadDefaultPackageIndex;
+int installDefaultPackageIndex;
+int g_installDefaultPackageIndex;
 int g_TriggerTextCompletionIndex;
 int g_InsertHotspotIndex;
 int g_insertPreviousIndex;
@@ -285,6 +287,7 @@ void commandMenuInit()
     g_selectionToSnippetIndex = setCommand(TEXT("Create Snippet from Selection"), doSelectionToSnippet);
     g_importSnippetsIndex = setCommand(TEXT("Import Snippets from ftd file"), importSnippetsOnly);
     //g_downloadDefaultPackageIndex = setCommand(TEXT("Import Default Snippet Package"), downloadDefaultPackage);
+    g_downloadDefaultPackageIndex = setCommand(TEXT("Install Default Snippet Package"), installDefaultPackage);
     g_exportSnippetsIndex = setCommand(TEXT("Export All Snippets"), exportSnippetsOnly);
     g_deleteAllSnippetsIndex = setCommand(TEXT("Delete All Snippets"), exportAndClearSnippets);
     
@@ -3835,6 +3838,25 @@ void setTextTarget(bool fromTab)
 void setListTarget()
 {    
     insertionDlg.setListTarget();
+}
+
+void installDefaultPackage()
+{
+      HRSRC hRes = FindResource((HINSTANCE)g_hModule, MAKEINTRESOURCE(ID_CUSTOM1), L"ANYTHINGGOESHERE");
+      HGLOBAL hMem = LoadResource((HINSTANCE)g_hModule, hRes);
+      DWORD size = SizeofResource((HINSTANCE)g_hModule, hRes);
+      char* resText = (char*)LockResource(hMem);
+      char* text = (char*)malloc(size + 1);
+      memcpy(text, resText, size);
+      text[size] = 0;
+      FreeResource(hMem);
+
+
+    //std::ofstream myfile;
+    //myfile.open (g_downloadPath);
+    //myfile << getDefaultPackage();
+    //myfile.close();
+    //importSnippets(g_downloadPath);
 }
 
 void downloadDefaultPackage()

@@ -50,7 +50,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.\Utils;.\DuckEval;.\NppApi;.\sqlite3;.\DialogFeatures;.\Dialogs;.\;.\Config;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\Utils;.\DuckEval;.\NppApi;.\Embeded;.\DefaultSnippetPackage;.\sqlite3;.\DialogFeatures;.\Dialogs;.\;.\Config;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader>
@@ -74,7 +74,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>.\Utils;.\DuckEval;.\NppApi;.\sqlite3;.\DialogFeatures;.\Dialogs;.\Config;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\Utils;.\DuckEval;.\NppApi;.\Embeded;.\DefaultSnippetPackage;.\sqlite3;.\DialogFeatures;.\Dialogs;.\;.\Config;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -108,6 +108,7 @@
     <ClCompile Include="Dialogs\SnippetDock.cpp" />
     <ClCompile Include="DllMain.cpp" />
     <ClCompile Include="DuckEval\DuckEval.cpp" />
+    <ClCompile Include="Embeded\DefaultPackage.cpp" />
     <ClCompile Include="NppApi\NppApiHelpers.cpp" />
     <ClCompile Include="PluginDefinition.cpp" />
     <ClCompile Include="Sqlite3\sqlite3.c" />
@@ -129,6 +130,7 @@
     <ClInclude Include="Dialogs\SettingDialog.h" />
     <ClInclude Include="Dialogs\SnippetDock.h" />
     <ClInclude Include="DuckEval\DuckEval.h" />
+    <ClInclude Include="Embeded\DefaultPackage.h" />
     <ClInclude Include="NppApi\menuCmdID.h" />
     <ClInclude Include="NppApi\Notepad_plus_msgs.h" />
     <ClInclude Include="NppApi\NppApiHelpers.h" />
@@ -146,6 +148,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Changelog.txt" />
+    <None Include="DefaultSnippetPackage\fingertext_standard_library-0.2.0.ftd" />
     <None Include="README.rdoc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

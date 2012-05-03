@@ -1,6 +1,6 @@
-//This file is part of FingerText, a notepad++ snippet plugin.
+//This file is part of ErinataNppPluginTemplate, a notepad++ snippet plugin.
 //
-//FingerText is released under MIT License.
+//ErinataNppPluginTemplate is released under MIT License.
 //
 //MIT license
 //
@@ -27,37 +27,11 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 //DEALINGS IN THE SOFTWARE.
 
-//#define TESTING
+#ifndef DEFAULTPACKAGE_H
+#define DEFAULTPACKAGE_H
 
+#include "PluginDefinition.h"
 
-#define VERSION_TEXT "0.5.60"
-#define VERSION_NUM 0,5,60,0
-#define VERSION_LINEAR 560
-#define VERSION_KEEP_CONFIG_START 549
-#define VERSION_STAGE "(Alpha)"
-#ifdef TESTING
-#define VERSION_STAGE_ADD " Nightly"
-#else
-#define VERSION_STAGE_ADD ""
-#endif
+std::string getDefaultPackage();
 
-
-#define AUTHOR_NAME "erinata"
-#define PLUGIN_NAME "FingerText"
-#define COPYRIGHT_TEXT "Copyright (C) 2011-2012"
-#define DESCRIPTION_TEXT "A snippet plugin for notepad++"
-
-#define DATE_TEXT "April 2012"
-#define AUTHOR_TEXT "Author: Tom Lam\r\n"
-#define EMAIL_TEXT "Email: erinata@gmail.com\r\n"
-#define ABOUT_TEXT "\
-Update to the lastest version:\r\n\
-           http://sourceforge.net/projects/fingertext/ \r\n\
-Usage Guide and Source code:\r\n\
-           http://github.com/erinata/FingerText \r\n\r\n\
-"
-#ifdef TESTING
-#define MENU_LENGTH 22
-#else
-#define MENU_LENGTH 17
-#endif
+#endif //DEFAULTPACKAGE_H

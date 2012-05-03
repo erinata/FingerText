@@ -44,6 +44,7 @@
 
 #include "PluginConfig.h"
 #include "sqlite3.h"
+#include "DefaultPackage.h"
 #include "InsertionDialog.h"
 #include "SnippetDock.h"
 #include "SettingDialog.h"
@@ -54,6 +55,7 @@
 #include "StringUtils.h"
 #include "ConversionUtils.h"
 #include "DebugUtils.h"
+
 
 // Functions that are loaded when notepad++ starts
 void pluginInit(HANDLE hModule);   // Initialization of your plugin data
@@ -148,7 +150,8 @@ void editSnippet();
 void deleteSnippet();
 void exportSnippetsOnly();
 void clearAllSnippets();
-void downloadStandardLibrary();
+void downloadDefaultPackage();
+void installDefaultPackage();
 void exportAndClearSnippets();
 bool exportSnippets(bool all = true, wchar_t* path = TEXT(""));
 void importSnippetsOnly();
