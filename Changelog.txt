@@ -1,5 +1,8 @@
 changelog (for developer use only, include unreleased versions)
 
+0.5.60
+****** Embed the default snippet in Fingertext
+
 0.5.59
 ****** The symbol "-" is allowed in triggertext.
 ****** only () is used to wrap parameters

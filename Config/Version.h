@@ -29,9 +29,9 @@
 
 //#define TESTING
 
-#define VERSION_TEXT "0.5.59.1"
-#define VERSION_NUM 0,5,59,1
-#define VERSION_LINEAR 559
+#define VERSION_TEXT "0.5.60"
+#define VERSION_NUM 0,5,60,0
+#define VERSION_LINEAR 560
 #define VERSION_KEEP_CONFIG_START 549
 #define VERSION_STAGE "(Alpha)"
 #ifdef TESTING
