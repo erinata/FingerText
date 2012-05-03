@@ -285,9 +285,10 @@ void commandMenuInit()
     g_toggleDisableIndex = setCommand(TEXT("Toggle On/Off FingerText"), toggleDisable);
     setCommand();
     g_selectionToSnippetIndex = setCommand(TEXT("Create Snippet from Selection"), doSelectionToSnippet);
+    g_downloadDefaultPackageIndex = setCommand(TEXT("Install Default Snippet Package"), installDefaultPackage);
     g_importSnippetsIndex = setCommand(TEXT("Import Snippets from ftd file"), importSnippetsOnly);
     //g_downloadDefaultPackageIndex = setCommand(TEXT("Import Default Snippet Package"), downloadDefaultPackage);
-    g_downloadDefaultPackageIndex = setCommand(TEXT("Install Default Snippet Package"), installDefaultPackage);
+    
     g_exportSnippetsIndex = setCommand(TEXT("Export All Snippets"), exportSnippetsOnly);
     g_deleteAllSnippetsIndex = setCommand(TEXT("Delete All Snippets"), exportAndClearSnippets);
     
@@ -3842,21 +3843,53 @@ void setListTarget()
 
 void installDefaultPackage()
 {
-      HRSRC hRes = FindResource((HINSTANCE)g_hModule, MAKEINTRESOURCE(ID_CUSTOM1), L"ANYTHINGGOESHERE");
-      HGLOBAL hMem = LoadResource((HINSTANCE)g_hModule, hRes);
-      DWORD size = SizeofResource((HINSTANCE)g_hModule, hRes);
-      char* resText = (char*)LockResource(hMem);
-      char* text = (char*)malloc(size + 1);
-      memcpy(text, resText, size);
-      text[size] = 0;
-      FreeResource(hMem);
+    updateSnippetCount();
+    
+    int messageReturn = IDYES;
 
+    if (toDouble(g_snippetCount) != 0)
+    {
+        messageReturn = showMessageBox(TEXT("It seems that you already have some snippets in your FingerText database.\r\n\r\nAre you sure that you want to install the Default Snippet Package?"),MB_YESNO);
+        if (messageReturn == IDNO) return;
+    }
+    
 
-    //std::ofstream myfile;
-    //myfile.open (g_downloadPath);
+    HGLOBAL     res_handle = NULL;
+    HRSRC       res;
+    char *      res_data;
+    DWORD       res_size;
+
+    // NOTE: providing g_hInstance is important, NULL might not work
+    res = FindResource((HINSTANCE)g_hModule, MAKEINTRESOURCE(SNIPPET_RESOURCE), RT_RCDATA);
+    //res = FindResource(NULL, MAKEINTRESOURCE(MY_RESOURCE), RT_RCDATA);
+    
+    if (!res)
+    {
+        showMessageBox(TEXT("Error importing Default Snippets."));
+        return;
+    }
+    
+    res_handle = LoadResource((HINSTANCE)g_hModule, res);
+    if (!res_handle)
+    {
+        showMessageBox(TEXT("Error importing Default Snippets."));
+        return;
+    }
+    
+    res_data = (char*)LockResource(res_handle);
+    res_size = SizeofResource(NULL, res);
+
+    std::string defaultSnippetText;
+    defaultSnippetText = toString(res_data);
+    
+    std::ofstream myfile;
+    myfile.open (g_downloadPath);
     //myfile << getDefaultPackage();
-    //myfile.close();
-    //importSnippets(g_downloadPath);
+    myfile << defaultSnippetText;
+    myfile.close();
+    importSnippets(g_downloadPath);
+
+    //delete [] res_data;
 }
 
 void downloadDefaultPackage()
