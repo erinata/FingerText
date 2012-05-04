@@ -377,14 +377,6 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 - Group config and database files into a FingerText folder under config folder
 
 0.4.16
-- This is primary a bug fixing version
-- chain snippet is indicated by $[![(cha)]!] instead of $[![(chain)]!] so that different hotspots can line up better.
-- Fixed error when saving file in ProgramFile folders without Admin right
-- Fixed tag completion not updating SnippetDock hint
-- Fixed infinite recusion bug in keyword and command hotspot
-- performance improvment in live search
-
-0.4.15
 - Add Dynamic Hotspots. Currently there are 3 types of dynamic hotspots (chain) (key) (cmd). More is coming.
 - Added Tag completion command
 - Added indentation reference
@@ -411,13 +403,6 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 - More messages for snippet saving and importing
 - Fixed problem of not opening the correct snippet in editor
 - Tons of other bugs fixed
-
-0.4.4
-- Implemented Snippets import and export function. Change the database storage location to the config folder. (Should solve the problem of snippet not saving correctly under Windows 7 and Vista)
-- A better step by step tutorial for people who are new to snippets
-
-0.4.1
-- Fixing the version number problem of 0.4.0
 
 0.4.0
 - First stable version using sqlite3. 

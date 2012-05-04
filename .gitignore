@@ -3,7 +3,6 @@
 /Unicode Debug/*
 /Unicode Release/*
 /_package/*
-/DefaultSnippetPackage/*
 test.bat
 testrelease.bat
 release.bat

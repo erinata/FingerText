@@ -1,0 +1,1220 @@
+template
+Name:makefile
+CXXFLAGS =	-O2 -g -Wall -fmessage-length=0
+
+OBJS =		$[![file name]!].o
+
+LIBS =
+
+TARGET =	$[![file name]!].exe
+
+$(TARGET):	$(OBJS)
+	$(CXX) -o $(TARGET) $(OBJS) $(LIBS)
+
+all:	$(TARGET)
+
+clean:
+	rm -f $(OBJS) $(TARGET)
+[>END<]!$[FingerTextData FingerTextData]@#
+simple
+Name:makefile
+all:
+	g++ -c -Wall $[![{FileName}]!].cpp
+	g++ $[![{FileName}]!].o -o $[![{FileName}]!][>END<]!$[FingerTextData FingerTextData]@#
+while
+Lang:MATLAB
+while $[![{condition}]!]
+   $[![]!]
+end[>END<]!$[FingerTextData FingerTextData]@#
+warning
+Lang:MATLAB
+warning('$[![{Description}]!]');[>END<]!$[FingerTextData FingerTextData]@#
+title
+Lang:MATLAB
+title('$[![{title 1}]!]');[>END<]!$[FingerTextData FingerTextData]@#
+template
+Lang:MATLAB
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+% Ext:           $[![$[1[(key)FILENAME]1]]!]
+% 
+% Description:    $[![To be specified ...... ]!]
+% 
+% Inputs:         $[![To be specified ...... ]!]
+% 
+% Outputs:        $[![To be specified ...... ]!]
+% 
+% Date Created:   $[1[(key)DATE:yyyyMMdd]1]
+% 
+% Author:         $[![{your name}]!]
+% 
+% License:        $[![No License]!]
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+try
+  % Main code here
+  $[![]!]
+catch
+  % Exception handling here
+end[>END<]!$[FingerTextData FingerTextData]@#
+if
+Lang:MATLAB
+if $[![{condition}]!],
+  $[![]!]
+end[>END<]!$[FingerTextData FingerTextData]@#
+function
+Lang:MATLAB
+function [ $[![{output}]!] ] = $[![{Function Name}]!]( $[![{input}]!] )
+  $[![]!]
+end[>END<]!$[FingerTextData FingerTextData]@#
+for
+Lang:MATLAB
+for $[![i]!]=$[![1]!]:$[![n]!]
+   $[![]!]
+end[>END<]!$[FingerTextData FingerTextData]@#
+template
+Lang:CPP
+ //============================================================================
+// Name         : $[![$[1[(key)FILENAME]1]]!]
+// Author       : $[![{your name}]!]
+// Version      : $[![{Version}]!]
+// Date         : $[1[(key)DATE:yyyyMMdd]1]  
+// License      : $[![No License]!]
+// Description  : $[![To be added........]!]
+//============================================================================
+
+#include <stdio.h>
+
+int main() {
+    $[![{Body}]!]
+    return 0;
+}
+[>END<]!$[FingerTextData FingerTextData]@#
+switch
+Lang:CPP
+switch ($[![{Key}]!]) 
+{
+  	case $[![{Value}]!]:
+		    $[![{Body}]!]
+		    break;
+	  default:
+        $[![{default}]!]
+		    break;
+}[>END<]!$[FingerTextData FingerTextData]@#
+main
+Lang:CPP
+int main(int argc, char* argv[]) 
+{
+	  $[![[Body]]!]
+}[>END<]!$[FingerTextData FingerTextData]@#
+if
+Lang:CPP
+if ($[![{condition}]!])
+{
+  $[![{Body 1}]!]
+} else
+{
+  $[![{Body 2}]!]
+}[>END<]!$[FingerTextData FingerTextData]@#
+helloworld
+Lang:CPP
+//============================================================================
+ // Name         : HelloWorld.cpp
+ // Author       : 
+ // Version      : 
+ // Date         : 
+ // License      : 
+ // Description  : Hello World in C++
+ //============================================================================
+ 
+#include <iostream>
+using namespace std;
+
+int main() {
+    cout << "!!!Hello World!!!" << endl; 
+    cin.get();
+    return 0;
+}
+[>END<]!$[FingerTextData FingerTextData]@#
+for
+Lang:CPP
+int $[![i]!] = 0;
+for ( $[![i]!]= 0; $[![{Condition}]!]; ++$[![i]!]) {
+	  $[![{Body}]!]
+}[>END<]!$[FingerTextData FingerTextData]@#
+do
+Lang:CPP
+do
+{ 
+	$[![{Body}]!] 
+} while ($[![{Condition}]!]);[>END<]!$[FingerTextData FingerTextData]@#
+cout
+Lang:CPP
+cout << "$[![{Text}]!]" << endl;[>END<]!$[FingerTextData FingerTextData]@#
+template
+Lang:C
+ //============================================================================
+// Name         : $[![$[1[(key)FILENAME]1]]!]
+// Author       : $[![{your name}]!]
+// Version      : $[![{Version}]!]
+// Date         : $[1[(key)DATE:yyyyMMdd]1]  
+// License      : $[![No License]!]
+// Description  : $[![To be added........]!]
+//============================================================================
+
+#include <stdio.h>
+
+int main() {
+    $[![{Body}]!]
+    return 0;
+}
+[>END<]!$[FingerTextData FingerTextData]@#
+switch
+Lang:C
+switch ($[![{Key}]!]) 
+{
+  	case $[![{Value}]!]:
+		    $[![{Body}]!]
+		    break;
+	  default:
+        $[![{default}]!]
+		    break;
+}[>END<]!$[FingerTextData FingerTextData]@#
+main
+Lang:C
+int main(int argc, char* argv[]) 
+{
+	  $[![[Body]]!]
+}[>END<]!$[FingerTextData FingerTextData]@#
+if
+Lang:C
+if ($[![{condition}]!])
+{
+  $[![{Body 1}]!]
+} else
+{
+  $[![{Body 2}]!]
+}[>END<]!$[FingerTextData FingerTextData]@#
+helloworld
+Lang:C
+//============================================================================
+ // Name         : HelloWorld.cpp
+ // Author       : 
+ // Version      : 
+ // Date         : 
+ // License      : 
+ // Description  : Hello World in C
+ //============================================================================
+ 
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+  	puts("!!!Hello World!!!");
+  	return EXIT_SUCCESS;
+}
+[>END<]!$[FingerTextData FingerTextData]@#
+for
+Lang:C
+int $[![i]!] = 0;
+for ( $[![i]!]= 0; $[![{Condition}]!]; ++$[![i]!]) {
+	  $[![{Body}]!]
+}[>END<]!$[FingerTextData FingerTextData]@#
+do
+Lang:C
+do
+{ 
+	$[![{Body}]!] 
+} while ($[![{Condition}]!]);[>END<]!$[FingerTextData FingerTextData]@#
+time
+GLOBAL
+$[![(key)TIME:HH:mm:ss]!][>END<]!$[FingerTextData FingerTextData]@#
+shebang
+GLOBAL
+#!/usr/bin/env[>END<]!$[FingerTextData FingerTextData]@#
+npp
+GLOBAL
+Notepad++
+[>END<]!$[FingerTextData FingerTextData]@#
+mit
+GLOBAL
+MIT license
+
+Copyright (C) $[![(key)DATE:yyyy]!] by $[![{Your Name}]!]
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+$[![]!]
+
+[>END<]!$[FingerTextData FingerTextData]@#
+lorem
+GLOBAL
+Lorem ipsum dolor sit amet, libero turpis non cras ligula, id commodo, aenean est in volutpat amet sodales, porttitor bibendum facilisi suspendisse, aliquam ipsum ante morbi sed ipsum mollis. Sollicitudin viverra, vel varius eget sit mollis. Commodo enim aliquam suspendisse tortor cum diam, commodo facilisis, rutrum et duis nisl porttitor, vel eleifend odio ultricies ut, orci in adipiscing felis velit nibh. Consectetuer porttitor feugiat vestibulum sit feugiat, voluptates dui eros libero. Etiam vestibulum at lectus.
+Donec vivamus. Vel donec et scelerisque vestibulum. Condimentum aliquam, mollit magna velit nec, tempor cursus vitae sit aliquet neque purus. Ultrices lacus proin conubia dictum tempus, tempor pede vitae faucibus, sem auctor, molestie diam dictum aliquam. Dolor leo, ridiculus est ut cubilia nec, fermentum arcu praesent, pede etiam. Tempor vestibulum turpis id ligula mi mattis. Eget arcu vitae mauris amet odio. Diam nibh diam, quam elit, libero nostra ut. Pellentesque vehicula. Eget sed, dapibus magna nulla nonummy commodo accumsan morbi, praesent volutpat vel id maecenas, morbi habitant sem in adipiscing mi erat, malesuada pretium tortor rutrum eu eros vel. Donec molestie, faucibus a amet commodo scelerisque libero massa. Sapien quam in eu vel nulla.
+Iaculis et dui ullamcorper, non egestas condimentum dui phasellus. Sit non mattis a, leo in imperdiet erat nec pulvinar. Ornare massa justo cursus, convallis mauris interdum felis. Felis posuere metus, ornare pede montes, morbi urna sed temporibus non, nibh inceptos enim turpis natoque ac praesent. Litora vivamus veritatis vel nonummy, ut qui est pellentesque at alias, sed condimentum dapibus.
+Rhoncus lacinia. Imperdiet nulla sem fringilla, purus enim amet, nascetur faucibus, adipiscing neque ut bibendum, at felis nec in. Mauris ultricies, et pede id potenti in nec, mi elit rhoncus ligula, mollis lacus congue scelerisque magna. Ultrices risus elit lectus nunc blandit quis, magna enim ipsum, nostra leo vestibulum quis nibh arcu sed. Amet a sagittis fringilla, massa vitae rhoncus, a magna curabitur in.[>END<]!$[FingerTextData FingerTextData]@#
+if
+GLOBAL
+if ($[3[]3]) {
+ $[![]!]
+} $[2[(lis)|else $[![(cha)if]!]| else {
+ $[![]!]
+}]2][>END<]!$[FingerTextData FingerTextData]@#
+filename
+GLOBAL
+$[![(key)FILENAME]!]$[![(key)EXTNAME]!][>END<]!$[FingerTextData FingerTextData]@#
+execute
+GLOBAL
+$[![(run)$[![{type a command (e.g. dir) and hit TAB}]!]]!][>END<]!$[FingerTextData FingerTextData]@#
+evaluate
+GLOBAL
+$[![(eva)$[![{type a math expression (e.g. 1+1) and hit TAB}]!]]!][>END<]!$[FingerTextData FingerTextData]@#
+directory
+GLOBAL
+$[![(key)DIRECTORY]!][>END<] !$[FingerTextData FingerTextData]@#
+date
+GLOBAL
+$[![(key)DATE:yyyy/MM/dd]!][>END<]!$[FingerTextData FingerTextData]@#
+tagshort
+Ext:xml
+<$[![tagname]!]/>[>END<]!$[FingerTextData FingerTextData]@#
+tag
+Ext:xml
+<$[![tagname]!]>$[0[]0]</$[![tagname]!]>[>END<]!$[FingerTextData FingerTextData]@#
+declaration
+Ext:xml
+<?xml version="1.0"?>$[![]!][>END<]!$[FingerTextData FingerTextData]@#
+cdata
+Ext:xml
+<![CDATA[
+  $[![]!]
+]]>[>END<]!$[FingerTextData FingerTextData]@#
+times
+Ext:rb
+times do |$[![i]!]|
+  $[1[(key)SELECTION]1]$[![]!]
+end[>END<]!$[FingerTextData FingerTextData]@#
+shebang
+Ext:rb
+#!/usr/bin/env ruby$[![]!][>END<]!$[FingerTextData FingerTextData]@#
+rescuelog
+Ext:rb
+begin
+  $[![]!]
+rescue Exception => e
+  File.open("exception.log") do |f|
+    f.puts e.inspect
+    f.puts e.backtrace
+  end
+end[>END<]!$[FingerTextData FingerTextData]@#
+rescue
+Ext:rb
+begin
+  $[![]!]
+rescue Exception => e
+  p e.inspect
+  p e.backtrace
+end[>END<]!$[FingerTextData FingerTextData]@#
+raise
+Ext:rb
+raise "$[![Error!]!]"[>END<]!$[FingerTextData FingerTextData]@#
+lambda
+Ext:rb
+lambda do |$[![e]!]|
+  $[1[(key)SELECTION]1]$[![]!]
+end[>END<]!$[FingerTextData FingerTextData]@#
+if
+Ext:rb
+if $[![{condition}]!]
+  $[![{body1}]!]
+else
+  $[![{body2}]!]
+end[>END<]!$[FingerTextData FingerTextData]@#
+flash
+Ext:rb
+flash[:$[![notice]!]] = "$[![(content)]!]"[>END<]!$[FingerTextData FingerTextData]@#
+exceptionlog
+Ext:rb
+begin
+  $[![]!]
+rescue Exception => e
+  File.open("exception.log") do |f|
+    f.puts e.inspect
+    f.puts e.backtrace
+  end
+end[>END<]!$[FingerTextData FingerTextData]@#
+each
+Ext:rb
+each do |$[![i]!]|
+  $[1[(key)SELECTION]1]$[![]!]
+end[>END<]!$[FingerTextData FingerTextData]@#
+do
+Ext:rb
+do |$[![i]!]|
+  $[1[(key)SELECTION]1]$[![]!]
+end[>END<]!$[FingerTextData FingerTextData]@#
+dir
+Ext:rb
+File.dirname(__FILE__)[>END<]!$[FingerTextData FingerTextData]@#
+def
+Ext:rb
+def $[![{method name}]!]$[![]!]
+  $[1[(key)SELECTION]1]$[![]!]
+end[>END<]!$[FingerTextData FingerTextData]@#
+case
+Ext:rb
+case $[![{object}]!]
+when $[![{condition1}]!]
+  $[![{body1}]!]
+when $[![{condition2}]!]
+  $[![{body2}]!]
+else
+  $[![{default}]!]
+end[>END<]!$[FingerTextData FingerTextData]@#
+alias
+Ext:rb
+alias_method :$[![{new name}]!], :$[![{old name}]!][>END<]!$[FingerTextData FingerTextData]@#
+aa
+Ext:rb
+attr_accessor :$[![{attr name}]!][>END<]!$[FingerTextData FingerTextData]@#
+try
+Ext:r
+tryCatch({
+	$[![try]!]
+}, error = function(e){
+	$[![catch]!]
+})
+[>END<]!$[FingerTextData FingerTextData]@#
+switch
+Ext:r
+switch($[![key]!],
+	$[![item_1]!] = $[!["value_1"]!],
+	$[![item_2]!] = $[!["value_2"]!]
+)
+[>END<]!$[FingerTextData FingerTextData]@#
+sortdf
+Ext:r
+$[![my_data_frame]!][with($[![my_data_frame]!],order($[![order_by]!]),]
+[>END<]!$[FingerTextData FingerTextData]@#
+roxygen
+Ext:r
+#' Description 
+#' @name 
+#' @aliases 
+#' @title 
+#' @param 
+#' @param 
+#' @param 
+#' @return 
+#' @author 
+#' @seealso \code{\link{}} 
+#' @export
+#' @examples      
+#' \dontrun{
+#' 
+#' }  [>END<]!$[FingerTextData FingerTextData]@#
+rm
+Ext:r
+rm(list=ls(all=TRUE))
+$[![]!][>END<]!$[FingerTextData FingerTextData]@#
+lm
+Ext:r
+summary(lm($[![y~x]!]))[>END<]!$[FingerTextData FingerTextData]@#
+fun
+Ext:r
+$[![function_name]!]<-function(){
+	$[![expression]!]
+}
+[>END<] !$[FingerTextData FingerTextData]@#
+foreach
+Ext:r
+foreach($[![iterator]!] ) %do% {
+	$[![expression]!]
+}
+[>END<]!$[FingerTextData FingerTextData]@#
+for
+Ext:r
+for ($[![i=]!]){
+	$[![expression]!]
+}
+[>END<]!$[FingerTextData FingerTextData]@#
+cl
+Ext:r
+cl<-makeCluster(detectCores(8))
+[>END<]!$[FingerTextData FingerTextData]@#
+S3generic
+Ext:r
+$[![method_name]!] <-
+function(x,...){
+    UseMethod("$[![method_name]!]")
+}
+[>END<] !$[FingerTextData FingerTextData]@#
+template
+Ext:pl
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+main(@ARGV)
+
+sub main
+{
+  $[0[]0]
+}
+
+[>END<]!$[FingerTextData FingerTextData]@#
+sub
+Ext:pl
+sub $[![some_sub]!]
+{
+  $[![]!]
+}
+[>END<]!$[FingerTextData FingerTextData]@#
+shebang
+Ext:pl
+#!/usr/bin/env perl$[![]!][>END<]!$[FingerTextData FingerTextData]@#
+print
+Ext:pl
+print "$[![Hello World!]!]"[>END<]!$[FingerTextData FingerTextData]@#
+message
+Ext:pl
+message("$[![Hello World!]!]")[>END<]!$[FingerTextData FingerTextData]@#
+include
+Ext:php
+include("$[![file.php]!]");[>END<]!$[FingerTextData FingerTextData]@#
+echo
+Ext:php
+echo "$[![Hello World!]!]";[>END<]!$[FingerTextData FingerTextData]@#
+comment
+Ext:php
+/*  $[0[]0]  */[>END<]!$[FingerTextData FingerTextData]@#
+print
+Ext:lua
+print ("$[![Hello World!]!]")[>END<]!$[FingerTextData FingerTextData]@#
+if
+Ext:lua
+if $[![{condition}]!] then
+  $[![]!]
+else
+  $[![]!]
+end
+[>END<]!$[FingerTextData FingerTextData]@#
+function
+Ext:lua
+function $[![some_function]!]
+  $[![]!]
+end
+[>END<]!$[FingerTextData FingerTextData]@#
+for
+Ext:lua
+for $[![i]!] = $[![{from}]!], $[![{to}]!], $[![{step}]!] do
+  $[![]!]
+end
+[>END<]!$[FingerTextData FingerTextData]@#
+write
+Ext:js
+document.write("$[![<p>Hello World</p>]!]");[>END<]!$[FingerTextData FingerTextData]@#
+var
+Ext:js
+var $[![x]!] = $[![]!][>END<]!$[FingerTextData FingerTextData]@#
+ifelse
+Ext:js
+if ($[![{condition}]!])
+{
+  $[![]!]
+} else
+{
+  $[![]!]
+}
+[>END<]!$[FingerTextData FingerTextData]@#
+if
+Ext:js
+if ($[![{condition}]!])
+{
+  $[![]!]
+}
+[>END<]!$[FingerTextData FingerTextData]@#
+getbyid
+Ext:js
+document.getElementById("$[![some_id]!]")$[![]!][>END<]!$[FingerTextData FingerTextData]@#
+function
+Ext:js
+function $[![function_name]!]()
+{
+  $[![]!];
+}
+[>END<]!$[FingerTextData FingerTextData]@#
+for
+Ext:js
+for ($[![i]!]=0;$[![i]!]<=$[![max_value]!];$[![i]!]++)
+{
+  $[![]!]
+}
+[>END<]!$[FingerTextData FingerTextData]@#
+comment
+Ext:js
+/*  $[0[]0]  */[>END<]!$[FingerTextData FingerTextData]@#
+array
+Ext:js
+var $[![array_name]!] = new Array($[!["item 1"]!],$[!["item 2"]!],$[!["item 3"]!]);[>END<]!$[FingerTextData FingerTextData]@#
+alert
+Ext:js
+alert("$[![Hello World!]!]");[>END<]!$[FingerTextData FingerTextData]@#
+ul
+Ext:html
+<ul>
+	<li>$[![item 1]!]</li>
+	<li>$[![item 2]!]</li>
+  <li>$[![item 3]!]</li>
+</ul>[>END<]!$[FingerTextData FingerTextData]@#
+u
+Ext:html
+<u>$[0[]0]</u>[>END<]!$[FingerTextData FingerTextData]@#
+tt
+Ext:html
+<tt>$[0[]0]</tt>[>END<]!$[FingerTextData FingerTextData]@#
+tr
+Ext:html
+<tr>$[0[]0]</tr>[>END<]!$[FingerTextData FingerTextData]@#
+title
+Ext:html
+title="$[0[]0]"[>END<]!$[FingerTextData FingerTextData]@#
+th
+Ext:html
+<th>$[0[]0]</th>[>END<]!$[FingerTextData FingerTextData]@#
+tf
+Ext:html
+<input type="text" name="$[![{some name}]!]" value="$[![{some value}]!]" />[>END<]!$[FingerTextData FingerTextData]@#
+template
+Ext:html
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>some title</title>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+    <p>This is an HTML document template.
+  </body>
+</html>[>END<]!$[FingerTextData FingerTextData]@#
+td
+Ext:html
+<td>$[0[]0]</td>[>END<]!$[FingerTextData FingerTextData]@#
+tagshort
+Ext:html
+<$[![tagname]!]/>[>END<]!$[FingerTextData FingerTextData]@#
+tag
+Ext:html
+<$[![tagname]!]>$[0[]0]</$[![tagname]!]>[>END<]!$[FingerTextData FingerTextData]@#
+table
+Ext:html
+<table$[![ border="1"]!]>
+  <tr>
+    <th>$[![Header 1]!]</th>
+    <th>$[![Header 2]!]</th>
+  </tr>
+  <tr>
+    <td>$[![row 1 col 1]!]</td>
+    <td>$[![row 1 col 2]!]</td>
+  </tr>
+  <tr>
+    <td>$[![row 2 col 1]!]</td>
+    <td>$[![row 2 col 2]!]</td>
+  </tr>
+</table>[>END<]!$[FingerTextData FingerTextData]@#
+sup
+Ext:html
+<sup>$[0[]0]</sup>[>END<]!$[FingerTextData FingerTextData]@#
+submit
+Ext:html
+<input type="submit" value="$[![Submit]!]" />[>END<]!$[FingerTextData FingerTextData]@#
+sub
+Ext:html
+<sub>$[0[]0]</sub>[>END<]!$[FingerTextData FingerTextData]@#
+style
+Ext:html
+<style type="text/css">
+  $[0[]0]
+</style>[>END<]!$[FingerTextData FingerTextData]@#
+strong
+Ext:html
+<strong>$[0[]0]</strong>[>END<]!$[FingerTextData FingerTextData]@#
+span
+Ext:html
+<span id="$[![some_id]!]" class="$[![some_class]!]>$[0[]0]</span>[>END<]!$[FingerTextData FingerTextData]@#
+space
+Ext:html
+&nbsp;[>END<]!$[FingerTextData FingerTextData]@#
+small
+Ext:html
+<small>$[0[]0]</small>[>END<]!$[FingerTextData FingerTextData]@#
+select
+Ext:html
+<select>
+  <option>$[![option 1]!]</option>
+  <option>$[![option 2]!]</option>
+  <option>$[![option 3]!]$[0[]0]</option>
+</select>[>END<]!$[FingerTextData FingerTextData]@#
+script
+Ext:html
+<script type="text/javascript">
+  $[0[]0]
+</script>[>END<]!$[FingerTextData FingerTextData]@#
+samp
+Ext:html
+<samp>$[0[]0]</samp>[>END<]!$[FingerTextData FingerTextData]@#
+php
+Ext:html
+<?php $[0[]0]?>[>END<]!$[FingerTextData FingerTextData]@#
+p
+Ext:html
+<p>$[0[]0]</p>[>END<]!$[FingerTextData FingerTextData]@#
+ol
+Ext:html
+<ol>
+	<li>$[![item 1]!]</li>
+	<li>$[![item 2]!]</li>
+  <li>$[![item 3]!]$[0[]0]</li>
+</ol>[>END<]!$[FingerTextData FingerTextData]@#
+noscript
+Ext:html
+<noscript>$[![Your browser does not support JavaScript!]!]$[0[]0]</noscript>[>END<]!$[FingerTextData FingerTextData]@#
+meta
+Ext:html
+<meta name="description" content="$[![some description]!]" />
+<meta name="keywords" content="$[![HTML,CSS,XML,JavaScript]!]" />
+<meta name="author" content="$[![{your name}]!]" />
+<meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+[>END<]!$[FingerTextData FingerTextData]@#
+loadjs
+Ext:html
+<script type="text/javascript" src="$[![javascript]!].js"></script>[>END<]!$[FingerTextData FingerTextData]@#
+loadcss
+Ext:html
+<link rel="stylesheet" type="text/css" href="$[![{style_sheet}]!].css">[>END<]!$[FingerTextData FingerTextData]@#
+kbd
+Ext:html
+<kbd>$[0[]0]</kbd>[>END<]!$[FingerTextData FingerTextData]@#
+ins
+Ext:html
+<ins>$[0[]0]</ins>[>END<]!$[FingerTextData FingerTextData]@#
+img
+Ext:html
+<img src="$[![image]!].jpg" alt="$[![IMAGE]!]"$[![ align="left" ]!]/>[>END<]!$[FingerTextData FingerTextData]@#
+id
+Ext:html
+id="$[![some_id]!]"[>END<]!$[FingerTextData FingerTextData]@#
+i
+Ext:html
+<i>$[0[]0]</i>[>END<]!$[FingerTextData FingerTextData]@#
+hr
+Ext:html
+<hr/>[>END<]!$[FingerTextData FingerTextData]@#
+head
+Ext:html
+<head>$[0[]0]</head>[>END<]!$[FingerTextData FingerTextData]@#
+h2
+Ext:html
+<h2>$[0[]0]</h2>[>END<]!$[FingerTextData FingerTextData]@#
+h1
+Ext:html
+<h1>$[0[]0]</h1>[>END<]!$[FingerTextData FingerTextData]@#
+form
+Ext:html
+<form name="$[![some_name]!]" action="$[![{form action link}]!]" method="$[![post]!]">
+  $[0[]0]
+</form>[>END<]!$[FingerTextData FingerTextData]@#
+em
+Ext:html
+<em>$[0[]0]</em>[>END<]!$[FingerTextData FingerTextData]@#
+doctype
+Ext:html
+<!DOCTYPE $[![(lis)html|html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"|html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"|html PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd"]!]>
+$[0[]0][>END<]!$[FingerTextData FingerTextData]@#
+div
+Ext:html
+<div id="$[![some_id]!]" class="$[![some_class]!]>$[0[]0]</div>[>END<]!$[FingerTextData FingerTextData]@#
+dfn
+Ext:html
+<dfn>$[0[]0]</dfn>[>END<]!$[FingerTextData FingerTextData]@#
+del
+Ext:html
+<del>$[0[]0]</del>[>END<]!$[FingerTextData FingerTextData]@#
+comment
+Ext:html
+<!-- $[0[]0] -->[>END<]!$[FingerTextData FingerTextData]@#
+code
+Ext:html
+<code>$[0[]0]</code>[>END<]!$[FingerTextData FingerTextData]@#
+class
+Ext:html
+class="$[![some_class]!]"[>END<]!$[FingerTextData FingerTextData]@#
+cite
+Ext:html
+<cite>$[0[]0]</cite>[>END<]!$[FingerTextData FingerTextData]@#
+button
+Ext:html
+<input type="button" value="$[![Button 1]!]" onClick='$[![some_function()]!]'/>$[0[]0][>END<]!$[FingerTextData FingerTextData]@#
+br
+Ext:html
+<br/>[>END<]!$[FingerTextData FingerTextData]@#
+big
+Ext:html
+<big>$[0[]0]</big>[>END<]!$[FingerTextData FingerTextData]@#
+b
+Ext:html
+<b>$[0[]0]</b>[>END<]!$[FingerTextData FingerTextData]@#
+a
+Ext:html
+<a href="$[![{link}]!]">$[![{text}]!]</a>[>END<]!$[FingerTextData FingerTextData]@#
+visualstudio
+Ext:gitignore
+/bin/*
+/Unicode Debug/*
+/Unicode Release/*
+/Ansi Debug/*
+/Ansi Release/*
+/Debug/*
+/Release/*
+*.aps
+*.pdb[>END<]!$[FingerTextData FingerTextData]@#
+heroku_rails
+Ext:gitignore
+log/*.log
+tmp/**/*
+config/database.yml
+db/*.sqlite3
+.bundle
+[>END<]!$[FingerTextData FingerTextData]@#
+partial
+Ext:erb
+<%= render :partial => '$[![(path)]!]' %>[>END<]!$[FingerTextData FingerTextData]@#
+fftf
+Ext:erb
+f.text_field :$[![{attribute}]!][>END<]!$[FingerTextData FingerTextData]@#
+ffta
+Ext:erb
+f.text_area :$[![{attribute}]!][>END<]!$[FingerTextData FingerTextData]@#
+ffrb
+Ext:erb
+f.radio_button :$[![{attribute}]!], :$[![{tag_value}]!][>END<]!$[FingerTextData FingerTextData]@#
+ffpf
+Ext:erb
+f.password_field :$[![{attribute}]!][>END<]!$[FingerTextData FingerTextData]@#
+ffl
+Ext:erb
+f.label :$[![{attribute}]!], "$[![{attribute}]!]"[>END<]!$[FingerTextData FingerTextData]@#
+ffcb
+Ext:erb
+f.check_box :$[![{attribute}]!][>END<]!$[FingerTextData FingerTextData]@#
+cf
+Ext:erb
+<% content_for :$[![{yield_label}]!] do -%>
+	$[0[]0]
+<% end -%>[>END<]!$[FingerTextData FingerTextData]@#
+template
+Ext:do
+ /* Ext:           $[![$[1[(key)FILENAME]1]]!]                */
+ /* Description:    $[![Enter description here......]!]        */
+ /* Inputs:         $[![Input to be specified]!]               */
+ /* Outputs:        $[![Output to be specified]!]              */
+ /* Date Created:   $[1[(key)DATE:yyyyMMdd]1]                  */
+ /* Date Updated:   $[1[(key)DATE:yyyyMMdd]1]                  */
+ /* Author:         $[![$[![(cha)name]!]]!]                    */
+ /* License:        $[![no license]!]                          */
+
+/* initialize */
+#delimit cr
+clear all
+cap set mem 500m
+cap set more off
+
+/* open new logging */
+cap log close
+cap mkdir "log"
+cap log using "log\$[![$[1[(key)FILENAME]1]]!].log" ,replace
+
+$[![{Do something here......}]!]
+
+/* tidy up*/
+cap log close
+[>END<]!$[FingerTextData FingerTextData]@#
+save
+Ext:do
+cap save "$[![{File Name}]!]",replace[>END<]!$[FingerTextData FingerTextData]@#
+reshape
+Ext:do
+reshape $[![{long|wide}]!] $[![{Variable List}]!] , i($[![{ID}]!]) j($[![{period}]!])[>END<]!$[FingerTextData FingerTextData]@#
+lag1
+Ext:do
+($[![{variable}]!]==$[![{variable}]!][_n-1])[>END<]!$[FingerTextData FingerTextData]@#
+insheet_name
+Ext:do
+insheet using "$[![{csv File Name}]!]" ,clear nonames
+foreach var of varlist _all {
+  ren `var' `=`var'[1]'
+}
+drop in 1
+$[![]!][>END<]!$[FingerTextData FingerTextData]@#
+insheet
+Ext:do
+insheet using "$[![{csv File Name}]!]" ,clear$[![]!][>END<]!$[FingerTextData FingerTextData]@#
+infile
+Ext:do
+infile using "$[![{Dictionary Name}]!]", clear$[![]!][>END<]!$[FingerTextData FingerTextData]@#
+forvalues
+Ext:do
+forvalues i = $[![{start}]!]($[![{step}]!])$[![{end}]!]{
+    $[![{Body}]!]
+}
+[>END<]!$[FingerTextData FingerTextData]@#
+comment
+Ext:do
+/* $[![]!] */[>END<]!$[FingerTextData FingerTextData]@#
+zindex
+Ext:css
+z-index:$[0[]0];[>END<]!$[FingerTextData FingerTextData]@#
+yellow
+Ext:css
+#FFFF00[>END<]!$[FingerTextData FingerTextData]@#
+wordwrap
+Ext:css
+word-wrap:$[0[]0];[>END<]!$[FingerTextData FingerTextData]@#
+wordspacing
+Ext:css
+word-spacing:$[![30]!]px;[>END<]!$[FingerTextData FingerTextData]@#
+wordbreak
+Ext:css
+word-break:$[0[]0];[>END<]!$[FingerTextData FingerTextData]@#
+width
+Ext:css
+width:$[![100]!]px[>END<]!$[FingerTextData FingerTextData]@#
+whitespace
+Ext:css
+white-space:$[![(lis)inherit|normal|nowrap|pre|pre-line|pre-wrap]!];[>END<]!$[FingerTextData FingerTextData]@#
+white
+Ext:css
+#FFFFFF[>END<]!$[FingerTextData FingerTextData]@#
+visibility
+Ext:css
+visibility:$[![(lis)collapse|hidden|inherit|visible]!][>END<]!$[FingerTextData FingerTextData]@#
+verticalalign
+Ext:css
+vertical-align:$[![(lis)baseline|bottom|inherit|middle|sub|super|text-bottom|text-top|top]!];[>END<]!$[FingerTextData FingerTextData]@#
+top
+Ext:css
+top:$[0[]0];[>END<]!$[FingerTextData FingerTextData]@#
+textwrap
+Ext:css
+text-wrap:$[![(lis)none|normal|suppress|unrestricted]!];[>END<]!$[FingerTextData FingerTextData]@#
+texttransform
+Ext:css
+text-transform:$[![(lis)capitalize|inherit|lowercase|none|uppercase]!];[>END<]!$[FingerTextData FingerTextData]@#
+textshadow
+Ext:css
+text-shadow:$[![{h-shadow}]!] $[![{v-shadow}]!] $[![(cha)colorlist]!];[>END<]!$[FingerTextData FingerTextData]@#
+textoverflow
+Ext:css
+text-overflow:$[0[]0];[>END<]!$[FingerTextData FingerTextData]@#
+textoutline
+Ext:css
+text-outline:$[![{thickness}]!] $[![(cha)colorlist]!];[>END<]!$[FingerTextData FingerTextData]@#
+textjustify
+Ext:css
+text-align:justify;
+text-justify:$[![(lis)auto|distribute|kashida|inter-cluster|inter-ideograph|inter-word|none]!];[>END<]!$[FingerTextData FingerTextData]@#
+textindent
+Ext:css
+text-indent:$[![50]!]px;[>END<]!$[FingerTextData FingerTextData]@#
+textdecoration
+Ext:css
+text-decoration:$[![(lis)blink|inherit|line-through|none|overline|underline]!];[>END<]!$[FingerTextData FingerTextData]@#
+textalign
+Ext:css
+text-align:$[![(lis)center|inherit|justify|left|right]!];[>END<]!$[FingerTextData FingerTextData]@#
+template
+Ext:css
+body
+{
+  background-color:$[![#FFEE99]!]
+}
+
+h1
+{
+  color:$[![#AA5500]!];
+  text-align:center;
+}
+
+p
+{
+  font-family:"Times New Roman";
+  font-size:20px;
+}[>END<]!$[FingerTextData FingerTextData]@#
+tablelayout
+Ext:css
+table-layout:$[![(lis)auto|fixed|inherit]!];[>END<]!$[FingerTextData FingerTextData]@#
+stylelist
+Ext:css
+$[![(lis)dashed|dotted|double|groove|hidden|inherit|inset|none|outset|ridge|solid]!][>END<]!$[FingerTextData FingerTextData]@#
+sizelist
+Ext:css
+$[![(lis)|inherit|large|larger|medium|small|smaller|xx-large|xx-small|x-large|x-small]!][>END<]!$[FingerTextData FingerTextData]@#
+right
+Ext:css
+right:$[![5]!]px;[>END<]!$[FingerTextData FingerTextData]@#
+rgb
+Ext:css
+rgb($[![255]!],$[![255]!],$[![255]!])[>END<]!$[FingerTextData FingerTextData]@#
+red
+Ext:css
+#FF0000[>END<]!$[FingerTextData FingerTextData]@#
+punctuationtrim
+Ext:css
+punctuation-trim:$[![(lis)adjacent|allow-end|end|none|start]!];[>END<]!$[FingerTextData FingerTextData]@#
+position
+Ext:css
+position:$[![(lis)absolute|fixed|inherit|relative|static]!];[>END<]!$[FingerTextData FingerTextData]@#
+paddingtop
+Ext:css
+padding-top:$[![10]!]px[>END<]!$[FingerTextData FingerTextData]@#
+paddingright
+Ext:css
+padding-right:$[![10]!]px[>END<]!$[FingerTextData FingerTextData]@#
+paddingleft
+Ext:css
+padding-left:$[![10]!]px[>END<]!$[FingerTextData FingerTextData]@#
+paddingbottom
+Ext:css
+padding-bottom:$[![10]!]px[>END<]!$[FingerTextData FingerTextData]@#
+padding
+Ext:css
+padding:$[0[]0];[>END<]!$[FingerTextData FingerTextData]@#
+overflow
+Ext:css
+overflow:$[![(lis)auto|inherit|hidden|scroll|visible]!];[>END<]!$[FingerTextData FingerTextData]@#
+outlinewidth
+Ext:css
+outline-width:$[![15]!]px[>END<]!$[FingerTextData FingerTextData]@#
+outlinestyle
+Ext:css
+outline-style:$[![(cha)stylelist]!][>END<]!$[FingerTextData FingerTextData]@#
+outlinecolor
+Ext:css
+outline-color:$[![(cha)colorlist]!][>END<]!$[FingerTextData FingerTextData]@#
+outline
+Ext:css
+outline:$[0[]0];[>END<]!$[FingerTextData FingerTextData]@#
+minwidth
+Ext:css
+min-width:$[![100]!]px[>END<]!$[FingerTextData FingerTextData]@#
+minheight
+Ext:css
+min-height:$[![100]!]px[>END<]!$[FingerTextData FingerTextData]@#
+maxwidth
+Ext:css
+max-width:$[![100]!]px[>END<]!$[FingerTextData FingerTextData]@#
+maxheight
+Ext:css
+max-height:$[![100]!]px[>END<]!$[FingerTextData FingerTextData]@#
+margintop
+Ext:css
+margin-top:$[![10]!]px[>END<]!$[FingerTextData FingerTextData]@#
+marginright
+Ext:css
+margin-right:$[![10]!]px[>END<]!$[FingerTextData FingerTextData]@#
+marginleft
+Ext:css
+margin-left:$[![10]!]px[>END<]!$[FingerTextData FingerTextData]@#
+marginbottom
+Ext:css
+margin-bottom:$[![10]!]px[>END<]!$[FingerTextData FingerTextData]@#
+margin
+Ext:css
+margin:$[0[]0];[>END<]!$[FingerTextData FingerTextData]@#
+lineheight
+Ext:css
+line-height:$[![100%]!];[>END<]!$[FingerTextData FingerTextData]@#
+lime
+Ext:css
+#00FF00[>END<]!$[FingerTextData FingerTextData]@#
+letterspacing
+Ext:css
+letter-spacing:$[![2]!]px;[>END<]!$[FingerTextData FingerTextData]@#
+left
+Ext:css
+left:$[![5]!]px;[>END<]!$[FingerTextData FingerTextData]@#
+height
+Ext:css
+height:$[![100]!]px[>END<]!$[FingerTextData FingerTextData]@#
+hangingpunctuation
+Ext:css
+hanging-punctuation:$[![(lis)allow-end|first|force-end|last|none]!];[>END<]!$[FingerTextData FingerTextData]@#
+grey
+Ext:css
+#808080[>END<]!$[FingerTextData FingerTextData]@#
+green
+Ext:css
+#008000[>END<]!$[FingerTextData FingerTextData]@#
+fontweight
+Ext:css
+font-weight:$[![(lis)blod|bloder|lighter|inherit|normal|100|200|300|400|500|600|700|800|900]!][>END<]!$[FingerTextData FingerTextData]@#
+fontvariant
+Ext:css
+font-variant:$[![(lis)inherit|normal|small-caps]!][>END<]!$[FingerTextData FingerTextData]@#
+fontstyle
+Ext:css
+font-style:$[![(lis)italic|normal|oblique]!][>END<]!$[FingerTextData FingerTextData]@#
+fontsize
+Ext:css
+font-size:$[![(cha)sizelist]!][>END<]!$[FingerTextData FingerTextData]@#
+fontfamily
+Ext:css
+font-family:$[!["Times New Roman"]!][>END<]!$[FingerTextData FingerTextData]@#
+font
+Ext:css
+font:$[0[]0];[>END<]!$[FingerTextData FingerTextData]@#
+float
+Ext:css
+float:$[![(lis)inherit|left|right|none]!];[>END<]!$[FingerTextData FingerTextData]@#
+emptycells
+Ext:css
+empty-cells:$[![(lis)hide|inherit|show]!];[>END<]!$[FingerTextData FingerTextData]@#
+display
+Ext:css
+display:$[![(lis)block|inherit|inline|inline-block|inline-table|list-item|none|run-in|table|table-caption|table-cell|table-column|table-column-group|table-footer-group|table-header-group|table-row|table-row-group]!];[>END<]!$[FingerTextData FingerTextData]@#
+direction
+Ext:css
+direction:$[![(lis)ltr|inherit|rtl]!];[>END<]!$[FingerTextData FingerTextData]@#
+cyan
+Ext:css
+#00FFFF[>END<]!$[FingerTextData FingerTextData]@#
+cursor
+Ext:css
+cursor:$[![(lis)auto|crosshair|default|e-resize|help|inherit|move|ne-resize|nw-resize|n-resize|pointer|progress|se-resize|sw-resize|s-resize|text|wait|w-resize]!][>END<]!$[FingerTextData FingerTextData]@#
+comment
+Ext:css
+/*  $[0[]0]  */[>END<]!$[FingerTextData FingerTextData]@#
+colorlist
+Ext:css
+$[![(lis)|black|blue|grey|green|orange|pink|purple|red|snow|white|yellow]!][>END<]!$[FingerTextData FingerTextData]@#
+color
+Ext:css
+#$[![000000]!][>END<]!$[FingerTextData FingerTextData]@#
+clip
+Ext:css
+clip:rect($[![0]!]px,$[![60]!]px,$[![200]!]px,$[![0]!]px);[>END<]!$[FingerTextData FingerTextData]@#
+clear
+Ext:css
+clear:$[![(lis)both|inherit|left|none|right]!];[>END<]!$[FingerTextData FingerTextData]@#
+captionside
+Ext:css
+caption-side:$[![(lis)bottom|inherit|top]!];[>END<]!$[FingerTextData FingerTextData]@#
+bottom
+Ext:css
+bottom:$[0[]0];[>END<]!$[FingerTextData FingerTextData]@#
+borderwidth
+Ext:css
+border-width:$[![15]!]px[>END<]!$[FingerTextData FingerTextData]@#
+bordertopwidth
+Ext:css
+border-top-width:$[![15]!]px[>END<]!$[FingerTextData FingerTextData]@#
+bordertopstyle
+Ext:css
+border-top-style:$[![(cha)stylelist]!][>END<]!$[FingerTextData FingerTextData]@#
+bordertopcolor
+Ext:css
+border-top-color:$[![(cha)colorlist]!][>END<]!$[FingerTextData FingerTextData]@#
+bordertop
+Ext:css
+border-top:$[0[]0];[>END<]!$[FingerTextData FingerTextData]@#
+borderstyle
+Ext:css
+border-style:$[![(cha)stylelist]!][>END<]!$[FingerTextData FingerTextData]@#
+borderspacing
+Ext:css
+border-spacing:$[![10]!]px $[![30]!]px;[>END<]!$[FingerTextData FingerTextData]@#
+borderrightwidth
+Ext:css
+border-right-width:$[![15]!]px[>END<]!$[FingerTextData FingerTextData]@#
+borderrightstyle
+Ext:css
+border-right-style:$[![(cha)stylelist]!][>END<]!$[FingerTextData FingerTextData]@#
+borderrightcolor
+Ext:css
+border-right-color:$[![(cha)colorlist]!][>END<]!$[FingerTextData FingerTextData]@#
+borderright
+Ext:css
+border-right:$[0[]0];[>END<]!$[FingerTextData FingerTextData]@#
+borderleftwidth
+Ext:css
+border-left-width:$[![15]!]px[>END<]!$[FingerTextData FingerTextData]@#
+borderleftstyle
+Ext:css
+border-left-style:$[![(cha)stylelist]!][>END<]!$[FingerTextData FingerTextData]@#
+borderleftcolor
+Ext:css
+border-left-color:$[![(cha)colorlist]!][>END<]!$[FingerTextData FingerTextData]@#
+borderleft
+Ext:css
+border-left:$[0[]0];[>END<]!$[FingerTextData FingerTextData]@#
+bordercolor
+Ext:css
+border-color:$[![(cha)colorlist]!][>END<]!$[FingerTextData FingerTextData]@#
+bordercollapse
+Ext:css
+border-collapse:$[![(lis)collapse|inherit|separate]!];[>END<]!$[FingerTextData FingerTextData]@#
+borderbottomwidth
+Ext:css
+border-bottom-width:$[![15]!]px[>END<]!$[FingerTextData FingerTextData]@#
+borderbottomstyle
+Ext:css
+border-bottom-style:$[![(cha)stylelist]!][>END<]!$[FingerTextData FingerTextData]@#
+borderbottomcolor
+Ext:css
+border-bottom-color:$[![(cha)colorlist]!][>END<]!$[FingerTextData FingerTextData]@#
+borderbottom
+Ext:css
+border-bottom:$[0[]0];[>END<]!$[FingerTextData FingerTextData]@#
+border
+Ext:css
+border:$[0[]0];[>END<]!$[FingerTextData FingerTextData]@#
+blue
+Ext:css
+#0000FF[>END<]!$[FingerTextData FingerTextData]@#
+black
+Ext:css
+#000000[>END<]!$[FingerTextData FingerTextData]@#
+backgroundrepeat
+Ext:css
+background-repeat:no-repeat;[>END<]!$[FingerTextData FingerTextData]@#
+backgroundimage
+Ext:css
+background-image:url('$[![image.gif]!]');[>END<]!$[FingerTextData FingerTextData]@#
+backgroundcolor
+Ext:css
+background-color:$[![(cha)colorlist]!][>END<]!$[FingerTextData FingerTextData]@#
+backgroundattachment
+Ext:css
+background-attachment:fixed;[>END<]!$[FingerTextData FingerTextData]@#
+background
+Ext:css
+background:$[0[]0];[>END<]!$[FingerTextData FingerTextData]@#

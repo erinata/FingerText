@@ -150,7 +150,7 @@
     <None Include="README.rdoc">
       <Filter>Documents</Filter>
     </None>
-    <None Include="DefaultSnippetPackage\fingertext_standard_library-0.2.0.ftd">
+    <None Include="DefaultSnippetPackage\Default_Snippet_Package-0.2.0.ftd">
       <Filter>DefaultPackage</Filter>
     </None>
   </ItemGroup>

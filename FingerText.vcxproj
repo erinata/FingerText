@@ -146,7 +146,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Changelog.txt" />
-    <None Include="DefaultSnippetPackage\fingertext_standard_library-0.2.0.ftd" />
+    <None Include="DefaultSnippetPackage\Default_Snippet_Package-0.2.0.ftd" />
     <None Include="README.rdoc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
