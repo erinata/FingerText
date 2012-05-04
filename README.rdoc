@@ -159,25 +159,13 @@ Everything is compatible.
 In version 0.5.60 after you triggered a option hotspot, you can use right/down arrow to move to next option, left/up arrow to move to previous option. Hit tab confirm the choice.
 Also the option hotspot is not delimited by |~| anymore, it's using is simplier |. So $[![(opt)ABC|DEF|GHI]!] will define an hotspot with 3 options.
 
-Upgrading from any version between 0.5.0 and 0.5.18
-
 == Upgrading from any version between 0.5.0 and 0.5.18
 
 All hotspots are now triggered from inside to outside, left to right. Therefore dynamic snippets that is created before 0.5.20 can behave differently in this version.
 
-== Upgrading from 0.4.15 or 0.4.16
+== Upgrading from any version between 0.4.0 and 0.4.16
 
 If you want to use your snippets after you upgrade to 0.5.24, you can go to the config folder and move the FingerText.db3 file to the config\FingerText folder after update.
-
-chain snippet is indicated by $[![(cha)]!] instead of $[![(chain)]!] 
-
-== Upgrading from 0.4.4 or 0.4.11
-
-If you want to use your snippets after you upgrade to 0.5.24, you can go to the config folder and move the FingerText.db3 file to the config\FingerText folder after update.
-
-== Upgrading from 0.4.1
-
-If you want to use your snippets after you upgrade to 0.5.24, you can go to the %Notepad++ folder%\plugins\FingerText and get the old database file Snippets.db3. Rename is to FingerText.db3 and move it to the config\FingerText folder after update.
 
 == Upgrading from 0.3.5 or below
 
@@ -213,12 +201,6 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 - Fixed: last hotspot or option hotspot not working properly
 - updated snippet editor hint
 - improved performance in dealing with escape char
-
-0.5.52
-- various bug fixes
-
-0.5.49
-- All settings will be reset when update to fix bug due to outdated settings file
 - The scope name is finalized. There are 4 kinds of scopes. "Ext" "Name" "Lang" "GLOBAL". So if you want your snippet to be available when the file extension is cpp, you should use "Ext:cpp" (without quotes). If you want the snippet to be available when the file name is Makefile, use "Name:Makefile". If you want the snippet to be available when the language choice in Notepad++ is C++, use "Lang:CPP". If you want the snippet to be available anywhere, use "GLOBAL".
 - Added: Scope Association. It means the if you language choice is CPP, those snippets with "Ext:cpp" and "Ext:h" are automatically be available.
 - Added: multiple scope. When editing snippets you can put multiple scopes. For example if you put Lang:CPP|Lang:C, the snippets will be save into both scope. And when you open a snippets in editor, it automatically fetch all the identical snippets in different scopes.
@@ -261,11 +243,6 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 - Changed: Snippet preview layout is improved.
 
 0.5.42
-- Fixed: critical bug fix of the compatibility of (opt) and several lexers
-- Fixed: option hotspot UNDO bug
-- Changed: prevent the ftb window to be saved in the session
-
-0.5.41
 - Added: improved snippet preview box
 - Fixed: memory leakage problem of live update
 - Fixed: export snippet error due to live update problem
@@ -309,8 +286,6 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 0.5.30
 - Added: hotspots can be instantly replaced by parameters passed to the triggertext
 - Added: snippetdock states remember previous state
-
-0.5.28
 - Changed: merge in jvdanilo's implementation of executecommand
 - Changed: change hotspot (cmd) to (run)
 - Changed: conflict suffix is now added to the old snippet instead of new snippet
@@ -324,10 +299,6 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 - Change default snippet list length to 1000 to temporarily deal with the problem caused by snippetlistlength limit
 
 0.5.24
-- Fixed: Faster initialization of plugin
-- Fixed: Alert message show up when a tab key is restored
-
-0.5.23
 - Added: Can go forward (right/down arrow) or backward(left/up arrow) when cycling through option hotspot, tab to choose option
 - Added: New snippet editor
 - Changed: increase default chain limit to 40
@@ -337,10 +308,7 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 - Fixed: better checking for the end of option hotspot
 
 0.5.20
-- Fixed: tab_tag_completion is not working properly
 - Changed: All hotspots, both normal and dynamic, are triggered under the same rule, from inside to outside and from left to right. And they all nesting correctly.
-
-0.5.18
 - Added: New keyword DATE and TIME. Which makes the format of datetime output customizable, for example you can use $[![(key)DATE:yyyyMMdd]!] to get 20110601 on 1st of June 2011
 - Added: export and delete all snippets
 - Added: new keyword UPPER and LOWER. For example: $[![(key)UPPER:aBcDe]!] will become ABCDE
