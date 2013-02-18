@@ -55,6 +55,10 @@
 #include "ConversionUtils.h"
 #include "DebugUtils.h"
 
+// Messages to send to FingerText through the NPPM_MSGTOPLUGIN notification
+#define FINGERTEXT_ISENABLED 1
+#define FINGERTEXT_GETVERSION 2
+#define FINGERTEXT_ACTIVATE 3
 
 // Functions that are loaded when notepad++ starts
 void pluginInit(HANDLE hModule);   // Initialization of your plugin data

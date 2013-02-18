@@ -36,6 +36,7 @@ extern WNDPROC	wndProcNpp;
 extern int nppLoaded;
 extern int sciFocus;
 extern bool g_onHotSpot;
+extern bool g_enable;
 
 BOOL APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID lpReserved)
 {
@@ -237,6 +238,21 @@ extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam
 	//	::MessageBox(NULL, TEXT("MOVE"), TEXT("Trace"), MB_OK);
 	//}
 
+    if (Message == NPPM_MSGTOPLUGIN)
+    {
+        CommunicationInfo *ci = (CommunicationInfo *) lParam;
+
+		if (ci->internalMsg == FINGERTEXT_ISENABLED)
+        {
+            ci->info = (void *) g_enable;
+        } else if (ci->internalMsg == FINGERTEXT_GETVERSION)
+        {
+            ci->info = (void *) VERSION_LINEAR;
+        } else if (ci->internalMsg == FINGERTEXT_ACTIVATE)
+        {
+            doTabActivate(true);
+        } 
+    }
 
 	return true;
 }
