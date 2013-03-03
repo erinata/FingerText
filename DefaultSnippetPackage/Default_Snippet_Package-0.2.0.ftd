@@ -539,7 +539,8 @@ ifelse
 Ext:js
 if ($[![{condition}]!]) {
   $[![]!]
-} else {
+}
+else {
   $[![]!]
 }
 [>END<]!$[FingerTextData FingerTextData]@#
