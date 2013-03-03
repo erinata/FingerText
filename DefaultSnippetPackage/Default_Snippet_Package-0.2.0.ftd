@@ -537,18 +537,15 @@ Ext:js
 var $[![x]!] = $[![]!][>END<]!$[FingerTextData FingerTextData]@#
 ifelse
 Ext:js
-if ($[![{condition}]!])
-{
+if ($[![{condition}]!]) {
   $[![]!]
-} else
-{
+} else {
   $[![]!]
 }
 [>END<]!$[FingerTextData FingerTextData]@#
 if
 Ext:js
-if ($[![{condition}]!])
-{
+if ($[![{condition}]!]) {
   $[![]!]
 }
 [>END<]!$[FingerTextData FingerTextData]@#
@@ -557,15 +554,13 @@ Ext:js
 document.getElementById("$[![some_id]!]")$[![]!][>END<]!$[FingerTextData FingerTextData]@#
 function
 Ext:js
-function $[![function_name]!]()
-{
+function $[![function_name]!]() {
   $[![]!];
 }
 [>END<]!$[FingerTextData FingerTextData]@#
 for
 Ext:js
-for ($[![i]!]=0;$[![i]!]<=$[![max_value]!];$[![i]!]++)
-{
+for ($[![i]!]=0;$[![i]!]<=$[![max_value]!];$[![i]!]++)  {
   $[![]!]
 }
 [>END<]!$[FingerTextData FingerTextData]@#
@@ -578,6 +573,15 @@ var $[![array_name]!] = new Array($[!["item 1"]!],$[!["item 2"]!],$[!["item 3"]!
 alert
 Ext:js
 alert("$[![Hello World!]!]");[>END<]!$[FingerTextData FingerTextData]@#
+try
+Ext:js
+try {
+  $[![]!]
+}
+catch(e) {
+  $[![]!]
+}
+[>END<]!$[FingerTextData FingerTextData]@#
 ul
 Ext:html
 <ul>
