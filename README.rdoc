@@ -250,7 +250,7 @@ FingerText 0.3.5 or below use a "one snippet per file" system to store snippets,
 - Fixed: inclusive triggertext complete not working
 - improve start up performance by removing redundant updateScintilla calls
 - update the settings hint
-- Changed: undo after a tab triggertext completetion will become a regular tab
+- Changed: undo after a tab triggertext completion will become a regular tab
 - Fixed: undo works properly after params insertion
 - Changed: params insertion can accept values with hotspot tags
 - the limit of option numbers is lifted
