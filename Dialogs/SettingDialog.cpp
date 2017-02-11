@@ -43,7 +43,7 @@ void SettingDlg::doDialog()
 }
 
 
-BOOL CALLBACK SettingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK SettingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message) 
 	{

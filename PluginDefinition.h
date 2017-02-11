@@ -32,6 +32,7 @@
 
 
 #include "PluginInterface.h"
+#include "menuCmdID.h"
 
 #include <string>       // For alertString()
 #include <vector>

@@ -90,7 +90,7 @@ LRESULT CALLBACK SubWndProcNpp(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 extern "C" __declspec(dllexport) void setInfo(NppData nppDataInfo)
 {
 	nppData = nppDataInfo;
-    wndProcNpp = (WNDPROC)::SetWindowLongPtr(nppData._nppHandle, GWL_WNDPROC, (LPARAM)SubWndProcNpp);
+    wndProcNpp = (WNDPROC)::SetWindowLongPtr(nppData._nppHandle, GWLP_WNDPROC, (LPARAM)SubWndProcNpp);
     dialogsInit();
     pathInit();
     configInit();

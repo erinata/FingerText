@@ -7,7 +7,7 @@
 //version 2 of the License, or (at your option) any later version.
 //
 //This program is distributed in the hope that it will be useful,
-//but WITHOUT ANY WARRANTY; without even the implied warranty of 
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
@@ -19,6 +19,8 @@
 #define DOCKING_RESOURCE_H
 
 #define IDD_PLUGIN_DLG                  103
+#define IDC_EDIT1                       1000
+
 
 #define IDB_CLOSE_DOWN                  137
 #define IDB_CLOSE_UP                    138
@@ -54,5 +56,8 @@
 	//nmhdr.code = DWORD(DMN_XXX, int newContainer);
 	//nmhdr.hwndFrom = hwndNpp;
 	//nmhdr.idFrom = ctrlIdNpp;
+
+
+
 #endif //DOCKING_RESOURCE_H
 

@@ -41,7 +41,7 @@ void CreationDlg::doDialog()
 }
 
 
-BOOL CALLBACK CreationDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK CreationDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message) 
 	{

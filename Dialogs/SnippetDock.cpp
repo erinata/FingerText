@@ -366,7 +366,7 @@ void DockingDlg::switchInsertMode(int insert)
 //    return retVal;
 //}
 
-BOOL CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message) 
 	{

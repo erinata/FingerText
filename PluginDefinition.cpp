@@ -374,7 +374,7 @@ void pluginShutdown()  // function is triggered when NPPN_SHUTDOWN fires
         g_dbOpen = false;
     }
 
-    ::SetWindowLongPtr(nppData._nppHandle, GWL_WNDPROC, (LPARAM)wndProcNpp); // Clean up subclassing
+    ::SetWindowLongPtr(nppData._nppHandle, GWLP_WNDPROC, (LPARAM)wndProcNpp); // Clean up subclassing
     
     delete [] g_stopCharArray;
 
@@ -1075,8 +1075,8 @@ bool dynamicHotspot(int &startingPos, char* tagSign, char* tagTail)
     //int tagSignLength = strlen(tagSign);
     int tagSignLength = 4;
 
-    char* hotSpotText;
-    char* hotSpot;
+    char* hotSpotText = 0;
+    char* hotSpot = 0;
     int spot = -1;
     int spotComplete = -1;
     int spotType = 0;
@@ -1181,11 +1181,16 @@ bool dynamicHotspot(int &startingPos, char* tagSign, char* tagTail)
     if (limitCounter>=pc.configInt[CHAIN_LIMIT]) showMessageBox(TEXT("Dynamic hotspots triggering limit exceeded."));
     //if (limitCounter>=pc.configInt[CHAIN_LIMIT]) ::MessageBox(nppData._nppHandle, TEXT("Dynamic hotspots triggering limit exceeded."), TEXT(PLUGIN_NAME), MB_OK);
     
-    if (limitCounter>0)
-    {
-        delete [] hotSpot;
-        delete [] hotSpotText;
-
+	if (limitCounter > 0)
+	{
+		if (hotSpot)
+		{
+			delete[] hotSpot;
+		}
+		if (hotSpotText)
+		{
+			delete[] hotSpotText;
+		}
         return true;
     }
     return false;
@@ -4029,7 +4034,7 @@ bool exportSnippets(bool all, wchar_t* path)
         
         
         ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
-        int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
+        LRESULT importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
         ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
 
 
@@ -4208,7 +4213,7 @@ void importSnippets(wchar_t* path)
             file.close();
         
             ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
-            int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
+            LRESULT importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
             ::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
 
             //HWND curScintilla = getCurrentScintilla();
@@ -6220,7 +6225,7 @@ void testing2()
     alert(g_snippetCount);
     
     //::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
-    //int importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
+    //LRESULT importEditorBufferID = ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTBUFFERID, 0, 0);
     //::SendMessage(nppData._nppHandle, NPPM_SETBUFFERENCODING, (WPARAM)importEditorBufferID, 4);
 
 
