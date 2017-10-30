@@ -589,7 +589,7 @@ void insertSnippet()
     diagActivate(tempTriggerText);
     ::SetFocus(::getCurrentScintilla());
 
-    
+	delete[] tempScope;
 }
 
 
@@ -1692,7 +1692,7 @@ void evaluateHotSpot(int &firstPos, char* hotSpotText)
             //secondPos = secondPos - (delimitEnd + 2 - (firstPos + 5));
             
         } 
-    } if (strncmp(hotSpotText,"TERNARY'",8) == 0)
+    } else if (strncmp(hotSpotText,"TERNARY'",8) == 0)
     {
         mode = 0;
         
@@ -5610,14 +5610,9 @@ void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* pathWi
             }
     
             // Allocate space for the buffer.
-            pszOutBuffer = new char[dwSize+1];
+			try {
+				pszOutBuffer = new char[dwSize+1];
     
-            if (!pszOutBuffer)
-            {
-                showMessageBox(TEXT("Out of memory."));
-                dwSize=0;
-            } else
-            {
                 // Read the Data.
                 ZeroMemory(pszOutBuffer, dwSize+1);
     
@@ -5632,6 +5627,12 @@ void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* pathWi
                 // Free the memory allocated to the buffer.
                 delete [] pszOutBuffer;
             }
+			catch (const std::bad_alloc& e)
+			{
+				showMessageBox(TEXT("Out of memory."));
+				dwSize = 0;
+			}
+
         } while (dwSize>0);
     }
     fclose (pFile);
