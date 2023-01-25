@@ -1,0 +1,70 @@
+version: 0.5.61.{build}
+image: Visual Studio 2015
+
+
+environment:
+  matrix:
+    - PlatformToolset: v120_xp
+    - PlatformToolset: v140_xp
+
+platform:
+    - x64
+    - Win32
+
+configuration:
+    - Unicode Debug
+    - Unicode Release
+
+
+install:
+    - if "%platform%"=="x64" set archi=amd64
+    - if "%platform%"=="Win32" set archi=x86
+    - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %archi%
+
+build:
+    parallel: true                  # enable MSBuild parallel builds
+    verbosity: minimal
+
+build_script:
+    - cd "%APPVEYOR_BUILD_FOLDER%"
+    - msbuild FingerText.vcxproj /m /p:configuration="%configuration%" /p:platform="%platform%" /p:PlatformToolset="%PlatformToolset%" 
+
+after_build:
+    - cd "%APPVEYOR_BUILD_FOLDER%"
+    - ps: >-
+
+        if ($env:PLATFORM -eq "x64") {
+            #Push-AppveyorArtifact "$($env:PLATFORM)\$($env:CONFIGURATION)\FingerText.dll" -FileName FingerText.dll
+        }
+
+        if ($env:PLATFORM -eq "Win32" ) {
+            #Push-AppveyorArtifact "$($env:CONFIGURATION)\FingerText.dll" -FileName FingerText.dll
+        }
+
+        if ($($env:APPVEYOR_REPO_TAG) -eq "true" -and $env:CONFIGURATION -eq "Unicode Release" -and $env:PLATFORMTOOLSET -eq "v120_xp") {
+            if($env:PLATFORM -eq "x64"){
+            $ZipFileName = "FingerText_$($env:APPVEYOR_REPO_TAG_NAME)_x64.zip"
+            7z a $ZipFileName $env:PLATFORM\$env:CONFIGURATION\FingerText.dll
+            }
+            if($env:PLATFORM -eq "Win32"){
+            $ZipFileName = "FingerText_$($env:APPVEYOR_REPO_TAG_NAME)_x86.zip"
+            7z a $ZipFileName $env:CONFIGURATION\FingerText.dll 
+            }
+        }
+
+artifacts:
+  - path: FingerText_*.zip
+    name: releases
+
+deploy:
+    provider: GitHub
+    auth_token:
+        secure: !!TODO, see https://www.appveyor.com/docs/deployment/github/#provider-settings!!
+    artifact: releases
+    draft: false
+    prerelease: false
+    force_update: true
+    on:
+        appveyor_repo_tag: true
+        PlatformToolset: v120_xp
+        configuration: Release

@@ -37,8 +37,6 @@
 #define _USE_ATTRIBUTES_FOR_SAL         0
 #define __drv_typeConst                 0
 #define PSAPI_VERSION                   1
-#define CREATEPROCESS_MANIFEST_RESOURCE_ID 1
-#define MINIMUM_RESERVED_MANIFEST_RESOURCE_ID 1
 #define SW_SHOWNORMAL                   1
 #define SW_NORMAL                       1
 #define SHOW_OPENWINDOW                 1
@@ -211,7 +209,6 @@
 #define VFF_CURNEDEST                   0x0001
 #define VIFF_FORCEINSTALL               0x0001
 #define IDOK                            1
-#define ISOLATIONAWARE_MANIFEST_RESOURCE_ID 2
 #define SW_SHOWMINIMIZED                2
 #define SHOW_ICONWINDOW                 2
 #define SW_OTHERZOOM                    2
@@ -290,7 +287,6 @@
 #define __drv_typeBitset                2
 #define VFF_FILEINUSE                   0x0002
 #define VIFF_DONTDELETEOLD              0x0002
-#define ISOLATIONAWARE_NOSTATICIMPORT_MANIFEST_RESOURCE_ID 3
 #define SW_SHOWMAXIMIZED                3
 #define SW_MAXIMIZE                     3
 #define SHOW_FULLSCREEN                 3
@@ -514,7 +510,6 @@
 #define LANG_ICELANDIC                  0x0f
 #define SUBLANG_ARABIC_BAHRAIN          0x0f
 #define SUBLANG_SPANISH_PARAGUAY        0x0f
-#define MAXIMUM_RESERVED_MANIFEST_RESOURCE_ID 16
 #define VK_SHIFT                        0x10
 #define WM_CLOSE                        0x0010
 #define HTBOTTOMLEFT                    16
@@ -576,7 +571,6 @@
 #define LANG_PORTUGUESE                 0x16
 #define VK_JUNJA                        0x17
 #define LANG_ROMANSH                    0x17
-#define RT_MANIFEST                     24
 #define VK_FINAL                        0x18
 #define WM_SHOWWINDOW                   0x0018
 #define LANG_ROMANIAN                   0x18
@@ -1042,7 +1036,6 @@
 #define WM_CTLCOLORSCROLLBAR            0x0137
 #define WM_CTLCOLORSTATIC               0x0138
 #define MN_GETHMENU                     0x01E1
-#define VERSION_KEEP_CONFIG_START       500
 #define _WIN32_IE_IE20                  0x0200
 #define WM_MOUSEFIRST                   0x0200
 #define WM_MOUSEMOVE                    0x0200
@@ -1073,7 +1066,6 @@
 #define WM_MOUSEHWHEEL                  0x020E
 #define WM_MOUSELAST                    0x020E
 #define WM_PARENTNOTIFY                 0x0210
-#define VERSION_LINEAR                  528
 #define VERSION_KEEP_CONFIG_END         528
 #define WM_ENTERMENULOOP                0x0211
 #define WM_EXITMENULOOP                 0x0212
@@ -1158,7 +1150,6 @@
 #define WM_PENWINLAST                   0x038F
 #define WM_DDE_FIRST                    0x03E0
 #define IDC_SNIPPET_LIST                1000
-#define IDC_EDIT1                       1001
 #define IDC_INSERTION_EDIT              1001
 #define IDC_FILTER                      1001
 #define IDC_SAVE                        1002
@@ -1466,23 +1457,16 @@
 #define IDTIMEOUT                       32000
 #define OCR_NORMAL                      32512
 #define OIC_SAMPLE                      32512
-#define IDI_APPLICATION                 32512
 #define OCR_IBEAM                       32513
 #define OIC_HAND                        32513
-#define IDI_HAND                        32513
 #define OCR_WAIT                        32514
 #define OIC_QUES                        32514
-#define IDI_QUESTION                    32514
 #define OCR_CROSS                       32515
 #define OIC_BANG                        32515
-#define IDI_EXCLAMATION                 32515
 #define OCR_UP                          32516
 #define OIC_NOTE                        32516
-#define IDI_ASTERISK                    32516
 #define OIC_WINLOGO                     32517
-#define IDI_WINLOGO                     32517
 #define OIC_SHIELD                      32518
-#define IDI_SHIELD                      32518
 #define OCR_SIZE                        32640
 #define OCR_ICON                        32641
 #define OCR_SIZENWSE                    32642

@@ -57,7 +57,7 @@ public:
     };
     
 protected :
-	virtual BOOL CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
+	virtual INT_PTR CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 
 private:
 	NppData			_nppData;

@@ -338,7 +338,7 @@ void InsertionDlg::adjustTextHintPosition()
             
 }
 
-BOOL CALLBACK InsertionDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK InsertionDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message) 
 	{
@@ -366,8 +366,8 @@ BOOL CALLBACK InsertionDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPar
 		{
             //::SetTextColor((HDC)GetDlgItem(_hSelf, IDC_INSERTION_HINT_HIGHLIGHT),RGB(255,0,0));
 
-            wndProcEdit = (WNDPROC)SetWindowLong(GetDlgItem(_hSelf, IDC_INSERTION_EDIT), GWL_WNDPROC, (long)SubWndProcEdit);
-            wndProcList = (WNDPROC)SetWindowLong(GetDlgItem(_hSelf, IDC_INSERTION_LIST), GWL_WNDPROC, (long)SubWndProcList);
+            wndProcEdit = (WNDPROC)SetWindowLongPtr(GetDlgItem(_hSelf, IDC_INSERTION_EDIT), GWLP_WNDPROC, (LONG_PTR)SubWndProcEdit);
+            wndProcList = (WNDPROC)SetWindowLongPtr(GetDlgItem(_hSelf, IDC_INSERTION_LIST), GWLP_WNDPROC, (LONG_PTR)SubWndProcList);
 
             HFONT hFont=CreateFont (14, 0, 0, 0, FW_BLACK, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Consolas");
             SendMessage (GetDlgItem(_hSelf, IDC_INSERTION_HINT_HIGHLIGHT), WM_SETFONT, WPARAM (hFont), TRUE);
