@@ -1382,7 +1382,6 @@
 #define FILEOPENORD                     1536
 #define _WIN32_WINNT_WIN7               0x0601
 #define _WIN32_IE_IE60SP1               0x0601
-#define _WIN32_WINNT                    0x0601
 #define MULTIFILEOPENORD                1537
 #define _WIN32_IE_WS03                  0x0602
 #define PRINTDLGORD                     1538
@@ -1405,7 +1404,6 @@
 #define IDC_MANAGE_LINK                 1592
 #define _WIN32_IE_IE70                  0x0700
 #define _WIN32_IE_IE80                  0x0800
-#define _WIN32_IE                       0x0800
 #define CS_SAVEBITS                     0x0800
 #define HDS_NOSIZING                    0x0800
 #define TBSTYLE_FLAT                    0x0800
