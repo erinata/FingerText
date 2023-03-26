@@ -108,21 +108,21 @@ bool g_freezeDock = false;
 bool g_enable = true;
 bool g_editorView;
 
-int g_editorLineCount;
+sptr_t g_editorLineCount;
 
 std::string g_snippetCount = "";
 
 bool g_fingerTextList;
 
-int g_lastTriggerPosition = 0;
+sptr_t g_lastTriggerPosition = 0;
 std::string g_customClipBoard = "";
 std::string g_selectedText = "";
 
 // For option hotspot
 bool g_optionMode = false;
-int g_optionStartPosition = 0;
-int g_optionEndPosition = 0;
-int g_optionCurrent = 0;
+sptr_t g_optionStartPosition = 0;
+sptr_t g_optionEndPosition = 0;
+size_t g_optionCurrent = 0;
 std::vector<std::string> g_optionArray;
 
 // List of acceptable tagSigns
@@ -503,8 +503,8 @@ void selectionToSnippet(bool forceNew)
     //pc.configInt[EDITOR_CARET_BOUND]--;
     
     //HWND curScintilla = getCurrentScintilla();
-    int selectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
-    int selectionStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
+    sptr_t selectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
+    sptr_t selectionStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
     bool withSelection = false;
 
     char* selection;
@@ -574,8 +574,8 @@ void insertSnippet()
     char* buffer = toCharArray(bufferWide);
     buffer = quickStrip(buffer, ' ');
 
-    int scopeLength = ::strchr(buffer,'>') - buffer - 1;
-    int triggerTextLength = strlen(buffer)-scopeLength - 2;
+    size_t scopeLength = ::strchr(buffer,'>') - buffer - 1;
+    size_t triggerTextLength = strlen(buffer)-scopeLength - 2;
     char* tempTriggerText = new char [ triggerTextLength+1];
     char* tempScope = new char[scopeLength+1];
     
@@ -595,7 +595,7 @@ void insertSnippet()
 
 void editSnippet()
 {
-    int topIndex = -1;
+    LRESULT topIndex = -1;
     if (g_editorView) topIndex = snippetDock.getTopIndex();
 
     TCHAR* bufferWide;
@@ -611,8 +611,8 @@ void editSnippet()
     //    return;
     //}
     //
-    int scopeLength = ::strchr(buffer,'>') - buffer - 1;
-    int triggerTextLength = strlen(buffer)-scopeLength - 2;
+    size_t scopeLength = ::strchr(buffer,'>') - buffer - 1;
+    size_t triggerTextLength = strlen(buffer)-scopeLength - 2;
     char* tempTriggerText = new char [ triggerTextLength+1];
     char* tempScope = new char[scopeLength+1];
     
@@ -687,7 +687,7 @@ void editSnippet()
     delete [] tempTriggerText;
     delete [] tempScope;
 
-    int scrollPos = snippetDock.searchSnippetList(bufferWide);
+    LRESULT scrollPos = snippetDock.searchSnippetList(bufferWide);
     snippetDock.selectSnippetList(scrollPos);
     if (topIndex == -1)
     {
@@ -703,15 +703,15 @@ void editSnippet()
 
 void deleteSnippet()
 {
-    int topIndex = snippetDock.getTopIndex();
+    LRESULT topIndex = snippetDock.getTopIndex();
     
     TCHAR* bufferWide;
     snippetDock.getSelectText(bufferWide);
     char* buffer = toCharArray(bufferWide);
     buffer = quickStrip(buffer, ' ');
 
-    int scopeLength = ::strchr(buffer,'>') - buffer - 1;
-    int triggerTextLength = strlen(buffer)-scopeLength - 2;
+    size_t scopeLength = ::strchr(buffer,'>') - buffer - 1;
+    size_t triggerTextLength = strlen(buffer)-scopeLength - 2;
     char* tempTriggerText = new char [ triggerTextLength+1];
     char* tempScope = new char[scopeLength+1];
     
@@ -752,16 +752,16 @@ bool getLineChecked(char **buffer, int lineNumber, TCHAR* errorText)
 
     ::SendScintilla(SCI_GOTOLINE,lineNumber,0);
 
-    int tagPosStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+    sptr_t tagPosStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
 
-    int tagPosEnd;
+    sptr_t tagPosEnd;
     
     if (lineNumber == 3)
     {
         tagPosEnd = ::SendScintilla(SCI_GETLENGTH,0,0);
     } else
     {
-        int tagPosLineEnd = ::SendScintilla(SCI_GETLINEENDPOSITION,lineNumber,0);
+        sptr_t tagPosLineEnd = ::SendScintilla(SCI_GETLINEENDPOSITION,lineNumber,0);
 
         //char* wordChar;
         //if (lineNumber==2)
@@ -806,7 +806,7 @@ bool getLineChecked(char **buffer, int lineNumber, TCHAR* errorText)
     if (lineNumber == 3)
     {
         ::SendScintilla(SCI_GOTOPOS,tagPosStart,0);
-        int spot = searchNext("[>END<]");
+        sptr_t spot = searchNext("[>END<]");
         if (spot<0)
         {
             showMessageBox(TEXT("You should put an \"[>END<]\" (without quotes) at the end of your snippet content."));
@@ -829,7 +829,7 @@ void saveSnippet()
 {
     //HWND curScintilla = getCurrentScintilla();
     g_selectionMonitor--;
-    int docLength = ::SendScintilla(SCI_GETLENGTH,0,0);
+    sptr_t docLength = ::SendScintilla(SCI_GETLENGTH,0,0);
     // insert a space at the end of the doc so the ::SendMessage(curScintilla,SCI_SEARCHNEXT,0,(LPARAM)" "); will not get into error
     // TODO: Make sure that it is not necessary to keep this line
     //::SendMessage(curScintilla, SCI_INSERTTEXT, docLength, (LPARAM)" ");
@@ -953,7 +953,7 @@ void saveSnippet()
 
     //TODO: This is not working. The scrolling works but the snippetdock reset the scrolling after thei savesnippet() finished   
     wchar_t* searchItem = constructDockItems(toString(tagTypeText),toString(tagText),14);
-    int scrollPos = snippetDock.searchSnippetList(searchItem);
+    LRESULT scrollPos = snippetDock.searchSnippetList(searchItem);
     snippetDock.selectSnippetList(scrollPos);
     snippetDock.setTopIndex(scrollPos);
     
@@ -966,7 +966,7 @@ void saveSnippet()
 
 }
 
-void restoreTab(int &posCurrent, int &posSelectionStart, int &posSelectionEnd)
+void restoreTab(sptr_t &posCurrent, sptr_t &posSelectionStart, sptr_t &posSelectionEnd)
 {
     // restoring the original tab action
     ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
@@ -975,18 +975,18 @@ void restoreTab(int &posCurrent, int &posSelectionStart, int &posSelectionEnd)
 }
 
 //TODO: refactor searchPrevMatchedSign and searchNextMatchedTail
-int searchPrevMatchedSign(char* tagSign, char* tagTail)
+sptr_t searchPrevMatchedSign(char* tagSign, char* tagTail)
 {
     //This function works when the caret is at the beginning of tagtail
     // it return the position at the beginning of the tagsign if found
-    int signSpot = -1;
-    int tailSpot = -1;
-    int unmatchedTail = 0;
+    sptr_t signSpot = -1;
+    sptr_t tailSpot = -1;
+    sptr_t unmatchedTail = 0;
     
     do
     {
         
-        int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+        sptr_t posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
         tailSpot = searchPrev(tagTail);
         ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
         signSpot = searchPrev(tagSign);
@@ -1015,23 +1015,23 @@ int searchPrevMatchedSign(char* tagSign, char* tagTail)
     return -1;
 }
 
-int searchNextMatchedTail(char* tagSign, char* tagTail)
+sptr_t searchNextMatchedTail(char* tagSign, char* tagTail)
 {
 
     // TODO: this function is not returning the position correctly, but it stop at the place where is find the tail
     // This function is tested to work when the position is at the end of tagSign
     // And this return the position at the END of tailsign, if found
    
-    int signSpot = -1;
-    int tailSpot = -1;
-    int unmatchedSign = 0;
+    sptr_t signSpot = -1;
+    sptr_t tailSpot = -1;
+    sptr_t unmatchedSign = 0;
     
-    int signLength = strlen(tagSign);
-    int tailLength = strlen(tagTail);
+    size_t signLength = strlen(tagSign);
+    size_t tailLength = strlen(tagTail);
 
     do
     {
-        int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+        sptr_t posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
         signSpot = searchNext(tagSign);
         if (signSpot != -1) signSpot = signSpot+signLength;
         ::SendScintilla(SCI_GOTOPOS,posCurrent,0);
@@ -1061,10 +1061,10 @@ int searchNextMatchedTail(char* tagSign, char* tagTail)
     return -1;
 }
 
-bool dynamicHotspot(int &startingPos, char* tagSign, char* tagTail)
+bool dynamicHotspot(sptr_t &startingPos, char* tagSign, char* tagTail)
 {
     
-    int checkPoint = startingPos;    
+    sptr_t checkPoint = startingPos;
     bool normalSpotTriggered = false;
     
     //char tagSign[] = "$[![";
@@ -1077,8 +1077,8 @@ bool dynamicHotspot(int &startingPos, char* tagSign, char* tagTail)
 
     char* hotSpotText = 0;
     char* hotSpot = 0;
-    int spot = -1;
-    int spotComplete = -1;
+    sptr_t spot = -1;
+    sptr_t spotComplete = -1;
     int spotType = 0;
 
     int limitCounter = 0;
@@ -1102,8 +1102,8 @@ bool dynamicHotspot(int &startingPos, char* tagSign, char* tagTail)
             if (spotComplete>=0)
             {
 
-                int firstPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-                int secondPos = 0;
+                sptr_t firstPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+                sptr_t secondPos = 0;
                 
                 spotType = grabHotSpotContent(&hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength,spot);
                 
@@ -1196,7 +1196,7 @@ bool dynamicHotspot(int &startingPos, char* tagSign, char* tagTail)
     return false;
 }
 
-void paramsInsertion(int &firstPos, char* hotSpot, int &checkPoint)
+void paramsInsertion(sptr_t &firstPos, char* hotSpot, sptr_t &checkPoint)
 {
     if (!g_hotspotParams.empty())
     {
@@ -1211,7 +1211,7 @@ void paramsInsertion(int &firstPos, char* hotSpot, int &checkPoint)
             
             //::SendScintilla(SCI_SETSEL,firstPos,secondPos+3);
             bool first = true;
-            int found;
+            sptr_t found;
             do
             {
                 ::SendScintilla(SCI_GOTOPOS,firstPos,0);
@@ -1239,16 +1239,16 @@ void paramsInsertion(int &firstPos, char* hotSpot, int &checkPoint)
 }
 
 
-void chainSnippet(int &firstPos, char* hotSpotText)
+void chainSnippet(sptr_t &firstPos, char* hotSpotText)
 {
     //TODO: there may be a bug here. When the chain snippet contains content with CUT, the firstPos is not updated.
-    int triggerPos = strlen(hotSpotText)+firstPos;
+    sptr_t triggerPos = strlen(hotSpotText)+firstPos;
     ::SendScintilla(SCI_GOTOPOS,triggerPos,0);
     triggerTag(triggerPos,strlen(hotSpotText));
 }
 
 
-void webRequest(int &firstPos, char* hotSpotText)
+void webRequest(sptr_t &firstPos, char* hotSpotText)
 {
     TCHAR requestType[20];
     int requestTypeLength = 0;
@@ -1298,11 +1298,11 @@ void webRequest(int &firstPos, char* hotSpotText)
     }
 
         
-    int triggerPos = strlen(hotSpotText)+firstPos-requestTypeLength;
+    sptr_t triggerPos = strlen(hotSpotText)+firstPos-requestTypeLength;
     //TODO: rewrite this part so that it doesn't rely on searchNext, and separate it out to another function to prepare for the implementation of "web snippet import"
     SendScintilla(SCI_GOTOPOS,firstPos,0);
-    int spot1 = searchNext("://");
-    int serverStart; 
+    sptr_t  spot1 = searchNext("://");
+    sptr_t  serverStart;
     if ((spot1<0) || (spot1>triggerPos))
     {
         serverStart = firstPos;
@@ -1312,9 +1312,9 @@ void webRequest(int &firstPos, char* hotSpotText)
     }
     SendScintilla(SCI_GOTOPOS,serverStart,0);
 
-    int spot2 = searchNext("/");
+    sptr_t spot2 = searchNext("/");
 
-    int serverEnd;
+    sptr_t serverEnd;
     if (spot2<0 || spot1>triggerPos)
     {
         serverEnd = triggerPos;
@@ -1379,11 +1379,11 @@ void webRequest(int &firstPos, char* hotSpotText)
 //    _pclose( pPipe );
 //}
 
-void executeCommand(int &firstPos, char* hotSpotText)
+void executeCommand(sptr_t &firstPos, char* hotSpotText)
 {
     //TODO: cater the problem that the path can have spaces..... as shown in the security remarks in http://msdn.microsoft.com/en-us/library/ms682425%28v=vs.85%29.aspx
 
-    int triggerPos = strlen(hotSpotText)+firstPos;
+    sptr_t triggerPos = strlen(hotSpotText)+firstPos;
     ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
 
@@ -1660,12 +1660,12 @@ std::string evaluateCall(char* expression)
 
 }
 
-void evaluateHotSpot(int &firstPos, char* hotSpotText)
+void evaluateHotSpot(sptr_t &firstPos, char* hotSpotText)
 {
     std::string evaluateResult;
     //TODO: should allow for a more elaborate comparison output
     
-    int triggerPos = strlen(hotSpotText)+firstPos;
+    sptr_t triggerPos = strlen(hotSpotText)+firstPos;
     SendScintilla(SCI_GOTOPOS,firstPos,0);
     
     int mode = 0;
@@ -1673,14 +1673,14 @@ void evaluateHotSpot(int &firstPos, char* hotSpotText)
     char delimiter1 = '?';
     char delimiter2 = ':';
     std::string verboseText = " => ";
-    int offset=0;
+    sptr_t offset=0;
     
     if (strncmp(hotSpotText,"VERBOSE'",8) == 0)
     {
         mode = 1;
         
         ::SendScintilla(SCI_GOTOPOS,firstPos + 8,0);
-        int delimitEnd = searchNext("':");
+        sptr_t  delimitEnd = searchNext("':");
         
         if ((delimitEnd >= 0) && (delimitEnd < firstPos+strlen(hotSpotText)))
         {
@@ -1702,7 +1702,7 @@ void evaluateHotSpot(int &firstPos, char* hotSpotText)
         mode = 0;
         
         ::SendScintilla(SCI_GOTOPOS,firstPos + 8,0);
-        int delimitEnd = searchNext("':");
+        sptr_t  delimitEnd = searchNext("':");
         
         if ((delimitEnd >= 0) && (delimitEnd < firstPos+strlen(hotSpotText)))
         {
@@ -1765,7 +1765,7 @@ void evaluateHotSpot(int &firstPos, char* hotSpotText)
 
         double d = toDouble(evaluateResult);
         
-        if (d > secondSplit.size()-1) d = secondSplit.size()-1;
+        if (d > secondSplit.size()-1) d = (double)(secondSplit.size()-1);
         else if (d < 0) d = 0;
                
         evaluateResult = secondSplit[d];
@@ -1785,10 +1785,10 @@ void evaluateHotSpot(int &firstPos, char* hotSpotText)
     delete [] result;
 }
 
-void launchMessageBox(int &firstPos, char* hotSpotText)
+void launchMessageBox(sptr_t &firstPos, char* hotSpotText)
 {
     //TODO: need to find a better way to organize different types of messageboxes, there is probably no need to include all of them
-    int triggerPos = strlen(hotSpotText)+firstPos;
+    sptr_t triggerPos = strlen(hotSpotText)+firstPos;
     ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
 
     char* getTerm;
@@ -1844,14 +1844,14 @@ void launchMessageBox(int &firstPos, char* hotSpotText)
     delete [] getTermWide;
 }
 
-void textCopyCut(int sourceType, int operationType, int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint)
+void textCopyCut(int sourceType, int operationType, sptr_t &firstPos, char* hotSpotText, sptr_t &startingPos, sptr_t &checkPoint)
 {
     ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
     if (firstPos != 0)
     {
-        int scriptStart;
-        int selectionStart;
-        int selectionEnd;
+        sptr_t scriptStart;
+        sptr_t selectionStart;
+        sptr_t selectionEnd;
 
         //::SendScintilla(SCI_SETSEL,firstPos-1,firstPos);
         //::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
@@ -1894,9 +1894,9 @@ void textCopyCut(int sourceType, int operationType, int &firstPos, char* hotSpot
                 paramNumber = 1;
             }
             
-            int targetLine = (::SendScintilla(SCI_LINEFROMPOSITION,firstPos-1,0)) - paramNumber + 1;
+            sptr_t targetLine = (::SendScintilla(SCI_LINEFROMPOSITION,firstPos-1,0)) - paramNumber + 1;
             if (targetLine<0) targetLine = 0;
-            int targetPos = ::SendScintilla(SCI_POSITIONFROMLINE,targetLine,0);
+            sptr_t targetPos = ::SendScintilla(SCI_POSITIONFROMLINE,targetLine,0);
             ::SendScintilla(SCI_SETSELECTION, targetPos, firstPos-1);
 
 
@@ -1912,7 +1912,7 @@ void textCopyCut(int sourceType, int operationType, int &firstPos, char* hotSpot
             getTerm = new char[strlen(hotSpotText)];
             strcpy(getTerm,hotSpotText+keywordLength);
 
-            int scriptFound = -1;
+            sptr_t scriptFound = -1;
             if (strlen(getTerm)>0) scriptFound = searchPrev(getTerm);
 
             delete [] getTerm;
@@ -1984,10 +1984,10 @@ void textCopyCut(int sourceType, int operationType, int &firstPos, char* hotSpot
 }
 
 
-void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint)
+void keyWordSpot(sptr_t &firstPos, char* hotSpotText, sptr_t &startingPos, sptr_t &checkPoint)
 {
-    int hotSpotTextLength = strlen(hotSpotText);
-    int triggerPos = hotSpotTextLength+firstPos;
+    size_t hotSpotTextLength = strlen(hotSpotText);
+    sptr_t triggerPos = hotSpotTextLength+firstPos;
 
     ::SendScintilla(SCI_SETSEL,firstPos,triggerPos);
     //TODO: At least I should rearrange the keyword a little bit for efficiency
@@ -2198,7 +2198,7 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
         if (fileStream.is_open())
         {
             fileStream.seekg (0, std::ios::end);
-            int length = fileStream.tellg();
+            std::streamoff length = fileStream.tellg();
             fileStream.seekg (0, std::ios::beg);
 
             buffer = new char [length+1];
@@ -2222,7 +2222,7 @@ void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkP
         if (fileStream.is_open())
         {
             fileStream.seekg (0, std::ios::end);
-            int length = fileStream.tellg();
+            std::streamoff length = fileStream.tellg();
             fileStream.seekg (0, std::ios::beg);
 
             buffer = new char [length+1];
@@ -2477,7 +2477,7 @@ void searchAndReplace(std::string key, std::string text, bool regexp)
     char* replaceText = new char[text.length()+1];
     strcpy(searchKey,key.c_str());
     strcpy(replaceText,text.c_str());
-    int keySpot = -1;
+    sptr_t keySpot = -1;
     keySpot = searchNext(searchKey,regexp);
 
     while (keySpot >= 0)
@@ -2592,7 +2592,7 @@ bool fingerTextListActive()
 }
 
 
-int hotSpotNavigation(char* tagSign, char* tagTail)
+sptr_t hotSpotNavigation(char* tagSign, char* tagTail)
 {
     int retVal = 0;
     // TODO: consolidate this part with dynamic hotspots? 
@@ -2606,7 +2606,7 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
     char *hotSpotText;
     char *hotSpot;
 
-    int tagSpot = searchNext(tagTail);    // Find the tail first so that nested snippets are triggered correctly
+    sptr_t tagSpot = searchNext(tagTail);    // Find the tail first so that nested snippets are triggered correctly
     
 	if (tagSpot >= 0)
 	{
@@ -2616,8 +2616,8 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
         //int tailPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
         if (searchPrev(tagSign) >= 0)
         {
-            int firstPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-            int secondPos = 0;
+            sptr_t firstPos = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+            sptr_t secondPos = 0;
             grabHotSpotContent(&hotSpotText, &hotSpot, firstPos, secondPos, tagSignLength, tagSpot);
 
             if (strncmp(hotSpotText,"(lis)",5) == 0)
@@ -2636,7 +2636,7 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
                 
                 ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)hotSpotText);
                 ::SendScintilla(SCI_GOTOPOS,firstPos,0);
-                int triggerPos = firstPos + strlen(hotSpotText);
+                sptr_t triggerPos = firstPos + strlen(hotSpotText);
                 ::SendScintilla(SCI_SETSELECTION,firstPos,firstPos+5);
                 ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
                 triggerPos -= 5;
@@ -2645,13 +2645,13 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
                 int mode = 0;
                 char* preParam;
                 char delimiter = '|';
-                int offset=0;
+                sptr_t offset=0;
                 
                 if (strncmp(hotSpotText+5,"DELIMIT'",8) == 0)   // TODO: the +5 is not necessary, should delete the (opt) first......
                 {
                     mode = 0;
                     ::SendScintilla(SCI_GOTOPOS,firstPos + 8,0);
-                    int delimitEnd = searchNext("':");
+                    sptr_t delimitEnd = searchNext("':");
                     
                     if ((delimitEnd >= 0) && (delimitEnd < triggerPos))
                     {
@@ -2696,7 +2696,7 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
                     std::vector<std::string> rangeString = toVectorString(getTerm,'-');
                     delete [] getTerm;
 
-                    int numLength = 1;
+                    size_t numLength = 1;
                     long rangeStart;
                     long rangeEnd;
                     
@@ -2719,7 +2719,7 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
                         rangeStart = abs(rangeStart);
                         rangeEnd = abs(rangeEnd);
 
-                        int length;
+                        size_t length;
                         if (rangeEnd>=rangeStart)
                         {
                             for (int i = rangeStart; i<=rangeEnd; i++)
@@ -2826,8 +2826,8 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
                 ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)hotSpotText);
 
                 ::SendScintilla(SCI_GOTOPOS,firstPos,0);
-                int hotSpotFound=-1;
-                int tempPos[100];
+                sptr_t hotSpotFound=-1;
+                sptr_t tempPos[100];
                 int i=1;
                 //TODO: consider refactor this part to another function
                 for (i=1;i<=98;i++)
@@ -2883,7 +2883,7 @@ int hotSpotNavigation(char* tagSign, char* tagTail)
     return retVal;
 }
 
-int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, int tailPos)
+int grabHotSpotContent(char **hotSpotText,char **hotSpot, sptr_t firstPos, sptr_t&secondPos, int signLength, sptr_t tailPos)
 {
     int spotType = 0;
 
@@ -2982,8 +2982,8 @@ void showPreview(bool top,bool insertion)
         char* buffer = toCharArray(bufferWide);
         buffer = quickStrip(buffer, ' ');
 
-        int scopeLength = ::strchr(buffer,'>') - buffer - 1;
-        int triggerTextLength = strlen(buffer)-scopeLength - 2;
+        size_t scopeLength = ::strchr(buffer,'>') - buffer - 1;
+        size_t triggerTextLength = strlen(buffer)-scopeLength - 2;
         char* tempTriggerText = new char [ triggerTextLength+1];
         char* tempScope = new char[scopeLength+1];
         
@@ -3152,9 +3152,9 @@ void showPreview(bool top,bool insertion)
 
 
 
-std::vector<std::string> snippetTextBrokenDown(std::string editText, std::vector<std::string> params, char** tempTriggerText, char** snippetContent, int position)
+std::vector<std::string> snippetTextBrokenDown(std::string editText, std::vector<std::string> params, char** tempTriggerText, char** snippetContent, size_t position)
 {
-    int location = 0;
+    size_t location = 0;
     
     if (position<=editText.length())
     {
@@ -3185,8 +3185,8 @@ std::vector<std::string> snippetTextBrokenDown(std::string editText, std::vector
     
     std::vector<std::string> spotVector;
     
-    int endPos;
-    int startPos;
+    sptr_t endPos;
+    sptr_t startPos;
     int i = g_listLength-1;
     
     do
@@ -3217,7 +3217,7 @@ std::vector<std::string> snippetTextBrokenDown(std::string editText, std::vector
                 } else
                 {
                     ::SendScintilla(SCI_SETSEL,startPos,endPos);
-                    int found = -1;
+                    sptr_t found = -1;
                     do
                     {
                         ::SendScintilla(SCI_REPLACESEL,0,(LPARAM)"");
@@ -3315,20 +3315,20 @@ void insertEndSign()
 //}
 
 
-void insertTagSign(int type)
+void insertTagSign(LRESULT type)
 {
 
     if (g_editorView)
     {
         
-        int posStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
-        int lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION, posStart, 0);
+        sptr_t posStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
+        sptr_t lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION, posStart, 0);
 
         if (lineCurrent<3) ::SendScintilla(SCI_GOTOLINE,3,0);
         
 
-        int start = -1;
-        int end = -1;
+        sptr_t start = -1;
+        sptr_t end = -1;
 
         switch (type)
         {
@@ -3425,16 +3425,16 @@ void insertTagSign(int type)
     
 }
 
-bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
+bool replaceTag(char *expanded, sptr_t &posCurrent, sptr_t &posBeforeTag)
 {
     
     char *expanded_eolfix;
-    int eolmode = ::SendScintilla(SCI_GETEOLMODE, 0, 0);
+    sptr_t  eolmode = ::SendScintilla(SCI_GETEOLMODE, 0, 0);
     char *eol[3] = {"\r\n","\r","\n"};
     expanded_eolfix = replaceAll(expanded, "\n", eol[eolmode]);
 
-    int lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION, posCurrent, 0);
-    int initialIndent = ::SendScintilla(SCI_GETLINEINDENTATION, lineCurrent, 0);
+    sptr_t  lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION, posCurrent, 0);
+    sptr_t  initialIndent = ::SendScintilla(SCI_GETLINEINDENTATION, lineCurrent, 0);
 
     ::SendScintilla(SCI_INSERTTEXT, posCurrent, (LPARAM)"____`[SnippetInserting]");
 
@@ -3450,15 +3450,15 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
 
     ::SendScintilla(SCI_GOTOPOS,posBeforeTag,0);
     searchNext("`[SnippetInserting]");
-    int posEndOfInsertedText = ::SendScintilla(SCI_GETCURRENTPOS,0,0)+19;
+    sptr_t  posEndOfInsertedText = ::SendScintilla(SCI_GETCURRENTPOS,0,0)+19;
 
     // adjust indentation according to initial indentation
     if (pc.configInt[INDENT_REFERENCE]==1)
     {
-        int lineInsertedSnippet = ::SendScintilla(SCI_LINEFROMPOSITION, posEndOfInsertedText, 0);
+        sptr_t lineInsertedSnippet = ::SendScintilla(SCI_LINEFROMPOSITION, posEndOfInsertedText, 0);
 
-        int lineIndent=0;
-        for (int i=lineCurrent+1;i<=lineInsertedSnippet;i++)
+        sptr_t  lineIndent=0;
+        for (sptr_t i=lineCurrent+1;i<=lineInsertedSnippet;i++)
         {
             lineIndent = ::SendScintilla(SCI_GETLINEINDENTATION, i, 0);
             ::SendScintilla(SCI_SETLINEINDENTATION, i, initialIndent+lineIndent);
@@ -3469,14 +3469,14 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
     
     ::SendScintilla(SCI_GOTOPOS,posBeforeTag,0);
     searchNext("[>END<]");
-    int posEndOfSnippet = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+    sptr_t posEndOfSnippet = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
         
     ::SendScintilla(SCI_SETSELECTION,posEndOfSnippet,posEndOfInsertedText);
     ::SendScintilla(SCI_REPLACESEL, 0, (LPARAM)"");
 
     ::SendScintilla(SCI_GOTOPOS,posBeforeTag,0);
     //int stopFound = searchNext(g_stopCharArray);
-    int stopFound = searchNext("\\$\\[.\\[",true);
+    sptr_t stopFound = searchNext("\\$\\[.\\[",true);
     //int stopFound = -1;
     
     if (stopFound<posBeforeTag)
@@ -3492,11 +3492,11 @@ bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag)
 }
 
 
-int getCurrentTag(int posCurrent, char **buffer, int triggerLength)
+size_t getCurrentTag(sptr_t posCurrent, char **buffer, sptr_t triggerLength)
 {
-	int length = -1;
+    size_t length = -1;
 
-    int posBeforeTag;
+    size_t posBeforeTag;
     if (triggerLength<=0)
     {
         ::SendScintilla(SCI_SETWORDCHARS, 0, (LPARAM)escapeWordChar);
@@ -3613,7 +3613,7 @@ bool snippetHintUpdate()
             if (::SendScintilla(SCI_SELECTIONISRECTANGLE,0,0) == 0)
             {
                 
-                int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+                sptr_t posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
                 char *partialTag;
 	            int tagLength = getCurrentTag(posCurrent, &partialTag);
                 
@@ -3759,10 +3759,10 @@ void updateInsertionDialogHint()
     insertionDlg.updateInsertionHint();
 }
 
-wchar_t* constructDockItems(std::string scope, std::string triggerText, int maxlength)
+wchar_t* constructDockItems(std::string scope, std::string triggerText, size_t maxlength)
 {
     std::string newText = "<"+scope+">";
-    int scopeLength;
+    size_t scopeLength;
     scopeLength = maxlength - newText.length();
     if (scopeLength < 3) scopeLength = 3;
     for (int i=0;i<scopeLength;i++) newText = newText + " ";
@@ -4200,7 +4200,7 @@ void importSnippets(wchar_t* path)
         
 
         file.seekg(0, std::ios::end);
-        int fileLength = file.tellg();
+        std::streamoff fileLength = file.tellg();
         file.seekg(0, std::ios::beg);
 
         if (file.is_open())
@@ -4230,12 +4230,12 @@ void importSnippets(wchar_t* path)
         
             int importCount=0;
             int conflictCount=0;
-            int next=0;
+            sptr_t next=0;
             char* snippetText;
             char* tagText; 
             char* tagTypeText;
-            int snippetPosStart;
-            int snippetPosEnd;
+            sptr_t snippetPosStart;
+            sptr_t snippetPosEnd;
             bool notOverWrite;
             char* snippetTextOld;
             //char* snippetTextOldCleaned;
@@ -4590,7 +4590,7 @@ void refreshAnnotation()
         {
             //HWND curScintilla = getCurrentScintilla();
 
-            int lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION,::SendScintilla(SCI_GETCURRENTPOS,0,0),0);
+            sptr_t lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION,::SendScintilla(SCI_GETCURRENTPOS,0,0),0);
 
             //::SendMessage(getCurrentScintilla(), SCI_ANNOTATIONCLEARALL, 0, 0);
             ::SendScintilla(SCI_ANNOTATIONCLEARALL, 0, 0);
@@ -4783,7 +4783,7 @@ void selectionMonitor(int contentChange)
                 
                 if (g_optionMode)
                 {
-                    int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+                    sptr_t posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
                     //alertNumber(g_optionStartPosition);
                     //alertNumber(posCurrent);
                     //TODO: a bug when there is an empty option and the hotspot is at the beginning of document
@@ -4804,8 +4804,8 @@ void selectionMonitor(int contentChange)
                     //}
                 } else
                 {
-                    int selectionStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
-                    int selectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
+                    sptr_t selectionStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
+                    sptr_t selectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
 
                     
                     if (selectionStart==selectionEnd)
@@ -4824,12 +4824,12 @@ void selectionMonitor(int contentChange)
             }
         } else if (pc.configInt[EDITOR_CARET_BOUND] == 1)
         {
-            int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-            int lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION,posCurrent,0);
-            int selectionStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
-            int selectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
-            int selectionStartLine = ::SendScintilla(SCI_LINEFROMPOSITION,selectionStart,0);
-            int selectionEndLine = ::SendScintilla(SCI_LINEFROMPOSITION,selectionEnd,0);
+            sptr_t posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+            sptr_t lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION,posCurrent,0);
+            sptr_t selectionStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
+            sptr_t selectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
+            sptr_t selectionStartLine = ::SendScintilla(SCI_LINEFROMPOSITION,selectionStart,0);
+            sptr_t selectionEndLine = ::SendScintilla(SCI_LINEFROMPOSITION,selectionEnd,0);
             
             //// Failed attempt to use SCI_KEY to restrict caret movement
             //SendScintilla(SCI_ASSIGNCMDKEY,SCK_UP,SCI_LINEUP); 
@@ -4847,8 +4847,8 @@ void selectionMonitor(int contentChange)
             //    ::SendScintilla(SCI_GOTOLINE,1,0);
             //} 
             //
-            int firstlineEnd = ::SendScintilla(SCI_GETLINEENDPOSITION,0,0);
-            int currentLineCount = ::SendScintilla(SCI_GETLINECOUNT,0,0);
+            sptr_t firstlineEnd = ::SendScintilla(SCI_GETLINEENDPOSITION,0,0);
+            sptr_t currentLineCount = ::SendScintilla(SCI_GETLINECOUNT,0,0);
             
             //alertNumber(lineCurrent);
             //if (contentChange)
@@ -4921,12 +4921,12 @@ void doTagComplete()
     tagComplete();
 }
 
-int tagComplete()
+sptr_t tagComplete()
 {
-    int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-    int index = -1;
+    sptr_t posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+    sptr_t index = -1;
     char *tag;
-    int tagLength = getCurrentTag(posCurrent, &tag);
+    size_t tagLength = getCurrentTag(posCurrent, &tag);
     char *key = new char[300];
     strcpy(key,"");
     if (pc.configInt[INCLUSIVE_TRIGGERTEXT_COMPLETION]==1) strcat(key,"%");
@@ -5305,9 +5305,9 @@ std::vector<std::string> generateScopeList()
 
 }
 
-bool triggerTag(int &posCurrent, int triggerLength)
+bool triggerTag(sptr_t &posCurrent, sptr_t triggerLength)
 {
-    int paramPos = -1;
+    sptr_t paramPos = -1;
     char* previousChar;
     sciGetText(&previousChar, posCurrent-1, posCurrent);
     if (strcmp(previousChar,")")==0) paramPos = ::SendScintilla(SCI_BRACEMATCH,posCurrent-1,0);
@@ -5321,7 +5321,7 @@ bool triggerTag(int &posCurrent, int triggerLength)
 
     bool tagFound = false;
     char *tag;
-	int tagLength = getCurrentTag(posCurrent, &tag, triggerLength);
+	size_t tagLength = getCurrentTag(posCurrent, &tag, triggerLength);
 
     if (((triggerLength<=0) && (tag[0] == '_')) || (tagLength == 0))
     {
@@ -5329,7 +5329,7 @@ bool triggerTag(int &posCurrent, int triggerLength)
     } else if (tagLength > 0) //TODO: changing this to >0 fixed the problem of tag_tab_completion, but need to investigate more about the side effect
 	{
         
-        int posBeforeTag = posCurrent - tagLength;
+        sptr_t  posBeforeTag = posCurrent - tagLength;
 
         std::vector<std::string> scopeList = generateScopeList();
 
@@ -5359,8 +5359,8 @@ bool triggerTag(int &posCurrent, int triggerLength)
             if (paramPos>=0)
             {
                 // Here the logic is, if it's chain snippet triggering, triggerLength>=0 and so the BEGINUNDOACTION is not going to fire. other wise, it will fire and tagFound will be equal to true.
-                int paramStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-                int paramEnd = ::SendScintilla(SCI_BRACEMATCH,paramStart,0) + 1;
+                sptr_t paramStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+                sptr_t paramEnd = ::SendScintilla(SCI_BRACEMATCH,paramStart,0) + 1;
 
                 if (triggerLength<=0)
                 {
@@ -5653,7 +5653,7 @@ void httpToFile(TCHAR* server, TCHAR* request, TCHAR* requestType, TCHAR* pathWi
 
 
 
-std::vector<std::string> smartSplit(int start, int end, char delimiter, int parts)
+std::vector<std::string> smartSplit(sptr_t start, sptr_t end, TCHAR delimiter, int parts)
 {
     char filler;
     if (delimiter!=0)
@@ -5668,8 +5668,8 @@ std::vector<std::string> smartSplit(int start, int end, char delimiter, int part
     std::vector<int> positions;
     char* partToSplit;
     sciGetText(&partToSplit, start, end);
-    int signSpot; 
-    int tailSpot;
+    sptr_t signSpot;
+    sptr_t tailSpot;
     char* tagSignGet;
     char* tagTailGet;
     
@@ -5690,7 +5690,7 @@ std::vector<std::string> smartSplit(int start, int end, char delimiter, int part
             tailSpot = searchNextMatchedTail(tagSignGet,tagTailGet);
             if (tailSpot <= end && tailSpot> start)
             {
-                for (int i = signSpot - start; i<tailSpot-start;i++) partToSplit[i] = filler;
+                for (sptr_t i = signSpot - start; i<tailSpot-start;i++) partToSplit[i] = filler;
             }
             delete [] tagSignGet;
             delete [] tagTailGet;
@@ -5707,7 +5707,7 @@ std::vector<std::string> smartSplit(int start, int end, char delimiter, int part
         positions.push_back(retVal[i].length());
     }
 
-    int caret = start;
+    sptr_t caret = start;
     char* tempString;
     for (i = 0; i<positions.size();i++)
     {
@@ -5742,7 +5742,7 @@ bool diagActivate(char* tag)
     //TODO: can possbily refactor and restructure with tabActivate. But need to rethink the whol structure. Better way is probably just take the simliar parts and separate it out to a function
     if (g_enable == true) 
     {
-        int lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION,::SendScintilla(SCI_GETCURRENTPOS,0,0),0);
+        sptr_t  lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION,::SendScintilla(SCI_GETCURRENTPOS,0,0),0);
 
         if ((g_editorView == true) && (lineCurrent <=2))
         {
@@ -5754,8 +5754,8 @@ bool diagActivate(char* tag)
             if (pc.configInt[PRESERVE_STEPS]==0) ::SendScintilla(SCI_BEGINUNDOACTION, 0, 0);
             turnOffOptionMode();
 
-            int posSelectionStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
-            int posSelectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
+            sptr_t posSelectionStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
+            sptr_t  posSelectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
 
             char* selectedText;
             sciGetText(&selectedText,posSelectionStart,posSelectionEnd);
@@ -5765,8 +5765,8 @@ bool diagActivate(char* tag)
 
             SendScintilla(SCI_REPLACESEL,0,(LPARAM)tag);
 
-            int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-            int triggerLength = strlen(tag);
+            sptr_t  posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+            size_t triggerLength = strlen(tag);
             bool tagFound = false;
             g_hotspotParams.clear();
             
@@ -5783,11 +5783,11 @@ bool diagActivate(char* tag)
                 g_lastTriggerPosition = posCurrent;
 
                 
-                int navSpot = 0;
+                sptr_t navSpot = 0;
                 bool dynamicSpotTemp = false;
                 bool dynamicSpot = false;
                 bool outBound = false;
-                int prevHotspotPos = -1;
+                sptr_t prevHotspotPos = -1;
 
                 if (g_editorView == false)
                 {
@@ -5847,7 +5847,7 @@ bool diagActivate(char* tag)
 
                     if ((!((navSpot > 0) || (dynamicSpot))) && (outBound))
                     {
-                        int prevPos = g_lastTriggerPosition;
+                        sptr_t prevPos = g_lastTriggerPosition;
                         do
                         {
                             g_lastTriggerPosition = prevPos;
@@ -5940,10 +5940,10 @@ void doTabActivate(bool navOnly)
                 ::SendScintilla(SCI_AUTOCCOMPLETE,0,0);
                 autoComplete = 1;
             }
-            int posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
+            sptr_t posCurrent = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
             
             //int posTriggerStart = ::SendScintilla(SCI_GETCURRENTPOS,0,0);
-            int lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION,posCurrent,0);
+            sptr_t lineCurrent = ::SendScintilla(SCI_LINEFROMPOSITION,posCurrent,0);
 
             if ((g_editorView == true) && (lineCurrent <=2))
             {
@@ -5965,8 +5965,8 @@ void doTabActivate(bool navOnly)
                 pc.configInt[LIVE_HINT_UPDATE]--;
                 g_selectionMonitor--;
                 
-                int posSelectionStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
-                int posSelectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
+                sptr_t posSelectionStart = ::SendScintilla(SCI_GETSELECTIONSTART,0,0);
+                sptr_t posSelectionEnd = ::SendScintilla(SCI_GETSELECTIONEND,0,0);
 
                 if (g_optionMode)
                 {
@@ -5995,11 +5995,11 @@ void doTabActivate(bool navOnly)
                 // the SCI_BEGINUNDOACTION is sent.
 
 
-                int navSpot = 0;
+                sptr_t navSpot = 0;
                 bool dynamicSpotTemp = false;
                 bool dynamicSpot = false;
                 bool outBound = false;
-                int prevHotspotPos = -1;
+                sptr_t prevHotspotPos = -1;
 
                 if (g_editorView == false)
                 {
@@ -6059,7 +6059,7 @@ void doTabActivate(bool navOnly)
                     
                     if ((!((navSpot > 0) || (dynamicSpot))) && (outBound))
                     {
-                        int prevPos = g_lastTriggerPosition; //TODO: should be able to restructure and use the prevHotspotPos defined before
+                        sptr_t prevPos = g_lastTriggerPosition; //TODO: should be able to restructure and use the prevHotspotPos defined before
                         do
                         {
                             g_lastTriggerPosition = prevPos;
