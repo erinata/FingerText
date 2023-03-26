@@ -58,7 +58,7 @@ public:
     void InsertionDlg::setListTarget();
     bool InsertionDlg::completeSnippets();
     int InsertionDlg::getEditPos();
-    void InsertionDlg::getSelectText(TCHAR* &buffer, int index = -1);
+    void InsertionDlg::getSelectText(TCHAR* &buffer, LRESULT index = -1);
     void InsertionDlg::setDlgText(int dlg, TCHAR* showText);
     void InsertionDlg::changeMode(bool withComment);
     void InsertionDlg::changeExpand();

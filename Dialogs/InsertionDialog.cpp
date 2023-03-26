@@ -108,7 +108,7 @@ int InsertionDlg::getEditPos()
 
 TCHAR* InsertionDlg::getEditText()
 {
-    int length = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_EDIT), EM_LINELENGTH, 0, 0);             
+    LRESULT length = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_EDIT), EM_LINELENGTH, 0, 0);             
     TCHAR* bufferWide = new TCHAR[length+1];
     ::GetDlgItemText(_hSelf, IDC_INSERTION_EDIT ,bufferWide,length+1);
     return bufferWide;
@@ -137,13 +137,13 @@ void InsertionDlg::setDlgText(int dlg, TCHAR* showText)
 
 }
 
-void InsertionDlg::getSelectText(TCHAR* &buffer, int index)
+void InsertionDlg::getSelectText(TCHAR* &buffer, LRESULT index)
 {
      
     HWND hwndList = GetDlgItem(_hSelf, IDC_INSERTION_LIST);
-    if (index = -1) index = SendMessage(hwndList, LB_GETCURSEL, 0, 0);
+    if (index == -1) index = SendMessage(hwndList, LB_GETCURSEL, 0, 0);
     if (index <= 0) index = 0;
-    int length = SendMessage(hwndList, LB_GETTEXTLEN, index, 0);
+    LRESULT length = SendMessage(hwndList, LB_GETTEXTLEN, index, 0);
     if (length >=  1)
     {
 
@@ -242,7 +242,7 @@ bool InsertionDlg::completeSnippets()
     bool retVal = false;
     SendDlgItemMessage(_hSelf, IDC_INSERTION_LIST, LB_SETSEL, 0, 0);
     showPreview(false,true);
-    int length = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_EDIT), EM_LINELENGTH, 0, 0);  
+    LRESULT length = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_EDIT), EM_LINELENGTH, 0, 0);  
     SendDlgItemMessage(_hSelf, IDC_INSERTION_EDIT, EM_SETSEL, length, -1);
     //TODO: complete snippet in dialog
 
@@ -267,11 +267,11 @@ void InsertionDlg::changeMode(bool withComment)
 
 void InsertionDlg::setTextTarget(bool fromTab)
 {
-    int index = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_LIST), LB_GETCURSEL, 0, 0);
+    LRESULT index = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_LIST), LB_GETCURSEL, 0, 0);
 
     if ((fromTab) || (index)==0)
     {
-        int length = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_EDIT), EM_LINELENGTH, 0, 0);  
+        LRESULT length = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_EDIT), EM_LINELENGTH, 0, 0);  
         SetFocus(GetDlgItem(_hSelf, IDC_INSERTION_EDIT));
         SendDlgItemMessage(_hSelf, IDC_INSERTION_EDIT, EM_SETSEL, length, -1);
     }
@@ -280,7 +280,7 @@ void InsertionDlg::setTextTarget(bool fromTab)
 
 void InsertionDlg::setListTarget()
 {
-    int count = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_LIST), LB_GETCOUNT, 0, 0);
+    LRESULT count = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_LIST), LB_GETCOUNT, 0, 0);
     if (count>0)
     {
         SetFocus(GetDlgItem(_hSelf, IDC_INSERTION_LIST));
@@ -293,7 +293,7 @@ void InsertionDlg::updateInsertionHint()
 {
     if (::GetFocus() == GetDlgItem(_hSelf, IDC_INSERTION_EDIT))
     {
-       int length = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_EDIT), EM_LINELENGTH, 0, 0);
+       LRESULT length = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_EDIT), EM_LINELENGTH, 0, 0);
        if (length>0)
        {
           TCHAR* bufferWide = new TCHAR[length+1];
@@ -325,9 +325,9 @@ void InsertionDlg::adjustTextHintPosition()
 {
     int fontWidth = 7;
     int offset = 4;
-    int length1 = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_HINT), EM_LINELENGTH, 0, 0);  
-    int length2 = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_HINT_HIGHLIGHT), EM_LINELENGTH, 0, 0);  
-    int length3 = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_HINT_POST), EM_LINELENGTH, 0, 0);  
+    LRESULT length1 = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_HINT), EM_LINELENGTH, 0, 0);  
+    LRESULT length2 = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_HINT_HIGHLIGHT), EM_LINELENGTH, 0, 0);
+    LRESULT length3 = SendMessage(GetDlgItem(_hSelf, IDC_INSERTION_HINT_POST), EM_LINELENGTH, 0, 0);
     
     SetWindowPos(GetDlgItem(_hSelf, IDC_INSERTION_HINT)          ,NULL,5                                                  ,35,offset+length1*fontWidth,20,SWP_NOACTIVATE);
     SetWindowPos(GetDlgItem(_hSelf, IDC_INSERTION_HINT_HIGHLIGHT),NULL,5+offset+length1*fontWidth                         ,35,offset+length2*fontWidth,20,SWP_NOACTIVATE);
