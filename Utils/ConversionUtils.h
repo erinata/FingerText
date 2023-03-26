@@ -52,7 +52,7 @@ double toDouble(const std::string &s);
 
 long toLong(std::string source);
 
-std::vector<std::string> toVectorString(char* str, char c = ' ', int parts = 0);
+std::vector<std::string> toVectorString(char* str, TCHAR c = ' ', int parts = 0);
 std::vector<std::string> toSortedVectorString(std::vector<std::string> v);
 
 int toVk(char* input);

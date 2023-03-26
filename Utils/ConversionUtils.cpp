@@ -137,7 +137,7 @@ long toLong(std::string source)
     return l;
 }           
 
-std::vector<std::string> toVectorString(char* str, char c, int parts)
+std::vector<std::string> toVectorString(char* str, TCHAR c, int parts)
 {
     int i = 1;
     if (parts == 0) i = -1;
