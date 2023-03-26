@@ -44,11 +44,11 @@ int setCommand(TCHAR *cmdName = TEXT(""), PFUNCPLUGINCMD pFunc = NULL, ShortcutK
 int showMessageBox(TCHAR* text = TEXT(""), int flags = MB_OK);
 
 // Search in Scintilla
-int searchNext(char* searchText, bool regExp = false);
-int searchPrev(char* searchText, bool regExp = false);
+sptr_t searchNext(char* searchText, bool regExp = false);
+sptr_t searchPrev(char* searchText, bool regExp = false);
 
 // Getting Text from Scintilla
-unsigned int sciGetText(char **text, int start = -1, int end = -1);
+sptr_t sciGetText(char **text, sptr_t start = -1, sptr_t end = -1);
 //unsigned int sciGetText(HWND hwnd, char **text, int start, int end)
 
 void closeTab(TCHAR* path);
