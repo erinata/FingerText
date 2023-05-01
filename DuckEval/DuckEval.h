@@ -49,7 +49,7 @@ class Expression
         void Expression::toPostfix(std::string infix);        
         double Expression::operate(const std::string &, const double &, const double &); // calculate result by operator and operand
         void Expression::signReplace(std::string& str, const std::string& oldStr, const std::string& newStr,bool negative = false);
-        long Expression::factorial(long number);
+        double Expression::factorial(double number);
         int Expression::isNotEqual(double operand1, double operand2);
         int Expression::isEqual(double operand1, double operand2);
         int Expression::isSmallerOrEqual(double operand1, double operand2);
@@ -58,8 +58,8 @@ class Expression
         int Expression::isGreater(double operand1, double operand2);
         int Expression::operateOr(double operand1, double operand2);
         int Expression::operateAnd(double operand1, double operand2);
-        long Expression::ncr(long operand1, long operand2);
-        long Expression::npr(long operand1, long operand2);
+        double Expression::ncr(double operand1, double operand2);
+        double Expression::npr(double operand1, double operand2);
         long Expression::randomNumber(double operand1);
         double Expression::randomFraction(double operand1);
         

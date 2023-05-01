@@ -109,7 +109,7 @@ int showMessageBox(TCHAR* text, int flags)
     return ::MessageBox(nppData._nppHandle, text, TEXT(PLUGIN_NAME), flags);
 }
 
-int searchNext(char* searchText, bool regExp)
+sptr_t searchNext(char* searchText, bool regExp)
 {
     int searchFlags = 0;
     if (regExp) searchFlags = SCFIND_REGEXP;
@@ -117,7 +117,7 @@ int searchNext(char* searchText, bool regExp)
     return ::SendScintilla(SCI_SEARCHNEXT, searchFlags,(LPARAM)searchText);
 }
 
-int searchPrev(char* searchText, bool regExp)
+sptr_t searchPrev(char* searchText, bool regExp)
 {    
     int searchFlags = 0;
     if (regExp) searchFlags = SCFIND_REGEXP;
@@ -126,7 +126,7 @@ int searchPrev(char* searchText, bool regExp)
 }
 
 
-unsigned int sciGetText(char **text, int start, int end)
+sptr_t sciGetText(char **text, sptr_t start, sptr_t end)
 {
     if (start == -1)
     {
@@ -143,7 +143,7 @@ unsigned int sciGetText(char **text, int start, int end)
         tr.chrg.cpMin = start;
         tr.chrg.cpMax = end;
         tr.lpstrText  = *text;
-        return (int)SendScintilla(SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&tr));
+        return SendScintilla(SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&tr));
     } else
     {
         strcpy(*text,"");

@@ -49,19 +49,19 @@ class DockingDlg : public DockingDlgInterface
         void clearDock();
         void setDlgText(int dlg, TCHAR* showText);
         void toggleSave(bool buttonOn);
-        int getSelection();
+        LRESULT getSelection();
         //void setSelction();
         void DockingDlg::setupHotspotCombo();
-        void DockingDlg::switchInsertMode(int insert = 1);
+        void DockingDlg::switchInsertMode(LRESULT insert = 1);
         //int getCount();
         void DockingDlg::updateSnippetCount(wchar_t* count);
         void DockingDlg::insertHotspot();
         void DockingDlg::switchDock(bool toNormal = true);
-        void DockingDlg::selectSnippetList(int selection);
-        int DockingDlg::searchSnippetList(wchar_t* key);
-        int DockingDlg::getTopIndex();
-        void DockingDlg::setTopIndex(int index);
-        void DockingDlg::getSelectText(TCHAR* &buffer, int index = -1);
+        void DockingDlg::selectSnippetList(LRESULT selection);
+        LRESULT DockingDlg::searchSnippetList(wchar_t* key);
+        LRESULT DockingDlg::getTopIndex();
+        void DockingDlg::setTopIndex(LRESULT index);
+        void DockingDlg::getSelectText(TCHAR* &buffer, LRESULT index = -1);
 
     protected :
         

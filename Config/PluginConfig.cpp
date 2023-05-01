@@ -309,7 +309,7 @@ void PluginConfig::settings()
         {
             ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)iniPath);
         }
-        int lineCount = ::SendScintilla(SCI_GETLINECOUNT, 0, 0)-1;
+        sptr_t lineCount = ::SendScintilla(SCI_GETLINECOUNT, 0, 0)-1;
         ::SendScintilla(SCI_ANNOTATIONCLEARALL, 0, 0);
         //TODO: move this part (and other text) to const char in another file.
         ::SendScintilla(SCI_ANNOTATIONSETTEXT, lineCount, (LPARAM)"\
@@ -390,7 +390,7 @@ For step by step usage guide, please visit http://github.com/erinata/FingerText 
 void PluginConfig::about()
 {
         
-    int length = _tcslen(TEXT(PLUGIN_NAME))+_tcslen(TEXT(VERSION_TEXT))+_tcslen(TEXT(VERSION_STAGE))+_tcslen(TEXT(VERSION_STAGE_ADD))+_tcslen(TEXT(DATE_TEXT))+_tcslen(TEXT(AUTHOR_TEXT))+_tcslen(TEXT(EMAIL_TEXT))+_tcslen(TEXT(ABOUT_TEXT))+50;
+    sptr_t length = _tcslen(TEXT(PLUGIN_NAME))+_tcslen(TEXT(VERSION_TEXT))+_tcslen(TEXT(VERSION_STAGE))+_tcslen(TEXT(VERSION_STAGE_ADD))+_tcslen(TEXT(DATE_TEXT))+_tcslen(TEXT(AUTHOR_TEXT))+_tcslen(TEXT(EMAIL_TEXT))+_tcslen(TEXT(ABOUT_TEXT))+50;
    
     TCHAR* versionText = new TCHAR[length];
     

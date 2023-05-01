@@ -31,7 +31,7 @@
 #include "SnippetDock.h"
 
 bool normalMode = true;
-int insertMode = 1;
+LRESULT insertMode = 1;
 //int previewMode = 1;
 int selectMode = 1;
 //extern NppData nppData;
@@ -71,7 +71,7 @@ void DockingDlg::resizeListBox(int height,int width)
 
     int minimumHeight = 100;
 
-    if (height = -1)
+    if (height == -1)
     {
        RECT rect;
        GetWindowRect(_hSelf, &rect);
@@ -147,9 +147,9 @@ void DockingDlg::toggleSave(bool buttonOn)
 }
 
 
-int DockingDlg::getSelection()
+LRESULT DockingDlg::getSelection()
 {
-    int retVal;
+    LRESULT retVal;
     HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
     retVal = SendMessage(hwndList, LB_GETCURSEL, 0, 0);
     retVal = SendMessage(hwndList, LB_GETANCHORINDEX, 0, 0);
@@ -158,13 +158,13 @@ int DockingDlg::getSelection()
 
 }
 
-void DockingDlg::getSelectText(TCHAR* &buffer, int index)
+void DockingDlg::getSelectText(TCHAR* &buffer, LRESULT index)
 {
      
     HWND hwndList = GetDlgItem(_hSelf, IDC_SNIPPET_LIST);
-    if (index = -1) index = SendMessage(hwndList, LB_GETCURSEL, 0, 0);
+    if (index == -1) index = SendMessage(hwndList, LB_GETCURSEL, 0, 0);
     if (index <= 0) index = 0;
-    int length = SendMessage(hwndList, LB_GETTEXTLEN, index, 0);
+    LRESULT length = SendMessage(hwndList, LB_GETTEXTLEN, index, 0);
     if (length >=  1)
     {
 
@@ -204,22 +204,22 @@ void DockingDlg::setupHotspotCombo()
 
 
 
-int DockingDlg::searchSnippetList(wchar_t* key)
+LRESULT DockingDlg::searchSnippetList(wchar_t* key)
 {
     return SendMessage(GetDlgItem(_hSelf, IDC_SNIPPET_LIST), LB_FINDSTRINGEXACT, -1, (LPARAM)key);
 }
 
-void DockingDlg::setTopIndex(int index)
+void DockingDlg::setTopIndex(LRESULT index)
 {
     SendMessage(GetDlgItem(_hSelf, IDC_SNIPPET_LIST), LB_SETTOPINDEX, index, 0);
 }
 
-int DockingDlg::getTopIndex()
+LRESULT DockingDlg::getTopIndex()
 {
     return SendMessage(GetDlgItem(_hSelf, IDC_SNIPPET_LIST), LB_GETTOPINDEX, 0, 0);
 }
 
-void DockingDlg::selectSnippetList(int selection)
+void DockingDlg::selectSnippetList(LRESULT selection)
 {
     SendMessage(GetDlgItem(_hSelf, IDC_SNIPPET_LIST), LB_SETCURSEL, selection, 0);
 }
@@ -227,7 +227,7 @@ void DockingDlg::selectSnippetList(int selection)
 
 void DockingDlg::insertHotspot()
 {
-    int type = SendMessage(GetDlgItem(_hSelf, IDC_COMBO_HOTSPOT), CB_GETCURSEL, 0, 0);
+    LRESULT type = SendMessage(GetDlgItem(_hSelf, IDC_COMBO_HOTSPOT), CB_GETCURSEL, 0, 0);
     //::insertHotSpotSign(select);
     insertTagSign(type);
     ::SetFocus(::getCurrentScintilla());
@@ -350,7 +350,7 @@ void DockingDlg::switchDock(bool toNormal)
     //alert();
 }
 
-void DockingDlg::switchInsertMode(int insert)
+void DockingDlg::switchInsertMode(LRESULT insert)
 {
     insertMode = insert;
     SendMessage(GetDlgItem(_hSelf, IDC_RADIO_INSERT), BM_SETCHECK, insert, 0);
@@ -452,11 +452,11 @@ INT_PTR CALLBACK DockingDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPa
             {
                 if (::GetFocus() == GetDlgItem(_hSelf, IDC_FILTER))
                 {
-                    int length = SendMessage(GetDlgItem(_hSelf, IDC_FILTER), EM_LINELENGTH, 0, 0);
+                    LRESULT length = SendMessage(GetDlgItem(_hSelf, IDC_FILTER), EM_LINELENGTH, 0, 0);
                     if (length>0)
                     {
                         TCHAR* bufferWide = new TCHAR[length+1];
-                        ::GetDlgItemText(_hSelf, IDC_FILTER ,bufferWide,length+1);
+                        ::GetDlgItemText(_hSelf, IDC_FILTER ,bufferWide,(int)(length+1));
                         char* buffer = toCharArray(bufferWide);
                         bool leadingSpace = 0;
                         bool trailingSpace = 0;

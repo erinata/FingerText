@@ -86,22 +86,22 @@ void showInsertionDlg();
 void setInsertionDialogState(int state);
 
 void toggleDisable();
-void restoreTab(int &posCurrent, int &posSelectionStart, int &posSelectionEnd);
-int searchPrevMatchedSign(char* tagSign, char* tagTail);
-int searchPrevMatchedTail(char* tagSign, char* tagTail);
-bool dynamicHotspot(int &startingPos, char* tagSign = "$[![", char* tagTail = "]!]");
-void paramsInsertion(int &firstPos, char* hotSpot, int &checkPoint);
-void textCopyCut(int sourceType, int operationType, int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint);
-void keyWordSpot(int &firstPos, char* hotSpotText, int &startingPos, int &checkPoint);
-void webRequest(int &firstPos, char* hotSpotText);
-void executeCommand(int &firstPos, char* hotSpotText);
-void launchMessageBox(int &firstPos, char* hotSpotText);
+void restoreTab(sptr_t &posCurrent, sptr_t &posSelectionStart, sptr_t &posSelectionEnd);
+sptr_t searchPrevMatchedSign(char* tagSign, char* tagTail);
+sptr_t searchPrevMatchedTail(char* tagSign, char* tagTail);
+bool dynamicHotspot(sptr_t &startingPos, char* tagSign = "$[![", char* tagTail = "]!]");
+void paramsInsertion(sptr_t &firstPos, char* hotSpot, sptr_t &checkPoint);
+void textCopyCut(int sourceType, int operationType, sptr_t &firstPos, char* hotSpotText, sptr_t &startingPos, sptr_t &checkPoint);
+void keyWordSpot(sptr_t &firstPos, char* hotSpotText, sptr_t &startingPos, sptr_t &checkPoint);
+void webRequest(sptr_t &firstPos, char* hotSpotText);
+void executeCommand(sptr_t &firstPos, char* hotSpotText);
+void launchMessageBox(sptr_t &firstPos, char* hotSpotText);
 std::string evaluateCall(char* expression);
-void evaluateHotSpot(int &firstPos, char* hotSpotText);
-void chainSnippet(int &firstPos, char* hotSpotText);
-int hotSpotNavigation(char* tagSign = "$[![", char* tagTail = "]!]");
+void evaluateHotSpot(sptr_t &firstPos, char* hotSpotText);
+void chainSnippet(sptr_t &firstPos, char* hotSpotText);
+sptr_t hotSpotNavigation(char* tagSign = "$[![", char* tagTail = "]!]");
 
-int grabHotSpotContent(char **hotSpotText,char **hotSpot, int firstPos, int &secondPos, int signLength, int tailPos);
+int grabHotSpotContent(char **hotSpotText,char **hotSpot, sptr_t firstPos, sptr_t&secondPos, int signLength, sptr_t tailPos);
 void showPreview(bool top = false,bool insertion = false);
 
 void doSelectionToSnippet();
@@ -119,18 +119,18 @@ void insertOptionSign();
 void insertListSign();
 void insertEndSign();
 //void insertTagSign(char * tagSign);
-void insertTagSign(int type);
+void insertTagSign(LRESULT type);
 
 void searchAndReplace(std::string key, std::string text, bool regExp = false);
 
 bool getLineChecked(char **buffer, int lineNumber, TCHAR* errorText);
-bool replaceTag(char *expanded, int &posCurrent, int &posBeforeTag);
+bool replaceTag(char *expanded, sptr_t &posCurrent, sptr_t &posBeforeTag);
 void openDatabase();
-int getCurrentTag(int posCurrent, char **buffer, int triggerLength = 0);
+size_t getCurrentTag(sptr_t posCurrent, char **buffer, sptr_t triggerLength = 0);
 
 void showSnippetDock();
 void updateDockItems(bool withContent = true, bool withAll = false, char* tag = "%", bool populate = false, bool populateInsertion = false, bool searchType = false);
-wchar_t* constructDockItems(std::string scope, std::string triggerText, int maxlength);
+wchar_t* constructDockItems(std::string scope, std::string triggerText, size_t maxlength);
 void populateDockItems(bool withAll = true, bool insertion = false);
 
 bool fingerTextListActive();
@@ -185,12 +185,12 @@ void setFocusToWindow();
 void searchWindowByName(std::string searchKey = "", HWND parentWindow = 0);
 
 //std::vector<std::string> snippetTextBrokenDown(std::string editText, std::vector<std::string> vs, char* tempTriggerText, char* snippetContent, int position);
-std::vector<std::string> snippetTextBrokenDown(std::string editText, std::vector<std::string> params, char** tempTriggerText, char** snippetContent, int position);
+std::vector<std::string> snippetTextBrokenDown(std::string editText, std::vector<std::string> params, char** tempTriggerText, char** snippetContent, size_t position);
 
 void selectionMonitor(int contentChange);
 std::vector<std::string> generateScopeList();
-bool triggerTag(int &posCurrent,int triggerLength = 0);
-int tagComplete();
+bool triggerTag(sptr_t &posCurrent, sptr_t triggerLength = 0);
+sptr_t tagComplete();
 void doTagComplete();
 bool diagActivate(char* tag);
 void triggerDiagInsertion();
@@ -198,7 +198,7 @@ void triggerDiagInsertion();
 void tabActivate();
 void doTabActivate(bool navOnly = false);
 
-std::vector<std::string> smartSplit(int start, int end, char delimiter, int parts = 0);
+std::vector<std::string> smartSplit(sptr_t start, sptr_t end, TCHAR delimiter, int parts = 0);
 
 void removehook();
 void installhook();

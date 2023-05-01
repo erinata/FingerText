@@ -125,8 +125,8 @@ bool Expression::isDigit(const char &c)
 
 std::string Expression::rephrasing(std::string input)
 {
-    int length = input.length();
-    for (int j=0; j<length; ++j) input[j]=tolower(input[j]);
+    size_t length = input.length();
+    for (size_t j=0; j<length; ++j) input[j]=tolower(input[j]);
 
     //Operators
     signReplace(input,"==","=");
@@ -415,7 +415,7 @@ int Expression::isNotEqual(double operand1, double operand2)
     else return 1;
 }
 
-long Expression::ncr(long operand1, long operand2)
+double Expression::ncr(double operand1, double operand2)
 {
     if (operand1 < 0 || operand2 < 0 || operand1 > operand2)
     {
@@ -427,7 +427,7 @@ long Expression::ncr(long operand1, long operand2)
     return factorial(operand2)/(factorial(operand1)*factorial(operand2 - operand1));
 }
 
-long Expression::npr(long operand1, long operand2)
+double Expression::npr(double operand1, double operand2)
 {
     if (operand1 < 0 || operand2 < 0 || operand1 > operand2)
     {
@@ -438,11 +438,11 @@ long Expression::npr(long operand1, long operand2)
     return factorial(operand2)/factorial(operand2 - operand1);
 }
 
-long Expression::factorial(long number)
+double Expression::factorial(double number)
 {
     if (number < 0) isError = 1;
-    long result = 1;
-    for (long i = number; i>0; i--) result = result * i;
+    double result = 1;
+    for (double i = number; i>0; i--) result = result * i;
     return result;
 }
 
